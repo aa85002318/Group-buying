@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <title>訂單成立通知</title>
+</head>
+<body style="margin:0;padding:0;background:#F5F0EB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang TC',sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F0EB;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;">
+          <tr>
+            <td style="background:#6B4423;padding:28px 32px;text-align:center;">
+              <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;">chimeidiy 團購</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;color:#333;line-height:1.7;">
+              <h1 style="margin:0 0 8px;font-size:20px;color:#6B4423;">訂單成立通知</h1>
+              <p style="color:#666;font-size:14px;">您好，感謝您下單！請至訂單頁出示 QR Code 至門市取貨。</p>
+              <p style="margin:24px 0;font-size:14px;"><strong>訂單編號：</strong>{{ORDER_NO}}</p>
+              <p style="text-align:center;margin:32px 0;">
+                <a href="{{ORDER_URL}}" style="display:inline-block;background:#E85D4C;color:#fff;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:600;">查看訂單與取貨 QR Code</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 32px;border-top:1px solid #EEE5DC;text-align:center;font-size:12px;color:#888;">
+              如有問題請聯絡客服
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
