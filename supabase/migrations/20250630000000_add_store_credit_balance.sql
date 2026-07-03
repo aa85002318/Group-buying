@@ -1,0 +1,1 @@
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS store_credit_balance DECIMAL(12,2) NOT NULL DEFAULT 0;

@@ -23,6 +23,8 @@ export async function createPickupCodeForOrder(orderId: string, pickupToken: str
   return { pickup_token: pickupToken };
 }
 
+export const getOrderByPickupToken = lookupOrderByPickupToken;
+
 export async function lookupOrderByPickupToken(
   pickupToken: string,
   staffUserId: string,
@@ -34,7 +36,7 @@ export async function lookupOrderByPickupToken(
   const { data: order } = await admin
     .from("orders")
     .select(
-      "id, order_no, order_number, total_amount, payment_status, pickup_status, status, store_id, pickup_store_id, profiles!orders_user_id_fkey(full_name, phone), order_items(product_name, quantity, subtotal)"
+      "id, order_no, order_number, total_amount, payment_status, pickup_status, status, store_id, pickup_store_id, customer_name, customer_phone, profiles!orders_user_id_fkey(full_name, phone), order_items(product_name, quantity, subtotal)"
     )
     .eq("pickup_token", pickupToken)
     .single();
@@ -47,21 +49,25 @@ export async function lookupOrderByPickupToken(
   }
 
   const profile = order.profiles as { full_name?: string; phone?: string } | null;
-  const phone = profile?.phone ?? "";
+  const phone = order.customer_phone ?? profile?.phone ?? "";
   const phoneLastThree = phone.length >= 3 ? phone.slice(-3) : "—";
 
-  await admin.from("pickup_logs").insert({
-    order_id: order.id,
-    store_id: storeId,
-    staff_id: staffUserId,
-    action: "lookup",
-    metadata: { pickup_token: pickupToken },
-  });
+  if (order.pickup_status === "picked_up") {
+    await writePickupLog(order.id, staffUserId, storeId ?? null, "report_issue", "already_picked_up");
+  } else {
+    await admin.from("pickup_logs").insert({
+      order_id: order.id,
+      store_id: storeId,
+      staff_id: staffUserId,
+      action: "lookup",
+      metadata: { pickup_token: pickupToken },
+    });
+  }
 
   return {
     order_id: order.id,
     order_no: order.order_no ?? order.order_number,
-    customer_name: profile?.full_name ?? "—",
+    customer_name: order.customer_name ?? profile?.full_name ?? "—",
     phone_last_three: phoneLastThree,
     items: (order.order_items ?? []) as PickupLookupResult["items"],
     total_amount: Number(order.total_amount),
@@ -71,7 +77,7 @@ export async function lookupOrderByPickupToken(
   };
 }
 
-async function writePickupLog(
+export async function writePickupLog(
   orderId: string,
   staffId: string,
   storeId: string | null,
@@ -90,6 +96,8 @@ async function writePickupLog(
   });
 }
 
+export const confirmPayment = confirmStorePayment;
+
 export async function confirmStorePayment(
   orderId: string,
   staffUserId: string,
@@ -107,6 +115,10 @@ export async function confirmStorePayment(
   const storeId = order.pickup_store_id ?? order.store_id;
   if (staffStoreId && storeId && staffStoreId !== storeId) {
     throw new Error("此訂單不屬於您的門市");
+  }
+
+  if (order.payment_status === "paid_store" || order.payment_status === "paid_online") {
+    throw new Error("此訂單已確認收款");
   }
 
   const { data, error } = await admin
@@ -143,7 +155,7 @@ export async function confirmPickup(
   const admin = createAdminClient();
   const { data: order } = await admin
     .from("orders")
-    .select("id, store_id, pickup_store_id, payment_status")
+    .select("id, store_id, pickup_store_id, payment_status, pickup_status")
     .eq("id", orderId)
     .single();
 
@@ -152,6 +164,10 @@ export async function confirmPickup(
   const storeId = order.pickup_store_id ?? order.store_id;
   if (staffStoreId && storeId && staffStoreId !== storeId) {
     throw new Error("此訂單不屬於您的門市");
+  }
+
+  if (order.pickup_status === "picked_up") {
+    throw new Error("此訂單已完成取貨");
   }
 
   if (!["paid_online", "paid_store"].includes(order.payment_status)) {

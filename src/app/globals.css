@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #333333;
+    --primary: #c94c4c;
+    --primary-foreground: #ffffff;
+    --promo: #d92d20;
+    --card: #fff8f5;
+    --card-foreground: #333333;
+    --muted: #f5f5f5;
+    --muted-foreground: #8a8a8a;
+    --border: #e8e4df;
+    --tag-bg: #f7dada;
+    --tag-text: #9f2f2f;
+    --countdown: #9f2f2f;
+    --nav-active: #c94c4c;
+    --nav-inactive: #8a8a8a;
+    --nav-icon: #333333;
+    --header-height: 10rem;
+    --header-content-gap: 10mm;
+  }
+
+  *,
+  *::before,
+  *::after {
+    @apply box-border;
+  }
+
+  html {
+    @apply overflow-x-hidden;
+  }
+
+  body {
+    @apply bg-background text-coffee antialiased overflow-x-hidden;
+    font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+  }
+
+  img,
+  video {
+    @apply max-w-full h-auto;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}

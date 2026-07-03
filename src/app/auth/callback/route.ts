@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getSiteUrl } from "@/lib/env";
+import { getSiteUrlFromRequest } from "@/lib/env";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
   // Keep users on the same host they used (e.g. LAN IP on mobile).
-  const siteUrl = requestUrl.origin || getSiteUrl();
+  const siteUrl = requestUrl.origin || getSiteUrlFromRequest(request);
 
   if (code) {
     const supabase = await createClient();

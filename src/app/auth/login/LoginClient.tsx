@@ -9,6 +9,7 @@ import { Logo } from "@/components/layout/Logo";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { ROLE_LABELS } from "@/lib/utils";
+import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
 
 export default function LoginClient() {
   const router = useRouter();
@@ -88,16 +89,56 @@ export default function LoginClient() {
     setResendLoading(true);
     setResendMessage(null);
     try {
-      const res = await fetch("/api/auth/resend-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, origin: window.location.origin }),
+      const viaResend = await requestVerificationEmail(email);
+      if (viaResend.ok) {
+        setResendMessage(`驗證信已寄至 ${email.trim()}，請查收信箱（含垃圾郵件匣）。`);
+        return;
+      }
+
+      if (!viaResend.skipped) {
+        throw new Error(viaResend.error ?? "寄送失敗");
+      }
+
+      // Resend 未設定時，改由瀏覽器直接呼叫 Supabase
+      if (!isSupabaseConfigured()) {
+        alert("尚未設定 Resend 或 Supabase，無法寄送驗證信");
+        return;
+      }
+
+      const supabase = createClient();
+      const siteUrl = window.location.origin;
+      let { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${siteUrl}/auth/callback`,
+        },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "寄送失敗");
+
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (
+          msg.includes("redirect") ||
+          msg.includes("redirect_to") ||
+          msg.includes("not allowed") ||
+          msg.includes("url not allowed")
+        ) {
+          const retry = await supabase.auth.resend({
+            type: "signup",
+            email: email.trim(),
+          });
+          error = retry.error;
+        }
+      }
+
+      if (error) throw error;
       setResendMessage("驗證信已重新寄出，請查收信箱（含垃圾郵件匣）。");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "寄送失敗");
+      const message =
+        err instanceof Error
+          ? err.message
+          : "寄送失敗，請稍後再試或檢查 Supabase Email / SMTP 設定。";
+      alert(message);
     } finally {
       setResendLoading(false);
     }

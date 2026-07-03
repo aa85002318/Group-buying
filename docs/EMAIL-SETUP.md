@@ -4,8 +4,12 @@
 
 | 類型 | 寄送方式 | 用途 |
 |------|----------|------|
-| Auth 驗證信 | Supabase Dashboard 內建 | 註冊 Email 驗證 |
+| Auth 驗證信 | **Resend（程式寄送）** + Supabase 產生連結 | 註冊 Email 驗證（寄到**註冊者信箱**） |
 | 交易通知信 | Resend API（程式寄送） | 訂單成立、取貨完成 |
+
+> **重要：** 請勿在 Supabase 啟用錯誤設定的 Gmail SMTP（驗證信可能誤寄到寄件人信箱）。  
+> 若已設定 `RESEND_API_KEY`，驗證信由 `POST /api/auth/send-verification-email` 寄出。  
+> Supabase Dashboard → SMTP Settings 建議**關閉 Custom SMTP**，或改填 Resend SMTP。
 
 ---
 

@@ -8,9 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/layout/Logo";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
-import { getSiteUrl } from "@/lib/env";
+import { resolveSiteUrl } from "@/lib/env";
+import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
+import { isValidBirthday, isValidTaiwanPhone, normalizePhone } from "@/lib/validation/customer";
 
 function getRegisterErrorMessage(err: unknown): string {
+  if (err && typeof err === "object") {
+    const maybe = err as Record<string, unknown>;
+    const name = typeof maybe.name === "string" ? maybe.name : "";
+    const status = typeof maybe.status === "number" ? maybe.status : 0;
+    if (name === "AuthRetryableFetchError" || status >= 500) {
+      return "註冊失敗：Supabase Auth 服務暫時錯誤（500）。請檢查 Supabase Email 設定（特別是自訂 SMTP）或稍後再試。";
+    }
+  }
+
   if (err instanceof Error && err.message && err.message !== "{}") {
     return err.message;
   }
@@ -26,6 +37,14 @@ function getRegisterErrorMessage(err: unknown): string {
 
     for (const value of candidates) {
       if (typeof value === "string" && value.trim() && value.trim() !== "{}") {
+        const normalized = value.trim().toLowerCase();
+        if (
+          normalized.includes("trycloudflare.com") ||
+          normalized.includes("redirect_to") ||
+          normalized.includes("not allowed")
+        ) {
+          return "註冊失敗：Supabase 尚未允許目前網址。請到 Supabase Authentication > URL Configuration，將目前網域加入 Site URL 與 Redirect URLs（/auth/callback）。";
+        }
         return value;
       }
     }
@@ -41,11 +60,33 @@ function getRegisterErrorMessage(err: unknown): string {
   return "註冊失敗，請稍後再試。若使用手機測試，請確認 Supabase Redirect URL 已加入目前網址。";
 }
 
+function isRedirectBlockedError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const maybe = err as Record<string, unknown>;
+  const text = [
+    maybe.message,
+    maybe.error_description,
+    maybe.error,
+  ]
+    .filter((v): v is string => typeof v === "string")
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    text.includes("redirect") ||
+    text.includes("redirect_to") ||
+    text.includes("not allowed") ||
+    text.includes("url not allowed")
+  );
+}
+
 export default function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [birthday, setBirthday] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,6 +94,16 @@ export default function RegisterForm() {
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!isValidTaiwanPhone(phone)) {
+      alert("請輸入有效的手機號碼（09 開頭，共 10 碼）");
+      return;
+    }
+    if (!isValidBirthday(birthday)) {
+      alert("請輸入有效的生日");
+      return;
+    }
+
     setLoading(true);
     try {
       if (!isSupabaseConfigured()) {
@@ -66,21 +117,57 @@ export default function RegisterForm() {
         router.push("/");
         return;
       }
+
+      const normalizedPhone = normalizePhone(phone);
       const supabase = createClient();
-      const siteUrl = typeof window !== "undefined" ? window.location.origin : getSiteUrl();
-      const { data, error } = await supabase.auth.signUp({
+      const siteUrl = resolveSiteUrl();
+      const userMeta = {
+        full_name: fullName.trim(),
+        phone: normalizedPhone,
+        birthday,
+      };
+
+      let { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { full_name: fullName },
+          data: userMeta,
           emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       });
+
+      if (error && isRedirectBlockedError(error)) {
+        const retry = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: userMeta },
+        });
+        data = retry.data;
+        error = retry.error;
+      }
+
       if (error) throw error;
 
-      // 需驗證 Email 才能登入；若 Supabase 自動建立 session 則先登出
       if (data.session) {
         await supabase.auth.signOut();
+      }
+
+      if (data.user) {
+        const profileRes = await fetch("/api/auth/complete-registration", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: data.user.id,
+            full_name: fullName.trim(),
+            phone: normalizedPhone,
+            birthday,
+            email,
+          }),
+        });
+        if (!profileRes.ok) {
+          const profileErr = await profileRes.json().catch(() => ({}));
+          throw new Error(profileErr.error ?? "客戶資料儲存失敗");
+        }
       }
 
       if (ref && data.user) {
@@ -90,6 +177,12 @@ export default function RegisterForm() {
           body: JSON.stringify({ ref_code: ref, user_id: data.user.id }),
         });
       }
+
+      const verifyResult = await requestVerificationEmail(email);
+      if (!verifyResult.ok && !verifyResult.skipped) {
+        console.warn("Verification email via Resend failed:", verifyResult.error);
+      }
+
       setSent(true);
     } catch (err) {
       console.error("Register failed:", err);
@@ -126,9 +219,52 @@ export default function RegisterForm() {
         <p className="text-center text-sm text-coffee/70">加入會員，開始團購</p>
         {ref && <p className="text-center text-xs text-primary">推薦碼：{ref}</p>}
         <form onSubmit={handleRegister} className="space-y-4">
-          <Input placeholder="姓名" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-          <Input type="email" placeholder="電子郵件" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <Input type="password" placeholder="密碼（至少 6 碼）" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
+          <Input
+            placeholder="姓名"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            autoComplete="name"
+            required
+          />
+          <Input
+            type="tel"
+            placeholder="手機號碼（09xxxxxxxx）"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            autoComplete="tel"
+            inputMode="tel"
+            required
+          />
+          <div>
+            <label htmlFor="birthday" className="mb-1 block text-xs text-muted-foreground">
+              生日
+            </label>
+            <Input
+              id="birthday"
+              type="date"
+              value={birthday}
+              onChange={(e) => setBirthday(e.target.value)}
+              required
+            />
+          </div>
+          <Input
+            type="email"
+            placeholder="電子郵件"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+          />
+          <Input
+            type="password"
+            placeholder="密碼（至少 6 碼）"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={6}
+            autoComplete="new-password"
+            required
+          />
+          <p className="text-xs text-muted-foreground">註冊後會員條碼將為您的手機號碼。</p>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "註冊中..." : "註冊"}
           </Button>
