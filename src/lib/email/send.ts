@@ -15,7 +15,7 @@ function isEmailConfigured(): boolean {
 }
 
 /** Send transactional email via Resend. Logs in development when not configured. */
-export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<{ ok: boolean; skipped?: boolean }> {
+export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
 
   if (!apiKey) {
@@ -44,10 +44,12 @@ export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<
   if (!res.ok) {
     const body = await res.text();
     console.error("[email] Resend error:", res.status, body);
-    return { ok: false };
+    return { ok: false, error: body };
   }
 
   return { ok: true };
 }
+
+export type SendEmailResult = { ok: boolean; skipped?: boolean; error?: string };
 
 export { isEmailConfigured, getEmailFrom };

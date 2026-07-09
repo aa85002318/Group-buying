@@ -43,10 +43,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "找不到使用者" }, { status: 404 });
   }
 
-  const createdAt = new Date(authUser.user.created_at);
-  const withinWindow = Date.now() - createdAt.getTime() < 15 * 60 * 1000;
-  if (!withinWindow) {
-    return NextResponse.json({ error: "註冊資料已逾時，請聯絡客服" }, { status: 403 });
+  const { data: existingProfile } = await admin
+    .from("profiles")
+    .select("id, full_name, phone, birthday")
+    .eq("id", user_id)
+    .maybeSingle();
+
+  const profileComplete = Boolean(
+    existingProfile?.full_name?.trim() &&
+      existingProfile?.phone?.trim() &&
+      existingProfile?.birthday
+  );
+
+  if (profileComplete) {
+    return NextResponse.json(
+      { error: "此帳號已註冊完成，請直接登入；若未驗證 Email，可在登入頁重新寄送驗證信。" },
+      { status: 409 }
+    );
   }
 
   const normalizedPhone = normalizePhone(phone);

@@ -9,6 +9,7 @@ import { Logo } from "@/components/layout/Logo";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { ROLE_LABELS } from "@/lib/utils";
+import { getAuthErrorMessage } from "@/lib/auth/error-messages";
 import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
 
 export default function LoginClient() {
@@ -134,10 +135,7 @@ export default function LoginClient() {
       if (error) throw error;
       setResendMessage("驗證信已重新寄出，請查收信箱（含垃圾郵件匣）。");
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "寄送失敗，請稍後再試或檢查 Supabase Email / SMTP 設定。";
+      const message = getAuthErrorMessage(err, "resend");
       alert(message);
     } finally {
       setResendLoading(false);

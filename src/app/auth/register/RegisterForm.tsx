@@ -10,54 +10,11 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { resolveSiteUrl } from "@/lib/env";
 import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
+import { getAuthErrorMessage } from "@/lib/auth/error-messages";
 import { isValidBirthday, isValidTaiwanPhone, normalizePhone } from "@/lib/validation/customer";
 
 function getRegisterErrorMessage(err: unknown): string {
-  if (err && typeof err === "object") {
-    const maybe = err as Record<string, unknown>;
-    const name = typeof maybe.name === "string" ? maybe.name : "";
-    const status = typeof maybe.status === "number" ? maybe.status : 0;
-    if (name === "AuthRetryableFetchError" || status >= 500) {
-      return "註冊失敗：Supabase Auth 服務暫時錯誤（500）。請檢查 Supabase Email 設定（特別是自訂 SMTP）或稍後再試。";
-    }
-  }
-
-  if (err instanceof Error && err.message && err.message !== "{}") {
-    return err.message;
-  }
-
-  if (err && typeof err === "object") {
-    const maybe = err as Record<string, unknown>;
-    const candidates = [
-      maybe.message,
-      maybe.error_description,
-      maybe.error,
-      maybe.msg,
-    ];
-
-    for (const value of candidates) {
-      if (typeof value === "string" && value.trim() && value.trim() !== "{}") {
-        const normalized = value.trim().toLowerCase();
-        if (
-          normalized.includes("trycloudflare.com") ||
-          normalized.includes("redirect_to") ||
-          normalized.includes("not allowed")
-        ) {
-          return "註冊失敗：Supabase 尚未允許目前網址。請到 Supabase Authentication > URL Configuration，將目前網域加入 Site URL 與 Redirect URLs（/auth/callback）。";
-        }
-        return value;
-      }
-    }
-
-    try {
-      const raw = JSON.stringify(err);
-      if (raw && raw !== "{}") return raw;
-    } catch {
-      // noop
-    }
-  }
-
-  return "註冊失敗，請稍後再試。若使用手機測試，請確認 Supabase Redirect URL 已加入目前網址。";
+  return getAuthErrorMessage(err, "register");
 }
 
 function isRedirectBlockedError(err: unknown): boolean {
@@ -179,8 +136,14 @@ export default function RegisterForm() {
       }
 
       const verifyResult = await requestVerificationEmail(email);
-      if (!verifyResult.ok && !verifyResult.skipped) {
-        console.warn("Verification email via Resend failed:", verifyResult.error);
+      if (!verifyResult.ok) {
+        if (verifyResult.skipped) {
+          throw new Error(
+            verifyResult.error ??
+              "尚未設定 RESEND_API_KEY，無法寄送驗證信。請聯絡客服或稍後再試。"
+          );
+        }
+        throw new Error(verifyResult.error ?? "驗證信寄送失敗，請稍後再試");
       }
 
       setSent(true);

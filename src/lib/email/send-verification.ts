@@ -42,7 +42,7 @@ export async function sendVerificationEmail({
   });
 
   const { data, error } = await supabase.auth.admin.generateLink({
-    type: "magiclink",
+    type: "signup",
     email: trimmed,
     options: { redirectTo },
   });
@@ -63,7 +63,16 @@ export async function sendVerificationEmail({
 
   const sent = await sendEmail({ to: trimmed, subject, html });
   if (!sent.ok) {
-    return { ok: false, error: "驗證信寄送失敗，請稍後再試" };
+    let detail = "驗證信寄送失敗，請稍後再試";
+    if (sent.error) {
+      try {
+        const parsed = JSON.parse(sent.error) as { message?: string };
+        if (parsed.message) detail = parsed.message;
+      } catch {
+        // use default message
+      }
+    }
+    return { ok: false, error: detail };
   }
 
   return { ok: true };
