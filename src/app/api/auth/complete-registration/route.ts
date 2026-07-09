@@ -56,10 +56,7 @@ export async function POST(request: Request) {
   );
 
   if (profileComplete) {
-    return NextResponse.json(
-      { error: "此帳號已註冊完成，請直接登入；若未驗證 Email，可在登入頁重新寄送驗證信。" },
-      { status: 409 }
-    );
+    return NextResponse.json({ ok: true, profile: existingProfile, already_complete: true });
   }
 
   const normalizedPhone = normalizePhone(phone);

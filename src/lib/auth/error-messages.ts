@@ -1,7 +1,20 @@
 /** Map Supabase / auth API errors to user-friendly Traditional Chinese messages. */
-export function getAuthErrorMessage(err: unknown, context: "register" | "resend" = "register"): string {
+export function getAuthErrorMessage(
+  err: unknown,
+  context: "register" | "resend" | "login" = "register"
+): string {
   const text = extractErrorText(err).toLowerCase();
 
+  if (
+    text.includes("invalid login credentials") ||
+    text.includes("invalid credentials")
+  ) {
+    return "Email 或密碼錯誤。請確認是否用註冊時的 Email 與密碼；若尚未註冊成功，請重新註冊或聯絡客服。";
+  }
+
+  if (text.includes("email not confirmed") || text.includes("not confirmed")) {
+    return "此帳號尚未完成 Email 驗證，請至信箱點擊驗證連結，或按「重新寄送驗證信」。";
+  }
   if (
     text.includes("only request this after") ||
     text.includes("rate limit") ||
@@ -49,7 +62,9 @@ export function getAuthErrorMessage(err: unknown, context: "register" | "resend"
 
   return context === "resend"
     ? "寄送失敗，請稍後再試。"
-    : "註冊失敗，請稍後再試。";
+    : context === "login"
+      ? "登入失敗，請稍後再試。"
+      : "註冊失敗，請稍後再試。";
 }
 
 function extractErrorText(err: unknown): string {

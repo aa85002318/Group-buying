@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAuth, logAudit } from "@/lib/auth";
+import { requireVerifiedAuth, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createPayment } from "@/lib/services/paymentService";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { PaymentGateway } from "@/lib/types/database";
 
 export async function POST(request: Request) {
-  const { error, auth } = await requireAuth();
+  const { error, auth } = await requireVerifiedAuth();
   if (error) return error;
 
   const body = await request.json();

@@ -6,35 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/layout/Logo";
-import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { resolveSiteUrl } from "@/lib/env";
-import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
 import { getAuthErrorMessage } from "@/lib/auth/error-messages";
 import { isValidBirthday, isValidTaiwanPhone, normalizePhone } from "@/lib/validation/customer";
 
 function getRegisterErrorMessage(err: unknown): string {
   return getAuthErrorMessage(err, "register");
-}
-
-function isRedirectBlockedError(err: unknown): boolean {
-  if (!err || typeof err !== "object") return false;
-  const maybe = err as Record<string, unknown>;
-  const text = [
-    maybe.message,
-    maybe.error_description,
-    maybe.error,
-  ]
-    .filter((v): v is string => typeof v === "string")
-    .join(" ")
-    .toLowerCase();
-
-  return (
-    text.includes("redirect") ||
-    text.includes("redirect_to") ||
-    text.includes("not allowed") ||
-    text.includes("url not allowed")
-  );
 }
 
 export default function RegisterForm() {
@@ -76,74 +54,36 @@ export default function RegisterForm() {
       }
 
       const normalizedPhone = normalizePhone(phone);
-      const supabase = createClient();
       const siteUrl = resolveSiteUrl();
-      const userMeta = {
-        full_name: fullName.trim(),
-        phone: normalizedPhone,
-        birthday,
-      };
 
-      let { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userMeta,
-          emailRedirectTo: `${siteUrl}/auth/callback`,
-        },
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+          full_name: fullName.trim(),
+          phone: normalizedPhone,
+          birthday,
+          origin: typeof window !== "undefined" ? window.location.origin : siteUrl,
+        }),
       });
 
-      if (error && isRedirectBlockedError(error)) {
-        const retry = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: userMeta },
-        });
-        data = retry.data;
-        error = retry.error;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error ?? "註冊失敗");
       }
 
-      if (error) throw error;
-
-      if (data.session) {
-        await supabase.auth.signOut();
-      }
-
-      if (data.user) {
-        const profileRes = await fetch("/api/auth/complete-registration", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: data.user.id,
-            full_name: fullName.trim(),
-            phone: normalizedPhone,
-            birthday,
-            email,
-          }),
-        });
-        if (!profileRes.ok) {
-          const profileErr = await profileRes.json().catch(() => ({}));
-          throw new Error(profileErr.error ?? "客戶資料儲存失敗");
-        }
-      }
-
-      if (ref && data.user) {
+      if (ref && data.user_id) {
         await fetch("/api/share/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ref_code: ref, user_id: data.user.id }),
+          body: JSON.stringify({ ref_code: ref, user_id: data.user_id }),
         });
       }
 
-      const verifyResult = await requestVerificationEmail(email);
-      if (!verifyResult.ok) {
-        if (verifyResult.skipped) {
-          throw new Error(
-            verifyResult.error ??
-              "尚未設定 RESEND_API_KEY，無法寄送驗證信。請聯絡客服或稍後再試。"
-          );
-        }
-        throw new Error(verifyResult.error ?? "驗證信寄送失敗，請稍後再試");
+      if (data.warning) {
+        console.warn("Register warning:", data.warning);
       }
 
       setSent(true);

@@ -11,7 +11,8 @@ import {
   CHECKOUT_SHIPMENT_OPTIONS,
   shippingFeeForMethod,
 } from "@/lib/checkout/options";
-import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
+import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
+import { useEmailVerification } from "@/hooks/useEmailVerification";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
 import type { PaymentGateway, ShipmentMethod, Store } from "@/lib/types/database";
@@ -69,44 +70,43 @@ export function CheckoutForm() {
   const [couponCode, setCouponCode] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
-  const [resending, setResending] = useState(false);
+  const { loading: authLoading, emailVerified, email, resending, resendVerification } =
+    useEmailVerification();
+
+  async function handleResendVerification() {
+    try {
+      const message = await resendVerification(customerEmail || email);
+      alert(message ?? "驗證信已寄出，請至信箱點擊連結完成驗證");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "寄送失敗");
+    }
+  }
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/stores").then((r) => r.json()),
-      fetch("/api/auth/me").then((r) => r.json()),
-    ])
-      .then(([storesRes, meRes]) => {
+    fetch("/api/stores")
+      .then((r) => r.json())
+      .then((storesRes) => {
         if (Array.isArray(storesRes.stores) && storesRes.stores.length > 0) {
           setStores(storesRes.stores);
           setStoreId(storesRes.stores[0].id);
         }
+      })
+      .catch(() => {});
+
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((meRes) => {
         if (meRes.profile) {
           setRecipientName(meRes.profile.full_name ?? "");
           setRecipientPhone(meRes.profile.phone ?? "");
         }
         if (meRes.user?.email) setCustomerEmail(meRes.user.email);
-        setEmailVerified(Boolean(meRes.email_verified));
       })
-      .catch(() => setEmailVerified(true));
+      .catch(() => {});
   }, []);
 
   const shippingFee = useMemo(() => shippingFeeForMethod(shipmentMethod), [shipmentMethod]);
   const grandTotal = Math.max(0, total + shippingFee);
-
-  async function resendVerification() {
-    setResending(true);
-    try {
-      const result = await requestVerificationEmail(customerEmail);
-      if (!result.ok) throw new Error(result.error ?? "寄送失敗");
-      alert("驗證信已寄出，請至信箱點擊連結完成驗證");
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "寄送失敗");
-    } finally {
-      setResending(false);
-    }
-  }
 
   async function submitOrder() {
     if (items.length === 0) return;
@@ -149,7 +149,12 @@ export function CheckoutForm() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "下單失敗");
+      if (!res.ok) {
+        if (data.code === "email_not_confirmed") {
+          throw new Error("請先完成 Email 驗證後再下單");
+        }
+        throw new Error(data.error || "下單失敗");
+      }
       clear();
       router.push(`/orders/${data.order.id}`);
     } catch (e) {
@@ -170,16 +175,21 @@ export function CheckoutForm() {
     );
   }
 
+  if (authLoading) {
+    return <div className="py-12 text-center text-muted-foreground">載入中...</div>;
+  }
+
   if (emailVerified === false) {
     return (
-      <div className="space-y-4 py-12 text-center">
+      <div className="space-y-4 py-8">
         <h1 className="text-xl font-bold text-coffee">結帳</h1>
-        <p className="text-muted-foreground">請先完成 Email 驗證後再下單</p>
-        <Button onClick={resendVerification} disabled={resending}>
-          {resending ? "寄送中..." : "重新寄送驗證信"}
-        </Button>
-        <Link href="/profile" className="block text-sm text-primary hover:underline">
-          前往會員中心
+        <EmailVerificationNotice
+          email={customerEmail || email}
+          resending={resending}
+          onResend={handleResendVerification}
+        />
+        <Link href="/cart" className="block text-center text-sm text-primary hover:underline">
+          返回購物車
         </Link>
       </div>
     );
@@ -308,7 +318,7 @@ export function CheckoutForm() {
         size="lg"
         variant="promo"
         onClick={submitOrder}
-        disabled={submitting || (shipmentMethod === "store_pickup" && !storeId)}
+        disabled={submitting || emailVerified !== true || (shipmentMethod === "store_pickup" && !storeId)}
       >
         {submitting ? "建立訂單中..." : `確認下單 ${formatCurrency(grandTotal)}`}
       </Button>

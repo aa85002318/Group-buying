@@ -59,7 +59,11 @@ export default function LoginClient() {
     setLoginError(null);
     setResendMessage(null);
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
     setLoading(false);
 
     if (error) {
@@ -68,7 +72,7 @@ export default function LoginClient() {
         setLoginError("email_not_confirmed");
         return;
       }
-      alert(error.message);
+      setLoginError(getAuthErrorMessage(error, "login"));
       return;
     }
 
@@ -157,6 +161,10 @@ export default function LoginClient() {
 
         {errorMessage && (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{errorMessage}</p>
+        )}
+
+        {loginError && loginError !== "email_not_confirmed" && (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{loginError}</p>
         )}
 
         {loginError === "email_not_confirmed" && (

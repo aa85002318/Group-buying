@@ -8,9 +8,17 @@ interface CartSummaryProps {
   total: number;
   itemCount: number;
   onClear: () => void;
+  canCheckout?: boolean;
+  checkoutBlockedReason?: string;
 }
 
-export function CartSummary({ total, itemCount, onClear }: CartSummaryProps) {
+export function CartSummary({
+  total,
+  itemCount,
+  onClear,
+  canCheckout = true,
+  checkoutBlockedReason,
+}: CartSummaryProps) {
   return (
     <div className="rounded-xl bg-card p-4 shadow-card space-y-2">
       <div className="flex justify-between text-sm text-muted-foreground">
@@ -29,11 +37,17 @@ export function CartSummary({ total, itemCount, onClear }: CartSummaryProps) {
         <Button variant="outline" onClick={onClear}>
           清空購物車
         </Button>
-        <Link href="/checkout" className="flex-1">
-          <Button className="w-full" variant="promo">
-            前往結帳
+        {canCheckout ? (
+          <Link href="/checkout" className="flex-1">
+            <Button className="w-full" variant="promo">
+              前往結帳
+            </Button>
+          </Link>
+        ) : (
+          <Button className="flex-1" variant="promo" disabled title={checkoutBlockedReason}>
+            請先驗證 Email
           </Button>
-        </Link>
+        )}
       </div>
     </div>
   );

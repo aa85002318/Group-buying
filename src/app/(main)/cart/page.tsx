@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { CartItem } from "@/components/cart/CartItem";
 import { CartSummary } from "@/components/cart/CartSummary";
+import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 import { useCart } from "@/hooks/useCart";
+import { useEmailVerification } from "@/hooks/useEmailVerification";
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, total, itemCount, clear } = useCart();
+  const { loading, loggedIn, email, emailVerified, resending, resendVerification, canPurchase } =
+    useEmailVerification();
 
   if (items.length === 0) {
     return (
@@ -35,7 +39,28 @@ export default function CartPage() {
         />
       ))}
 
-      <CartSummary total={total} itemCount={itemCount} onClear={clear} />
+      {!loading && loggedIn && emailVerified === false && (
+        <EmailVerificationNotice
+          email={email}
+          resending={resending}
+          onResend={async () => {
+            try {
+              const message = await resendVerification();
+              alert(message);
+            } catch (e) {
+              alert(e instanceof Error ? e.message : "寄送失敗");
+            }
+          }}
+        />
+      )}
+
+      <CartSummary
+        total={total}
+        itemCount={itemCount}
+        onClear={clear}
+        canCheckout={!loggedIn || canPurchase}
+        checkoutBlockedReason="請先完成 Email 驗證"
+      />
     </div>
   );
 }

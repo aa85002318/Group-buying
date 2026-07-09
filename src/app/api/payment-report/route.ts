@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAuth, logAudit } from "@/lib/auth";
+import { requireVerifiedAuth, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockStore } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  const { error, auth } = await requireAuth();
+  const { error, auth } = await requireVerifiedAuth();
   if (error) return error;
 
   const body = await request.json();

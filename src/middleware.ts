@@ -43,6 +43,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
+  if (path.startsWith("/checkout") && user && !user.email_confirmed_at) {
+    const cartUrl = new URL("/cart", request.url);
+    cartUrl.searchParams.set("verify", "email");
+    return NextResponse.redirect(cartUrl);
+  }
+
   if (staffPaths.some((p) => path.startsWith(p))) {
     if (path === "/staff/login") {
       return response;
