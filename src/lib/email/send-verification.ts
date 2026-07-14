@@ -41,8 +41,11 @@ export async function sendVerificationEmail({
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  // The auth user is already created (admin.createUser) but unconfirmed.
+  // A magiclink both confirms the email and logs the user in when clicked,
+  // whereas "signup" would fail because the user already exists.
   const { data, error } = await supabase.auth.admin.generateLink({
-    type: "signup",
+    type: "magiclink",
     email: trimmed,
     options: { redirectTo },
   });

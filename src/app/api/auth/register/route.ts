@@ -51,13 +51,14 @@ export async function POST(request: Request) {
   const normalizedPhone = normalizePhone(phone);
   const memberCode = memberCodeFromPhone(normalizedPhone);
 
-  const phoneTaken = await isPhoneTaken(admin, normalizedPhone);
-  if (phoneTaken) {
-    return NextResponse.json({ error: "此手機號碼已被註冊" }, { status: 409 });
-  }
-
   const { data: existingUsers } = await admin.auth.admin.listUsers({ perPage: 200 });
   const existing = existingUsers?.users.find((u) => u.email?.toLowerCase() === email);
+
+  // Phone uniqueness — allow the same phone if it belongs to the same (incomplete) account being retried.
+  const phoneTaken = await isPhoneTaken(admin, normalizedPhone, existing?.id);
+  if (phoneTaken) {
+    return NextResponse.json({ error: "此手機號碼已被其他帳號註冊" }, { status: 409 });
+  }
 
   let userId: string;
 
