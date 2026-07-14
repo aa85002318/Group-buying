@@ -139,6 +139,7 @@ export async function POST(request: Request) {
       {
         ok: true,
         user_id: userId,
+        email_sent: false,
         warning: verify.error ?? "帳號已建立，但驗證信寄送失敗，請至登入頁重新寄送。",
       },
       { status: 201 }
@@ -150,11 +151,13 @@ export async function POST(request: Request) {
       {
         ok: true,
         user_id: userId,
-        warning: "帳號已建立，但尚未設定 RESEND_API_KEY，無法寄送驗證信。",
+        email_sent: false,
+        warning:
+          "帳號已建立，但伺服器尚未設定 RESEND_API_KEY（請至 Vercel Environment Variables 設定），無法寄送驗證信。",
       },
       { status: 201 }
     );
   }
 
-  return NextResponse.json({ ok: true, user_id: userId }, { status: 201 });
+  return NextResponse.json({ ok: true, user_id: userId, email_sent: true }, { status: 201 });
 }

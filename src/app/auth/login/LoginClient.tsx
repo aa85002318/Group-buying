@@ -17,7 +17,7 @@ export default function LoginClient() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/";
   const errorCode = searchParams.get("error");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);

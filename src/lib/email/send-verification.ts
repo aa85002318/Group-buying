@@ -41,9 +41,8 @@ export async function sendVerificationEmail({
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // The auth user is already created (admin.createUser) but unconfirmed.
-  // A magiclink both confirms the email and logs the user in when clicked,
-  // whereas "signup" would fail because the user already exists.
+  // User already exists (admin.createUser). Magic link produces a hashed_token we can
+  // put on OUR domain — avoiding Supabase action_link hash tokens the server callback can't read.
   const { data, error } = await supabase.auth.admin.generateLink({
     type: "magiclink",
     email: trimmed,
@@ -54,10 +53,17 @@ export async function sendVerificationEmail({
     return { ok: false, error: error.message };
   }
 
-  const confirmationUrl = data.properties?.action_link;
-  if (!confirmationUrl) {
+  const hashedToken = data.properties?.hashed_token;
+  if (!hashedToken) {
     return { ok: false, error: "無法產生驗證連結" };
   }
+
+  // App-hosted verify URL (server can read query params; hash fragments cannot)
+  const confirmationUrl =
+    `${siteUrl}/auth/callback` +
+    `?token_hash=${encodeURIComponent(hashedToken)}` +
+    `&type=magiclink` +
+    `&next=${encodeURIComponent("/")}`;
 
   const { subject, html } = buildVerifyEmail({
     confirmationUrl,

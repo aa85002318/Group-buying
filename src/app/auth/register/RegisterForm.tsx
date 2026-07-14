@@ -26,6 +26,7 @@ export default function RegisterForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sendWarning, setSendWarning] = useState<string | null>(null);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -84,6 +85,9 @@ export default function RegisterForm() {
 
       if (data.warning) {
         console.warn("Register warning:", data.warning);
+        setSendWarning(String(data.warning));
+      } else {
+        setSendWarning(null);
       }
 
       setSent(true);
@@ -100,15 +104,25 @@ export default function RegisterForm() {
       <div className="flex min-h-[calc(100vh-var(--header-height))] flex-col items-center justify-center gap-6 p-4">
         <Logo size="auth" priority />
         <div className="w-full max-w-sm space-y-4 rounded-xl bg-white p-6 text-center shadow-card">
-          <h1 className="text-lg font-bold text-coffee">請查收驗證信</h1>
-          <p className="text-sm text-muted-foreground">
-            我們已寄送驗證信至 <strong>{email}</strong>。請點擊信中連結完成驗證後才能登入與下單。
-          </p>
+          <h1 className="text-lg font-bold text-coffee">
+            {sendWarning ? "帳號已建立" : "請查收驗證信"}
+          </h1>
+          {sendWarning ? (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              {sendWarning}
+              <br />
+              請至登入頁按「重新寄送驗證信」。
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              我們已寄送驗證信至 <strong>{email}</strong>。請點擊信中連結完成驗證後才能登入與下單。
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
             沒收到信？請檢查垃圾郵件，或至登入頁重新寄送驗證信。
           </p>
-          <Link href="/auth/login">
-            <Button className="w-full">前往登入</Button>
+          <Link href={`/auth/login?email=${encodeURIComponent(email.trim().toLowerCase())}`}>
+            <Button className="w-full">前往登入／重寄驗證信</Button>
           </Link>
         </div>
       </div>
