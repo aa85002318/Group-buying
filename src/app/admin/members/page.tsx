@@ -12,7 +12,10 @@ import { formatCurrency, formatDate, ROLE_LABELS } from "@/lib/utils";
 import { formatBirthdayDisplay } from "@/lib/validation/customer";
 import type { Profile, UserRole } from "@/lib/types/database";
 
-type Member = Profile & { store_credit_balance?: number };
+type Member = Profile & {
+  store_credit_balance?: number;
+  email_verified?: boolean;
+};
 
 const ROLES: UserRole[] = ["member", "admin", "store_staff", "group_leader", "promoter", "livestream_host"];
 
@@ -24,6 +27,7 @@ export default function AdminMembersPage() {
   );
   const [editing, setEditing] = useState<Member | null>(null);
   const [saving, setSaving] = useState(false);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
@@ -72,13 +76,54 @@ export default function AdminMembersPage() {
     }
   };
 
+  const confirmEmail = async (member: Member) => {
+    if (member.email_verified) {
+      alert("此會員 Email 已驗證");
+      return;
+    }
+    if (
+      !confirm(
+        `確定要手動驗證 ${member.email ?? member.full_name ?? "此會員"} 的 Email 嗎？\n驗證後即可登入與下單。`
+      )
+    ) {
+      return;
+    }
+    setConfirmingId(member.id);
+    try {
+      const res = await fetch(`/api/admin/members/${member.id}/confirm-email`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "驗證失敗");
+      alert(data.message ?? "已手動驗證 Email");
+      if (editing?.id === member.id) {
+        setEditing({ ...editing, email_verified: true });
+      }
+      refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "驗證失敗");
+    } finally {
+      setConfirmingId(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <AdminPageHeader title="會員管理" description="會員資料、條碼（手機號碼）、角色與購物金" />
+      <AdminPageHeader
+        title="會員管理"
+        description="會員資料、Email 驗證狀態、條碼、角色與購物金。未收到驗證信時可手動驗證。"
+      />
 
       {editing && (
         <div className="rounded-xl bg-white p-4 shadow-card">
-          <h2 className="font-medium text-coffee">編輯會員：{editing.full_name ?? editing.email}</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-medium text-coffee">編輯會員：{editing.full_name ?? editing.email}</h2>
+            {editing.email_verified ? (
+              <StatusBadge label="Email 已驗證" variant="success" />
+            ) : (
+              <StatusBadge label="Email 未驗證" variant="warning" />
+            )}
+          </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <Input
               placeholder="姓名"
@@ -102,7 +147,11 @@ export default function AdminMembersPage() {
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
-            <select className="input-field" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}>
+            <select
+              className="input-field"
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
+            >
               {ROLES.map((r) => (
                 <option key={r} value={r}>
                   {ROLE_LABELS[r]}
@@ -125,6 +174,15 @@ export default function AdminMembersPage() {
             <Button onClick={save} disabled={saving}>
               {saving ? "儲存中…" : "儲存"}
             </Button>
+            {!editing.email_verified && (
+              <Button
+                variant="promo"
+                disabled={confirmingId === editing.id}
+                onClick={() => confirmEmail(editing)}
+              >
+                {confirmingId === editing.id ? "驗證中…" : "手動驗證 Email"}
+              </Button>
+            )}
             <Button variant="secondary" onClick={() => setEditing(null)}>
               取消
             </Button>
@@ -138,6 +196,16 @@ export default function AdminMembersPage() {
           { key: "phone", header: "手機", render: (m) => m.phone ?? "—" },
           { key: "birthday", header: "生日", render: (m) => formatBirthdayDisplay(m.birthday) },
           { key: "email", header: "Email", render: (m) => m.email ?? "—" },
+          {
+            key: "verified",
+            header: "Email 驗證",
+            render: (m) =>
+              m.email_verified ? (
+                <StatusBadge label="已驗證" variant="success" />
+              ) : (
+                <StatusBadge label="未驗證" variant="warning" />
+              ),
+          },
           { key: "code", header: "會員條碼", render: (m) => <span className="font-mono">{m.member_code}</span> },
           {
             key: "role",
@@ -149,14 +217,30 @@ export default function AdminMembersPage() {
             header: "購物金",
             render: (m) => formatCurrency(m.store_credit_balance ?? 0),
           },
-          { key: "joined", header: "加入時間", render: (m) => <span className="text-xs">{formatDate(m.created_at)}</span> },
+          {
+            key: "joined",
+            header: "加入時間",
+            render: (m) => <span className="text-xs">{formatDate(m.created_at)}</span>,
+          },
           {
             key: "actions",
             header: "操作",
             render: (m) => (
-              <Button size="sm" variant="secondary" onClick={() => openEdit(m)}>
-                編輯
-              </Button>
+              <div className="flex flex-wrap justify-end gap-1">
+                <Button size="sm" variant="secondary" onClick={() => openEdit(m)}>
+                  編輯
+                </Button>
+                {!m.email_verified && (
+                  <Button
+                    size="sm"
+                    variant="promo"
+                    disabled={confirmingId === m.id}
+                    onClick={() => confirmEmail(m)}
+                  >
+                    {confirmingId === m.id ? "驗證中…" : "驗證 Email"}
+                  </Button>
+                )}
+              </div>
             ),
           },
         ]}

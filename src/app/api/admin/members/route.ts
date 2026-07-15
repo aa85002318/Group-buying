@@ -51,10 +51,32 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: false });
 
   if (search) {
-    query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%,member_code.ilike.%${search}%`);
+    query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%,member_code.ilike.%${search}%,phone.ilike.%${search}%`);
   }
 
   const { data, error: fetchError } = await query;
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
-  return NextResponse.json({ members: data });
+
+  const verifiedMap = new Map<string, boolean>();
+  let page = 1;
+  for (;;) {
+    const { data: authPage, error: authError } = await admin.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    });
+    if (authError) break;
+    for (const user of authPage.users) {
+      verifiedMap.set(user.id, Boolean(user.email_confirmed_at));
+    }
+    if (authPage.users.length < 200) break;
+    page += 1;
+    if (page > 50) break;
+  }
+
+  const members = (data ?? []).map((m) => ({
+    ...m,
+    email_verified: verifiedMap.get(m.id) ?? false,
+  }));
+
+  return NextResponse.json({ members });
 }
