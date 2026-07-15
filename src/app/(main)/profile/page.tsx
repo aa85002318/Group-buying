@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 import { ROLE_LABELS } from "@/lib/utils";
 import { isSupabaseConfigured } from "@/lib/config";
+import { getAuthErrorMessage } from "@/lib/auth/error-messages";
+import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
 import { PROFILE_MENU_GROUPS, STAFF_NAV_LINKS } from "@/lib/navigation";
 import { formatBirthdayDisplay } from "@/lib/validation/customer";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -23,6 +26,8 @@ export default function ProfilePage() {
     role?: string;
   } | null>(null);
   const [emailVerified, setEmailVerified] = useState(true);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -46,6 +51,25 @@ export default function ProfilePage() {
       })
       .catch(() => {});
   }, []);
+
+  const handleResendVerification = async () => {
+    const email = profile?.email?.trim();
+    if (!email) {
+      alert("找不到 Email，請重新登入後再試");
+      return;
+    }
+    setResending(true);
+    setResendMessage(null);
+    try {
+      const result = await requestVerificationEmail(email);
+      if (!result.ok) throw new Error(result.error ?? "寄送失敗");
+      setResendMessage(result.message ?? `驗證信已寄至 ${email}，請查收信箱（含垃圾郵件）。`);
+    } catch (err) {
+      alert(getAuthErrorMessage(err, "resend"));
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleLogout = async () => {
     if (isSupabaseConfigured()) {
@@ -88,12 +112,23 @@ export default function ProfilePage() {
             {barcodeValue ? <MemberBarcode value={barcodeValue} className="sm:shrink-0" /> : null}
           </div>
           {!emailVerified && (
-            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              Email 尚未驗證，完成驗證後才能下單。
-              <Link href={APP_ROUTES.login} className="ml-1 underline">
-                查看說明
+            <div className="mt-3 space-y-2">
+              <EmailVerificationNotice
+                email={profile?.email}
+                resending={resending}
+                onResend={handleResendVerification}
+                compact
+                title="Email 尚未驗證"
+                description="完成驗證後才能下單。沒收到信可重新寄送，或至「編輯資料」處理。"
+                showProfileLink={false}
+              />
+              {resendMessage && (
+                <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-800">{resendMessage}</p>
+              )}
+              <Link href={APP_ROUTES.profileEdit} className="block text-xs text-primary hover:underline">
+                前往編輯資料重新驗證 →
               </Link>
-            </p>
+            </div>
           )}
         </CardContent>
       </Card>
