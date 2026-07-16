@@ -44,6 +44,8 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
   const searchParams = useSearchParams();
 
   const isActive = (href: string) => {
+    if (href.startsWith("http://") || href.startsWith("https://")) return false;
+
     const baseHref = href.split("?")[0];
 
     if (baseHref === "/products") {
@@ -62,16 +64,9 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
       return pathname === "/products" && !currentCategory && !currentSearch;
     }
 
-    if (baseHref === "/group-buy") {
-      return pathname === "/group-buy" || pathname.startsWith("/group-buy/");
-    }
-
-    if (baseHref === "/live") return pathname === "/live" || pathname.startsWith("/live/");
-    if (baseHref === "/videos") return pathname === "/videos" || pathname.startsWith("/videos/");
-    if (baseHref === "/articles") return pathname === "/articles" || pathname.startsWith("/articles/");
     if (baseHref === "/") return pathname === "/";
-
-    return pathname === baseHref;
+    if (pathname === baseHref) return true;
+    return pathname.startsWith(`${baseHref}/`);
   };
 
   return (
@@ -85,20 +80,20 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
       <div className="flex gap-1 overflow-x-auto whitespace-nowrap scrollbar-none md:gap-1.5">
         {links.map(({ label, href, icon: Icon, badge, iconEmoji }) => {
           const active = isActive(href);
-          return (
-            <Link
-              key={`${label}-${href}`}
-              href={href}
-              className={cn(
-                "inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 md:h-12 md:px-4",
-                active
-                  ? "bg-brand-gradient text-white shadow-brand"
-                  : "bg-transparent text-brand-ink hover:bg-brand-blush hover:text-brand-red"
-              )}
-            >
+          const classNameValue = cn(
+            "inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 md:h-12 md:px-4",
+            active
+              ? "bg-brand-gradient text-white shadow-brand"
+              : "bg-transparent text-brand-ink hover:bg-brand-blush hover:text-brand-red"
+          );
+          const content = (
+            <>
               {iconEmoji ? (
                 <span
-                  className={cn("flex h-4 w-4 items-center justify-center text-sm", active ? "text-white" : "text-brand-orange")}
+                  className={cn(
+                    "flex h-4 w-4 items-center justify-center text-sm",
+                    active ? "text-white" : "text-brand-orange"
+                  )}
                   aria-hidden
                 >
                   {iconEmoji}
@@ -126,6 +121,27 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
                   LIVE
                 </span>
               )}
+            </>
+          );
+
+          const isExternal = href.startsWith("http://") || href.startsWith("https://");
+          if (isExternal) {
+            return (
+              <a
+                key={`${label}-${href}`}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={classNameValue}
+              >
+                {content}
+              </a>
+            );
+          }
+
+          return (
+            <Link key={`${label}-${href}`} href={href} className={classNameValue}>
+              {content}
             </Link>
           );
         })}

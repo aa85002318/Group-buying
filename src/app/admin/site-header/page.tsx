@@ -1,200 +1,241 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import type { ProductCategory } from "@/lib/types/database";
-import { getCategoryDisplayIcon } from "@/lib/home";
 import { BRAND_NAME, BRAND_SUBTITLE } from "@/lib/env";
+import {
+  DEFAULT_HEADER_NAV_ITEMS,
+  type HeaderNavBadge,
+  type HeaderNavItem,
+} from "@/lib/site-header";
 
-const PAGE_OPTIONS = [
-  { key: "products", label: "全部商品" },
-  { key: "group_buy", label: "熱門團購" },
-  { key: "live", label: "直播專區" },
-  { key: "videos", label: "影音專區" },
-  { key: "articles", label: "文章專區" },
-] as const;
-
-type SiteHeaderSettingsForm = {
-  brandTitle: string;
-  brandSubtitle: string;
-  pageKeys: string[];
-  categoryIds: string[];
-};
+function createEmptyItem(): HeaderNavItem {
+  return {
+    id: `nav-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    label: "",
+    href: "/",
+    icon_emoji: "",
+  };
+}
 
 export default function AdminSiteHeaderPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState<SiteHeaderSettingsForm>({
-    brandTitle: BRAND_NAME,
-    brandSubtitle: BRAND_SUBTITLE,
-    pageKeys: ["products", "group_buy", "live", "videos", "articles"],
-    categoryIds: [],
-  });
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [brandTitle, setBrandTitle] = useState(BRAND_NAME);
+  const [brandSubtitle, setBrandSubtitle] = useState(BRAND_SUBTITLE);
+  const [navItems, setNavItems] = useState<HeaderNavItem[]>(DEFAULT_HEADER_NAV_ITEMS);
 
   useEffect(() => {
-    Promise.all([fetch("/api/admin/site-header").then((r) => r.json()), fetch("/api/admin/categories").then((r) => r.json())])
-      .then(([s, c]) => {
-        setSettings((prev) => ({
-          ...prev,
-          brandTitle: s?.brandTitle ?? prev.brandTitle,
-          brandSubtitle: s?.brandSubtitle ?? prev.brandSubtitle,
-          pageKeys: Array.isArray(s?.pageKeys) ? s.pageKeys : prev.pageKeys,
-          categoryIds: Array.isArray(s?.categoryIds) ? s.categoryIds : prev.categoryIds,
-        }));
-        setCategories(c?.categories ?? []);
+    fetch("/api/admin/site-header")
+      .then((r) => r.json())
+      .then((d) => {
+        setBrandTitle(d?.brandTitle ?? BRAND_NAME);
+        setBrandSubtitle(d?.brandSubtitle ?? BRAND_SUBTITLE);
+        setNavItems(Array.isArray(d?.navItems) && d.navItems.length > 0 ? d.navItems : DEFAULT_HEADER_NAV_ITEMS);
       })
+      .catch(() => setError("載入失敗"))
       .finally(() => setLoading(false));
   }, []);
 
-  const pageKeySet = useMemo(() => new Set(settings.pageKeys), [settings.pageKeys]);
-  const categoryIdSet = useMemo(() => new Set(settings.categoryIds), [settings.categoryIds]);
+  const updateItem = (id: string, patch: Partial<HeaderNavItem>) => {
+    setNavItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  };
 
-  const togglePageKey = (key: string) => {
-    setSettings((prev) => {
-      const next = new Set(prev.pageKeys);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return { ...prev, pageKeys: Array.from(next) };
+  const moveItem = (index: number, direction: -1 | 1) => {
+    setNavItems((prev) => {
+      const next = [...prev];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      const tmp = next[index];
+      next[index] = next[target];
+      next[target] = tmp;
+      return next;
     });
   };
 
-  const toggleCategory = (id: string) => {
-    setSettings((prev) => {
-      const next = new Set(prev.categoryIds);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return { ...prev, categoryIds: Array.from(next) };
-    });
+  const removeItem = (id: string) => {
+    setNavItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const addItem = () => {
+    setNavItems((prev) => [...prev, createEmptyItem()]);
   };
 
   const save = async () => {
     setSaving(true);
+    setMessage(null);
+    setError(null);
     try {
       const res = await fetch("/api/admin/site-header", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brandTitle: settings.brandTitle,
-          brandSubtitle: settings.brandSubtitle,
-          pageKeys: settings.pageKeys,
-          categoryIds: settings.categoryIds,
+          brandTitle,
+          brandSubtitle,
+          navItems: navItems.map((item) => ({
+            ...item,
+            label: item.label.trim(),
+            href: item.href.trim(),
+            icon_emoji: item.icon_emoji?.trim() || undefined,
+            badge: item.badge || undefined,
+          })),
         }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? "儲存失敗");
 
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        throw new Error(d?.error ?? "儲存失敗");
-      }
+      if (Array.isArray(data.navItems)) setNavItems(data.navItems);
+      setBrandTitle(data.brandTitle ?? brandTitle);
+      setBrandSubtitle(data.brandSubtitle ?? brandSubtitle);
+      setMessage("已儲存，前台頁首會立即更新");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "儲存失敗");
     } finally {
       setSaving(false);
-    }
-    // refresh for updated values
-    const next = await fetch("/api/admin/site-header").then((r) => r.json()).catch(() => null);
-    if (next) {
-      setSettings((prev) => ({
-        ...prev,
-        brandTitle: next.brandTitle ?? prev.brandTitle,
-        brandSubtitle: next.brandSubtitle ?? prev.brandSubtitle,
-        pageKeys: Array.isArray(next.pageKeys) ? next.pageKeys : prev.pageKeys,
-        categoryIds: Array.isArray(next.categoryIds) ? next.categoryIds : prev.categoryIds,
-      }));
     }
   };
 
   return (
     <div className="space-y-4">
-      <AdminPageHeader title="頁首設定" description="設定頁首品牌文案與顯示的直播/影片/文章/商品分類入口" />
+      <AdminPageHeader
+        title="頁首設定"
+        description="設定品牌文案，並自由新增頁首項目與連結（站內路徑或外部網址）"
+        actions={
+          <Button onClick={save} disabled={saving || loading}>
+            {saving ? "儲存中…" : "儲存設定"}
+          </Button>
+        }
+      />
 
       {loading ? (
         <p>載入中…</p>
       ) : (
         <>
-          <div className="rounded-xl bg-white p-4 shadow-card space-y-4">
+          {message && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{message}</p>}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
+
+          <div className="space-y-4 rounded-xl bg-white p-4 shadow-card">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-coffee">品牌主標（主名稱）</p>
-                <Input
-                  value={settings.brandTitle}
-                  onChange={(e) => setSettings((prev) => ({ ...prev, brandTitle: e.target.value }))}
-                  placeholder="CHIMEIDIY 團購"
-                />
+                <p className="text-sm font-medium text-coffee">品牌主標</p>
+                <Input value={brandTitle} onChange={(e) => setBrandTitle(e.target.value)} placeholder="CHIMEIDIY 團購" />
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-coffee">品牌副標（副名稱）</p>
+                <p className="text-sm font-medium text-coffee">品牌副標</p>
                 <Input
-                  value={settings.brandSubtitle}
-                  onChange={(e) => setSettings((prev) => ({ ...prev, brandSubtitle: e.target.value }))}
+                  value={brandSubtitle}
+                  onChange={(e) => setBrandSubtitle(e.target.value)}
                   placeholder="棋美點心屋"
                 />
               </div>
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl bg-white p-4 shadow-card space-y-3">
-              <h2 className="text-sm font-medium text-coffee">指定頁面（直播/影片/文章）</h2>
-              <div className="flex flex-wrap gap-2">
-                {PAGE_OPTIONS.map((p) => (
-                  <label
-                    key={p.key}
-                    className="flex cursor-pointer items-center gap-2 rounded-full border border-border px-3 py-2 text-sm hover:bg-muted"
-                  >
-                    <input type="checkbox" checked={pageKeySet.has(p.key)} onChange={() => togglePageKey(p.key)} />
-                    <span>{p.label}</span>
-                  </label>
+          <div className="space-y-3 rounded-xl bg-white p-4 shadow-card">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-medium text-coffee">頁首導覽項目</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  可新增項目，並設定名稱與連結。連結可用站內路徑（如 `/live`）或完整網址（如 `https://...`）。
+                </p>
+              </div>
+              <Button type="button" variant="secondary" onClick={addItem}>
+                新增項目
+              </Button>
+            </div>
+
+            {navItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">尚未新增項目，請點「新增項目」。</p>
+            ) : (
+              <div className="space-y-3">
+                {navItems.map((item, index) => (
+                  <div key={item.id} className="space-y-3 rounded-xl border border-border p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-coffee">項目 {index + 1}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={index === 0}
+                          onClick={() => moveItem(index, -1)}
+                        >
+                          上移
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={index === navItems.length - 1}
+                          onClick={() => moveItem(index, 1)}
+                        >
+                          下移
+                        </Button>
+                        <Button type="button" size="sm" variant="outline" onClick={() => removeItem(item.id)}>
+                          刪除
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">顯示名稱</p>
+                        <Input
+                          value={item.label}
+                          onChange={(e) => updateItem(item.id, { label: e.target.value })}
+                          placeholder="例如：直播專區"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">連結</p>
+                        <Input
+                          value={item.href}
+                          onChange={(e) => updateItem(item.id, { href: e.target.value })}
+                          placeholder="/live 或 https://line.me/..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">圖示（emoji，選填）</p>
+                        <Input
+                          value={item.icon_emoji ?? ""}
+                          onChange={(e) => updateItem(item.id, { icon_emoji: e.target.value })}
+                          placeholder="例如：📡"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">標記（選填）</p>
+                        <select
+                          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                          value={item.badge ?? ""}
+                          onChange={(e) =>
+                            updateItem(item.id, {
+                              badge: (e.target.value || undefined) as HeaderNavBadge | undefined,
+                            })
+                          }
+                        >
+                          <option value="">無</option>
+                          <option value="hot">HOT</option>
+                          <option value="live">LIVE</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
+            )}
 
-            <div className="rounded-xl bg-white p-4 shadow-card space-y-3">
-              <h2 className="text-sm font-medium text-coffee">商品分類（可選多個）</h2>
-              {categories.length === 0 ? (
-                <p className="text-sm text-muted-foreground">尚未建立分類</p>
-              ) : (
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {categories.map((c) => {
-                    const icon = getCategoryDisplayIcon(c);
-                    return (
-                      <label
-                        key={c.id}
-                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3 text-sm hover:bg-muted"
-                      >
-                        {icon.type === "image" ? (
-                          <div className="relative h-8 w-8 shrink-0">
-                            <Image src={icon.value} alt={c.name} fill className="object-contain" unoptimized />
-                          </div>
-                        ) : (
-                          <span className="text-xl">{icon.value}</span>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate font-medium text-coffee">{c.name}</div>
-                          <div className="truncate text-xs text-muted-foreground">{c.slug}</div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={categoryIdSet.has(c.id)}
-                          onChange={() => toggleCategory(c.id)}
-                        />
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
+            <div className="flex justify-end">
+              <Button type="button" variant="secondary" onClick={addItem}>
+                新增項目
+              </Button>
             </div>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button onClick={save} disabled={saving}>
-              {saving ? "儲存中…" : "儲存設定"}
-            </Button>
           </div>
         </>
       )}
     </div>
   );
 }
-
