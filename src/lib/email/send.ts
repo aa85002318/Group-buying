@@ -1,4 +1,4 @@
-import { BRAND_NAME, SUPPORT_EMAIL } from "@/lib/env";
+import { BRAND_NAME } from "@/lib/env";
 
 export interface SendEmailInput {
   to: string;
@@ -8,10 +8,27 @@ export interface SendEmailInput {
   tags?: Array<{ name: string; value: string }>;
   /** Custom headers, e.g. to reduce Gmail threading. */
   headers?: Record<string, string>;
+  /** Override reply-to; default stays on the same sending domain. */
+  replyTo?: string;
 }
 
 function getEmailFrom(): string {
   return process.env.EMAIL_FROM?.trim() || `${BRAND_NAME} <noreply@chimeidiy.com>`;
+}
+
+/** Prefer same-domain reply-to to avoid spam filters (cross-domain reply-to hurts deliverability). */
+function getReplyTo(): string | undefined {
+  const configured = process.env.SUPPORT_EMAIL?.trim();
+  const from = getEmailFrom();
+  const fromDomain = from.match(/@([^>]+)>?/)?.[1]?.toLowerCase();
+  if (configured && fromDomain) {
+    const supportDomain = configured.includes("@")
+      ? configured.split("@")[1]?.toLowerCase()
+      : "";
+    if (supportDomain && supportDomain === fromDomain) return configured;
+  }
+  const fromAddr = from.match(/<([^>]+)>/)?.[1] ?? from;
+  return fromAddr || undefined;
 }
 
 function isEmailConfigured(): boolean {
@@ -43,6 +60,7 @@ export async function sendEmail({
   html,
   tags,
   headers,
+  replyTo,
 }: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
 
@@ -58,11 +76,13 @@ export async function sendEmail({
   const payload: Record<string, unknown> = {
     from: getEmailFrom(),
     to: [to],
-    reply_to: SUPPORT_EMAIL,
     subject,
     html,
     text: htmlToPlainText(html),
   };
+
+  const resolvedReplyTo = replyTo ?? getReplyTo();
+  if (resolvedReplyTo) payload.reply_to = resolvedReplyTo;
   if (tags?.length) payload.tags = tags;
   if (headers && Object.keys(headers).length) payload.headers = headers;
 
