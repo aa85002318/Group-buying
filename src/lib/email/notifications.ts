@@ -124,7 +124,16 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<SendE
       template
     );
 
-    const result = await sendEmail({ to: recipient.email, subject, html });
+    const result = await sendEmail({
+      to: recipient.email,
+      subject,
+      html,
+      tags: [
+        { name: "type", value: "order_confirmation" },
+        { name: "order", value: order.id.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 50) },
+      ],
+      headers: { "X-Entity-Ref-ID": `order-confirmation-${order.id}` },
+    });
     if (!result.ok) console.error("[email] order confirmation Resend failed:", result.error);
     return result;
   } catch (e) {
@@ -186,7 +195,16 @@ export async function sendOrderUnpaidEmail(orderId: string): Promise<SendEmailRe
       template
     );
 
-    const result = await sendEmail({ to: recipient.email, subject, html });
+    const result = await sendEmail({
+      to: recipient.email,
+      subject,
+      html,
+      tags: [
+        { name: "type", value: "order_unpaid" },
+        { name: "order", value: order.id.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 50) },
+      ],
+      headers: { "X-Entity-Ref-ID": `order-unpaid-${order.id}` },
+    });
     if (!result.ok) console.error("[email] unpaid Resend failed:", result.error);
     return result;
   } catch (e) {
@@ -217,7 +235,16 @@ export async function sendOrderCancelledEmail(orderId: string, reason?: string):
       template
     );
 
-    const result = await sendEmail({ to: recipient.email, subject, html });
+    const result = await sendEmail({
+      to: recipient.email,
+      subject,
+      html,
+      tags: [
+        { name: "type", value: "order_cancelled" },
+        { name: "order", value: order.id.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 50) },
+      ],
+      headers: { "X-Entity-Ref-ID": `order-cancelled-${order.id}` },
+    });
     if (!result.ok) console.error("[email] cancelled Resend failed:", result.error);
     return result;
   } catch (e) {
@@ -249,7 +276,16 @@ export async function sendOrderArrivalEmail(orderId: string): Promise<SendEmailR
       })),
     });
 
-    const result = await sendEmail({ to: recipient.email, subject, html });
+    const result = await sendEmail({
+      to: recipient.email,
+      subject,
+      html,
+      tags: [
+        { name: "type", value: "order_arrival" },
+        { name: "order", value: order.id.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 50) },
+      ],
+      headers: { "X-Entity-Ref-ID": `order-arrival-${order.id}` },
+    });
     if (!result.ok) console.error("[email] arrival Resend failed:", result.error);
     return result;
   } catch (e) {
@@ -263,7 +299,7 @@ export async function sendOrderEmailByType(
   orderId: string,
   type: OrderEmailType,
   options?: { reason?: string }
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; id?: string; to?: string }> {
   try {
     if (!isSupabaseConfigured()) {
       return { ok: false, error: "郵件服務未設定" };
@@ -293,7 +329,7 @@ export async function sendOrderEmailByType(
     if (result.skipped) {
       return { ok: false, error: "伺服器未設定 RESEND_API_KEY，信件未寄出" };
     }
-    return { ok: true };
+    return { ok: true, id: result.id };
   } catch (e) {
     console.error("[email] sendOrderEmailByType failed:", e);
     return { ok: false, error: e instanceof Error ? e.message : "寄送失敗" };

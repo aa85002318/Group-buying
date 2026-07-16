@@ -49,23 +49,23 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailTemplateId, EmailTemplateRecor
   order_unpaid: {
     id: "order_unpaid",
     label: "尚未付款通知",
-    subject: "【{{brand}}】尚未付款提醒 {{order_no}}",
-    heading: "尚未付款通知",
+    subject: "【{{brand}}】訂單付款提醒 {{order_no}}",
+    heading: "訂單付款提醒",
     intro_html:
-      "<p>{{customer_greeting}}您在 {{brand}} 的訂單尚未完成付款，請盡快處理以免影響出貨／取貨安排。</p>",
+      "<p>{{customer_greeting}}您在 {{brand}} 的訂單尚待完成付款，請盡快處理以免影響出貨／取貨安排。</p>",
     footer_note: "",
-    button_label: "前往付款／查看訂單",
-    preheader: "訂單 {{order_no}} 尚未付款，應付 {{total_amount}}",
+    button_label: "前往查看訂單",
+    preheader: "訂單 {{order_no}} 尚待付款，金額 {{total_amount}}",
   },
   order_cancelled: {
     id: "order_cancelled",
     label: "取消訂單通知",
-    subject: "【{{brand}}】訂單已取消 {{order_no}}",
-    heading: "訂單取消通知",
-    intro_html: "<p>{{customer_greeting}}您在 {{brand}} 的訂單已取消。</p>",
+    subject: "【{{brand}}】訂單狀態更新 {{order_no}}",
+    heading: "訂單狀態更新",
+    intro_html: "<p>{{customer_greeting}}您在 {{brand}} 的訂單狀態已更新為取消。</p>",
     footer_note: "如有疑問，請透過客服中心與我們聯繫。",
     button_label: "查看訂單",
-    preheader: "訂單 {{order_no}} 已取消",
+    preheader: "訂單 {{order_no}} 狀態已更新",
   },
 };
 

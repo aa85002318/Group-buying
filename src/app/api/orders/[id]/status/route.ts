@@ -5,6 +5,7 @@ import { processOrderCommissions, clawbackCommissions } from "@/lib/services/com
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockStore } from "@/lib/mock-data";
+import { sendOrderCancelledEmail } from "@/lib/email/notifications";
 
 export async function PATCH(
   request: Request,
@@ -27,6 +28,10 @@ export async function PATCH(
     if (status === "refunded") {
       await clawbackCommissions(id, "訂單退款").catch(() => {});
     }
+    if (status === "cancelled") {
+      const mail = await sendOrderCancelledEmail(id);
+      if (!mail.ok) console.error("[orders] cancelled email failed:", mail.error);
+    }
 
     await logAudit(staffCheck.auth.profile.id, "update_order_status", "order", id, null, { status });
     return NextResponse.json({ order });
@@ -48,7 +53,7 @@ export async function PATCH(
     return NextResponse.json({ order });
   }
 
-  const supabase = await createAdminClient();
+  const supabase = createAdminClient();
   const { data: existing } = await supabase
     .from("orders")
     .select("status, user_id")
@@ -70,5 +75,9 @@ export async function PATCH(
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const mail = await sendOrderCancelledEmail(id);
+  if (!mail.ok) console.error("[orders] cancelled email failed:", mail.error);
+
   return NextResponse.json({ order: data });
 }

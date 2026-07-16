@@ -87,7 +87,11 @@ export default function AdminOrdersPage() {
         alert(data.error ?? "寄送失敗");
         return;
       }
-      alert("信件已寄出");
+      alert(
+        data.id
+          ? `信件已送出至客戶信箱（可至垃圾郵件匣確認）。Resend ID：${data.id}`
+          : "信件已送出至客戶信箱（可至垃圾郵件匣確認）。"
+      );
     } finally {
       setSending(null);
     }

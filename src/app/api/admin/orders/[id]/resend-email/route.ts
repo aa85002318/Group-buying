@@ -26,8 +26,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   if (auth?.profile?.id) {
-    await logAudit(auth.profile.id, `resend_order_email_${type}`, "order", id, null, { type });
+    await logAudit(auth.profile.id, `resend_order_email_${type}`, "order", id, null, {
+      type,
+      resend_id: result.id ?? null,
+    });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, id: result.id ?? null });
 }
