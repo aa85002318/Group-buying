@@ -1,9 +1,18 @@
 import type { LucideIcon } from "lucide-react";
 import {
   ClipboardList,
+  CookingPot,
+  Droplets,
+  Flame,
   Home,
+  Leaf,
   Package,
+  Radio,
   ShoppingBag,
+  Snowflake,
+  Sparkles,
+  Tag,
+  UtensilsCrossed,
   User,
 } from "lucide-react";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -13,22 +22,91 @@ export interface NavLink {
   label: string;
 }
 
+export interface HeaderCategoryLink extends NavLink {
+  icon: LucideIcon;
+  badge?: "live" | "hot";
+  match?: (pathname: string, query: string) => boolean;
+}
+
 export interface BottomNavItem extends NavLink {
   icon: LucideIcon;
   match?: (pathname: string) => boolean;
 }
 
+function matchCategory(pathname: string, query: string, category: string) {
+  if (pathname !== "/products") return false;
+  const params = new URLSearchParams(query);
+  return params.get("category") === category && !params.get("search");
+}
+
 /** Header category chips — scrollable quick filters */
-export const HEADER_CATEGORY_LINKS: NavLink[] = [
-  { label: "全部商品", href: APP_ROUTES.products },
-  { label: "食品", href: "/products?category=食品" },
-  { label: "生鮮食材", href: "/products?category=生鮮食材" },
-  { label: "冷凍食品", href: "/products?category=冷凍食品" },
-  { label: "廚房用品", href: "/products?category=廚房用品" },
-  { label: "居家清潔", href: "/products?category=居家清潔" },
-  { label: "季節限定", href: "/products?category=季節限定" },
-  { label: "團購活動", href: "/group-buy" },
-  { label: "直播專區", href: "/live" },
+export const HEADER_CATEGORY_LINKS: HeaderCategoryLink[] = [
+  {
+    label: "首頁",
+    href: APP_ROUTES.home,
+    icon: Home,
+    match: (pathname, query) => pathname === "/" && !query,
+  },
+  {
+    label: "全部商品",
+    href: APP_ROUTES.products,
+    icon: Package,
+    match: (pathname, query) => {
+      if (pathname !== "/products") return false;
+      const params = new URLSearchParams(query);
+      return !params.get("category") && !params.get("search");
+    },
+  },
+  {
+    label: "熱門團購",
+    href: "/group-buy",
+    icon: Flame,
+    badge: "hot",
+    match: (pathname) => pathname === "/group-buy" || pathname.startsWith("/group-buy/"),
+  },
+  {
+    label: "食品",
+    href: "/products?category=食品",
+    icon: UtensilsCrossed,
+    match: (pathname, query) => matchCategory(pathname, query, "食品"),
+  },
+  {
+    label: "生鮮食材",
+    href: "/products?category=生鮮食材",
+    icon: Leaf,
+    match: (pathname, query) => matchCategory(pathname, query, "生鮮食材"),
+  },
+  {
+    label: "冷凍食品",
+    href: "/products?category=冷凍食品",
+    icon: Snowflake,
+    match: (pathname, query) => matchCategory(pathname, query, "冷凍食品"),
+  },
+  {
+    label: "廚房用品",
+    href: "/products?category=廚房用品",
+    icon: CookingPot,
+    match: (pathname, query) => matchCategory(pathname, query, "廚房用品"),
+  },
+  {
+    label: "居家清潔",
+    href: "/products?category=居家清潔",
+    icon: Droplets,
+    match: (pathname, query) => matchCategory(pathname, query, "居家清潔"),
+  },
+  {
+    label: "季節限定",
+    href: "/products?category=季節限定",
+    icon: Tag,
+    match: (pathname, query) => matchCategory(pathname, query, "季節限定"),
+  },
+  {
+    label: "直播專區",
+    href: "/live",
+    icon: Radio,
+    badge: "live",
+    match: (pathname) => pathname === "/live" || pathname.startsWith("/live/"),
+  },
 ];
 
 /** Mobile bottom tab bar */
@@ -43,8 +121,8 @@ export const BOTTOM_NAV_ITEMS: BottomNavItem[] = [
 /** Homepage quick entry cards */
 export const HOME_QUICK_ENTRIES = [
   { href: APP_ROUTES.products, label: "全部商品", description: "瀏覽與搜尋商品", emoji: "🛍️" },
-  { href: "/group-buy", label: "團購活動", description: "限時團購與預購", emoji: "🏷️" },
-  { href: APP_ROUTES.orders, label: "我的訂單", description: "查詢訂單與取貨碼", emoji: "📦" },
+  { href: "/group-buy", label: "熱門團購", description: "限時團購與預購", emoji: "🔥" },
+  { href: APP_ROUTES.orders, label: "我的團購", description: "查詢訂單與取貨碼", emoji: "📦" },
   { href: APP_ROUTES.profile, label: "會員中心", description: "帳號與個人服務", emoji: "👤" },
 ] as const;
 
@@ -87,7 +165,7 @@ export const FOOTER_SECTIONS = [
     title: "購物",
     links: [
       { href: APP_ROUTES.products, label: "全部商品" },
-      { href: "/group-buy", label: "團購活動" },
+      { href: "/group-buy", label: "熱門團購" },
       { href: "/live", label: "直播專區" },
       { href: "/videos", label: "影音專區" },
     ],
@@ -98,7 +176,7 @@ export const FOOTER_SECTIONS = [
       { href: APP_ROUTES.login, label: "登入" },
       { href: APP_ROUTES.register, label: "註冊" },
       { href: APP_ROUTES.profile, label: "會員中心" },
-      { href: APP_ROUTES.orders, label: "我的訂單" },
+      { href: APP_ROUTES.orders, label: "我的團購" },
       { href: "/support", label: "客服中心" },
     ],
   },
@@ -120,3 +198,10 @@ export function isMinimalChromePath(pathname: string): boolean {
     pathname.startsWith("/auth")
   );
 }
+
+export const GROUP_BUY_QUICK_STATS = [
+  { label: "今日開團", value: "12", suffix: "團", icon: Sparkles },
+  { label: "即將結團", value: "5", suffix: "團", icon: Flame },
+  { label: "滿額免運", value: "", suffix: "", icon: Package },
+  { label: "邀請好友賺購物金", value: "", suffix: "", icon: Tag },
+] as const;

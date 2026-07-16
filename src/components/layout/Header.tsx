@@ -3,20 +3,35 @@
 import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search, ShoppingCart, User } from "lucide-react";
+import { Package, Search, ShoppingCart, User } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { useCart } from "@/hooks/useCart";
-import { HEADER_CATEGORY_LINKS, isMinimalChromePath } from "@/lib/navigation";
+import {
+  GROUP_BUY_QUICK_STATS,
+  HEADER_CATEGORY_LINKS,
+  isMinimalChromePath,
+} from "@/lib/navigation";
 import { APP_ROUTES } from "@/lib/site-links";
 
-const CATEGORY_LINKS = HEADER_CATEGORY_LINKS;
-
-function BrandName({ className }: { className?: string }) {
+function BrandLockup({ className }: { className?: string }) {
   return (
-    <span className={cn("font-bold text-tag-text", className)}>chimeidiy 團購</span>
+    <Link
+      href="/"
+      className={cn("inline-flex min-w-0 shrink-0 items-center gap-2 md:gap-3", className)}
+    >
+      <Logo size="header" className="shrink-0 object-contain" priority />
+      <span className="min-w-0">
+        <span className="block truncate text-base font-bold leading-tight text-brand-ink md:text-lg">
+          棋美團購
+        </span>
+        <span className="mt-0.5 hidden text-xs font-medium text-brand-orange sm:block">
+          一起買・更划算
+        </span>
+      </span>
+    </Link>
   );
 }
 
@@ -27,53 +42,68 @@ function CategoryMenu({ className }: { className?: string }) {
 
   return (
     <nav
+      aria-label="商品分類"
       className={cn(
-        "flex gap-3 overflow-x-auto whitespace-nowrap scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:gap-4",
+        "rounded-2xl border border-brand-line bg-white p-2 shadow-sm md:p-2.5",
         className
       )}
     >
-      {CATEGORY_LINKS.map(({ label, href }) => {
-        const [hrefPath, hrefQuery = ""] = href.split("?");
-        const isAllProducts = href === "/products";
-        const active = isAllProducts
-          ? pathname === "/" ||
-            (pathname === "/products" && (!currentQuery || currentQuery === ""))
-          : hrefPath === pathname &&
-            (hrefQuery ? currentQuery === hrefQuery : !currentQuery || currentQuery === "");
-        const isPromo = label === "限時優惠";
+      <div className="flex gap-1 overflow-x-auto whitespace-nowrap scrollbar-none md:gap-1.5">
+        {HEADER_CATEGORY_LINKS.map(({ label, href, icon: Icon, badge, match }) => {
+          const active = match
+            ? match(pathname, currentQuery)
+            : pathname === href.split("?")[0];
 
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              "inline-flex h-11 shrink-0 items-center rounded-full border px-5 text-sm transition-colors md:px-6",
-              active
-                ? "border-transparent bg-primary text-white"
-                : cn(
-                    "border-tag-bg bg-white text-coffee hover:border-tag-bg hover:bg-card hover:text-primary",
-                    isPromo && "hover:text-promo"
-                  )
-            )}
-          >
-            {label}
-          </Link>
-        );
-      })}
+          return (
+            <Link
+              key={`${label}-${href}`}
+              href={href}
+              className={cn(
+                "inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 md:h-12 md:px-4",
+                active
+                  ? "bg-brand-gradient text-white shadow-brand"
+                  : "bg-transparent text-brand-ink hover:bg-brand-blush hover:text-brand-red"
+              )}
+            >
+              <Icon
+                className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-brand-orange")}
+                aria-hidden
+              />
+              <span>{label}</span>
+              {badge === "hot" && !active && (
+                <span className="text-[10px] font-bold text-brand-orange" aria-hidden>
+                  HOT
+                </span>
+              )}
+              {badge === "live" && (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                    active ? "bg-white/20 text-white" : "bg-brand-red text-white"
+                  )}
+                >
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
+                  LIVE
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }
 
 function SearchBar({
   className,
-  defaultValue = "",
-  compact = false,
+  id = "header-search",
 }: {
   className?: string;
-  defaultValue?: string;
-  compact?: boolean;
+  id?: string;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const defaultValue = searchParams.get("search") ?? "";
   const [query, setQuery] = useState(defaultValue);
 
   useEffect(() => {
@@ -91,45 +121,70 @@ function SearchBar({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={cn("relative shrink-0", className)}>
+    <form onSubmit={handleSubmit} className={cn("relative w-full", className)} role="search">
       <Search
-        className={cn(
-          "pointer-events-none absolute top-1/2 -translate-y-1/2 text-muted-foreground",
-          compact ? "left-3 h-4 w-4" : "left-4 h-4 w-4"
-        )}
+        className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-red"
+        aria-hidden
       />
       <input
+        id={id}
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder={compact ? "搜尋商品…" : "搜尋商品、品牌、團購活動"}
-        className={cn(
-          "w-full rounded-full border border-tag-bg bg-card text-coffee outline-none transition-colors placeholder:text-muted-foreground focus:border-primary",
-          compact
-            ? "h-10 pl-9 pr-3 text-sm"
-            : "h-12 pl-11 pr-4 text-sm"
-        )}
+        placeholder="搜尋商品、品牌或團購活動"
+        className="h-12 w-full rounded-full border-[1.5px] border-[#F2B4AE] bg-brand-warm pl-11 pr-14 text-sm text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-red focus:shadow-brand-ring focus-visible:border-brand-red focus-visible:shadow-brand-ring"
       />
+      <button
+        type="submit"
+        className="absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-brand-gradient text-white shadow-sm transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40"
+        aria-label="搜尋"
+      >
+        <Search className="h-4 w-4" />
+      </button>
     </form>
   );
 }
 
-function CartLink({ className }: { className?: string }) {
+function CartLink({ showLabel = false }: { showLabel?: boolean }) {
   const { items } = useCart();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <Link
       href="/cart"
-      className={cn("relative rounded-full p-2 text-coffee transition-colors hover:text-primary", className)}
-      aria-label="購物車"
+      className="relative inline-flex flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-brand-ink transition hover:bg-brand-blush hover:text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 md:flex-row md:gap-1.5 md:px-2.5"
+      aria-label={`購物車${cartCount > 0 ? `，${cartCount} 件商品` : ""}`}
     >
-      <ShoppingCart className="h-5 w-5" />
-      {cartCount > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-promo px-1 text-[10px] font-medium leading-none text-white">
-          {cartCount > 99 ? "99+" : cartCount}
-        </span>
-      )}
+      <span className="relative">
+        <ShoppingCart className="h-5 w-5" />
+        {cartCount > 0 && (
+          <span className="absolute -right-2 -top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-red px-1 text-[10px] font-bold leading-none text-white">
+            {cartCount > 99 ? "99+" : cartCount}
+          </span>
+        )}
+      </span>
+      {showLabel && <span className="hidden text-xs font-medium md:inline md:text-sm">購物車</span>}
+    </Link>
+  );
+}
+
+function IconAction({
+  href,
+  label,
+  icon: Icon,
+}: {
+  href: string;
+  label: string;
+  icon: typeof User;
+}) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-brand-ink transition hover:bg-brand-blush hover:text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 md:flex-row md:gap-1.5 md:px-2.5"
+      aria-label={label}
+    >
+      <Icon className="h-5 w-5" />
+      <span className="hidden text-xs font-medium md:inline md:text-sm">{label}</span>
     </Link>
   );
 }
@@ -152,7 +207,9 @@ function AuthActions({
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsLoggedIn(!!session);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(!!session);
     });
     return () => subscription.unsubscribe();
@@ -161,12 +218,12 @@ function AuthActions({
   if (variant === "auth-login") {
     return (
       <div className={cn("flex shrink-0 items-center gap-2", className)}>
-        <Link href="/" className="rounded-full px-3 py-1.5 text-sm text-coffee hover:text-primary">
+        <Link href="/" className="rounded-full px-3 py-1.5 text-sm text-brand-ink hover:text-brand-red">
           回首頁
         </Link>
         <Link
           href="/auth/register"
-          className="rounded-full bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary-dark"
+          className="rounded-full bg-brand-gradient px-3 py-1.5 text-sm text-white shadow-sm"
         >
           註冊
         </Link>
@@ -177,12 +234,12 @@ function AuthActions({
   if (variant === "auth-register") {
     return (
       <div className={cn("flex shrink-0 items-center gap-2", className)}>
-        <Link href="/" className="rounded-full px-3 py-1.5 text-sm text-coffee hover:text-primary">
+        <Link href="/" className="rounded-full px-3 py-1.5 text-sm text-brand-ink hover:text-brand-red">
           回首頁
         </Link>
         <Link
           href="/auth/login"
-          className="rounded-full bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary-dark"
+          className="rounded-full bg-brand-gradient px-3 py-1.5 text-sm text-white shadow-sm"
         >
           登入
         </Link>
@@ -190,58 +247,63 @@ function AuthActions({
     );
   }
 
-  const memberHref = isLoggedIn ? APP_ROUTES.profile : APP_ROUTES.login;
-
   return (
-    <div className={cn("flex shrink-0 items-center gap-2 md:gap-4", className)}>
+    <div className={cn("flex shrink-0 items-center gap-0.5 md:gap-1", className)}>
       {isLoggedIn ? (
-        <Link
-          href={memberHref}
-          className="flex items-center gap-1 rounded-full text-sm text-coffee transition-colors hover:text-primary"
-          aria-label="會員中心"
-        >
-          <User className="h-5 w-5 md:hidden" />
-          <span className="hidden md:inline">會員中心</span>
-        </Link>
+        <>
+          <IconAction href={APP_ROUTES.orders} label="我的團購" icon={Package} />
+          <IconAction href={APP_ROUTES.profile} label="會員中心" icon={User} />
+        </>
       ) : (
         <>
-          <Link
-            href={APP_ROUTES.login}
-            className="rounded-full p-2 text-coffee transition-colors hover:text-primary md:hidden"
-            aria-label="登入"
-          >
-            <User className="h-5 w-5" />
-          </Link>
-          <Link
-            href={APP_ROUTES.login}
-            className="hidden rounded-full px-3 py-1.5 text-sm text-coffee hover:text-primary md:inline"
-          >
-            登入
-          </Link>
+          <IconAction href={APP_ROUTES.login} label="我的團購" icon={Package} />
+          <IconAction href={APP_ROUTES.login} label="會員中心" icon={User} />
           <Link
             href={APP_ROUTES.register}
-            className="hidden rounded-full bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary-dark md:inline"
+            className="ml-1 hidden rounded-full bg-brand-gradient px-3 py-1.5 text-sm font-medium text-white shadow-sm md:inline"
           >
             註冊
           </Link>
         </>
       )}
-      <CartLink />
+      <CartLink showLabel />
     </div>
   );
 }
 
-function BrandLockup({ className }: { className?: string }) {
+function QuickPromoStrip() {
   return (
-    <Link href="/" className={cn("inline-flex shrink-0 items-center gap-2 md:gap-3", className)}>
-      <Logo size="header" />
-      <BrandName className="text-base md:text-lg" />
-    </Link>
+    <div
+      aria-label="團購快捷資訊"
+      className="overflow-hidden rounded-xl bg-promo-strip px-3 py-2.5 md:px-4"
+    >
+      <ul className="flex gap-4 overflow-x-auto whitespace-nowrap scrollbar-none md:justify-center md:gap-8">
+        {GROUP_BUY_QUICK_STATS.map(({ label, value, suffix, icon: Icon }) => (
+          <li
+            key={label}
+            className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-[#9F1D1D]"
+          >
+            <Icon className="h-4 w-4 text-brand-orange" aria-hidden />
+            <span>{label}</span>
+            {value ? (
+              <span className="font-bold text-brand-orange">
+                {value}
+                {suffix}
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
 function CategoryMenuFallback() {
-  return <div className="h-11" />;
+  return <div className="h-14 rounded-2xl border border-brand-line bg-white" />;
+}
+
+function SearchFallback({ className }: { className?: string }) {
+  return <div className={cn("h-12 rounded-full bg-brand-warm", className)} />;
 }
 
 export function Header() {
@@ -253,10 +315,7 @@ export function Header() {
     if (!header) return;
 
     const syncHeight = () => {
-      document.documentElement.style.setProperty(
-        "--header-height",
-        `${header.offsetHeight}px`
-      );
+      document.documentElement.style.setProperty("--header-height", `${header.offsetHeight}px`);
     };
 
     syncHeight();
@@ -279,29 +338,45 @@ export function Header() {
   return (
     <header
       ref={headerRef}
-      className="fixed left-0 right-0 top-0 z-50 border-b border-tag-bg bg-white"
+      className="fixed left-0 right-0 top-0 z-50 border-b border-brand-line/80 bg-white/95 shadow-[0_1px_0_rgba(242,222,220,0.9)] backdrop-blur-sm"
     >
-      <div className="w-full px-4 md:px-12 lg:px-[72px]">
-        <div className="flex flex-col gap-3 py-3 md:gap-0">
-          {/* Top row: logo (left) + search & actions (right) */}
-          <div className="flex h-12 items-center gap-2 md:h-[72px] md:gap-4">
-            <BrandLockup className="min-w-0 shrink-0" />
-            <div className="flex min-w-0 flex-1 items-center justify-end gap-2 md:gap-3">
-              {!isAuthPage && (
-                <SearchBar compact className="w-[8.5rem] sm:w-44 md:w-64" />
-              )}
+      <div className="mx-auto w-full max-w-7xl px-4 md:px-8 lg:px-12">
+        <div className="flex flex-col gap-3 py-3 md:gap-3 md:py-4">
+          {/* Layer 1: brand + search + actions */}
+          <div className="flex min-h-[56px] items-center gap-2 md:min-h-[72px] md:gap-6">
+            <BrandLockup className="max-w-[46%] md:max-w-none" />
+
+            {!isAuthPage && (
+              <div className="mx-auto hidden w-[38%] max-w-xl flex-1 md:block">
+                <Suspense fallback={<SearchFallback />}>
+                  <SearchBar id="header-search-desktop" />
+                </Suspense>
+              </div>
+            )}
+
+            <div className="ml-auto">
               <AuthActions variant={authVariant} />
             </div>
           </div>
 
-          {/* Category chips only — no search below */}
+          {/* Mobile full-width search */}
           {!isAuthPage && (
-            <div className="pb-1 md:flex md:h-16 md:items-center md:pb-0">
-              <Suspense fallback={<CategoryMenuFallback />}>
-                <CategoryMenu />
+            <div className="md:hidden">
+              <Suspense fallback={<SearchFallback />}>
+                <SearchBar id="header-search-mobile" />
               </Suspense>
             </div>
           )}
+
+          {/* Layer 2: categories */}
+          {!isAuthPage && (
+            <Suspense fallback={<CategoryMenuFallback />}>
+              <CategoryMenu />
+            </Suspense>
+          )}
+
+          {/* Promo strip */}
+          {!isAuthPage && <QuickPromoStrip />}
         </div>
       </div>
     </header>

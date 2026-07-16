@@ -5,21 +5,23 @@
 @layer base {
   :root {
     --background: #ffffff;
-    --foreground: #333333;
-    --primary: #c94c4c;
+    --foreground: #252525;
+    --primary: #e53935;
     --primary-foreground: #ffffff;
-    --promo: #d92d20;
-    --card: #fff8f5;
-    --card-foreground: #333333;
-    --muted: #f5f5f5;
-    --muted-foreground: #8a8a8a;
-    --border: #e8e4df;
-    --tag-bg: #f7dada;
-    --tag-text: #9f2f2f;
-    --countdown: #9f2f2f;
-    --nav-active: #c94c4c;
-    --nav-inactive: #8a8a8a;
-    --nav-icon: #333333;
+    --promo: #ff6b00;
+    --card: #fff9f5;
+    --card-foreground: #252525;
+    --muted: #fff9f5;
+    --muted-foreground: #737373;
+    --border: #f2dedc;
+    --tag-bg: #fff0eb;
+    --tag-text: #e53935;
+    --countdown: #e53935;
+    --nav-active: #e53935;
+    --nav-inactive: #737373;
+    --nav-icon: #252525;
+    --brand-red: #e53935;
+    --brand-orange: #ff6b00;
     --header-height: 10rem;
     --header-content-gap: 10mm;
   }
@@ -48,5 +50,14 @@
 @layer utilities {
   .safe-bottom {
     padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
