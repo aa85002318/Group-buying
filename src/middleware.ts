@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const protectedPaths = ["/cart", "/checkout", "/orders", "/profile", "/commissions", "/share-rewards", "/notifications", "/payment-report", "/monster"];
+  const protectedPaths = ["/cart", "/checkout", "/orders", "/profile", "/commissions", "/share-rewards", "/notifications", "/payment-report"];
   const adminPaths = ["/admin"];
   const staffPaths = ["/staff"];
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminRichTextEditor } from "@/components/admin/AdminRichTextEditor";
 import type { ProductCategory } from "@/lib/types/database";
 
 export default function AdminArticleNewPage() {
@@ -93,12 +94,14 @@ export default function AdminArticleNewPage() {
           />
         </div>
 
-        <textarea
-          className="input-field min-h-[200px]"
-          placeholder="內容（支援 HTML）"
-          value={form.content}
-          onChange={(e) => setForm({ ...form, content: e.target.value })}
-        />
+        <div>
+          <p className="mb-2 text-sm font-medium text-coffee">文章內容</p>
+          <AdminRichTextEditor
+            value={form.content}
+            onChange={(content) => setForm({ ...form, content })}
+            placeholder="輸入文章內容，可調整文字大小與顏色…"
+          />
+        </div>
 
         <div className="flex gap-2">
           <Button onClick={save} disabled={saving || !form.title}>儲存</Button>

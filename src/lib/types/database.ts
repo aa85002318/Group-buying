@@ -174,6 +174,7 @@ export interface GroupBuyEvent {
   banner_aspect_ratio?: string | null;
   is_homepage_featured?: boolean;
   homepage_sort_order?: number;
+  linked_product_id?: string | null;
   start_at: string;
   end_at: string;
   status: "draft" | "active" | "ended" | "cancelled";
@@ -199,6 +200,8 @@ export interface Store {
   name: string;
   address: string;
   phone: string | null;
+  notes?: string | null;
+  business_hours?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

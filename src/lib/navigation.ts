@@ -69,7 +69,6 @@ export const PROFILE_MENU_GROUPS: ProfileMenuGroup[] = [
   {
     title: "會員服務",
     items: [
-      { href: "/monster", label: "我的麵包小怪獸" },
       { href: "/commissions", label: "我的分潤" },
       { href: "/share-rewards", label: "分享獎勵" },
       { href: "/notifications", label: "通知中心" },

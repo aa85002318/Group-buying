@@ -5,7 +5,6 @@ import { BannerCarousel, type BannerItem } from "@/components/home/BannerCarouse
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { ProductScrollSection } from "@/components/home/ProductScrollSection";
 import { VideoSection } from "@/components/home/VideoSection";
-import { MonsterEntryCard } from "@/components/monster/MonsterEntryCard";
 import {
   getClosingSoonProducts,
   getNewThisWeekProducts,
@@ -52,25 +51,22 @@ export default function HomePage() {
   }, []);
 
   const banners: BannerItem[] = useMemo(() => {
+    const toBanner = (e: GroupBuyEventWithProducts): BannerItem => ({
+      id: e.id,
+      title: e.title,
+      image: e.banner_url!,
+      link: e.linked_product_id ? `/products/${e.linked_product_id}` : `/group-buy/${e.id}`,
+    });
+
     const featuredBanners = featuredEvents
       .filter((e) => e.banner_url && e.status === "active")
-      .map((e) => ({
-        id: e.id,
-        title: e.title,
-        image: e.banner_url!,
-        link: `/group-buy/${e.id}`,
-      }));
+      .map(toBanner);
 
     if (featuredBanners.length > 0) return featuredBanners;
 
     const eventBanners = events
       .filter((e) => e.banner_url && e.status === "active")
-      .map((e) => ({
-        id: e.id,
-        title: e.title,
-        image: e.banner_url!,
-        link: `/group-buy/${e.id}`,
-      }));
+      .map(toBanner);
 
     return eventBanners.length > 0 ? eventBanners : mockBanners;
   }, [events, featuredEvents]);
@@ -84,8 +80,6 @@ export default function HomePage() {
       <BannerCarousel banners={banners} />
 
       <CategoryGrid categories={categories} />
-
-      <MonsterEntryCard />
 
       <ProductScrollSection
         title="本週上新"

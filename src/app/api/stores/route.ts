@@ -11,7 +11,7 @@ export async function GET() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("stores")
-    .select("id, name, address, phone, is_active, created_at, updated_at")
+    .select("id, name, address, phone, notes, business_hours, is_active, created_at, updated_at")
     .eq("is_active", true)
     .order("name");
 

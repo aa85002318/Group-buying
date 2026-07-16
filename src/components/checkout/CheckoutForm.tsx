@@ -258,11 +258,27 @@ export function CheckoutForm() {
               ) : (
                 stores.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} — {s.address}
+                    {s.name}
                   </option>
                 ))
               )}
             </select>
+            {(() => {
+              const store = stores.find((s) => s.id === storeId);
+              if (!store) return null;
+              return (
+                <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
+                  <p className="text-muted-foreground">地址：{store.address}</p>
+                  {store.phone && <p className="text-muted-foreground">電話：{store.phone}</p>}
+                  <div className="mt-2 rounded-md bg-amber-50 px-2 py-1.5 text-amber-950">
+                    <p className="text-xs font-medium">注意事項</p>
+                    <p className="mt-0.5 whitespace-pre-wrap text-xs">
+                      {store.notes?.trim() || "請於營業時間內取貨。"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </section>

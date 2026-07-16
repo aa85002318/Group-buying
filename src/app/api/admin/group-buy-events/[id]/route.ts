@@ -10,6 +10,7 @@ const ALLOWED_FIELDS = [
   "banner_aspect_ratio",
   "is_homepage_featured",
   "homepage_sort_order",
+  "linked_product_id",
   "start_at",
   "end_at",
   "status",
@@ -29,7 +30,10 @@ export async function PATCH(
 
   const updates: Record<string, unknown> = {};
   for (const key of ALLOWED_FIELDS) {
-    if (key in body) updates[key] = body[key];
+    if (key in body) {
+      const value = body[key];
+      updates[key] = key === "linked_product_id" && !value ? null : value;
+    }
   }
 
   if (!isSupabaseConfigured()) {

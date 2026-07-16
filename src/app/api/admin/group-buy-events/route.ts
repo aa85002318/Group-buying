@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     banner_aspect_ratio: body.banner_aspect_ratio ?? "16:9",
     is_homepage_featured: body.is_homepage_featured ?? false,
     homepage_sort_order: body.homepage_sort_order ?? 0,
+    linked_product_id: body.linked_product_id || null,
     start_at: body.start_at,
     end_at: body.end_at,
     status: body.status ?? "draft",

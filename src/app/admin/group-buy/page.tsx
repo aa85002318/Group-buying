@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { useAdminList } from "@/hooks/useAdminList";
 import { groupBuyStatusVariant } from "@/lib/admin/status";
 import { formatDate, GROUP_BUY_STATUS_LABELS } from "@/lib/utils";
-import type { GroupBuyEvent } from "@/lib/types/database";
+import type { GroupBuyEvent, Product } from "@/lib/types/database";
 
 const emptyForm = {
   title: "",
@@ -21,6 +21,7 @@ const emptyForm = {
   banner_url: "",
   is_homepage_featured: false,
   homepage_sort_order: 0,
+  linked_product_id: "",
 };
 
 export default function AdminGroupBuyPage() {
@@ -29,10 +30,18 @@ export default function AdminGroupBuyPage() {
     "events",
     ["title"]
   );
+  const [products, setProducts] = useState<Product[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<GroupBuyEvent | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+
+  useEffect(() => {
+    fetch("/api/admin/products")
+      .then((r) => r.json())
+      .then((d) => setProducts(d.products ?? []))
+      .catch(() => {});
+  }, []);
 
   const openCreate = () => {
     setEditing(null);
@@ -51,6 +60,7 @@ export default function AdminGroupBuyPage() {
       banner_url: e.banner_url ?? "",
       is_homepage_featured: e.is_homepage_featured ?? false,
       homepage_sort_order: e.homepage_sort_order ?? 0,
+      linked_product_id: e.linked_product_id ?? "",
     });
     setShowForm(true);
   };
@@ -68,6 +78,7 @@ export default function AdminGroupBuyPage() {
         banner_aspect_ratio: "16:9",
         is_homepage_featured: form.is_homepage_featured,
         homepage_sort_order: Number(form.homepage_sort_order) || 0,
+        linked_product_id: form.linked_product_id || null,
       };
 
       if (editing) {
@@ -99,11 +110,14 @@ export default function AdminGroupBuyPage() {
     refresh();
   };
 
+  const productName = (id: string | null | undefined) =>
+    products.find((p) => p.id === id)?.name ?? (id ? "已連結商品" : "—");
+
   return (
     <div className="space-y-4">
       <AdminPageHeader
         title="團購管理"
-        description="團購活動、16:9 橫幅與首頁輪播設定"
+        description="團購活動、16:9 橫幅與首頁輪播（可導向商品）"
         actions={<Button onClick={openCreate}>新增團購</Button>}
       />
 
@@ -121,7 +135,7 @@ export default function AdminGroupBuyPage() {
 
           <AdminImageUpload
             label="活動橫幅（16:9）"
-            hint="建議尺寸 16:9，例如 1280×720 像素"
+            hint="建議尺寸 16:9，例如 1280×720 像素；點擊輪播可導向下方指定商品"
             images={form.banner_url ? [form.banner_url] : []}
             onChange={(urls) => setForm({ ...form, banner_url: urls[0] ?? "" })}
             multiple={false}
@@ -129,6 +143,23 @@ export default function AdminGroupBuyPage() {
             aspectRatio="video"
             uploadFolder="group-buy-banners"
           />
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-coffee">輪播導購商品</label>
+            <select
+              className="input-field w-full"
+              value={form.linked_product_id}
+              onChange={(e) => setForm({ ...form, linked_product_id: e.target.value })}
+            >
+              <option value="">不指定（連到團購活動頁）</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">首頁 16:9 輪播點擊後導向此商品頁</p>
+          </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Input type="datetime-local" value={form.start_at} onChange={(e) => setForm({ ...form, start_at: e.target.value })} />
@@ -197,6 +228,11 @@ export default function AdminGroupBuyPage() {
               ) : (
                 <span className="text-xs text-muted-foreground">—</span>
               ),
+          },
+          {
+            key: "product",
+            header: "導購商品",
+            render: (e) => <span className="text-xs">{productName(e.linked_product_id)}</span>,
           },
           {
             key: "period",
