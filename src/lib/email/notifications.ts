@@ -6,6 +6,7 @@ import { buildPickupConfirmationEmail } from "@/lib/email/templates/pickup-confi
 import { buildOrderUnpaidEmail } from "@/lib/email/templates/order-unpaid";
 import { buildOrderCancelledEmail } from "@/lib/email/templates/order-cancelled";
 import { buildOrderArrivalEmail } from "@/lib/email/templates/order-arrival";
+import { getEmailTemplate } from "@/lib/email/template-store";
 
 export type OrderEmailType = "confirmation" | "unpaid" | "cancelled" | "arrival";
 
@@ -79,23 +80,27 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<void>
 
     const store = await getStoreInfo(order.pickup_store_id ?? order.store_id);
     const orderNo = order.order_no ?? order.order_number ?? order.id.slice(0, 8);
-    const { subject, html } = buildOrderConfirmationEmail({
-      customerName: recipient.fullName,
-      orderId: order.id,
-      orderNo,
-      totalAmount: Number(order.total_amount),
-      subtotal: Number(order.subtotal ?? order.total_amount),
-      discount: Number(order.discount_amount ?? 0),
-      shippingFee: Number(order.shipping_fee ?? 0),
-      createdAt: order.created_at,
-      storeName: store?.name,
-      storeAddress: store?.address,
-      items: (order.order_items ?? []).map((i) => ({
-        product_name: i.product_name,
-        quantity: i.quantity,
-        subtotal: Number(i.subtotal ?? 0),
-      })),
-    });
+    const template = await getEmailTemplate("order_confirmation");
+    const { subject, html } = buildOrderConfirmationEmail(
+      {
+        customerName: recipient.fullName,
+        orderId: order.id,
+        orderNo,
+        totalAmount: Number(order.total_amount),
+        subtotal: Number(order.subtotal ?? order.total_amount),
+        discount: Number(order.discount_amount ?? 0),
+        shippingFee: Number(order.shipping_fee ?? 0),
+        createdAt: order.created_at,
+        storeName: store?.name,
+        storeAddress: store?.address,
+        items: (order.order_items ?? []).map((i) => ({
+          product_name: i.product_name,
+          quantity: i.quantity,
+          subtotal: Number(i.subtotal ?? 0),
+        })),
+      },
+      template
+    );
 
     await sendEmail({ to: recipient.email, subject, html });
   } catch (e) {
@@ -143,14 +148,18 @@ export async function sendOrderUnpaidEmail(orderId: string): Promise<void> {
 
     const store = await getStoreInfo(order.pickup_store_id ?? order.store_id);
     const orderNo = order.order_no ?? order.order_number ?? order.id.slice(0, 8);
-    const { subject, html } = buildOrderUnpaidEmail({
-      customerName: recipient.fullName,
-      orderId: order.id,
-      orderNo,
-      totalAmount: Number(order.total_amount),
-      createdAt: order.created_at,
-      storeName: store?.name,
-    });
+    const template = await getEmailTemplate("order_unpaid");
+    const { subject, html } = buildOrderUnpaidEmail(
+      {
+        customerName: recipient.fullName,
+        orderId: order.id,
+        orderNo,
+        totalAmount: Number(order.total_amount),
+        createdAt: order.created_at,
+        storeName: store?.name,
+      },
+      template
+    );
 
     await sendEmail({ to: recipient.email, subject, html });
   } catch (e) {
@@ -167,14 +176,18 @@ export async function sendOrderCancelledEmail(orderId: string, reason?: string):
     if (!recipient?.email) return;
 
     const orderNo = order.order_no ?? order.order_number ?? order.id.slice(0, 8);
-    const { subject, html } = buildOrderCancelledEmail({
-      customerName: recipient.fullName,
-      orderId: order.id,
-      orderNo,
-      totalAmount: Number(order.total_amount),
-      createdAt: order.created_at,
-      reason: reason ?? null,
-    });
+    const template = await getEmailTemplate("order_cancelled");
+    const { subject, html } = buildOrderCancelledEmail(
+      {
+        customerName: recipient.fullName,
+        orderId: order.id,
+        orderNo,
+        totalAmount: Number(order.total_amount),
+        createdAt: order.created_at,
+        reason: reason ?? null,
+      },
+      template
+    );
 
     await sendEmail({ to: recipient.email, subject, html });
   } catch (e) {

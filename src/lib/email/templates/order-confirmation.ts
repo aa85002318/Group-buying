@@ -1,6 +1,12 @@
-import { BRAND_NAME, getSiteUrl } from "@/lib/env";
+import { getSiteUrl } from "@/lib/env";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { emailButton, emailInfoRow, wrapEmailHtml } from "@/lib/email/layout";
+import { emailButton, emailInfoRow, escapeHtml, wrapEmailHtml } from "@/lib/email/layout";
+import {
+  applyEmailTemplateVars,
+  DEFAULT_EMAIL_TEMPLATES,
+  type EmailTemplateRecord,
+  type EmailTemplateVars,
+} from "@/lib/email/template-store";
 
 export interface OrderEmailItem {
   product_name: string;
@@ -22,9 +28,20 @@ export interface OrderConfirmationEmailData {
   items: OrderEmailItem[];
 }
 
-export function buildOrderConfirmationEmail(data: OrderConfirmationEmailData): { subject: string; html: string } {
+export function buildOrderConfirmationEmail(
+  data: OrderConfirmationEmailData,
+  template: EmailTemplateRecord = DEFAULT_EMAIL_TEMPLATES.order_confirmation
+): { subject: string; html: string } {
   const siteUrl = getSiteUrl();
   const orderUrl = `${siteUrl}/orders/${data.orderId}`;
+  const vars: EmailTemplateVars = {
+    customer_name: data.customerName,
+    order_no: data.orderNo,
+    total_amount: formatCurrency(data.totalAmount),
+    created_at: formatDate(data.createdAt),
+    store_name: data.storeName ?? "",
+    store_address: data.storeAddress ?? "",
+  };
 
   const itemsRows = data.items
     .map(
@@ -36,9 +53,16 @@ export function buildOrderConfirmationEmail(data: OrderConfirmationEmailData): {
     )
     .join("");
 
+  const heading = applyEmailTemplateVars(template.heading, vars);
+  const intro = applyEmailTemplateVars(template.intro_html, vars);
+  const footer = applyEmailTemplateVars(template.footer_note, vars);
+  const buttonLabel = applyEmailTemplateVars(template.button_label, vars);
+  const subject = applyEmailTemplateVars(template.subject, vars);
+  const preheader = applyEmailTemplateVars(template.preheader, vars);
+
   const bodyHtml = `
-    <h1 style="margin:0 0 8px;font-size:20px;color:#6B4423;">訂單成立通知</h1>
-    <p style="margin:0 0 20px;color:#666666;font-size:14px;">${data.customerName ? `${data.customerName} 您好，` : "您好，"}感謝您在 ${BRAND_NAME} 下單！我們已收到您的訂單，請至門市取貨時出示訂單 QR Code。</p>
+    <h1 style="margin:0 0 8px;font-size:20px;color:#6B4423;">${escapeHtml(heading)}</h1>
+    <div style="margin:0 0 20px;color:#666666;font-size:14px;line-height:1.7;">${intro}</div>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       ${emailInfoRow("訂單編號", data.orderNo)}
@@ -65,15 +89,15 @@ export function buildOrderConfirmationEmail(data: OrderConfirmationEmailData): {
       <tr><td style="text-align:right;padding:8px 0;font-size:16px;font-weight:700;color:#6B4423;">應付金額</td><td style="text-align:right;padding:8px 0;font-size:16px;font-weight:700;color:#E85D4C;width:100px;">${formatCurrency(data.totalAmount)}</td></tr>
     </table>
 
-    <p style="margin:16px 0 0;font-size:13px;color:#888888;">取貨時請出示訂單頁面的 QR Code，門市人員將協助確認收款與取貨。</p>
-    ${emailButton(orderUrl, "查看訂單與取貨 QR Code")}
+    ${footer ? `<p style="margin:16px 0 0;font-size:13px;color:#888888;">${escapeHtml(footer)}</p>` : ""}
+    ${emailButton(orderUrl, buttonLabel)}
   `;
 
   return {
-    subject: `【${BRAND_NAME}】訂單成立 ${data.orderNo}`,
+    subject,
     html: wrapEmailHtml({
-      title: `訂單成立 ${data.orderNo}`,
-      preheader: `您的訂單 ${data.orderNo} 已成立，應付 ${formatCurrency(data.totalAmount)}`,
+      title: heading,
+      preheader,
       bodyHtml,
     }),
   };
