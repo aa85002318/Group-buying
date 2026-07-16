@@ -4,26 +4,32 @@
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #252525;
-    --primary: #e53935;
+    --background: #fffdfc;
+    --foreground: #292525;
+    --primary: #d92d2d;
+    --primary-light: #f04444;
+    --primary-dark: #a61f2b;
     --primary-foreground: #ffffff;
-    --promo: #ff6b00;
-    --card: #fff9f5;
-    --card-foreground: #252525;
-    --muted: #fff9f5;
-    --muted-foreground: #737373;
-    --border: #f2dedc;
-    --tag-bg: #fff0eb;
-    --tag-text: #e53935;
-    --countdown: #e53935;
-    --nav-active: #e53935;
-    --nav-inactive: #737373;
-    --nav-icon: #252525;
-    --brand-red: #e53935;
-    --brand-orange: #ff6b00;
-    --header-height: 10rem;
-    --header-content-gap: 10mm;
+    --promo: #ffc83d;
+    --pink: #ff8f9c;
+    --pink-light: #fff0f1;
+    --card: #ffffff;
+    --card-foreground: #292525;
+    --muted: #fff0f1;
+    --muted-foreground: #777070;
+    --border: #f0dddd;
+    --tag-bg: #fff0f1;
+    --tag-text: #d92d2d;
+    --countdown: #a61f2b;
+    --nav-active: #d92d2d;
+    --nav-inactive: #777070;
+    --nav-icon: #292525;
+    --brand-red: #d92d2d;
+    --brand-orange: #ff8f9c;
+    --success: #35b77e;
+    --header-height: 4.5rem;
+    --header-content-gap: 0.75rem;
+    --bottom-nav-height: 4.5rem;
   }
 
   *,
@@ -47,9 +53,23 @@
   }
 }
 
+@layer components {
+  .btn-brand {
+    @apply inline-flex items-center justify-center rounded-button bg-brand-gradient px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition hover:opacity-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .card-surface {
+    @apply rounded-card border border-border bg-card shadow-card;
+  }
+}
+
 @layer utilities {
   .safe-bottom {
-    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  }
+
+  .page-pad-x {
+    @apply px-4 md:px-6 lg:px-8;
   }
 
   .scrollbar-none {

@@ -329,6 +329,13 @@ export function CheckoutForm() {
         </div>
       </section>
 
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
+        <p className="font-medium">下單後尚未算正式成立</p>
+        <p className="mt-1 text-amber-900/90">
+          請於期限內完成匯款或門市繳費。匯款需回報後五碼；門市繳費由門市人員確認收款後，訂單才正式成立並可取貨。
+        </p>
+      </div>
+
       <Button
         className="w-full"
         size="lg"

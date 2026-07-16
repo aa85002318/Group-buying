@@ -27,7 +27,10 @@ export default function AdminPaymentsPage() {
 
   return (
     <div className="space-y-4">
-      <AdminPageHeader title="付款審核" description="確認或拒絕會員付款回報" />
+      <AdminPageHeader
+        title="付款審核"
+        description="審核會員匯款回報。確認後訂單才正式成立；門市現場繳費請用「掃碼取貨」標記已收款。"
+      />
 
       <AdminTable
         columns={[

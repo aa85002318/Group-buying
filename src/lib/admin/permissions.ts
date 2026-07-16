@@ -31,6 +31,7 @@ export const ADMIN_ONLY_PATHS = [
   "/admin/reports",
   "/admin/staff",
   "/admin/payment-records",
+  "/admin/integrations",
 ] as const;
 
 export type AdminNavItem = {
@@ -51,6 +52,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/payments", label: "付款" },
   { href: "/admin/pickup", label: "取貨" },
   { href: "/admin/payment-records", label: "金流紀錄", roles: ["admin"] },
+  { href: "/admin/integrations/ecpay", label: "綠界串接", roles: ["admin"] },
   { href: "/admin/staff", label: "門市人員", roles: ["admin"] },
   { href: "/admin/videos", label: "影音", roles: ["admin"] },
   { href: "/admin/livestreams", label: "直播", roles: ["admin"] },

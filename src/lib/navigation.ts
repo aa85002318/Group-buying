@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  ClipboardList,
   CookingPot,
   Droplets,
   Flame,
@@ -109,12 +108,22 @@ export const HEADER_CATEGORY_LINKS: HeaderCategoryLink[] = [
   },
 ];
 
-/** Mobile bottom tab bar */
+/** Mobile bottom tab bar (see MobileBottomNav for raised center button) */
 export const BOTTOM_NAV_ITEMS: BottomNavItem[] = [
   { href: APP_ROUTES.home, label: "首頁", icon: Home, match: (p) => p === "/" },
-  { href: APP_ROUTES.products, label: "商品", icon: Package, match: (p) => p.startsWith("/products") },
-  { href: "/group-buy", label: "團購", icon: ShoppingBag, match: (p) => p.startsWith("/group-buy") },
-  { href: APP_ROUTES.orders, label: "訂單", icon: ClipboardList, match: (p) => p.startsWith("/orders") },
+  {
+    href: "/categories",
+    label: "分類",
+    icon: Package,
+    match: (p) => p.startsWith("/categories") || p.startsWith("/category"),
+  },
+  {
+    href: "/angel",
+    label: "餵養",
+    icon: Sparkles,
+    match: (p) => p.startsWith("/angel") || p.startsWith("/monster"),
+  },
+  { href: APP_ROUTES.cart, label: "購物車", icon: ShoppingBag, match: (p) => p.startsWith("/cart") },
   { href: APP_ROUTES.profile, label: "我的", icon: User, match: (p) => p.startsWith("/profile") },
 ];
 

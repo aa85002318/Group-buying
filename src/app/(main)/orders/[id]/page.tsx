@@ -13,7 +13,22 @@ import {
   SHIPMENT_METHOD_LABELS,
   SHIPMENT_STATUS_LABELS,
 } from "@/lib/utils";
+import {
+  getBankTransferInfo,
+  getPaymentDeadlineHours,
+  ORDER_PAYMENT_FLOW_STEPS,
+  paymentDeadlineAt,
+} from "@/lib/payment/instructions";
 import type { Order, OrderItem, OrderPayment, Shipment, Store } from "@/lib/types/database";
+
+function isPaid(order: Order, payment?: OrderPayment | null) {
+  if (["paid_online", "paid_store"].includes(order.payment_status ?? "")) return true;
+  if (["payment_confirmed", "preparing", "ready_for_pickup", "completed"].includes(order.status)) {
+    return true;
+  }
+  if (payment && ["paid_online", "paid_store"].includes(payment.status)) return true;
+  return false;
+}
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
   const [order, setOrder] = useState<
@@ -57,6 +72,12 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   const shipment = (order.shipments as Shipment[] | undefined)?.[0];
   const payment = (order.payments as OrderPayment[] | undefined)?.[0];
   const pickupStore = shipment?.stores ?? order.stores;
+  const paid = isPaid(order, payment);
+  const gateway = payment?.gateway ?? order.payment_method;
+  const deadline = paymentDeadlineAt(order.created_at);
+  const bank = getBankTransferInfo();
+  const awaiting =
+    !paid && ["awaiting_payment", "payment_reported", "pending"].includes(order.status);
 
   return (
     <div className="space-y-4">
@@ -70,6 +91,55 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       </div>
 
       <OrderStatusBadges paymentStatus={order.payment_status} pickupStatus={order.pickup_status} />
+
+      {awaiting && (
+        <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+          <p className="font-semibold">取貨前請先完成付款</p>
+          <p>
+            下單後請於{" "}
+            <strong>{getPaymentDeadlineHours()} 小時內</strong>
+            （截止：{formatDate(deadline.toISOString())}）完成匯款或至門市繳費。
+            <strong>繳費確認後訂單才正式成立</strong>，才能取貨。
+          </p>
+          <ol className="list-decimal space-y-1 pl-5 text-amber-900/90">
+            {ORDER_PAYMENT_FLOW_STEPS.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+
+          {gateway === "bank_transfer" && (
+            <div className="rounded-lg bg-white/70 p-3 text-coffee">
+              <p className="font-medium">匯款帳號</p>
+              <p>
+                {bank.bankName}（{bank.bankCode}）
+              </p>
+              <p>戶名：{bank.accountName}</p>
+              <p className="font-mono">{bank.accountNumber}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{bank.note}</p>
+            </div>
+          )}
+
+          {gateway === "store_cash" && (
+            <p>
+              您選擇<strong>門市付款</strong>：請至取貨門市繳費，由門市人員在系統標記「已收款」後，訂單才正式成立。
+            </p>
+          )}
+
+          {gateway === "bank_transfer" && (
+            <Link href={`/payment-report/${order.id}`}>
+              <Button className="w-full">
+                {order.status === "payment_reported" ? "再次回報／更新匯款資訊" : "回報匯款資訊"}
+              </Button>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {order.status === "payment_reported" && !paid && (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-coffee">
+          已收到您的匯款回報，等待門市／後台確認中。確認後訂單即正式成立。
+        </div>
+      )}
 
       <div className="space-y-2 rounded-xl bg-white p-4 text-sm shadow-card">
         <p>
@@ -88,7 +158,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         )}
       </div>
 
-      <div className="rounded-xl bg-white p-4 text-sm shadow-card space-y-3">
+      <div className="space-y-3 rounded-xl bg-white p-4 text-sm shadow-card">
         <h2 className="font-medium text-coffee">配送資訊</h2>
         {shipment ? (
           <>
@@ -136,28 +206,22 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         )}
       </div>
 
-      <div className="rounded-xl bg-white p-4 text-sm shadow-card space-y-2">
+      <div className="space-y-2 rounded-xl bg-white p-4 text-sm shadow-card">
         <h2 className="font-medium text-coffee">付款資訊</h2>
-        {payment ? (
+        {payment || gateway ? (
           <>
             <p>
               <span className="text-muted-foreground">方式：</span>
-              {PAYMENT_GATEWAY_LABELS[payment.gateway] ?? payment.gateway}
+              {PAYMENT_GATEWAY_LABELS[gateway ?? ""] ?? gateway ?? "—"}
             </p>
             <p>
               <span className="text-muted-foreground">金額：</span>
-              {formatCurrency(payment.amount)}
+              {formatCurrency(payment?.amount ?? order.total_amount)}
             </p>
-            {payment.merchant_trade_no && (
+            {payment?.merchant_trade_no && (
               <p>
                 <span className="text-muted-foreground">交易編號：</span>
                 <span className="font-mono text-xs">{payment.merchant_trade_no}</span>
-              </p>
-            )}
-            {payment.gateway_trade_no && (
-              <p>
-                <span className="text-muted-foreground">金流回傳編號：</span>
-                <span className="font-mono text-xs">{payment.gateway_trade_no}</span>
               </p>
             )}
           </>
@@ -169,7 +233,13 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       {shipment?.method === "store_pickup" && (
         <div className="rounded-xl bg-white p-4 shadow-card">
           <h2 className="mb-3 font-medium">取貨 QR Code</h2>
-          <PickupQrCode orderId={order.id} />
+          {paid ? (
+            <PickupQrCode orderId={order.id} />
+          ) : (
+            <p className="rounded-lg bg-muted px-3 py-4 text-center text-sm text-muted-foreground">
+              付款確認後才會開放取貨 QR Code。請先完成匯款回報或至門市繳費。
+            </p>
+          )}
         </div>
       )}
 
@@ -188,7 +258,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             <span>商品小計</span>
             <span>{formatCurrency(order.subtotal)}</span>
           </div>
-          {order.discount > 0 && (
+          {(order.discount ?? 0) > 0 && (
             <div className="flex justify-between text-muted-foreground">
               <span>折扣</span>
               <span>-{formatCurrency(order.discount)}</span>
@@ -211,13 +281,6 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           <p className="whitespace-pre-wrap text-muted-foreground">{order.notes}</p>
         </div>
       )}
-
-      {["awaiting_payment", "payment_reported"].includes(order.status) &&
-        payment?.gateway === "bank_transfer" && (
-          <Link href={`/payment-report/${order.id}`}>
-            <Button className="w-full">回報銀行轉帳</Button>
-          </Link>
-        )}
     </div>
   );
 }

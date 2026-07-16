@@ -41,9 +41,9 @@ export const ROLE_LABELS: Record<string, string> = {
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   pending: "待處理",
-  awaiting_payment: "待付款",
-  payment_reported: "待確認付款",
-  payment_confirmed: "付款已確認",
+  awaiting_payment: "待付款（尚未正式成立）",
+  payment_reported: "已回報匯款（待確認）",
+  payment_confirmed: "付款已確認（訂單成立）",
   paid: "已付款",
   preparing: "備貨中",
   ready_for_pickup: "待取貨",
@@ -77,7 +77,7 @@ export const PAYMENT_STATUS_LABELS: Record<string, string> = {
 
 export const PAYMENT_GATEWAY_LABELS: Record<string, string> = {
   store_cash: "門市付款",
-  bank_transfer: "銀行轉帳",
+  bank_transfer: "銀行匯款",
   ecpay: "綠界金流",
   newebpay: "藍新金流",
   manual: "手動紀錄",

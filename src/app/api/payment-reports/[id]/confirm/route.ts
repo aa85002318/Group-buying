@@ -46,7 +46,23 @@ export async function PATCH(
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
 
   if (status === "confirmed") {
-    await admin.from("orders").update({ status: "payment_confirmed" }).eq("id", data.order_id);
+    await admin
+      .from("orders")
+      .update({
+        status: "payment_confirmed",
+        payment_status: "paid_online",
+        updated_at: now,
+      })
+      .eq("id", data.order_id);
+
+    await admin
+      .from("payments")
+      .update({
+        status: "paid_online",
+        paid_at: now,
+      })
+      .eq("order_id", data.order_id)
+      .eq("status", "unpaid");
   }
 
   await logAudit(auth!.profile.id, "confirm_payment_report", "payment_report", id, null, data);
