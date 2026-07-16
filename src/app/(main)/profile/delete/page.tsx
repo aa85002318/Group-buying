@@ -81,6 +81,22 @@ export default function ProfileDeletePage() {
         <p className="mt-1 text-sm text-muted-foreground">目前帳號：{email || "—"}</p>
       </div>
 
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+        <p className="font-medium">刪除會員前請先確認</p>
+        <p className="mt-1 leading-relaxed">
+          請確認您的訂單皆已完成（含取貨）。若尚有等待中的訂單，請先{" "}
+          <Link href="/support" className="font-medium underline underline-offset-2">
+            聯繫客服
+          </Link>
+          ，完成後再刪除帳號。
+        </p>
+        <p className="mt-2">
+          <Link href={APP_ROUTES.orders} className="underline underline-offset-2">
+            查看我的訂單 →
+          </Link>
+        </p>
+      </div>
+
       <div className="space-y-3 rounded-xl bg-white p-4 text-sm shadow-card">
         <p className="font-medium text-coffee">刪除後將立即生效，且無法復原：</p>
         <ul className="list-disc space-y-1 pl-5 text-muted-foreground">

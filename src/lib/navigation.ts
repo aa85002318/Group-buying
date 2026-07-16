@@ -171,7 +171,8 @@ export const STAFF_NAV_LINKS: NavLink[] = [
   { href: "/admin/orders", label: "訂單管理" },
 ];
 
-export const FOOTER_SECTIONS = [
+/** Public footer — no admin / staff tools */
+export const FOOTER_SECTIONS: { title: string; links: NavLink[] }[] = [
   {
     title: "購物",
     links: [
@@ -179,6 +180,7 @@ export const FOOTER_SECTIONS = [
       { href: "/group-buy", label: "熱門團購" },
       { href: "/live", label: "直播專區" },
       { href: "/videos", label: "影音專區" },
+      { href: "/articles", label: "文章專區" },
     ],
   },
   {
@@ -187,16 +189,8 @@ export const FOOTER_SECTIONS = [
       { href: APP_ROUTES.login, label: "登入" },
       { href: APP_ROUTES.register, label: "註冊" },
       { href: APP_ROUTES.profile, label: "會員中心" },
-      { href: APP_ROUTES.orders, label: "我的團購" },
+      { href: APP_ROUTES.orders, label: "我的訂單" },
       { href: "/support", label: "客服中心" },
-    ],
-  },
-  {
-    title: "門市與後台",
-    links: [
-      { href: APP_ROUTES.staffLogin, label: "門市登入" },
-      { href: APP_ROUTES.admin, label: "管理後台" },
-      { href: APP_ROUTES.staffPickupScan, label: "門市掃碼" },
     ],
   },
   {
@@ -207,7 +201,17 @@ export const FOOTER_SECTIONS = [
       { href: APP_ROUTES.accountDeletion, label: "刪除帳號說明" },
     ],
   },
-] as const;
+];
+
+/** Shown in footer only for admin / store_staff */
+export const FOOTER_STAFF_SECTION: { title: string; links: NavLink[] } = {
+  title: "門市作業",
+  links: [
+    { href: APP_ROUTES.staffLogin, label: "門市登入" },
+    { href: APP_ROUTES.admin, label: "管理後台" },
+    { href: APP_ROUTES.staffPickupScan, label: "門市掃碼" },
+  ],
+};
 
 /** Paths that use minimal chrome (no header category row / bottom nav) */
 export function isMinimalChromePath(pathname: string): boolean {

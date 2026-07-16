@@ -17,12 +17,20 @@ export default function AccountDeletionInfoPage() {
         對帳號刪除入口的要求。
       </p>
 
-      <h2>一、App／網站內自行刪除（建議）</h2>
+      <h2>一、刪除前請先確認訂單</h2>
+      <p>
+        刪除會員前，請先確認您的訂單皆已完成（含取貨）。若尚有等待中的訂單，請先{" "}
+        <Link href="/support">聯繫客服</Link>
+        ，處理完成後再申請刪除帳號。
+      </p>
+
+      <h2>二、App／網站內自行刪除（建議）</h2>
       <ol>
         <li>登入會員帳號</li>
         <li>
           前往 <Link href={APP_ROUTES.profile}>會員中心</Link> →「刪除帳號」
         </li>
+        <li>確認訂單皆已完成；若有等待中訂單請先聯繫客服</li>
         <li>閱讀注意事項後，輸入確認文字並送出</li>
       </ol>
       <p>
@@ -31,7 +39,7 @@ export default function AccountDeletionInfoPage() {
         （需先登入）
       </p>
 
-      <h2>二、刪除後會發生什麼</h2>
+      <h2>三、刪除後會發生什麼</h2>
       <ul>
         <li>帳號立即無法再登入使用</li>
         <li>姓名、Email、手機、生日等個人識別資料會被匿名化或清除</li>
@@ -42,7 +50,7 @@ export default function AccountDeletionInfoPage() {
         <li>此操作無法復原；若日後要使用本服務，需重新註冊新帳號</li>
       </ul>
 
-      <h2>三、無法線上刪除時</h2>
+      <h2>四、無法線上刪除時</h2>
       <p>
         若您無法登入、或為門市／管理權限帳號需人工協助，請寄信至{" "}
         <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
@@ -50,7 +58,7 @@ export default function AccountDeletionInfoPage() {
         日內完成，法令另有規定者除外）。
       </p>
 
-      <h2>四、相關文件</h2>
+      <h2>五、相關文件</h2>
       <p>
         <Link href="/privacy">隱私權政策</Link>
         {" · "}
