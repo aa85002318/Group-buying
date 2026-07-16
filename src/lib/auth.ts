@@ -33,7 +33,13 @@ export async function getAuthUser() {
     .eq("id", user.id)
     .single();
 
-  return profile ? { user, profile } : null;
+  if (!profile) return null;
+  if (profile.is_active === false) {
+    await supabase.auth.signOut();
+    return null;
+  }
+
+  return { user, profile };
 }
 
 export function isEmailVerified(user: unknown): boolean {

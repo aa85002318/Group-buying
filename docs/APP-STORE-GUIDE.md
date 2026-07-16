@@ -1,169 +1,194 @@
-# App 上架注意事項（chimeidiy 團購）
+# App 設計與上架流程（CHIMEIDIY 團購）
 
-目前網站是 **Next.js 響應式網頁**，手機瀏覽器已可完整使用。若要上架 **App Store / Google Play**，有三條常見路線，建議依預算與時程選擇。
-
----
-
-## 路線比較
-
-| 方案 | 說明 | 上架難度 | 適合時機 |
-|------|------|----------|----------|
-| **A. PWA** | 使用者「加入主畫面」，像 App 一樣開啟 | 不需商店審核 | 先驗證市場、內部測試 |
-| **B. WebView 包殼**（Capacitor / Expo WebView） | 現有網站包進原生殼 | 中 | 要快上架、功能以網頁為主 |
-| **C. 原生 / React Native** | 重做或部分原生畫面 | 高 | 需要相機、推播、離線等深度整合 |
-
-**建議：** 先上線 **HTTPS 正式網域** + 手機版網頁穩定，再決定是否包殼或做原生 App。
-
----
-
-## 不論哪條路，上線前必備
-
-### 1. 正式 HTTPS 網域
-
-- App Store / Play 審核與金流、登入回調都要求 **HTTPS**
-- 設定 `NEXT_PUBLIC_SITE_URL=https://你的網域`
-- Supabase **Site URL** 與 **Redirect URLs** 改為 `https://你的網域/auth/callback`
-
-### 2. 隱私權與服務條款
-
-- 需有**隱私權政策**網址（收集：姓名、電話、Email、訂單、生日）
-- 建議加上**服務條款**、退換貨說明
-- App 商店表單會要求填 Privacy Policy URL
-
-### 3. 帳號與登入
-
-- **Apple**：若提供 Google / Email 登入，通常還需提供 **Sign in with Apple**（Guideline 4.8）
-- **Google Play**：資料安全表單需說明收集哪些資料、是否加密傳輸
-- 刪除帳號：兩平台 increasingly 要求提供**刪除帳號**方式（可在會員中心或客服流程）
-
-### 4. 金流（若 App 內付款）
-
-- **實體商品團購**：一般可用綠界 / 藍新等網頁金流，**不必**走 Apple IAP
-- **數位內容或訂閱**：可能觸發 Apple 30% IAP 規定，需個案評估
-- 本專案為團購取貨，多屬實體商品，但仍建議在審核說明中寫清楚「線下取貨、實體商品」
-
-### 5. 推播通知（選用）
-
-- 網頁：Web Push（需 HTTPS + Service Worker）
-- 原生殼：Firebase Cloud Messaging（FCM）+ APNs（iOS）
-- 訂單狀態、取貨提醒可之後再加
-
-### 6. 深層連結（Deep Link）
-
-若用 WebView 或原生殼，需設定：
-
-- iOS：**Universal Links**（`apple-app-site-association`）
-- Android：**App Links**（`assetlinks.json`）
-- 驗證信、分享連結要能開回 App 或網頁
-
-目前網頁路徑如 `/auth/callback`、`/orders/[id]` 可沿用。
-
-### 7. 商店素材
-
-| 項目 | Apple App Store | Google Play |
-|------|-----------------|-------------|
-| 開發者帳號 | Apple Developer（年費） | Google Play Console（一次性） |
-| 截圖 | 多種 iPhone 尺寸 | 手機 + 可選平板 |
-| 說明 | 繁中描述、關鍵字 | 簡短 / 完整說明 |
-| 分級 | 問卷 | IARC 分級 |
-| 測試 | TestFlight | 內部 / 封閉測試軌道 |
-
-### 8. 本專案技術檢查
-
-- [ ] Migration 已在 Supabase 執行（會員、商品欄位）
-- [ ] Resend 驗證信 / 訂單信可正常寄送
-- [ ] 後台 `/admin` 僅 staff / admin 可進
-- [ ] 門市掃碼 `/staff/pickup-scan` 在手機相機可運作
-- [ ] 會員條碼 `/profile` QR 可被門市掃描
-
----
-
-## 方案 A：PWA（最快）
-
-1. 新增 `manifest.json`（名稱、圖示、theme color）
-2. 可選 Service Worker（離線快取、推播）
-3. 使用者用 Safari / Chrome「加入主畫面」
-
-**優點：** 無審核、改版即時  
-**缺點：** iOS 推播與部分 API 有限制；不會出現在 App Store 搜尋
-
----
-
-## 方案 B：Capacitor 包殼（推薦給現有 Next.js）
-
-本專案已設定 Capacitor，App 以 WebView 載入正式站 `https://shop.chimeidiygroupbuying.com`（改版網站即時生效，無需重新送審每次小改）。
-
-### 專案設定
+目前路線：**Capacitor WebView 包殼** — App 開啟後載入正式站  
+`https://shop.chimeidiygroupbuying.com`  
+（網站改版即時生效，多數內容不必重送審）
 
 | 項目 | 值 |
 |------|-----|
-| App ID | `com.chimeidiy.groupbuy` |
-| 顯示名稱 | 棋美團購 |
+| App 顯示名稱 | CHIMEIDIY 團購 |
+| Bundle / Application ID | `com.chimeidiy.groupbuy` |
 | 設定檔 | `capacitor.config.ts` |
-| 本機占位 | `www/`（實際載入遠端網址） |
+| iOS / Android 專案 | `ios/`、`android/` |
 
-### 常用指令
+---
+
+## 一、App 設計規格（建議）
+
+### 1. 產品定位
+
+- **名稱：** CHIMEIDIY 團購  
+- **副標／品牌：** 棋美點心屋  
+- **一句話：** 線上團購、門市取貨、訂單與會員一站完成  
+- **核心流程：** 瀏覽 → 下單 → 付款／取貨 → 訂單／條碼 →（選用）LINE 通知
+
+### 2. 視覺與品牌
+
+| 項目 | 建議 |
+|------|------|
+| 主色 | `#E53935`（品牌紅） |
+| 強調色 | `#FF6B00`（橘） |
+| 狀態列 | 淺色文字 + 紅色底（已設定） |
+| Splash | 紅底 + Logo／角色圖 |
+| App Icon | 1024×1024（無透明、無圓角；系統會裁切） |
+| 頁首 | Logo 圖 +「CHIMEIDIY 團購」／「棋美點心屋」 |
+
+後台可調頁首導覽：`/admin/site-header`（可新增項目與連結）。
+
+### 3. 畫面與資訊架構（App 內＝網站）
+
+```
+啟動 Splash
+  └─ WebView 首頁
+       ├─ 商品 / 團購 / 直播 / 影音 / 文章（頁首可自訂）
+       ├─ 購物車 → 結帳
+       ├─ 會員中心（資料、條碼、LINE 社群）
+       ├─ 我的訂單（取貨 QR）
+       └─ 門市掃碼（僅 staff／admin）
+```
+
+**設計原則：**
+
+- 維持現有響應式網頁，不另做一套原生 UI  
+- 手機優先：觸控區塊夠大、底部導覽可用  
+- Safe Area：瀏海／底部橫條留白（已用 `viewport-fit=cover`）  
+- 外部連結（LINE 社群等）用系統瀏覽器或新分頁開啟
+
+### 4. 權限與原生能力
+
+| 能力 | 用途 | 狀態 |
+|------|------|------|
+| 網路 | 載入網站 | 必要 |
+| 相機 | 門市掃碼 `/staff/pickup-scan` | iOS／Android 已申請說明 |
+| 推播 | 到貨／付款提醒 | 可後期（FCM + APNs） |
+| LINE | 登入綁定、訂單通知 | 程式已預留，需填 Channel Token |
+
+### 5. 審核用「設計說明」可這樣寫
+
+> 本 App 為 CHIMEIDIY 團購官方客戶端，提供實體商品團購瀏覽、下單、門市取貨與會員服務。內容透過安全 HTTPS 連線載入官方網站；付款為實體商品／線下取貨情境，非數位內容訂閱。
+
+---
+
+## 二、上架前必備清單
+
+### 帳號與金流
+
+- [ ] **Apple Developer**（年費）  
+- [ ] **Google Play Console**（一次性註冊費）  
+- [ ] Vercel：`NEXT_PUBLIC_SITE_URL=https://shop.chimeidiygroupbuying.com`  
+- [ ] Supabase Site URL + Redirect：`…/auth/callback`
+
+### 法務與帳號（商店常擋）
+
+- [x] **隱私權政策**公開網址：`https://shop.chimeidiygroupbuying.com/privacy`  
+- [x] **服務條款**：`https://shop.chimeidiygroupbuying.com/terms`  
+- [x] **刪除帳號說明**（商店填寫用）：`https://shop.chimeidiygroupbuying.com/account-deletion`  
+- [x] **App 內刪除入口**：會員中心 → 刪除帳號（`/profile/delete`）  
+- [ ] 若有第三方登入：Apple 常要求 **Sign in with Apple**  
+- [ ] 審核用**測試帳號**（一般會員 + 可選門市帳號）
+
+### 素材
+
+| 素材 | Apple | Google |
+|------|-------|--------|
+| App Icon | 1024×1024 | 512×512 |
+| 截圖 | 6.7"／6.1" 等 iPhone | 手機（可選平板） |
+| 說明文案 | 繁中短述 + 關鍵字 | 短述 + 完整說明 |
+| 分級 | 問卷 | IARC |
+
+### 技術實測（實機）
 
 ```bash
-# 同步原生專案（改 capacitor.config 或 www 後執行）
 npm run cap:sync
+npm run cap:ios      # 或 cap:android
+```
 
-# 用 Xcode / Android Studio 開啟
+- [ ] 註冊／登入／Email 驗證回調  
+- [ ] 下單、購物車、訂單列表、取貨 QR  
+- [ ] 會員條碼  
+- [ ] 門市掃碼（相機權限）  
+- [ ] Android 返回鍵  
+- [ ] Cookie／Session 不會異常登出  
+
+---
+
+## 三、上架流程（逐步）
+
+### Phase A — 準備（約 1–2 週）
+
+1. 補齊隱私權、條款、刪除帳號說明頁  
+   - 已就緒：`/privacy`、`/terms`、`/account-deletion`、`/profile/delete`
+2. 產出 App Icon、Splash、商店截圖（用實機或模擬器截正式站）  
+3. 確認正式站穩定：`https://shop.chimeidiygroupbuying.com`  
+4. 準備審核測試帳號與操作說明（下單路徑寫清楚）
+
+### Phase B — iOS（App Store）
+
+1. 開啟 `ios` 專案：`npm run cap:ios`  
+2. Xcode → Signing & Capabilities（Team、Bundle ID）  
+3. 設定 App Icon／Launch Screen  
+4. Archive → 上傳至 App Store Connect  
+5. 填寫：名稱、描述、關鍵字、隱私權 URL、截圖、年齡分級  
+6. **App Privacy** 問卷（Email、電話、訂單等）  
+7. 送審前用 **TestFlight** 內部測試  
+8. Submit for Review  
+
+**審核備註建議：** 說明為實體團購／門市取貨；附測試帳號；標註主要流程路徑。
+
+### Phase C — Android（Google Play）
+
+1. 開啟 `android`：`npm run cap:android`  
+2. 建立簽章 keystore（妥善備份）  
+3. 產出 AAB（Play 要 App Bundle）  
+4. Play Console → 建立應用程式  
+5. 填商店資訊、圖示、截圖、內容分級  
+6. **資料安全**表單  
+7. 先走**內部測試** → 再封閉／開放測試 → 正式發布  
+
+### Phase D — 上架後維運
+
+- **網站小改**：直接部署 Vercel，App 通常不必重送審  
+- **改 Bundle ID、權限、原生殼**：需新版 App 送審  
+- 監控：登入失敗、白屏、相機權限拒絕率  
+- 可選下一階段：推播、Universal Links／App Links、LINE 正式開通  
+
+---
+
+## 四、建議時程總覽
+
+```
+現在     正式站已上線 + Capacitor 專案已建立
+週 1–2   隱私權／條款／刪除帳號 + Icon／截圖 + 實機測試
+週 2–3   TestFlight + Play 內部測試
+週 3–5   送審、依退件修正、正式上架
+之後     推播／深度連結／LINE 通知（選用）
+```
+
+---
+
+## 五、其他路線（對照）
+
+| 方案 | 說明 | 適合 |
+|------|------|------|
+| **PWA** | 加入主畫面，不經商店 | 最快驗證，但無商店搜尋 |
+| **Capacitor（現行）** | 網站包進 App | 要上架、功能以網頁為主 |
+| **React Native** | 重做 UI | 要強原生體驗／離線 |
+
+---
+
+## 六、常用指令
+
+```bash
+npm run cap:sync
 npm run cap:ios
 npm run cap:android
-```
 
-### 本機開發（可選）
-
-若要 App 連本機 Next.js（例如 `http://192.168.x.x:3003`）：
-
-```bash
+# 本機除錯（測完改回正式網址再 sync）
 CAPACITOR_SERVER_URL=http://192.168.x.x:3003 npm run cap:sync
-npm run cap:ios   # 或 cap:android
-```
-
-測完記得改回正式網址再 sync。
-
-### 實機測試清單
-
-- [ ] 註冊 / 登入 / 驗證信回調 `/auth/callback`
-- [ ] 購物車、結帳、訂單列表
-- [ ] 會員條碼 `/profile`
-- [ ] 門市掃碼 `/staff/pickup-scan`（已申請相機權限）
-- [ ] Android 返回鍵行為
-
-### 上架前
-
-1. 在 Xcode 設定 Signing、Bundle ID、App 圖示與截圖
-2. 在 Android Studio 設定簽章、應用圖示
-3. 部署含 `CapacitorShell` 的 Next.js 至正式網域（狀態列、Splash、返回鍵）
-4. 隱私權政策 URL、測試帳號（見上文「不論哪條路，上線前必備」）
-
-**注意：**
-
-- WebView 內登入、Cookie、Supabase session 要實機測
-- 相機掃碼需申請相機權限說明（Info.plist / AndroidManifest）
-- 審核時提供測試帳號給 Apple / Google
-
----
-
-## 方案 C：React Native / Expo
-
-適合長期要做推播、原生 UX、離線購物車。可共用 Supabase API 與部分 TypeScript 邏輯，但 UI 需重做。
-
----
-
-## 建議時程
-
-```
-Phase 1  正式 HTTPS 網域 + 手機版網頁穩定（現在）
-Phase 2  隱私權 / 條款頁、刪除帳號流程
-Phase 3  PWA 或 TestFlight 內測
-Phase 4  Capacitor 包殼上架（若需要商店曝光）
 ```
 
 相關文件：
 
-- 部署：`docs/APP-DEPLOYMENT-GUIDE.md`
-- 多裝置開發：`docs/MOBILE-ACCESS.md`
-- Supabase：`docs/SUPABASE-DASHBOARD-CHECKLIST.md`
+- 部署：`docs/APP-DEPLOYMENT-GUIDE.md`  
+- 多裝置開發：`docs/MOBILE-ACCESS.md`  
+- Supabase：`docs/SUPABASE-DASHBOARD-CHECKLIST.md`  

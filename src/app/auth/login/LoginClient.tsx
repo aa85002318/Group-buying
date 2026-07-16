@@ -18,6 +18,7 @@ export default function LoginClient() {
   const next = searchParams.get("next") ?? "/";
   const lineUserId = searchParams.get("line_user_id");
   const errorCode = searchParams.get("error");
+  const deleted = searchParams.get("deleted") === "1";
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -81,6 +82,19 @@ export default function LoginClient() {
       await supabase.auth.signOut();
       setLoginError("email_not_confirmed");
       return;
+    }
+
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_active")
+        .eq("id", data.user.id)
+        .single();
+      if (profile && profile.is_active === false) {
+        await supabase.auth.signOut();
+        setLoginError("此帳號已刪除，無法登入。");
+        return;
+      }
     }
 
     // If LINE login happened first, callback redirected here with line_user_id.
@@ -176,6 +190,12 @@ export default function LoginClient() {
       <BrandHeading priority />
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white p-6 shadow-card">
         <p className="text-center text-sm text-coffee/70">登入您的帳號</p>
+
+        {deleted && (
+          <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
+            帳號已刪除。若需再次使用本服務，請重新註冊。
+          </p>
+        )}
 
         {errorMessage && (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{errorMessage}</p>

@@ -99,6 +99,7 @@ export interface Profile {
   referrer_user_id: string | null;
   store_id: string | null;
   store_credit_balance?: number;
+  is_active?: boolean;
   created_at: string;
   updated_at: string;
 }

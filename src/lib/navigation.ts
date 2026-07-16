@@ -134,7 +134,10 @@ export interface ProfileMenuGroup {
 export const PROFILE_MENU_GROUPS: ProfileMenuGroup[] = [
   {
     title: "帳號設定",
-    items: [{ href: APP_ROUTES.profileEdit, label: "編輯會員資料" }],
+    items: [
+      { href: APP_ROUTES.profileEdit, label: "編輯會員資料" },
+      { href: APP_ROUTES.profileDelete, label: "刪除帳號" },
+    ],
   },
   {
     title: "購物與訂單",
@@ -151,6 +154,14 @@ export const PROFILE_MENU_GROUPS: ProfileMenuGroup[] = [
       { href: "/share-rewards", label: "分享獎勵" },
       { href: "/notifications", label: "通知中心" },
       { href: "/support", label: "客服中心" },
+    ],
+  },
+  {
+    title: "法務資訊",
+    items: [
+      { href: APP_ROUTES.privacy, label: "隱私權政策" },
+      { href: APP_ROUTES.terms, label: "服務條款" },
+      { href: APP_ROUTES.accountDeletion, label: "刪除帳號說明" },
     ],
   },
 ];
@@ -186,6 +197,14 @@ export const FOOTER_SECTIONS = [
       { href: APP_ROUTES.staffLogin, label: "門市登入" },
       { href: APP_ROUTES.admin, label: "管理後台" },
       { href: APP_ROUTES.staffPickupScan, label: "門市掃碼" },
+    ],
+  },
+  {
+    title: "法務",
+    links: [
+      { href: APP_ROUTES.privacy, label: "隱私權政策" },
+      { href: APP_ROUTES.terms, label: "服務條款" },
+      { href: APP_ROUTES.accountDeletion, label: "刪除帳號說明" },
     ],
   },
 ] as const;
