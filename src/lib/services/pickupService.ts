@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
 import { sendPickupConfirmationEmail } from "@/lib/email/notifications";
+import { sendOrderLineNotification } from "@/lib/line/notifications";
 import type { OrderPaymentStatus, OrderPickupStatus, PickupLookupResult } from "@/lib/types/database";
 
 export type { PickupLookupResult };
@@ -141,6 +142,11 @@ export async function confirmStorePayment(
     gateway: "store_cash",
     status: "paid_store",
     paid_at: new Date().toISOString(),
+  });
+
+  // LINE 通知（付款已確認）：僅在使用 LINE 綁定後才會送出
+  await sendOrderLineNotification(orderId, "payment_confirmed").catch((e) => {
+    console.warn("[line] payment_confirmed notification failed:", e);
   });
 
   await writePickupLog(orderId, staffUserId, storeId, "confirm_payment");

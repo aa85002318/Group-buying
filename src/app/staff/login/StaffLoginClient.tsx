@@ -60,7 +60,7 @@ export default function StaffLoginClient() {
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <Logo size="header" />
+        <Logo size="header" withText markOnly textLayout="below" align="center" title="CHIMEIDIY 團購" subtitle="棋美點心屋" />
         <h1 className="text-xl font-bold text-coffee">門市人員登入</h1>
         <p className="text-sm text-muted-foreground">登入後可掃碼查單、確認收款與取貨</p>
       </div>

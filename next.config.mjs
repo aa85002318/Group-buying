@@ -27,6 +27,23 @@ const nextConfig = {
       { protocol: "http", hostname: "**" },
     ],
   },
+  // Capacitor native projects open too many files for the Next.js file watcher
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored: [
+          "**/node_modules/**",
+          "**/.git/**",
+          "**/.next/**",
+          "**/android/**",
+          "**/ios/**",
+          "**/www/**",
+        ],
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

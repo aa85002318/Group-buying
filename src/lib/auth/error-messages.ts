@@ -42,7 +42,7 @@ export function getAuthErrorMessage(
     text.includes("not allowed") ||
     text.includes("url not allowed")
   ) {
-    return "註冊失敗：Supabase 尚未允許目前網址。請到 Authentication → URL Configuration，加入 https://chimeidiygroupbuying.com/auth/callback";
+    return "註冊失敗：Supabase 尚未允許目前網址。請到 Authentication → URL Configuration，加入 https://shop.chimeidiygroupbuying.com/auth/callback";
   }
 
   if (text.includes("註冊資料已逾時")) {

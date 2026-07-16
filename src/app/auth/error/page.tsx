@@ -22,7 +22,7 @@ export default function AuthErrorPage({
 
   return (
     <div className="flex min-h-[calc(100vh-var(--header-height))] flex-col items-center justify-center gap-6 p-4">
-      <Logo size="auth" priority />
+        <Logo size="auth" withText markOnly textLayout="below" align="center" priority title="CHIMEIDIY 團購" subtitle="棋美點心屋" />
       <div className="w-full max-w-sm space-y-4 rounded-xl bg-white p-6 text-center shadow-card">
         <h1 className="text-lg font-bold text-coffee">驗證失敗</h1>
         <p className="text-sm text-muted-foreground">{message}</p>

@@ -41,6 +41,7 @@ export type AdminNavItem = {
 
 export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin", label: "儀表板" },
+  { href: "/admin/site-header", label: "頁首設定", roles: ["admin"] },
   { href: "/admin/products", label: "商品", roles: ["admin"] },
   { href: "/admin/categories", label: "分類管理", roles: ["admin"] },
   { href: "/admin/articles", label: "文章管理", roles: ["admin"] },

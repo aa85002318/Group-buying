@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminShell } from "@/components/admin/AdminShell";
 import { APP_ROUTES } from "@/lib/site-links";
+import { BRAND_NAME, BRAND_SUBTITLE } from "@/lib/env";
 
 function NavLink({
   href,
@@ -48,7 +49,7 @@ export function AdminDesktopSidebar() {
           <Link href={APP_ROUTES.admin} className="text-lg font-bold text-primary">
             管理後台
           </Link>
-          <p className="mt-1 text-xs text-muted-foreground">chimeidiy 團購營運中心</p>
+          <p className="mt-1 text-xs text-muted-foreground">{BRAND_NAME} · {BRAND_SUBTITLE}</p>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
           {nav.map(({ href, label }) => (

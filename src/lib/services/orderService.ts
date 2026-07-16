@@ -11,6 +11,7 @@ import { generateOrderNumber } from "@/lib/utils";
 import { createPickupCodeForOrder, generatePickupToken } from "@/lib/services/pickupService";
 import { shippingFeeForMethod } from "@/lib/checkout/options";
 import { recordInitialPayment } from "@/lib/services/paymentService";
+import { sendOrderLineNotification } from "@/lib/line/notifications";
 
 export interface CreateOrderItemInput {
   productId: string;
@@ -456,6 +457,16 @@ export async function updateOrderStatus(orderId: string, status: string) {
     .select()
     .single();
 
-  if (error) return null;
+  if (error || !data) return null;
+
+  // LINE 通知：僅在關鍵狀態才送出（避免重複/誤送）。
+  if (status === "cancelled") {
+    await sendOrderLineNotification(orderId, "cancelled").catch(() => {});
+  }
+
+  if (status === "ready_for_pickup") {
+    await sendOrderLineNotification(orderId, "arrival").catch(() => {});
+  }
+
   return data;
 }

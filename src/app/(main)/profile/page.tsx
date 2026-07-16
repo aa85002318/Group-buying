@@ -170,6 +170,23 @@ export default function ProfilePage() {
         </section>
       )}
 
+      <section className="space-y-2">
+        <h2 className="px-1 text-sm font-medium text-muted-foreground">LINE 私域社群</h2>
+        <div className="divide-y rounded-xl bg-white shadow-card">
+          <div className="px-4 py-3 text-sm">
+            您已被邀請加入「CHIMEIDIY 大安分店 團購群組」！請點選以下連結加入社群！
+          </div>
+          <a
+            href="https://line.me/ti/g2/_r8v5uBC3xDAm5cW5s1DejMj3wJjYTAZ90rKHQ?utm_source=invitation&utm_medium=link_copy&utm_campaign=default"
+            target="_blank"
+            rel="noreferrer"
+            className="block px-4 py-3 text-sm font-medium text-primary hover:bg-muted"
+          >
+            加入社群 →
+          </a>
+        </div>
+      </section>
+
       <Button variant="outline" className="w-full" onClick={handleLogout}>
         登出
       </Button>

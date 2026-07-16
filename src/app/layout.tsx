@@ -1,21 +1,24 @@
 import type { Metadata, Viewport } from "next";
+import { CapacitorShell } from "@/components/capacitor/CapacitorShell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "chimeidiy 團購",
-  description: "chimeidiy 團購 - 團購、直播、分潤一站式服務",
+  title: "CHIMEIDIY 團購",
+  description: "CHIMEIDIY 團購 · 棋美點心屋 — 團購、直播、分潤一站式服務",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-TW" className="overflow-x-hidden">
       <body className="min-h-screen overflow-x-hidden bg-background font-sans text-coffee antialiased">
+        <CapacitorShell />
         {children}
       </body>
     </html>

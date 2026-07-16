@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BRAND_NAME } from "@/lib/env";
+import { BRAND_NAME, BRAND_SUBTITLE } from "@/lib/env";
 import { FOOTER_SECTIONS, isMinimalChromePath } from "@/lib/navigation";
 import { APP_ROUTES } from "@/lib/site-links";
 
@@ -14,8 +14,9 @@ export function SiteFooter() {
     <footer className="mt-10 border-t border-border bg-card/50 pb-24 pt-8 md:pb-8">
       <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
         <div className="sm:col-span-2 md:col-span-1">
-          <Link href={APP_ROUTES.home} className="font-bold text-coffee hover:text-primary">
-            {BRAND_NAME}
+          <Link href={APP_ROUTES.home} className="block hover:text-primary">
+            <span className="font-bold text-coffee">{BRAND_NAME}</span>
+            <span className="mt-0.5 block text-xs font-medium text-brand-orange">{BRAND_SUBTITLE}</span>
           </Link>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
             精選團購好物，門市取貨方便安心。

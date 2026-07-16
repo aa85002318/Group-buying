@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStaffOrAdmin, logAudit } from "@/lib/auth";
 import { sendOrderEmailByType, type OrderEmailType } from "@/lib/email/notifications";
+import { sendOrderLineNotification } from "@/lib/line/notifications";
 
 const ALLOWED: OrderEmailType[] = ["confirmation", "unpaid", "cancelled", "arrival"];
 
@@ -24,6 +25,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!result.ok) {
     return NextResponse.json({ error: result.error ?? "寄送失敗" }, { status: 400 });
   }
+
+  // LINE 通知為選用功能：與 Email 一起重新發送（若 LINE 綁定存在）
+  await sendOrderLineNotification(id, type, { reason }).catch(() => {});
 
   if (auth?.profile?.id) {
     await logAudit(auth.profile.id, `resend_order_email_${type}`, "order", id, null, {

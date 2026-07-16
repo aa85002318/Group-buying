@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth, requireVerifiedAuth, logAudit } from "@/lib/auth";
 import { createOrder, getMyOrders, OrderError } from "@/lib/services/orderService";
 import { sendOrderConfirmationEmail } from "@/lib/email/notifications";
+import { sendOrderLineNotification } from "@/lib/line/notifications";
 import type { PaymentGateway, ShipmentMethod } from "@/lib/types/database";
 
 export async function GET() {
@@ -87,6 +88,12 @@ export async function POST(request: Request) {
     if (!mail.ok) {
       console.error("[orders] confirmation email failed:", mail.error);
     }
+
+    // LINE 通知為選用功能：不影響下單流程
+    await sendOrderLineNotification(order.id, "confirmation").catch((e) => {
+      console.warn("[line] confirmation notification failed:", e);
+    });
+
     return NextResponse.json({
       order,
       email_sent: mail.ok && !mail.skipped,

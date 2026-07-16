@@ -1,9 +1,9 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Package, Search, ShoppingCart, User } from "lucide-react";
+import { Package, Search, ShoppingCart, User, type LucideIcon } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -16,29 +16,63 @@ import {
 } from "@/lib/navigation";
 import { APP_ROUTES } from "@/lib/site-links";
 
+type HeaderChip = {
+  href: string;
+  label: string;
+  badge?: "hot" | "live";
+  iconEmoji?: string | null;
+  icon?: LucideIcon;
+};
+
 function BrandLockup({ className }: { className?: string }) {
   return (
-    <Link
+    <Logo
       href="/"
-      className={cn("inline-flex min-w-0 shrink-0 items-center gap-2 md:gap-3", className)}
-    >
-      <Logo size="header" className="shrink-0 object-contain" priority />
-      <span className="min-w-0">
-        <span className="block truncate text-base font-bold leading-tight text-brand-ink md:text-lg">
-          棋美團購
-        </span>
-        <span className="mt-0.5 hidden text-xs font-medium text-brand-orange sm:block">
-          一起買・更划算
-        </span>
-      </span>
-    </Link>
+      size="header"
+      withText
+      markOnly
+      priority
+      className={cn("max-w-full", className)}
+      title="CHIMEIDIY 團購"
+      subtitle="棋美點心屋"
+    />
   );
 }
 
-function CategoryMenu({ className }: { className?: string }) {
+function CategoryMenu({ className, links }: { className?: string; links: HeaderChip[] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentQuery = searchParams.toString();
+
+  const isActive = (href: string) => {
+    const baseHref = href.split("?")[0];
+
+    if (baseHref === "/products") {
+      const params = new URLSearchParams(href.split("?")[1] ?? "");
+      const expectedCategory = params.get("category");
+      const pathnameParams = searchParams.toString();
+      const current = new URLSearchParams(pathnameParams);
+      const currentCategory = current.get("category");
+      const currentSearch = current.get("search");
+
+      if (expectedCategory) {
+        return pathname === "/products" && currentCategory === expectedCategory && !currentSearch;
+      }
+
+      // "全部商品" => no category & no search
+      return pathname === "/products" && !currentCategory && !currentSearch;
+    }
+
+    if (baseHref === "/group-buy") {
+      return pathname === "/group-buy" || pathname.startsWith("/group-buy/");
+    }
+
+    if (baseHref === "/live") return pathname === "/live" || pathname.startsWith("/live/");
+    if (baseHref === "/videos") return pathname === "/videos" || pathname.startsWith("/videos/");
+    if (baseHref === "/articles") return pathname === "/articles" || pathname.startsWith("/articles/");
+    if (baseHref === "/") return pathname === "/";
+
+    return pathname === baseHref;
+  };
 
   return (
     <nav
@@ -49,11 +83,8 @@ function CategoryMenu({ className }: { className?: string }) {
       )}
     >
       <div className="flex gap-1 overflow-x-auto whitespace-nowrap scrollbar-none md:gap-1.5">
-        {HEADER_CATEGORY_LINKS.map(({ label, href, icon: Icon, badge, match }) => {
-          const active = match
-            ? match(pathname, currentQuery)
-            : pathname === href.split("?")[0];
-
+        {links.map(({ label, href, icon: Icon, badge, iconEmoji }) => {
+          const active = isActive(href);
           return (
             <Link
               key={`${label}-${href}`}
@@ -65,10 +96,19 @@ function CategoryMenu({ className }: { className?: string }) {
                   : "bg-transparent text-brand-ink hover:bg-brand-blush hover:text-brand-red"
               )}
             >
-              <Icon
-                className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-brand-orange")}
-                aria-hidden
-              />
+              {iconEmoji ? (
+                <span
+                  className={cn("flex h-4 w-4 items-center justify-center text-sm", active ? "text-white" : "text-brand-orange")}
+                  aria-hidden
+                >
+                  {iconEmoji}
+                </span>
+              ) : Icon ? (
+                <Icon
+                  className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-brand-orange")}
+                  aria-hidden
+                />
+              ) : null}
               <span>{label}</span>
               {badge === "hot" && !active && (
                 <span className="text-[10px] font-bold text-brand-orange" aria-hidden>
@@ -309,6 +349,35 @@ function SearchFallback({ className }: { className?: string }) {
 export function Header() {
   const pathname = usePathname();
   const headerRef = useRef<HTMLElement>(null);
+  const [siteHeaderConfig, setSiteHeaderConfig] = useState<{
+    links: Array<{ href: string; label: string; badge?: "hot" | "live"; icon_emoji?: string }>;
+  } | null>(null);
+
+  useEffect(() => {
+    // load from DB so header content can be managed in back-office
+    fetch("/api/site-header")
+      .then((r) => r.json())
+      .then((d) => setSiteHeaderConfig(d ?? null))
+      .catch(() => {});
+  }, []);
+
+  const links: HeaderChip[] = useMemo(() => {
+    if (siteHeaderConfig?.links?.length) {
+      return siteHeaderConfig.links.map((l) => ({
+        href: l.href,
+        label: l.label,
+        badge: l.badge,
+        iconEmoji: l.icon_emoji ?? null,
+      }));
+    }
+
+    return HEADER_CATEGORY_LINKS.map(({ label, href, icon, badge }) => ({
+      href,
+      label,
+      badge,
+      icon,
+    }));
+  }, [siteHeaderConfig]);
 
   useEffect(() => {
     const header = headerRef.current;
@@ -371,7 +440,7 @@ export function Header() {
           {/* Layer 2: categories */}
           {!isAuthPage && (
             <Suspense fallback={<CategoryMenuFallback />}>
-              <CategoryMenu />
+              <CategoryMenu links={links} />
             </Suspense>
           )}
 

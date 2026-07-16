@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Logo } from "@/components/layout/Logo";
+import { BrandHeading } from "@/components/layout/BrandHeading";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 
@@ -48,7 +48,7 @@ export default function RegisterClient() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-4">
-      <Logo size="auth" priority />
+      <BrandHeading priority />
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white p-6 shadow-card">
         {ref && <p className="text-center text-xs text-primary">推薦碼：{ref}</p>}
         <form onSubmit={handleRegister} className="space-y-4">

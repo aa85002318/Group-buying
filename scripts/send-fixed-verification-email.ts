@@ -11,7 +11,7 @@ async function main() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!.trim();
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!.trim();
   const siteUrl = (
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://chimeidiygroupbuying.com"
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://shop.chimeidiygroupbuying.com"
   ).replace(/\/$/, "");
 
   const admin = createClient(supabaseUrl, serviceKey, {

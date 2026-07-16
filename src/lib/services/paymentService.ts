@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
 import type { PaymentGateway } from "@/lib/types/database";
+import { sendOrderLineNotification } from "@/lib/line/notifications";
 
 export type CreatePaymentInput = {
   orderId: string;
@@ -108,6 +109,10 @@ export async function handlePaymentCallback(payload: Record<string, unknown>) {
         pickup_status: "ready",
       })
       .eq("id", payment.order_id);
+
+    await sendOrderLineNotification(payment.order_id, "payment_confirmed").catch((e) => {
+      console.warn("[line] payment_confirmed notification failed:", e);
+    });
   } else {
     await admin
       .from("payments")

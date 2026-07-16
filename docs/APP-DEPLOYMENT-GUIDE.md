@@ -26,7 +26,7 @@ NEXT_PUBLIC_APP_ENV=staging
 ### Production 範例
 
 ```
-NEXT_PUBLIC_SITE_URL=https://shop.chimeidiy.com
+NEXT_PUBLIC_SITE_URL=https://shop.chimeidiygroupbuying.com
 NEXT_PUBLIC_APP_ENV=production
 ```
 
@@ -60,9 +60,9 @@ NEXT_PUBLIC_APP_ENV=production
 Supabase Dashboard → **Authentication → Providers → Email**：
 
 - 開啟 **Confirm email**
-- Site URL：`NEXT_PUBLIC_SITE_URL`（例如 `https://shop.chimeidiy.com`）
+- Site URL：`NEXT_PUBLIC_SITE_URL`（例如 `https://shop.chimeidiygroupbuying.com`）
 - Redirect URLs 新增：
-  - `https://shop.chimeidiy.com/auth/callback`
+  - `https://shop.chimeidiygroupbuying.com/auth/callback`
   - `https://staging.chimeidiy.com/auth/callback`（staging）
   - `http://localhost:3000/auth/callback`（本機）
 

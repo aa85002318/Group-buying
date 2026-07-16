@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Logo } from "@/components/layout/Logo";
+import { BrandHeading } from "@/components/layout/BrandHeading";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { ROLE_LABELS } from "@/lib/utils";
@@ -16,6 +16,7 @@ export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/";
+  const lineUserId = searchParams.get("line_user_id");
   const errorCode = searchParams.get("error");
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
@@ -80,6 +81,23 @@ export default function LoginClient() {
       await supabase.auth.signOut();
       setLoginError("email_not_confirmed");
       return;
+    }
+
+    // If LINE login happened first, callback redirected here with line_user_id.
+    // After email/password login succeeds, bind LINE user id to this account.
+    if (lineUserId && data?.user?.id) {
+      try {
+        const bindRes = await fetch("/api/line/bind", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lineUserId }),
+        });
+        if (!bindRes.ok) {
+          console.warn("[line] bind failed:", await bindRes.json().catch(() => ({})));
+        }
+      } catch (err) {
+        console.warn("[line] bind error:", err);
+      }
     }
 
     router.push(next.startsWith("/") ? next : "/");
@@ -155,7 +173,7 @@ export default function LoginClient() {
 
   return (
     <div className="flex min-h-[calc(100vh-var(--header-height))] flex-col items-center justify-center gap-6 p-4">
-      <Logo size="auth" priority />
+      <BrandHeading priority />
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white p-6 shadow-card">
         <p className="text-center text-sm text-coffee/70">登入您的帳號</p>
 
@@ -212,6 +230,20 @@ export default function LoginClient() {
         <p className="text-center text-sm text-coffee">
           還沒有帳號？<Link href="/auth/register" className="font-medium text-primary hover:text-primary/80">立即註冊</Link>
         </p>
+
+        <div className="space-y-2 pt-2">
+          <a
+            href={`/api/line/oauth/start?next=${encodeURIComponent(next)}`}
+            className="block w-full rounded-md border border-border bg-white px-4 py-2 text-center text-sm font-medium text-coffee hover:bg-muted"
+          >
+            使用 LINE 登入 / 綁定通知
+          </a>
+          {lineUserId ? (
+            <p className="text-center text-xs text-muted-foreground">
+              你已完成 LINE 授權，請登入帳號後自動完成綁定。
+            </p>
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -91,10 +91,53 @@
 
 ## 方案 B：Capacitor 包殼（推薦給現有 Next.js）
 
-1. 網站部署到 `https://shop.chimeidiy.com`
-2. `npm install @capacitor/core @capacitor/cli`
-3. Capacitor 設定 `server.url` 指向正式網域，或 build 靜態 export（若架構允許）
-4. 產生 iOS / Android 專案 → Xcode / Android Studio 上架
+本專案已設定 Capacitor，App 以 WebView 載入正式站 `https://shop.chimeidiygroupbuying.com`（改版網站即時生效，無需重新送審每次小改）。
+
+### 專案設定
+
+| 項目 | 值 |
+|------|-----|
+| App ID | `com.chimeidiy.groupbuy` |
+| 顯示名稱 | 棋美團購 |
+| 設定檔 | `capacitor.config.ts` |
+| 本機占位 | `www/`（實際載入遠端網址） |
+
+### 常用指令
+
+```bash
+# 同步原生專案（改 capacitor.config 或 www 後執行）
+npm run cap:sync
+
+# 用 Xcode / Android Studio 開啟
+npm run cap:ios
+npm run cap:android
+```
+
+### 本機開發（可選）
+
+若要 App 連本機 Next.js（例如 `http://192.168.x.x:3003`）：
+
+```bash
+CAPACITOR_SERVER_URL=http://192.168.x.x:3003 npm run cap:sync
+npm run cap:ios   # 或 cap:android
+```
+
+測完記得改回正式網址再 sync。
+
+### 實機測試清單
+
+- [ ] 註冊 / 登入 / 驗證信回調 `/auth/callback`
+- [ ] 購物車、結帳、訂單列表
+- [ ] 會員條碼 `/profile`
+- [ ] 門市掃碼 `/staff/pickup-scan`（已申請相機權限）
+- [ ] Android 返回鍵行為
+
+### 上架前
+
+1. 在 Xcode 設定 Signing、Bundle ID、App 圖示與截圖
+2. 在 Android Studio 設定簽章、應用圖示
+3. 部署含 `CapacitorShell` 的 Next.js 至正式網域（狀態列、Splash、返回鍵）
+4. 隱私權政策 URL、測試帳號（見上文「不論哪條路，上線前必備」）
 
 **注意：**
 

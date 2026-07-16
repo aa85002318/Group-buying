@@ -61,9 +61,9 @@ IP 變了只要加新的一行，不必重 deploy。完整清單見 `docs/SUPABA
 
 要讓**不在你家 Wi‑Fi 的人**也能開，需要：
 
-1. **HTTPS 網域**（例如 `https://shop.chimeidiy.com`）
+1. **HTTPS 網域**（例如 `https://shop.chimeidiygroupbuying.com`）
 2. 部署到 Vercel / Netlify（見 `docs/APP-DEPLOYMENT-GUIDE.md`）
-3. 設定 `NEXT_PUBLIC_SITE_URL=https://shop.chimeidiy.com`
+3. 設定 `NEXT_PUBLIC_SITE_URL=https://shop.chimeidiygroupbuying.com`
 4. Supabase Site URL 與 Redirect URL 改為正式網域
 
 可選：Cloudflare Tunnel 暫時對外，但每次網址可能變，需更新 Supabase Redirect URLs。

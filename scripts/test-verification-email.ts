@@ -25,7 +25,7 @@ async function main() {
   });
 
   const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://chimeidiygroupbuying.com";
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://shop.chimeidiygroupbuying.com";
   const redirectTo = `${siteUrl.replace(/\/$/, "")}/auth/callback`;
   console.log("redirectTo:", redirectTo);
 

@@ -86,5 +86,6 @@ export function resolveSiteUrl(options?: { origin?: string; request?: Request })
   return getSiteUrl();
 }
 
-export const BRAND_NAME = "chimeidiy 團購";
+export const BRAND_NAME = "CHIMEIDIY 團購";
+export const BRAND_SUBTITLE = "棋美點心屋";
 export const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "support@chimeidiy.com";
