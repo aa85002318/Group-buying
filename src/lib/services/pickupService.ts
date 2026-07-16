@@ -203,7 +203,10 @@ export async function confirmPickup(
   });
 
   await writePickupLog(orderId, staffUserId, storeId, "confirm_pickup");
-  void sendPickupConfirmationEmail(orderId, pickedUpAt);
+  const mail = await sendPickupConfirmationEmail(orderId, pickedUpAt);
+  if (!mail.ok) {
+    console.error("[pickup] confirmation email failed:", mail.error);
+  }
 
   return data;
 }

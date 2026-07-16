@@ -82,8 +82,16 @@ export async function POST(request: Request) {
     });
 
     await logAudit(auth!.profile.id, "create", "order", order.id, null, order, request as never);
-    void sendOrderConfirmationEmail(order.id);
-    return NextResponse.json({ order });
+    // Await so serverless runtime does not freeze before Resend finishes
+    const mail = await sendOrderConfirmationEmail(order.id);
+    if (!mail.ok) {
+      console.error("[orders] confirmation email failed:", mail.error);
+    }
+    return NextResponse.json({
+      order,
+      email_sent: mail.ok && !mail.skipped,
+      email_warning: mail.ok ? undefined : mail.error ?? "訂單確認信寄送失敗",
+    });
   } catch (e) {
     if (e instanceof OrderError) {
       return NextResponse.json({ error: e.message }, { status: 400 });

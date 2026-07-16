@@ -95,7 +95,7 @@ export function applyEmailTemplateVars(text: string, vars: EmailTemplateVars): s
     "{{cancel_reason}}": vars.cancel_reason ?? "",
   };
 
-  let out = text;
+  let out = String(text ?? "");
   for (const [key, value] of Object.entries(map)) {
     out = out.split(key).join(value);
   }
@@ -112,13 +112,13 @@ export async function getEmailTemplate(id: EmailTemplateId): Promise<EmailTempla
     if (error || !data) return fallback;
     return {
       id,
-      label: data.label ?? fallback.label,
-      subject: data.subject ?? fallback.subject,
-      heading: data.heading ?? fallback.heading,
-      intro_html: data.intro_html ?? fallback.intro_html,
-      footer_note: data.footer_note ?? fallback.footer_note,
-      button_label: data.button_label ?? fallback.button_label,
-      preheader: data.preheader ?? fallback.preheader,
+      label: String(data.label ?? fallback.label),
+      subject: String(data.subject ?? fallback.subject),
+      heading: String(data.heading ?? fallback.heading),
+      intro_html: String(data.intro_html ?? fallback.intro_html),
+      footer_note: String(data.footer_note ?? fallback.footer_note),
+      button_label: String(data.button_label ?? fallback.button_label),
+      preheader: String(data.preheader ?? fallback.preheader),
       updated_at: data.updated_at,
     };
   } catch {

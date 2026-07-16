@@ -44,9 +44,11 @@ export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<
   if (!res.ok) {
     const body = await res.text();
     console.error("[email] Resend error:", res.status, body);
-    return { ok: false, error: body };
+    return { ok: false, error: `Resend ${res.status}: ${body}` };
   }
 
+  const payload = (await res.json().catch(() => ({}))) as { id?: string };
+  console.log("[email] sent", { to, subject, id: payload.id });
   return { ok: true };
 }
 

@@ -1,6 +1,6 @@
 import { BRAND_NAME, getSiteUrl } from "@/lib/env";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { emailButton, emailInfoRow, wrapEmailHtml } from "@/lib/email/layout";
+import { emailButton, emailInfoRow, escapeHtml, wrapEmailHtml } from "@/lib/email/layout";
 
 export interface OrderArrivalEmailData {
   customerName: string;
@@ -18,7 +18,7 @@ export function buildOrderArrivalEmail(data: OrderArrivalEmailData): { subject: 
   const itemsRows = data.items
     .map(
       (item) => `<tr>
-        <td style="padding:12px 8px;border-bottom:1px solid #EEE5DC;color:#333333;font-size:14px;">${item.product_name}</td>
+        <td style="padding:12px 8px;border-bottom:1px solid #EEE5DC;color:#333333;font-size:14px;">${escapeHtml(item.product_name)}</td>
         <td style="padding:12px 8px;border-bottom:1px solid #EEE5DC;color:#333333;font-size:14px;text-align:center;">${item.quantity}</td>
       </tr>`
     )
