@@ -57,18 +57,18 @@ export function BannerCarousel({ banners, autoPlayMs = 5000 }: BannerCarouselPro
 
   return (
     <section className="w-full">
-      <div className="relative aspect-[390/250] w-full overflow-hidden rounded-[20px] bg-[#7F1D1D] shadow-[0_18px_45px_rgba(233,45,45,0.24)] md:aspect-[16/6]">
+      <div className="relative aspect-[390/250] w-full overflow-hidden rounded-[20px] bg-[#B81648] shadow-[0_18px_42px_rgba(184,22,72,0.32)] md:aspect-[16/6]">
         <Link href={current.link} className="block h-full w-full">
           <Image
             src={current.image}
             alt={current.title}
             fill
-            className="object-cover opacity-75"
+            className="object-cover opacity-55"
             sizes="(max-width: 768px) 100vw, 1280px"
             priority
             unoptimized
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#9F1239]/95 via-[#E92D2D]/78 to-[#FF7A00]/20" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,#E9285C_0%,#FF4D36_55%,#FF8300_100%)] opacity-90" />
 
           {current.productImage && (
             <div className="absolute bottom-5 right-4 top-5 w-[38%] overflow-hidden rounded-2xl border-2 border-white/40 bg-white/20 shadow-2xl md:right-10 md:w-[32%]">
@@ -85,11 +85,11 @@ export function BannerCarousel({ banners, autoPlayMs = 5000 }: BannerCarouselPro
           )}
 
           <div className="absolute inset-y-0 left-0 flex w-[66%] flex-col justify-center px-5 py-5 text-white md:w-[62%] md:px-10">
-            <span className="mb-2 w-fit rounded-full bg-[#FFC83D] px-3 py-1 text-xs font-black text-[#7C2D12] shadow-sm">
+            <span className="mb-2 w-fit rounded-full bg-[#FFC400] px-3 py-1 text-xs font-black text-[#202124] shadow-sm">
               限時團購
             </span>
             {current.offer && (
-              <p className="text-2xl font-black tracking-tight text-[#FFF3B0] drop-shadow md:text-4xl">
+              <p className="text-2xl font-black tracking-tight text-[#FFC400] drop-shadow md:text-4xl">
                 {current.offer}
               </p>
             )}
@@ -102,7 +102,7 @@ export function BannerCarousel({ banners, autoPlayMs = 5000 }: BannerCarouselPro
                 截止 {deadlineLabel}
               </p>
             )}
-            <span className="mt-4 inline-flex min-h-11 w-fit items-center gap-2 rounded-[14px] bg-gradient-to-r from-[#E92D2D] to-[#FF7A00] px-5 text-sm font-black text-white shadow-[0_10px_24px_rgba(127,29,29,0.35)] ring-1 ring-white/30 transition active:scale-95">
+            <span className="mt-4 inline-flex min-h-11 w-fit items-center gap-2 rounded-[14px] bg-white px-5 text-sm font-black text-[#E9285C] shadow-[0_10px_24px_rgba(184,22,72,0.32)] transition active:scale-95">
               <ShoppingBag className="h-4 w-4" />
               立即搶購
             </span>

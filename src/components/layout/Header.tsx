@@ -440,10 +440,10 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
   if (items.length === 0) return null;
 
   const cardStyles = [
-    "from-[#F43F5E] to-[#FB7185] text-white",
-    "from-[#E92D2D] to-[#FF7A00] text-white",
-    "from-[#FFC83D] to-[#FF9F1C] text-[#6B2C00]",
-    "from-[#8B5CF6] to-[#EC4899] text-white",
+    "bg-[#FF4D36] text-white",
+    "bg-[#E9285C] text-white",
+    "bg-[#FFC400] text-[#202124]",
+    "bg-[#A93DDB] text-white",
   ];
 
   return (
@@ -463,7 +463,7 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
           const content = (
             <div
               className={cn(
-                "relative flex min-h-[64px] min-w-0 flex-col justify-center overflow-hidden rounded-2xl bg-gradient-to-br px-2.5 py-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]",
+                "relative flex min-h-[64px] min-w-0 flex-col justify-center overflow-hidden rounded-2xl px-2.5 py-2 shadow-[0_6px_14px_rgba(32,33,36,0.14)] transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]",
                 cardStyles[index % cardStyles.length]
               )}
             >

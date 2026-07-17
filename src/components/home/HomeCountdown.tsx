@@ -30,7 +30,7 @@ export function HomeCountdown({ endAt }: { endAt: string }) {
   }, [endAt]);
 
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-[#E92D2D] px-2 py-1 text-[11px] font-black text-white shadow-sm">
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#FF4D36] px-2 py-1 text-[11px] font-black text-white shadow-[0_4px_10px_rgba(255,77,54,0.35)]">
       <Clock3 className="h-3 w-3" />
       {label}
     </span>

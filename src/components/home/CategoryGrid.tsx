@@ -1,7 +1,13 @@
 import Link from "next/link";
-import Image from "next/image";
+import {
+  CalendarDays,
+  CookingPot,
+  Snowflake,
+  Sparkles,
+  Sprout,
+  Utensils,
+} from "lucide-react";
 import type { ProductCategory } from "@/lib/types/database";
-import { getCategoryDisplayIcon } from "@/lib/home";
 
 interface CategoryGridProps {
   categories: ProductCategory[];
@@ -9,21 +15,21 @@ interface CategoryGridProps {
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
   const iconBackgrounds = [
-    "bg-[#FFE4E9] text-[#E92D2D]",
-    "bg-[#FFF0D9] text-[#C55300]",
-    "bg-[#FFF4BF] text-[#8A5A00]",
-    "bg-[#DFF7EC] text-[#15805D]",
-    "bg-[#E7E7FF] text-[#5145CD]",
-    "bg-[#F3E8FF] text-[#9333EA]",
+    "bg-[#FF8A00]",
+    "bg-[#23B26D]",
+    "bg-[#268CFF]",
+    "bg-[#FFC400]",
+    "bg-[#00AFC1]",
+    "bg-[#E9288A]",
   ];
+  const categoryIcons = [Utensils, Sprout, Snowflake, CookingPot, Sparkles, CalendarDays];
 
   return (
     <section className="rounded-[20px] bg-white p-4 shadow-card md:p-5">
-      <h2 className="mb-4 text-lg font-black text-[#222222]">商品分類</h2>
+      <h2 className="mb-4 text-lg font-black text-[#202124]">商品分類</h2>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-6 md:gap-4">
         {categories.map((c, index) => {
-          const icon = getCategoryDisplayIcon(c);
-          const hasSticker = icon.type === "image";
+          const Icon = categoryIcons[index % categoryIcons.length];
 
           return (
             <Link
@@ -32,24 +38,13 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
               className="group flex min-h-11 flex-col items-center gap-2 rounded-2xl py-1 transition-transform active:scale-95"
             >
               <div
-                className={`relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full shadow-sm transition-transform duration-200 group-hover:scale-105 group-active:scale-95 sm:h-16 sm:w-16 ${
+                className={`relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[18px] text-white shadow-[0_6px_14px_rgba(32,33,36,0.16)] transition-transform duration-200 group-hover:scale-105 group-active:scale-95 sm:h-16 sm:w-16 ${
                   iconBackgrounds[index % iconBackgrounds.length]
                 }`}
               >
-                {hasSticker ? (
-                  <Image
-                    src={icon.value}
-                    alt={c.name}
-                    fill
-                    sizes="64px"
-                    className="object-contain p-2 drop-shadow-sm"
-                    unoptimized
-                  />
-                ) : (
-                    <span className="text-2xl leading-none sm:text-[1.75rem]">{icon.value}</span>
-                )}
+                <Icon className="h-7 w-7 stroke-[2.25]" aria-hidden />
               </div>
-              <span className="line-clamp-2 text-center text-sm font-semibold text-[#333333]">
+              <span className="line-clamp-2 text-center text-sm font-semibold text-[#202124]">
                 {c.name}
               </span>
             </Link>

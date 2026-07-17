@@ -30,23 +30,32 @@ export function ProductScrollSection({
     <section
       className={
         isClosing
-          ? "rounded-[20px] bg-gradient-to-br from-[#FFF1F3] to-[#FFF5EB] p-4 md:p-5"
+          ? "rounded-[20px] border-2 border-[#E9285C] bg-white p-3 shadow-[0_14px_34px_rgba(184,22,72,0.18)] md:p-4"
           : "py-2"
       }
     >
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div
+        className={
+          isClosing
+            ? "mb-4 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#B81648] to-[#E9285C] px-4 py-3 text-white"
+            : "mb-4 flex items-center justify-between gap-3"
+        }
+      >
         <div className="flex items-center gap-2">
+          {variant === "new" && (
+            <span className="h-7 w-1.5 shrink-0 rounded-full bg-[#E9285C]" aria-hidden />
+          )}
           <h2
             className={
               isClosing
-                ? "text-xl font-black text-[#E92D2D]"
-                : "text-xl font-black text-[#222222]"
+                ? "text-xl font-black text-white"
+                : "text-xl font-black text-[#202124]"
             }
           >
             {title}
           </h2>
           {variant === "new" && (
-            <span className="rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#F43F5E] px-2.5 py-1 text-[10px] font-black text-white">
+            <span className="rounded-full bg-[#A93DDB] px-2.5 py-1 text-[10px] font-black text-white">
               NEW
             </span>
           )}
@@ -54,7 +63,11 @@ export function ProductScrollSection({
         {seeMoreHref && (
           <Link
             href={seeMoreHref}
-            className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-[#F43F5E]"
+            className={
+              isClosing
+                ? "inline-flex min-h-11 items-center gap-1 text-sm font-bold text-white"
+                : "inline-flex min-h-11 items-center gap-1 text-sm font-bold text-[#E9285C]"
+            }
           >
             查看更多
             <ArrowRight className="h-4 w-4" />
