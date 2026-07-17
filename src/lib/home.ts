@@ -23,11 +23,13 @@ export function isClosingWithinDays(endAt: string, days = 7): boolean {
 export type HomeProduct = Product & {
   href?: string;
   cutoff_at?: string;
+  sold_count?: number;
 };
 
 type EventWithProducts = GroupBuyEvent & {
   group_buy_products?: Array<{
     special_price?: number | null;
+    sold_count?: number;
     products?: Product | null;
   }>;
 };
@@ -69,6 +71,7 @@ export function getClosingSoonProducts(
         price: gbp.special_price ?? product.price,
         href: `/group-buy/${event.id}`,
         cutoff_at: event.end_at,
+        sold_count: gbp.sold_count,
       });
     }
   }

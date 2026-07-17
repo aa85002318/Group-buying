@@ -8,11 +8,20 @@ interface CategoryGridProps {
 }
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
+  const iconBackgrounds = [
+    "bg-[#FFE4E9] text-[#E92D2D]",
+    "bg-[#FFF0D9] text-[#C55300]",
+    "bg-[#FFF4BF] text-[#8A5A00]",
+    "bg-[#DFF7EC] text-[#15805D]",
+    "bg-[#E7E7FF] text-[#5145CD]",
+    "bg-[#F3E8FF] text-[#9333EA]",
+  ];
+
   return (
-    <section>
-      <h2 className="mb-3 text-lg font-bold text-coffee">商品分類</h2>
+    <section className="rounded-[20px] bg-white p-4 shadow-card md:p-5">
+      <h2 className="mb-4 text-lg font-black text-[#222222]">商品分類</h2>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-6 md:gap-4">
-        {categories.map((c) => {
+        {categories.map((c, index) => {
           const icon = getCategoryDisplayIcon(c);
           const hasSticker = icon.type === "image";
 
@@ -20,28 +29,29 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
             <Link
               key={c.id}
               href={`/products?category=${c.id}`}
-              className="flex flex-col items-center gap-1 transition-opacity hover:opacity-85"
+              className="group flex min-h-11 flex-col items-center gap-2 rounded-2xl py-1 transition-transform active:scale-95"
             >
-              {hasSticker ? (
-                <div className="relative aspect-square w-full max-w-[108px] sm:max-w-[120px]">
+              <div
+                className={`relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full shadow-sm transition-transform duration-200 group-hover:scale-105 group-active:scale-95 sm:h-16 sm:w-16 ${
+                  iconBackgrounds[index % iconBackgrounds.length]
+                }`}
+              >
+                {hasSticker ? (
                   <Image
                     src={icon.value}
                     alt={c.name}
                     fill
-                    sizes="(max-width: 640px) 33vw, 120px"
-                    className="object-contain drop-shadow-sm"
+                    sizes="64px"
+                    className="object-contain p-2 drop-shadow-sm"
                     unoptimized
                   />
-                </div>
-              ) : (
-                <>
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[#F7DADA] bg-[#FFF8F5] sm:h-16 sm:w-16">
+                ) : (
                     <span className="text-2xl leading-none sm:text-[1.75rem]">{icon.value}</span>
-                  </div>
-                  <span className="line-clamp-2 text-center text-sm text-[#333333]">{c.name}</span>
-                </>
-              )}
-              {hasSticker ? <span className="sr-only">{c.name}</span> : null}
+                )}
+              </div>
+              <span className="line-clamp-2 text-center text-sm font-semibold text-[#333333]">
+                {c.name}
+              </span>
             </Link>
           );
         })}

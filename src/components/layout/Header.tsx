@@ -4,6 +4,7 @@ import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from "react
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  ArrowUpRight,
   Menu,
   Package,
   Search,
@@ -438,42 +439,66 @@ function AuthActions({
 function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
   if (items.length === 0) return null;
 
+  const cardStyles = [
+    "from-[#F43F5E] to-[#FB7185] text-white",
+    "from-[#E92D2D] to-[#FF7A00] text-white",
+    "from-[#FFC83D] to-[#FF9F1C] text-[#6B2C00]",
+    "from-[#8B5CF6] to-[#EC4899] text-white",
+  ];
+
   return (
     <div
       aria-label="團購快捷資訊"
-      className="overflow-hidden rounded-xl bg-promo-strip px-3 py-2 md:px-4"
+      className="overflow-hidden"
     >
-      <ul className="flex gap-3 overflow-x-auto whitespace-nowrap scrollbar-none md:justify-center md:gap-6">
-        {items.map(({ id, label, value, suffix, icon_emoji, href }) => {
+      <ul className="grid grid-cols-4 gap-1.5">
+        {items.map(({ id, label, value, suffix, icon_emoji, href }, index) => {
+          const targetHref =
+            href ??
+            (id === "today" || id === "ending"
+              ? "/group-buy"
+              : id === "shipping"
+                ? "/products"
+                : undefined);
           const content = (
-            <>
-              {icon_emoji ? <span aria-hidden>{icon_emoji}</span> : null}
-              <span>{label}</span>
-              {value ? (
-                <span className="font-bold text-brand-orange">
-                  {value}
-                  {suffix}
+            <div
+              className={cn(
+                "relative flex min-h-[64px] min-w-0 flex-col justify-center overflow-hidden rounded-2xl bg-gradient-to-br px-2.5 py-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]",
+                cardStyles[index % cardStyles.length]
+              )}
+            >
+              <span className="absolute bottom-1 right-1 text-xl opacity-35 drop-shadow-sm" aria-hidden>
+                {icon_emoji || "✨"}
+              </span>
+              <span className="relative z-10 min-w-0">
+                {value ? (
+                  <span className="block text-xl font-black leading-none">
+                    {value}
+                    <span className="ml-0.5 text-sm">{suffix}</span>
+                  </span>
+                ) : null}
+                <span className="mt-1 block truncate text-[10px] font-bold opacity-95 sm:text-[11px]">
+                  {label}
                 </span>
-              ) : null}
-            </>
+              </span>
+              {targetHref && (
+                <ArrowUpRight className="absolute right-2 top-2 h-3.5 w-3.5 opacity-80" />
+              )}
+            </div>
           );
-          const className =
-            "inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-[#9F1D1D] md:text-sm";
 
           return (
-            <li key={id}>
-              {href ? (
-                href.startsWith("http") ? (
-                  <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+            <li key={id} className="min-w-0">
+              {targetHref ? (
+                targetHref.startsWith("http") ? (
+                  <a href={targetHref} target="_blank" rel="noopener noreferrer">
                     {content}
                   </a>
                 ) : (
-                  <Link href={href} className={className}>
-                    {content}
-                  </Link>
+                  <Link href={targetHref}>{content}</Link>
                 )
               ) : (
-                <span className={className}>{content}</span>
+                content
               )}
             </li>
           );

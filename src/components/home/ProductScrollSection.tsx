@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { ProductCard } from "@/components/products/ProductCard";
-import { Badge } from "@/components/ui/badge";
+import {
+  HomeProductCard,
+  type HomeProductCardVariant,
+} from "@/components/home/HomeProductCard";
 import type { HomeProduct } from "@/lib/home";
-import { formatCutoffLabel } from "@/lib/home";
+import { ArrowRight } from "lucide-react";
 
 interface ProductScrollSectionProps {
   title: string;
@@ -11,25 +13,51 @@ interface ProductScrollSectionProps {
   showCutoff?: boolean;
   emptyText?: string;
   fourPerRow?: boolean;
+  variant?: HomeProductCardVariant;
 }
-
-const CARD_WIDTH = "calc((100% - 0.75rem * 3) / 4)";
 
 export function ProductScrollSection({
   title,
   products,
   seeMoreHref,
-  showCutoff,
   emptyText = "暫無商品",
-  fourPerRow = false,
+  variant = "new",
 }: ProductScrollSectionProps) {
+  const isClosing = variant === "closing";
+  const isRanking = variant === "ranking";
+
   return (
-    <section className="rounded-xl bg-background py-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-coffee">{title}</h2>
+    <section
+      className={
+        isClosing
+          ? "rounded-[20px] bg-gradient-to-br from-[#FFF1F3] to-[#FFF5EB] p-4 md:p-5"
+          : "py-2"
+      }
+    >
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h2
+            className={
+              isClosing
+                ? "text-xl font-black text-[#E92D2D]"
+                : "text-xl font-black text-[#222222]"
+            }
+          >
+            {title}
+          </h2>
+          {variant === "new" && (
+            <span className="rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#F43F5E] px-2.5 py-1 text-[10px] font-black text-white">
+              NEW
+            </span>
+          )}
+        </div>
         {seeMoreHref && (
-          <Link href={seeMoreHref} className="text-sm text-primary">
+          <Link
+            href={seeMoreHref}
+            className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-[#F43F5E]"
+          >
             查看更多
+            <ArrowRight className="h-4 w-4" />
           </Link>
         )}
       </div>
@@ -37,32 +65,17 @@ export function ProductScrollSection({
       {products.length === 0 ? (
         <p className="py-4 text-center text-sm text-muted-foreground">{emptyText}</p>
       ) : (
-        <div
-          className={
-            fourPerRow
-              ? "flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              : "-mx-4 flex gap-3 overflow-x-auto px-4 pb-1"
-          }
-        >
-          {products.map((p) => (
+        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 scrollbar-none">
+          {products.map((p, index) => (
             <div
               key={`${p.id}-${p.cutoff_at ?? ""}`}
-              className="relative shrink-0 snap-start"
-              style={fourPerRow ? { width: CARD_WIDTH, minWidth: CARD_WIDTH } : { width: "9rem" }}
+              className={
+                isRanking
+                  ? "w-[88%] shrink-0 snap-start sm:w-[48%] lg:w-[calc((100%_-_1.5rem)_/_3)]"
+                  : "w-[72%] shrink-0 snap-start sm:w-[42%] md:w-[31%] lg:w-[calc((100%_-_2.25rem)_/_4)]"
+              }
             >
-              {showCutoff && p.cutoff_at && (
-                <Badge variant="countdown" className="absolute left-2 top-2 z-10">
-                  {formatCutoffLabel(p.cutoff_at)}
-                </Badge>
-              )}
-              <ProductCard
-                id={p.id}
-                name={p.name}
-                price={p.price}
-                original_price={p.original_price}
-                image_url={p.image_url}
-                href={p.href}
-              />
+              <HomeProductCard product={p} variant={variant} rank={index + 1} />
             </div>
           ))}
         </div>

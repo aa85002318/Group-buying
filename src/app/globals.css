@@ -4,28 +4,28 @@
 
 @layer base {
   :root {
-    --background: #fffdfc;
-    --foreground: #292525;
-    --primary: #d92d2d;
-    --primary-light: #f04444;
-    --primary-dark: #a61f2b;
+    --background: #f7f7f8;
+    --foreground: #222222;
+    --primary: #f43f5e;
+    --primary-light: #fb7185;
+    --primary-dark: #e92d2d;
     --primary-foreground: #ffffff;
-    --promo: #ffc83d;
-    --pink: #ff8f9c;
-    --pink-light: #fff0f1;
+    --promo: #e92d2d;
+    --pink: #f43f5e;
+    --pink-light: #fff1f3;
     --card: #ffffff;
-    --card-foreground: #292525;
-    --muted: #fff0f1;
-    --muted-foreground: #777070;
-    --border: #f0dddd;
-    --tag-bg: #fff0f1;
-    --tag-text: #d92d2d;
-    --countdown: #a61f2b;
-    --nav-active: #d92d2d;
-    --nav-inactive: #777070;
-    --nav-icon: #292525;
-    --brand-red: #d92d2d;
-    --brand-orange: #ff8f9c;
+    --card-foreground: #222222;
+    --muted: #fff1f3;
+    --muted-foreground: #737373;
+    --border: #e5e5e5;
+    --tag-bg: #fff1f3;
+    --tag-text: #e92d2d;
+    --countdown: #e92d2d;
+    --nav-active: #f43f5e;
+    --nav-inactive: #737373;
+    --nav-icon: #333333;
+    --brand-red: #f43f5e;
+    --brand-orange: #ff7a00;
     --success: #35b77e;
     --header-height: 10rem;
     --header-content-gap: 10mm;

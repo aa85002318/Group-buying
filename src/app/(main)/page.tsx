@@ -8,6 +8,7 @@ import { VideoSection } from "@/components/home/VideoSection";
 import {
   getClosingSoonProducts,
   getNewThisWeekProducts,
+  type HomeProduct,
 } from "@/lib/home";
 import {
   getMockGroupBuyEventsWithProducts,
@@ -17,11 +18,13 @@ import {
   mockVideos,
 } from "@/lib/mock-data";
 import type { GroupBuyEvent, Product, ProductCategory, Video } from "@/lib/types/database";
+import { formatCurrency } from "@/lib/utils";
 
 type GroupBuyEventWithProducts = GroupBuyEvent & {
   group_buy_products?: Array<{
     products?: Product | null;
     special_price?: number | null;
+    sold_count?: number;
   }>;
 };
 
@@ -51,12 +54,30 @@ export default function HomePage() {
   }, []);
 
   const banners: BannerItem[] = useMemo(() => {
-    const toBanner = (e: GroupBuyEventWithProducts): BannerItem => ({
-      id: e.id,
-      title: e.title,
-      image: e.banner_url!,
-      link: e.linked_product_id ? `/products/${e.linked_product_id}` : `/group-buy/${e.id}`,
-    });
+    const toBanner = (e: GroupBuyEventWithProducts): BannerItem => {
+      const groupBuyProduct = e.group_buy_products?.find((item) => item.products);
+      const product = groupBuyProduct?.products;
+      const price = groupBuyProduct?.special_price ?? product?.price;
+      const saving =
+        product?.original_price && price && product.original_price > price
+          ? product.original_price - price
+          : 0;
+
+      return {
+        id: e.id,
+        title: e.title,
+        image: e.banner_url!,
+        link: e.linked_product_id ? `/products/${e.linked_product_id}` : `/group-buy/${e.id}`,
+        offer:
+          saving > 0
+            ? `現省 ${formatCurrency(saving)}`
+            : price
+              ? `團購價 ${formatCurrency(price)}`
+              : undefined,
+        deadline: e.end_at,
+        productImage: product?.image_url,
+      };
+    };
 
     const featuredBanners = featuredEvents
       .filter((e) => e.banner_url && e.status === "active")
@@ -68,24 +89,69 @@ export default function HomePage() {
       .filter((e) => e.banner_url && e.status === "active")
       .map(toBanner);
 
-    return eventBanners.length > 0 ? eventBanners : mockBanners;
-  }, [events, featuredEvents]);
+    if (eventBanners.length > 0) return eventBanners;
+
+    return mockBanners.map((banner, index) => {
+      const product = products[index % products.length];
+      const saving =
+        product?.original_price && product.original_price > product.price
+          ? product.original_price - product.price
+          : 0;
+      return {
+        ...banner,
+        offer: product
+          ? saving > 0
+            ? `現省 ${formatCurrency(saving)}`
+            : `團購價 ${formatCurrency(product.price)}`
+          : undefined,
+        deadline: product?.preorder_deadline ?? undefined,
+        productImage: product?.image_url,
+      };
+    });
+  }, [events, featuredEvents, products]);
 
   const newThisWeek = useMemo(() => getNewThisWeekProducts(products), [products]);
   const closingSoon = useMemo(() => getClosingSoonProducts(products, events), [products, events]);
-  const recommended = useMemo(() => products.slice(0, 6), [products]);
+  const recommended = useMemo(() => {
+    const ranked = new Map<string, HomeProduct>();
+
+    for (const event of events) {
+      for (const item of event.group_buy_products ?? []) {
+        const product = item.products;
+        if (!product) continue;
+        const existing = ranked.get(product.id);
+        const soldCount = item.sold_count ?? 0;
+        if ((existing?.sold_count ?? -1) >= soldCount) continue;
+        ranked.set(product.id, {
+          ...product,
+          price: item.special_price ?? product.price,
+          href: `/group-buy/${event.id}`,
+          sold_count: soldCount,
+        });
+      }
+    }
+
+    const rankedProducts = Array.from(ranked.values()).sort(
+      (a, b) => (b.sold_count ?? 0) - (a.sold_count ?? 0)
+    );
+    for (const product of products) {
+      if (rankedProducts.length >= 3) break;
+      if (!ranked.has(product.id)) rankedProducts.push({ ...product, sold_count: 0 });
+    }
+    return rankedProducts.slice(0, 3);
+  }, [events, products]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <BannerCarousel banners={banners} />
 
       <CategoryGrid categories={categories} />
 
       <ProductScrollSection
-        title="本週上新"
+        title="本週新品搶先看"
         products={newThisWeek}
         seeMoreHref="/group-buy"
-        fourPerRow
+        variant="new"
         emptyText="本週尚無新商品"
       />
 
@@ -94,15 +160,15 @@ export default function HomePage() {
         products={closingSoon}
         seeMoreHref="/group-buy"
         showCutoff
-        fourPerRow
+        variant="closing"
         emptyText="近期無即將截止的團購"
       />
 
       <ProductScrollSection
-        title="推薦商品"
+        title="團友熱買排行榜"
         products={recommended}
         seeMoreHref="/group-buy"
-        fourPerRow
+        variant="ranking"
         emptyText="暫無推薦商品"
       />
 
