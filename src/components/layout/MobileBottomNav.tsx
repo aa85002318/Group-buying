@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Grid2X2, Home, ShoppingCart, User } from "lucide-react";
+import { Grid2X2, Home, PackagePlus, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -21,6 +21,13 @@ const NAV_ITEMS = [
     label: "分類",
     icon: Grid2X2,
     match: (p: string) => p.startsWith("/categories") || p.startsWith("/category"),
+    showBadge: false,
+  },
+  {
+    href: "/products?sort=newest",
+    label: "本日上架",
+    icon: PackagePlus,
+    match: (p: string) => p.startsWith("/products"),
     showBadge: false,
   },
   {
@@ -52,7 +59,7 @@ export function MobileBottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-md md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="mx-auto grid h-[4.25rem] max-w-app grid-cols-4 items-center px-2 pb-1.5">
+      <div className="mx-auto grid h-[4.25rem] max-w-app grid-cols-5 items-center px-2 pb-1.5">
         {NAV_ITEMS.map(({ href, label, icon: Icon, match, showBadge }) => {
           const active = match(pathname);
           return (

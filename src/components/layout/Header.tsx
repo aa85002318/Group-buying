@@ -4,7 +4,6 @@ import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from "react
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  ChevronDown,
   Menu,
   Package,
   Search,
@@ -91,16 +90,11 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
         type="button"
         aria-expanded={isOpen}
         aria-controls="header-category-menu"
+        aria-label={isOpen ? "收合商品導覽" : "展開商品導覽"}
         onClick={() => setIsOpen((open) => !open)}
-        className="inline-flex h-9 items-center gap-2 rounded-xl border border-brand-line bg-white px-3 text-sm font-medium text-brand-ink shadow-sm transition hover:border-brand-red/30 hover:bg-brand-blush focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-line bg-white text-brand-red shadow-sm transition hover:border-brand-red/30 hover:bg-brand-blush focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
       >
-        <Menu className="h-4 w-4 text-brand-red" aria-hidden />
-        <span>商品導覽</span>
-        <span className="text-xs font-normal text-brand-muted">{links.length} 項</span>
-        <ChevronDown
-          className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")}
-          aria-hidden
-        />
+        <Menu className="h-5 w-5" aria-hidden />
       </button>
 
       {isOpen && (
@@ -416,7 +410,7 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
 }
 
 function CategoryMenuFallback() {
-  return <div className="h-9 w-32 rounded-xl border border-brand-line bg-white" />;
+  return <div className="h-10 w-10 rounded-xl border border-brand-line bg-white" />;
 }
 
 function SearchFallback({ className }: { className?: string }) {
@@ -493,37 +487,30 @@ export function Header() {
     >
       <div className="mx-auto w-full max-w-7xl px-4 md:px-8 lg:px-12">
         <div className="flex flex-col gap-2 py-2.5 md:py-3">
-          {/* Layer 1: brand + search + actions */}
-          <div className="flex min-h-[48px] items-center gap-2 md:min-h-[56px] md:gap-5">
-            <BrandLockup className="max-w-[46%] md:max-w-none" />
-
-            {!isAuthPage && (
-              <div className="mx-auto hidden w-[38%] max-w-xl flex-1 md:block">
-                <Suspense fallback={<SearchFallback />}>
-                  <SearchBar id="header-search-desktop" />
+          {/* Layer 1: menu + centered brand + actions */}
+          <div className="grid min-h-[48px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center md:min-h-[56px]">
+            <div className="flex min-w-0 justify-start">
+              {!isAuthPage && (
+                <Suspense fallback={<CategoryMenuFallback />}>
+                  <CategoryMenu links={links} />
                 </Suspense>
-              </div>
-            )}
+              )}
+            </div>
 
-            <div className="ml-auto">
+            <BrandLockup className="max-w-[150px] justify-self-center sm:max-w-none" />
+
+            <div className="flex min-w-0 justify-end">
               <AuthActions variant={authVariant} />
             </div>
           </div>
 
-          {/* Mobile full-width search */}
+          {/* Full-width search */}
           {!isAuthPage && (
-            <div className="md:hidden">
+            <div className="mx-auto w-full max-w-2xl">
               <Suspense fallback={<SearchFallback />}>
-                <SearchBar id="header-search-mobile" />
+                <SearchBar id="header-search" />
               </Suspense>
             </div>
-          )}
-
-          {/* Layer 2: categories */}
-          {!isAuthPage && (
-            <Suspense fallback={<CategoryMenuFallback />}>
-              <CategoryMenu links={links} />
-            </Suspense>
           )}
 
           {/* Promo strip */}
