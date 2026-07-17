@@ -9,6 +9,7 @@ import {
   Search,
   ShoppingCart,
   User,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
@@ -185,11 +186,13 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
 function SearchBar({
   className,
   id = "header-search",
-  compact = false,
+  autoFocus = false,
+  onSearch,
 }: {
   className?: string;
   id?: string;
-  compact?: boolean;
+  autoFocus?: boolean;
+  onSearch?: () => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -208,15 +211,13 @@ function SearchBar({
     } else {
       router.push("/products");
     }
+    onSearch?.();
   };
 
   return (
     <form onSubmit={handleSubmit} className={cn("relative w-full", className)} role="search">
       <Search
-        className={cn(
-          "pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-red",
-          compact && "hidden sm:block"
-        )}
+        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-red"
         aria-hidden
       />
       <input
@@ -224,13 +225,9 @@ function SearchBar({
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        autoFocus={autoFocus}
         placeholder="搜尋商品、品牌或團購活動"
-        className={cn(
-          "h-10 w-full rounded-full border-[1.5px] border-[#F2B4AE] bg-brand-warm pr-10 text-sm text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-red focus:shadow-brand-ring focus-visible:border-brand-red focus-visible:shadow-brand-ring",
-          compact
-            ? "pl-2 text-transparent placeholder:text-transparent sm:pl-10 sm:text-brand-ink sm:placeholder:text-brand-muted"
-            : "pl-11"
-        )}
+        className="h-10 w-full rounded-full border-[1.5px] border-[#F2B4AE] bg-brand-warm pl-10 pr-10 text-sm text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-red focus:shadow-brand-ring focus-visible:border-brand-red focus-visible:shadow-brand-ring"
       />
       <button
         type="submit"
@@ -240,6 +237,60 @@ function SearchBar({
         <Search className="h-4 w-4" />
       </button>
     </form>
+  );
+}
+
+function CollapsibleSearch() {
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls="header-search-panel"
+        aria-label={isOpen ? "收合搜尋" : "展開搜尋"}
+        onClick={() => setIsOpen((open) => !open)}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-brand-ink transition hover:bg-brand-blush hover:text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
+      >
+        {isOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+      </button>
+
+      {isOpen && (
+        <div
+          id="header-search-panel"
+          className="absolute right-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-brand-line bg-white p-2 shadow-xl"
+        >
+          <SearchBar id="header-search" autoFocus onSearch={() => setIsOpen(false)} />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -524,12 +575,8 @@ export function Header() {
 
             <div className="flex min-w-0 items-center justify-end gap-1">
               {!isAuthPage && (
-                <Suspense fallback={<SearchFallback className="w-10 sm:w-36 md:w-48" />}>
-                  <SearchBar
-                    id="header-search"
-                    compact
-                    className="w-10 sm:w-36 md:w-48 lg:w-60"
-                  />
+                <Suspense fallback={<SearchFallback className="w-10" />}>
+                  <CollapsibleSearch />
                 </Suspense>
               )}
               <AuthActions variant={authVariant} />
