@@ -39,12 +39,10 @@ function BrandLockup({ className }: { className?: string }) {
     <Logo
       href="/"
       size="header"
-      withText
       markOnly
       priority
       className={cn("max-w-full", className)}
       title="CHIMEIDIY 團購"
-      subtitle="棋美點心屋"
     />
   );
 }
@@ -187,9 +185,11 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
 function SearchBar({
   className,
   id = "header-search",
+  compact = false,
 }: {
   className?: string;
   id?: string;
+  compact?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -213,7 +213,10 @@ function SearchBar({
   return (
     <form onSubmit={handleSubmit} className={cn("relative w-full", className)} role="search">
       <Search
-        className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-red"
+        className={cn(
+          "pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-red",
+          compact && "hidden sm:block"
+        )}
         aria-hidden
       />
       <input
@@ -222,7 +225,12 @@ function SearchBar({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="搜尋商品、品牌或團購活動"
-        className="h-10 w-full rounded-full border-[1.5px] border-[#F2B4AE] bg-brand-warm pl-11 pr-12 text-sm text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-red focus:shadow-brand-ring focus-visible:border-brand-red focus-visible:shadow-brand-ring"
+        className={cn(
+          "h-10 w-full rounded-full border-[1.5px] border-[#F2B4AE] bg-brand-warm pr-10 text-sm text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-red focus:shadow-brand-ring focus-visible:border-brand-red focus-visible:shadow-brand-ring",
+          compact
+            ? "pl-2 text-transparent placeholder:text-transparent sm:pl-10 sm:text-brand-ink sm:placeholder:text-brand-muted"
+            : "pl-11"
+        )}
       />
       <button
         type="submit"
@@ -262,15 +270,20 @@ function IconAction({
   href,
   label,
   icon: Icon,
+  className,
 }: {
   href: string;
   label: string;
   icon: typeof User;
+  className?: string;
 }) {
   return (
     <Link
       href={href}
-      className="inline-flex flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-brand-ink transition hover:bg-brand-blush hover:text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 md:flex-row md:gap-1.5 md:px-2.5"
+      className={cn(
+        "inline-flex flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 text-brand-ink transition hover:bg-brand-blush hover:text-brand-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 md:flex-row md:gap-1.5 md:px-2.5",
+        className
+      )}
       aria-label={label}
     >
       <Icon className="h-5 w-5" />
@@ -341,12 +354,22 @@ function AuthActions({
     <div className={cn("flex shrink-0 items-center gap-0.5 md:gap-1", className)}>
       {isLoggedIn ? (
         <>
-          <IconAction href={APP_ROUTES.orders} label="我的團購" icon={Package} />
+          <IconAction
+            href={APP_ROUTES.orders}
+            label="我的團購"
+            icon={Package}
+            className="hidden md:inline-flex"
+          />
           <IconAction href={APP_ROUTES.profile} label="會員中心" icon={User} />
         </>
       ) : (
         <>
-          <IconAction href={APP_ROUTES.login} label="我的團購" icon={Package} />
+          <IconAction
+            href={APP_ROUTES.login}
+            label="我的團購"
+            icon={Package}
+            className="hidden md:inline-flex"
+          />
           <IconAction href={APP_ROUTES.login} label="會員中心" icon={User} />
           <Link
             href={APP_ROUTES.register}
@@ -487,7 +510,7 @@ export function Header() {
     >
       <div className="mx-auto w-full max-w-7xl px-4 md:px-8 lg:px-12">
         <div className="flex flex-col gap-2 py-2.5 md:py-3">
-          {/* Layer 1: menu + centered brand + actions */}
+          {/* Single row: menu + centered brand + compact search/actions */}
           <div className="grid min-h-[48px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center md:min-h-[56px]">
             <div className="flex min-w-0 justify-start">
               {!isAuthPage && (
@@ -499,19 +522,19 @@ export function Header() {
 
             <BrandLockup className="max-w-[150px] justify-self-center sm:max-w-none" />
 
-            <div className="flex min-w-0 justify-end">
+            <div className="flex min-w-0 items-center justify-end gap-1">
+              {!isAuthPage && (
+                <Suspense fallback={<SearchFallback className="w-10 sm:w-36 md:w-48" />}>
+                  <SearchBar
+                    id="header-search"
+                    compact
+                    className="w-10 sm:w-36 md:w-48 lg:w-60"
+                  />
+                </Suspense>
+              )}
               <AuthActions variant={authVariant} />
             </div>
           </div>
-
-          {/* Full-width search */}
-          {!isAuthPage && (
-            <div className="mx-auto w-full max-w-2xl">
-              <Suspense fallback={<SearchFallback />}>
-                <SearchBar id="header-search" />
-              </Suspense>
-            </div>
-          )}
 
           {/* Promo strip */}
           {!isAuthPage && <QuickPromoStrip items={promoItems} />}
