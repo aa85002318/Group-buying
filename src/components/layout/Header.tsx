@@ -3,7 +3,15 @@
 import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Package, Search, ShoppingCart, User, type LucideIcon } from "lucide-react";
+import {
+  ChevronDown,
+  Menu,
+  Package,
+  Search,
+  ShoppingCart,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -45,6 +53,11 @@ function BrandLockup({ className }: { className?: string }) {
 function CategoryMenu({ className, links }: { className?: string; links: HeaderChip[] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname, searchParams]);
 
   const isActive = (href: string) => {
     if (href.startsWith("http://") || href.startsWith("https://")) return false;
@@ -73,18 +86,34 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
   };
 
   return (
-    <nav
-      aria-label="商品分類"
-      className={cn(
-        "rounded-2xl border border-brand-line bg-white p-2 shadow-sm md:p-2.5",
-        className
-      )}
-    >
-      <div className="flex gap-1 overflow-x-auto whitespace-nowrap scrollbar-none md:gap-1.5">
+    <div className={cn("relative w-fit max-w-full", className)}>
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls="header-category-menu"
+        onClick={() => setIsOpen((open) => !open)}
+        className="inline-flex h-9 items-center gap-2 rounded-xl border border-brand-line bg-white px-3 text-sm font-medium text-brand-ink shadow-sm transition hover:border-brand-red/30 hover:bg-brand-blush focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
+      >
+        <Menu className="h-4 w-4 text-brand-red" aria-hidden />
+        <span>商品導覽</span>
+        <span className="text-xs font-normal text-brand-muted">{links.length} 項</span>
+        <ChevronDown
+          className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+
+      {isOpen && (
+        <nav
+          id="header-category-menu"
+          aria-label="商品分類"
+          className="absolute left-0 top-full z-50 mt-2 max-h-[min(60vh,28rem)] w-[min(30rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-brand-line bg-white p-2 shadow-xl"
+        >
+          <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
         {links.map(({ label, href, icon: Icon, badge, iconEmoji }) => {
           const active = isActive(href);
           const classNameValue = cn(
-            "inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30 md:h-12 md:px-4",
+            "inline-flex h-10 min-w-0 items-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30",
             active
               ? "bg-brand-gradient text-white shadow-brand"
               : "bg-transparent text-brand-ink hover:bg-brand-blush hover:text-brand-red"
@@ -136,6 +165,7 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
                 target="_blank"
                 rel="noopener noreferrer"
                 className={classNameValue}
+                onClick={() => setIsOpen(false)}
               >
                 {content}
               </a>
@@ -143,13 +173,20 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
           }
 
           return (
-            <Link key={`${label}-${href}`} href={href} className={classNameValue}>
+            <Link
+              key={`${label}-${href}`}
+              href={href}
+              className={classNameValue}
+              onClick={() => setIsOpen(false)}
+            >
               {content}
             </Link>
           );
         })}
-      </div>
-    </nav>
+          </div>
+        </nav>
+      )}
+    </div>
   );
 }
 
@@ -191,11 +228,11 @@ function SearchBar({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="搜尋商品、品牌或團購活動"
-        className="h-12 w-full rounded-full border-[1.5px] border-[#F2B4AE] bg-brand-warm pl-11 pr-14 text-sm text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-red focus:shadow-brand-ring focus-visible:border-brand-red focus-visible:shadow-brand-ring"
+        className="h-10 w-full rounded-full border-[1.5px] border-[#F2B4AE] bg-brand-warm pl-11 pr-12 text-sm text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-red focus:shadow-brand-ring focus-visible:border-brand-red focus-visible:shadow-brand-ring"
       />
       <button
         type="submit"
-        className="absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-brand-gradient text-white shadow-sm transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40"
+        className="absolute right-1 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-brand-gradient text-white shadow-sm transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/40"
         aria-label="搜尋"
       >
         <Search className="h-4 w-4" />
@@ -336,9 +373,9 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
   return (
     <div
       aria-label="團購快捷資訊"
-      className="overflow-hidden rounded-xl bg-promo-strip px-3 py-2.5 md:px-4"
+      className="overflow-hidden rounded-xl bg-promo-strip px-3 py-2 md:px-4"
     >
-      <ul className="flex gap-4 overflow-x-auto whitespace-nowrap scrollbar-none md:justify-center md:gap-8">
+      <ul className="flex gap-3 overflow-x-auto whitespace-nowrap scrollbar-none md:justify-center md:gap-6">
         {items.map(({ id, label, value, suffix, icon_emoji, href }) => {
           const content = (
             <>
@@ -353,7 +390,7 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
             </>
           );
           const className =
-            "inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-[#9F1D1D]";
+            "inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-[#9F1D1D] md:text-sm";
 
           return (
             <li key={id}>
@@ -379,11 +416,11 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
 }
 
 function CategoryMenuFallback() {
-  return <div className="h-14 rounded-2xl border border-brand-line bg-white" />;
+  return <div className="h-9 w-32 rounded-xl border border-brand-line bg-white" />;
 }
 
 function SearchFallback({ className }: { className?: string }) {
-  return <div className={cn("h-12 rounded-full bg-brand-warm", className)} />;
+  return <div className={cn("h-10 rounded-full bg-brand-warm", className)} />;
 }
 
 export function Header() {
@@ -455,9 +492,9 @@ export function Header() {
       className="fixed left-0 right-0 top-0 z-50 border-b border-brand-line/80 bg-white/95 shadow-[0_1px_0_rgba(242,222,220,0.9)] backdrop-blur-sm"
     >
       <div className="mx-auto w-full max-w-7xl px-4 md:px-8 lg:px-12">
-        <div className="flex flex-col gap-3 py-3 md:gap-3 md:py-4">
+        <div className="flex flex-col gap-2 py-2.5 md:py-3">
           {/* Layer 1: brand + search + actions */}
-          <div className="flex min-h-[56px] items-center gap-2 md:min-h-[72px] md:gap-6">
+          <div className="flex min-h-[48px] items-center gap-2 md:min-h-[56px] md:gap-5">
             <BrandLockup className="max-w-[46%] md:max-w-none" />
 
             {!isAuthPage && (
