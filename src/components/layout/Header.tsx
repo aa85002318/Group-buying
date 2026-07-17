@@ -285,7 +285,7 @@ function CollapsibleSearch() {
       {isOpen && (
         <div
           id="header-search-panel"
-          className="absolute right-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-brand-line bg-white p-2 shadow-xl"
+          className="absolute left-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-brand-line bg-white p-2 shadow-xl"
         >
           <SearchBar id="header-search" autoFocus onSearch={() => setIsOpen(false)} />
         </div>
@@ -561,24 +561,24 @@ export function Header() {
     >
       <div className="mx-auto w-full max-w-7xl px-4 md:px-8 lg:px-12">
         <div className="flex flex-col gap-2 py-2.5 md:py-3">
-          {/* Single row: menu + centered brand + compact search/actions */}
+          {/* Single row: left menu/search + centered brand + member actions */}
           <div className="grid min-h-[48px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center md:min-h-[56px]">
-            <div className="flex min-w-0 justify-start">
+            <div className="flex min-w-0 items-center justify-start gap-1">
               {!isAuthPage && (
-                <Suspense fallback={<CategoryMenuFallback />}>
-                  <CategoryMenu links={links} />
-                </Suspense>
+                <>
+                  <Suspense fallback={<CategoryMenuFallback />}>
+                    <CategoryMenu links={links} />
+                  </Suspense>
+                  <Suspense fallback={<SearchFallback className="w-10" />}>
+                    <CollapsibleSearch />
+                  </Suspense>
+                </>
               )}
             </div>
 
             <BrandLockup className="max-w-[150px] justify-self-center sm:max-w-none" />
 
             <div className="flex min-w-0 items-center justify-end gap-1">
-              {!isAuthPage && (
-                <Suspense fallback={<SearchFallback className="w-10" />}>
-                  <CollapsibleSearch />
-                </Suspense>
-              )}
               <AuthActions variant={authVariant} />
             </div>
           </div>
