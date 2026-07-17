@@ -5,7 +5,11 @@ import { cn } from "@/lib/utils";
 
 const sizes = {
   sm: { width: 36, height: 36, className: "h-9 w-9" },
-  header: { width: 52, height: 52, className: "h-9 w-9 md:h-12 md:w-12" },
+  header: {
+    width: 200,
+    height: 76,
+    className: "h-auto w-[116px] sm:w-[140px] md:w-[180px]",
+  },
   md: { width: 180, height: 180, className: "h-auto w-[180px]" },
   lg: { width: 260, height: 260, className: "h-auto w-[min(260px,80vw)]" },
   auth: { width: 120, height: 120, className: "h-[96px] w-[96px] md:h-[120px] md:w-[120px]" },
@@ -40,7 +44,12 @@ export function Logo({
 }: LogoProps) {
   const { width, height, className: sizeClass } = sizes[size];
   const layout = textLayout ?? (size === "header" || size === "sm" ? "beside" : "below");
-  const src = markOnly || withText ? "/images/logo-mark.png" : "/images/logo.png";
+  const src =
+    size === "header"
+      ? "/brand/chimeidiy-header-logo.png"
+      : markOnly || withText
+        ? "/images/logo-mark.png"
+        : "/images/logo.png";
 
   const image = (
     <Image
