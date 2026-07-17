@@ -5,9 +5,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { BRAND_NAME, BRAND_SUBTITLE } from "@/lib/env";
 import {
   DEFAULT_HEADER_NAV_ITEMS,
+  DEFAULT_HEADER_PROMO_ITEMS,
   isValidHeaderHref,
   normalizeHeaderNavItems,
+  normalizeHeaderPromoItems,
   type HeaderNavItem,
+  type HeaderPromoItem,
 } from "@/lib/site-header";
 
 export async function GET() {
@@ -19,21 +22,26 @@ export async function GET() {
       brandTitle: BRAND_NAME,
       brandSubtitle: BRAND_SUBTITLE,
       navItems: DEFAULT_HEADER_NAV_ITEMS,
+      promoItems: DEFAULT_HEADER_PROMO_ITEMS,
     });
   }
 
   const admin = createAdminClient();
   const { data } = await admin
     .from("site_header_settings")
-    .select("brand_title,brand_subtitle,nav_items")
+    .select("brand_title,brand_subtitle,nav_items,promo_items")
     .eq("singleton_key", "main")
     .maybeSingle();
 
   const navItems = normalizeHeaderNavItems(data?.nav_items);
+  const promoItems = normalizeHeaderPromoItems(data?.promo_items);
   return NextResponse.json({
     brandTitle: data?.brand_title ?? BRAND_NAME,
     brandSubtitle: data?.brand_subtitle ?? BRAND_SUBTITLE,
     navItems: navItems.length > 0 ? navItems : DEFAULT_HEADER_NAV_ITEMS,
+    promoItems: Array.isArray(data?.promo_items)
+      ? promoItems
+      : DEFAULT_HEADER_PROMO_ITEMS,
   });
 }
 
@@ -46,6 +54,7 @@ export async function PATCH(request: Request) {
   const brandTitle = typeof body.brandTitle === "string" ? body.brandTitle.trim() : "";
   const brandSubtitle = typeof body.brandSubtitle === "string" ? body.brandSubtitle.trim() : "";
   const navItems = normalizeHeaderNavItems(body.navItems);
+  const promoItems = normalizeHeaderPromoItems(body.promoItems);
 
   if (!brandTitle || !brandSubtitle) {
     return NextResponse.json({ error: "請填寫品牌主標與副標" }, { status: 400 });
@@ -53,6 +62,9 @@ export async function PATCH(request: Request) {
 
   if (!Array.isArray(body.navItems)) {
     return NextResponse.json({ error: "navItems 格式不正確" }, { status: 400 });
+  }
+  if (!Array.isArray(body.promoItems)) {
+    return NextResponse.json({ error: "promoItems 格式不正確" }, { status: 400 });
   }
 
   for (const item of body.navItems as HeaderNavItem[]) {
@@ -66,9 +78,20 @@ export async function PATCH(request: Request) {
       );
     }
   }
+  for (const item of body.promoItems as HeaderPromoItem[]) {
+    if (!item?.label?.trim()) {
+      return NextResponse.json({ error: "每個快捷資訊都需要顯示文字" }, { status: 400 });
+    }
+    if (item.href?.trim() && !isValidHeaderHref(item.href)) {
+      return NextResponse.json(
+        { error: `快捷資訊連結格式不正確：${item.label}` },
+        { status: 400 }
+      );
+    }
+  }
 
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ ok: true, navItems });
+    return NextResponse.json({ ok: true, navItems, promoItems });
   }
 
   const admin = createAdminClient();
@@ -82,6 +105,7 @@ export async function PATCH(request: Request) {
         brand_title: brandTitle,
         brand_subtitle: brandSubtitle,
         nav_items: navItems,
+        promo_items: promoItems,
         updated_at: now,
       },
       { onConflict: "singleton_key" }
@@ -98,6 +122,7 @@ export async function PATCH(request: Request) {
       brandTitle,
       brandSubtitle,
       navItems,
+      promoItems,
     });
   }
 
@@ -106,6 +131,7 @@ export async function PATCH(request: Request) {
     brandTitle,
     brandSubtitle,
     navItems,
+    promoItems,
     settings: data,
   });
 }

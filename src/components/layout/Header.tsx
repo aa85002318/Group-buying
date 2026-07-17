@@ -10,11 +10,14 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { useCart } from "@/hooks/useCart";
 import {
-  GROUP_BUY_QUICK_STATS,
   HEADER_CATEGORY_LINKS,
   isMinimalChromePath,
 } from "@/lib/navigation";
 import { APP_ROUTES } from "@/lib/site-links";
+import {
+  DEFAULT_HEADER_PROMO_ITEMS,
+  type HeaderPromoItem,
+} from "@/lib/site-header";
 
 type HeaderChip = {
   href: string;
@@ -327,28 +330,49 @@ function AuthActions({
   );
 }
 
-function QuickPromoStrip() {
+function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
+  if (items.length === 0) return null;
+
   return (
     <div
       aria-label="團購快捷資訊"
       className="overflow-hidden rounded-xl bg-promo-strip px-3 py-2.5 md:px-4"
     >
       <ul className="flex gap-4 overflow-x-auto whitespace-nowrap scrollbar-none md:justify-center md:gap-8">
-        {GROUP_BUY_QUICK_STATS.map(({ label, value, suffix, icon: Icon }) => (
-          <li
-            key={label}
-            className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-[#9F1D1D]"
-          >
-            <Icon className="h-4 w-4 text-brand-orange" aria-hidden />
-            <span>{label}</span>
-            {value ? (
-              <span className="font-bold text-brand-orange">
-                {value}
-                {suffix}
-              </span>
-            ) : null}
-          </li>
-        ))}
+        {items.map(({ id, label, value, suffix, icon_emoji, href }) => {
+          const content = (
+            <>
+              {icon_emoji ? <span aria-hidden>{icon_emoji}</span> : null}
+              <span>{label}</span>
+              {value ? (
+                <span className="font-bold text-brand-orange">
+                  {value}
+                  {suffix}
+                </span>
+              ) : null}
+            </>
+          );
+          const className =
+            "inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-[#9F1D1D]";
+
+          return (
+            <li key={id}>
+              {href ? (
+                href.startsWith("http") ? (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+                    {content}
+                  </a>
+                ) : (
+                  <Link href={href} className={className}>
+                    {content}
+                  </Link>
+                )
+              ) : (
+                <span className={className}>{content}</span>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -367,6 +391,7 @@ export function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const [siteHeaderConfig, setSiteHeaderConfig] = useState<{
     links: Array<{ href: string; label: string; badge?: "hot" | "live"; icon_emoji?: string }>;
+    promoItems?: HeaderPromoItem[];
   } | null>(null);
 
   useEffect(() => {
@@ -394,6 +419,10 @@ export function Header() {
       icon,
     }));
   }, [siteHeaderConfig]);
+
+  const promoItems = Array.isArray(siteHeaderConfig?.promoItems)
+    ? siteHeaderConfig.promoItems
+    : DEFAULT_HEADER_PROMO_ITEMS;
 
   useEffect(() => {
     const header = headerRef.current;
@@ -461,7 +490,7 @@ export function Header() {
           )}
 
           {/* Promo strip */}
-          {!isAuthPage && <QuickPromoStrip />}
+          {!isAuthPage && <QuickPromoStrip items={promoItems} />}
         </div>
       </div>
     </header>

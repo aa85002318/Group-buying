@@ -8,12 +8,28 @@ export type HeaderNavItem = {
   icon_emoji?: string;
 };
 
+export type HeaderPromoItem = {
+  id: string;
+  label: string;
+  value?: string;
+  suffix?: string;
+  icon_emoji?: string;
+  href?: string;
+};
+
 export const DEFAULT_HEADER_NAV_ITEMS: HeaderNavItem[] = [
   { id: "products", label: "全部商品", href: "/products", icon_emoji: "🛍️" },
   { id: "group_buy", label: "熱門團購", href: "/group-buy", badge: "hot", icon_emoji: "🔥" },
   { id: "live", label: "直播專區", href: "/live", badge: "live", icon_emoji: "📡" },
   { id: "videos", label: "影音專區", href: "/videos", icon_emoji: "🎬" },
   { id: "articles", label: "文章專區", href: "/articles", icon_emoji: "📝" },
+];
+
+export const DEFAULT_HEADER_PROMO_ITEMS: HeaderPromoItem[] = [
+  { id: "today", label: "今日開團", value: "12", suffix: "團", icon_emoji: "✨" },
+  { id: "ending", label: "即將結團", value: "5", suffix: "團", icon_emoji: "🔥" },
+  { id: "shipping", label: "滿額免運", icon_emoji: "📦" },
+  { id: "invite", label: "邀請好友賺購物金", icon_emoji: "🏷️", href: "/share-rewards" },
 ];
 
 export function isValidHeaderHref(href: string): boolean {
@@ -51,6 +67,42 @@ export function normalizeHeaderNavItems(raw: unknown): HeaderNavItem[] {
         : undefined;
 
     items.push({ id, label, href, badge, icon_emoji });
+  }
+  return items;
+}
+
+export function normalizeHeaderPromoItems(raw: unknown): HeaderPromoItem[] {
+  if (!Array.isArray(raw)) return [];
+
+  const items: HeaderPromoItem[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const record = row as Record<string, unknown>;
+    const label = typeof record.label === "string" ? record.label.trim() : "";
+    if (!label) continue;
+
+    const id =
+      typeof record.id === "string" && record.id.trim()
+        ? record.id.trim()
+        : `promo-${items.length + 1}`;
+    const value =
+      typeof record.value === "string" && record.value.trim()
+        ? record.value.trim()
+        : undefined;
+    const suffix =
+      typeof record.suffix === "string" && record.suffix.trim()
+        ? record.suffix.trim()
+        : undefined;
+    const icon_emoji =
+      typeof record.icon_emoji === "string" && record.icon_emoji.trim()
+        ? record.icon_emoji.trim()
+        : undefined;
+    const href =
+      typeof record.href === "string" && isValidHeaderHref(record.href)
+        ? record.href.trim()
+        : undefined;
+
+    items.push({ id, label, value, suffix, icon_emoji, href });
   }
   return items;
 }

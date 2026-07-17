@@ -1,18 +1,30 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { isSupabaseConfigured } from "@/lib/config";
 import { BRAND_NAME, BRAND_SUBTITLE } from "@/lib/env";
 import {
   DEFAULT_HEADER_NAV_ITEMS,
+  DEFAULT_HEADER_PROMO_ITEMS,
   normalizeHeaderNavItems,
+  normalizeHeaderPromoItems,
   type HeaderNavItem,
 } from "@/lib/site-header";
 
 export async function GET() {
-  const supabase = await createClient();
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({
+      brandTitle: BRAND_NAME,
+      brandSubtitle: BRAND_SUBTITLE,
+      links: DEFAULT_HEADER_NAV_ITEMS,
+      promoItems: DEFAULT_HEADER_PROMO_ITEMS,
+    });
+  }
+
+  const supabase = createAdminClient();
 
   const { data: settings } = await supabase
     .from("site_header_settings")
-    .select("brand_title,brand_subtitle,nav_items,page_keys,category_ids")
+    .select("brand_title,brand_subtitle,nav_items,promo_items,page_keys,category_ids")
     .eq("singleton_key", "main")
     .maybeSingle();
 
@@ -58,6 +70,8 @@ export async function GET() {
     navItems = fallback.length > 0 ? fallback : DEFAULT_HEADER_NAV_ITEMS;
   }
 
+  const promoItems = normalizeHeaderPromoItems(settings?.promo_items);
+
   return NextResponse.json({
     brandTitle,
     brandSubtitle,
@@ -67,5 +81,8 @@ export async function GET() {
       badge: item.badge,
       icon_emoji: item.icon_emoji,
     })),
+    promoItems: Array.isArray(settings?.promo_items)
+      ? promoItems
+      : DEFAULT_HEADER_PROMO_ITEMS,
   });
 }

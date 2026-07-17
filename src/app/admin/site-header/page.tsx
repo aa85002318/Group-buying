@@ -7,8 +7,10 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { BRAND_NAME, BRAND_SUBTITLE } from "@/lib/env";
 import {
   DEFAULT_HEADER_NAV_ITEMS,
+  DEFAULT_HEADER_PROMO_ITEMS,
   type HeaderNavBadge,
   type HeaderNavItem,
+  type HeaderPromoItem,
 } from "@/lib/site-header";
 
 function createEmptyItem(): HeaderNavItem {
@@ -20,6 +22,17 @@ function createEmptyItem(): HeaderNavItem {
   };
 }
 
+function createEmptyPromoItem(): HeaderPromoItem {
+  return {
+    id: `promo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    label: "",
+    value: "",
+    suffix: "",
+    icon_emoji: "",
+    href: "",
+  };
+}
+
 export default function AdminSiteHeaderPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,6 +41,8 @@ export default function AdminSiteHeaderPage() {
   const [brandTitle, setBrandTitle] = useState(BRAND_NAME);
   const [brandSubtitle, setBrandSubtitle] = useState(BRAND_SUBTITLE);
   const [navItems, setNavItems] = useState<HeaderNavItem[]>(DEFAULT_HEADER_NAV_ITEMS);
+  const [promoItems, setPromoItems] =
+    useState<HeaderPromoItem[]>(DEFAULT_HEADER_PROMO_ITEMS);
 
   useEffect(() => {
     fetch("/api/admin/site-header")
@@ -36,6 +51,7 @@ export default function AdminSiteHeaderPage() {
         setBrandTitle(d?.brandTitle ?? BRAND_NAME);
         setBrandSubtitle(d?.brandSubtitle ?? BRAND_SUBTITLE);
         setNavItems(Array.isArray(d?.navItems) && d.navItems.length > 0 ? d.navItems : DEFAULT_HEADER_NAV_ITEMS);
+        setPromoItems(Array.isArray(d?.promoItems) ? d.promoItems : DEFAULT_HEADER_PROMO_ITEMS);
       })
       .catch(() => setError("載入失敗"))
       .finally(() => setLoading(false));
@@ -65,6 +81,30 @@ export default function AdminSiteHeaderPage() {
     setNavItems((prev) => [...prev, createEmptyItem()]);
   };
 
+  const updatePromoItem = (id: string, patch: Partial<HeaderPromoItem>) => {
+    setPromoItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...patch } : item))
+    );
+  };
+
+  const movePromoItem = (index: number, direction: -1 | 1) => {
+    setPromoItems((prev) => {
+      const next = [...prev];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const removePromoItem = (id: string) => {
+    setPromoItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const addPromoItem = () => {
+    setPromoItems((prev) => [...prev, createEmptyPromoItem()]);
+  };
+
   const save = async () => {
     setSaving(true);
     setMessage(null);
@@ -83,12 +123,21 @@ export default function AdminSiteHeaderPage() {
             icon_emoji: item.icon_emoji?.trim() || undefined,
             badge: item.badge || undefined,
           })),
+          promoItems: promoItems.map((item) => ({
+            ...item,
+            label: item.label.trim(),
+            value: item.value?.trim() || undefined,
+            suffix: item.suffix?.trim() || undefined,
+            icon_emoji: item.icon_emoji?.trim() || undefined,
+            href: item.href?.trim() || undefined,
+          })),
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "儲存失敗");
 
       if (Array.isArray(data.navItems)) setNavItems(data.navItems);
+      if (Array.isArray(data.promoItems)) setPromoItems(data.promoItems);
       setBrandTitle(data.brandTitle ?? brandTitle);
       setBrandSubtitle(data.brandSubtitle ?? brandSubtitle);
       setMessage("已儲存，前台頁首會立即更新");
@@ -233,6 +282,129 @@ export default function AdminSiteHeaderPage() {
                 新增項目
               </Button>
             </div>
+          </div>
+
+          <div className="space-y-3 rounded-xl bg-white p-4 shadow-card">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-medium text-coffee">下方開團快捷資訊</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  管理「今日開團、即將結團、滿額免運、邀請好友」等欄位，可自由新增、刪除、排序及變更文字與數字。
+                </p>
+              </div>
+              <Button type="button" variant="secondary" onClick={addPromoItem}>
+                新增快捷資訊
+              </Button>
+            </div>
+
+            {promoItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                目前不顯示快捷資訊列，可點「新增快捷資訊」加入。
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {promoItems.map((item, index) => (
+                  <div key={item.id} className="space-y-3 rounded-xl border border-border p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-coffee">
+                        快捷資訊 {index + 1}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={index === 0}
+                          onClick={() => movePromoItem(index, -1)}
+                        >
+                          上移
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={index === promoItems.length - 1}
+                          onClick={() => movePromoItem(index, 1)}
+                        >
+                          下移
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removePromoItem(item.id)}
+                        >
+                          刪除
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                      <label className="space-y-2">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          顯示文字
+                        </span>
+                        <Input
+                          value={item.label}
+                          onChange={(e) =>
+                            updatePromoItem(item.id, { label: e.target.value })
+                          }
+                          placeholder="例如：邀請好友賺購物金"
+                        />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          數值（選填）
+                        </span>
+                        <Input
+                          value={item.value ?? ""}
+                          onChange={(e) =>
+                            updatePromoItem(item.id, { value: e.target.value })
+                          }
+                          placeholder="例如：12"
+                        />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          單位（選填）
+                        </span>
+                        <Input
+                          value={item.suffix ?? ""}
+                          onChange={(e) =>
+                            updatePromoItem(item.id, { suffix: e.target.value })
+                          }
+                          placeholder="例如：團"
+                        />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          圖示 emoji（選填）
+                        </span>
+                        <Input
+                          value={item.icon_emoji ?? ""}
+                          onChange={(e) =>
+                            updatePromoItem(item.id, { icon_emoji: e.target.value })
+                          }
+                          placeholder="例如：✨"
+                        />
+                      </label>
+                      <label className="space-y-2 md:col-span-2">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          點擊連結（選填）
+                        </span>
+                        <Input
+                          value={item.href ?? ""}
+                          onChange={(e) =>
+                            updatePromoItem(item.id, { href: e.target.value })
+                          }
+                          placeholder="/share-rewards 或 https://..."
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
