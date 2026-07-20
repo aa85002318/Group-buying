@@ -25,10 +25,10 @@ interface BannerCarouselProps {
 function BannerDecor() {
   return (
     <>
-      <span className="pointer-events-none absolute -left-2 top-3 h-16 w-16 rounded-full bg-[#FFC83D]/35 blur-[2px]" />
+      <span className="pointer-events-none absolute -left-2 top-3 h-16 w-16 rounded-full bg-warning/35 blur-[2px]" />
       <span className="pointer-events-none absolute right-8 top-2 h-10 w-10 rounded-full bg-white/25" />
-      <span className="pointer-events-none absolute bottom-8 left-[42%] h-3 w-3 rounded-full bg-[#4CC9A6]" />
-      <span className="pointer-events-none absolute bottom-12 left-[48%] h-2 w-2 rounded-full bg-[#FFC83D]" />
+      <span className="pointer-events-none absolute bottom-8 left-[42%] h-3 w-3 rounded-full bg-success" />
+      <span className="pointer-events-none absolute bottom-12 left-[48%] h-2 w-2 rounded-full bg-warning" />
       <svg
         className="pointer-events-none absolute left-4 top-10 h-8 w-20 text-white/40"
         viewBox="0 0 80 24"
@@ -37,7 +37,7 @@ function BannerDecor() {
       >
         <path d="M2 18 C20 2, 40 22, 58 8 S78 4, 78 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
       </svg>
-      <span className="animate-ribbon pointer-events-none absolute right-3 top-4 rounded-md bg-[#FFC83D] px-2 py-1 text-[10px] font-black text-[#222222] shadow-sticker">
+      <span className="animate-ribbon pointer-events-none absolute right-3 top-4 rounded-md bg-warning px-2 py-1 text-[10px] font-black text-foreground shadow-sticker">
         限時優惠
       </span>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-wave opacity-90" />
@@ -81,7 +81,7 @@ export function BannerCarousel({ banners, autoPlayMs = 5000 }: BannerCarouselPro
 
   return (
     <section className="w-full">
-      <div className="relative aspect-[390/250] w-full overflow-hidden rounded-[22px] bg-[#E9285C] shadow-lift md:aspect-[16/6]">
+      <div className="relative aspect-[390/250] w-full overflow-hidden rounded-[22px] bg-primary shadow-lift md:aspect-[16/6]">
         <Link href={current.link} className="block h-full w-full">
           <Image
             src={current.image}
@@ -115,7 +115,7 @@ export function BannerCarousel({ banners, autoPlayMs = 5000 }: BannerCarouselPro
               CHIMEIDIY 團購
             </span>
             {current.offer && (
-              <p className="text-2xl font-black tracking-tight text-[#FFC83D] drop-shadow md:text-4xl">
+              <p className="text-2xl font-black tracking-tight text-warning drop-shadow md:text-4xl">
                 {current.offer}
               </p>
             )}
@@ -128,7 +128,7 @@ export function BannerCarousel({ banners, autoPlayMs = 5000 }: BannerCarouselPro
                 截止 {deadlineLabel}
               </p>
             )}
-            <span className="mt-4 inline-flex min-h-11 w-fit items-center gap-2 rounded-[14px] bg-white px-5 text-sm font-black text-[#E9285C] shadow-brand transition hover:-translate-y-0.5 active:scale-95">
+            <span className="mt-4 inline-flex min-h-11 w-fit items-center gap-2 rounded-[14px] bg-white px-5 text-sm font-black text-price shadow-brand transition hover:-translate-y-0.5 active:scale-95">
               <ShoppingBag className="h-4 w-4" />
               立即搶購
             </span>

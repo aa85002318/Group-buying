@@ -71,7 +71,7 @@ export default function AiBakingPage() {
     <div className="page-enter space-y-6 pb-8">
       <div className="rounded-[22px] bg-hero-gradient p-6 text-white shadow-lift">
         <div className="flex items-start gap-3">
-          <BrandIcon name="articles" size="lg" className="bg-white/20 text-white" />
+          <BrandIcon name="articles" size="lg" className="bg-surface/20 text-white" />
           <div>
             <h1 className="text-2xl font-black">AI 烘焙助手</h1>
             <p className="mt-1 text-sm text-white/90">材料推薦 · 份量換算 · 烤箱換算 · 替代方案 · 失敗分析</p>
@@ -89,7 +89,7 @@ export default function AiBakingPage() {
 
       {tab === "recipes" && (
         <section className="card-surface space-y-4 p-5">
-          <h2 className="font-bold text-coffee">我有這些材料</h2>
+          <h2 className="font-bold text-foreground">我有這些材料</h2>
           <div className="flex flex-wrap gap-2">
             {SUGGESTED_INGREDIENTS.map((ing) => (
               <Chip
@@ -131,7 +131,7 @@ export default function AiBakingPage() {
               加入
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">已選：{ingredients.join("、") || "尚未選擇"}</p>
+          <p className="text-sm text-foreground-secondary">已選：{ingredients.join("、") || "尚未選擇"}</p>
           <Button disabled={loading || ingredients.length === 0} onClick={() => run("recipes", { ingredients })}>
             {loading ? "分析中…" : "AI 推薦食譜"}
           </Button>
@@ -140,7 +140,7 @@ export default function AiBakingPage() {
 
       {tab === "scale" && (
         <section className="card-surface space-y-4 p-5">
-          <h2 className="font-bold text-coffee">食譜份量換算</h2>
+          <h2 className="font-bold text-foreground">食譜份量換算</h2>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-sm">原份量（人）</label>
@@ -190,7 +190,7 @@ export default function AiBakingPage() {
 
       {tab === "oven" && (
         <section className="card-surface space-y-4 p-5">
-          <h2 className="font-bold text-coffee">烤箱溫度換算</h2>
+          <h2 className="font-bold text-foreground">烤箱溫度換算</h2>
           <Input className="min-h-12" type="number" value={celsius} onChange={(e) => setCelsius(e.target.value)} placeholder="溫度 °C" />
           <div className="grid grid-cols-2 gap-3">
             <select className="input-field min-h-12" value={fromMode} onChange={(e) => setFromMode(e.target.value)}>
@@ -208,7 +208,7 @@ export default function AiBakingPage() {
 
       {tab === "substitute" && (
         <section className="card-surface space-y-4 p-5">
-          <h2 className="font-bold text-coffee">材料替代建議</h2>
+          <h2 className="font-bold text-foreground">材料替代建議</h2>
           <Input className="min-h-12" value={subIngredient} onChange={(e) => setSubIngredient(e.target.value)} placeholder="例如：奶油" />
           <Button disabled={loading} onClick={() => run("substitute", { ingredient: subIngredient })}>
             {loading ? "分析中…" : "尋找替代"}
@@ -218,7 +218,7 @@ export default function AiBakingPage() {
 
       {tab === "failure" && (
         <section className="card-surface space-y-4 p-5">
-          <h2 className="font-bold text-coffee">烘焙失敗分析</h2>
+          <h2 className="font-bold text-foreground">烘焙失敗分析</h2>
           <Input className="min-h-12" value={symptom} onChange={(e) => setSymptom(e.target.value)} placeholder="例如：蛋糕消泡、麵包不起來" />
           <div className="flex flex-wrap gap-2">
             {["餅乾太硬", "蛋糕消泡", "麵包不起來", "中心未熟"].map((s) => (
@@ -231,11 +231,11 @@ export default function AiBakingPage() {
         </section>
       )}
 
-      {error && <p className="rounded-xl bg-[#FDECEA] px-4 py-3 text-sm text-[#E53935]">{error}</p>}
+      {error && <p className="rounded-xl bg-[#FDECEA] px-4 py-3 text-sm text-error">{error}</p>}
 
       {result != null && (
         <section className="card-surface space-y-3 p-5">
-          <h2 className="font-bold text-coffee">分析結果</h2>
+          <h2 className="font-bold text-foreground">分析結果</h2>
           <ResultView tab={tab} result={result} />
         </section>
       )}
@@ -248,20 +248,20 @@ function ResultView({ tab, result }: { tab: Tab; result: unknown }) {
 
   if (tab === "recipes") {
     const recipes = (data.recipes as Array<Record<string, unknown>>) ?? [];
-    if (!recipes.length) return <p className="text-sm text-muted-foreground">找不到足夠匹配的食譜，試試加入更多材料。</p>;
+    if (!recipes.length) return <p className="text-sm text-foreground-secondary">找不到足夠匹配的食譜，試試加入更多材料。</p>;
     return (
       <div className="space-y-3">
         {recipes.map((r) => (
           <div key={String(r.id)} className="rounded-2xl border border-border bg-muted/40 p-4">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-black text-primary">{String(r.name)}</h3>
-              <span className="text-xs font-bold text-muted-foreground">{Math.round(Number(r.matchScore) * 100)}% 匹配</span>
+              <h3 className="font-black text-price">{String(r.name)}</h3>
+              <span className="text-xs font-bold text-foreground-secondary">{Math.round(Number(r.matchScore) * 100)}% 匹配</span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">難度：{String(r.difficulty)}</p>
+            <p className="mt-1 text-xs text-foreground-secondary">難度：{String(r.difficulty)}</p>
             {(r.missing as string[])?.length > 0 && (
               <p className="mt-2 text-sm">還缺：{(r.missing as string[]).join("、")}</p>
             )}
-            <p className="mt-2 text-sm text-coffee">{String(r.tip)}</p>
+            <p className="mt-2 text-sm text-foreground">{String(r.tip)}</p>
           </div>
         ))}
       </div>
@@ -285,8 +285,8 @@ function ResultView({ tab, result }: { tab: Tab; result: unknown }) {
   if (tab === "oven") {
     return (
       <div>
-        <p className="text-3xl font-black text-primary">{String(data.temp)}°C</p>
-        <p className="mt-2 text-sm text-muted-foreground">{String(data.note)}</p>
+        <p className="text-3xl font-black text-price">{String(data.temp)}°C</p>
+        <p className="mt-2 text-sm text-foreground-secondary">{String(data.note)}</p>
       </div>
     );
   }
@@ -298,8 +298,8 @@ function ResultView({ tab, result }: { tab: Tab; result: unknown }) {
         <p className="text-sm">針對「{String(data.ingredient)}」建議：</p>
         {alts.map((a, i) => (
           <div key={i} className="rounded-2xl border border-border p-3">
-            <p className="font-bold text-coffee">{a.alt} <span className="text-xs font-medium text-primary">{a.ratio}</span></p>
-            <p className="mt-1 text-sm text-muted-foreground">{a.note}</p>
+            <p className="font-bold text-foreground">{a.alt} <span className="text-xs font-medium text-primary">{a.ratio}</span></p>
+            <p className="mt-1 text-sm text-foreground-secondary">{a.note}</p>
           </div>
         ))}
       </div>
@@ -308,16 +308,16 @@ function ResultView({ tab, result }: { tab: Tab; result: unknown }) {
 
   return (
     <div className="space-y-3">
-      <h3 className="font-black text-primary">{String(data.title)}</h3>
+      <h3 className="font-black text-price">{String(data.title)}</h3>
       <div>
         <p className="text-sm font-bold">可能原因</p>
-        <ul className="mt-1 list-inside list-disc text-sm text-muted-foreground">
+        <ul className="mt-1 list-inside list-disc text-sm text-foreground-secondary">
           {((data.causes as string[]) ?? []).map((c) => <li key={c}>{c}</li>)}
         </ul>
       </div>
       <div>
         <p className="text-sm font-bold">建議調整</p>
-        <ul className="mt-1 list-inside list-disc text-sm text-muted-foreground">
+        <ul className="mt-1 list-inside list-disc text-sm text-foreground-secondary">
           {((data.fixes as string[]) ?? []).map((c) => <li key={c}>{c}</li>)}
         </ul>
       </div>

@@ -41,12 +41,12 @@ export function CarrierForm({ mode, initialName = "", initialCode = "", onSubmit
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-[20px] bg-white p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
       <h2 className="text-lg font-bold text-[#173F75]">{mode === "create" ? "新增手機條碼" : "編輯載具"}</h2>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-[#202124]">
-          載具名稱 <span className="text-[#6B7280]">（選填）</span>
+        <label className="mb-1.5 block text-sm font-medium text-foreground">
+          載具名稱 <span className="text-foreground-secondary">（選填）</span>
         </label>
         <Input
           value={carrierName}
@@ -58,8 +58,8 @@ export function CarrierForm({ mode, initialName = "", initialCode = "", onSubmit
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-[#202124]">
-          手機條碼 <span className="text-[#E9285C]">*</span>
+        <label className="mb-1.5 block text-sm font-medium text-foreground">
+          手機條碼 <span className="text-primary">*</span>
         </label>
         <Input
           value={carrierCode}
@@ -70,13 +70,13 @@ export function CarrierForm({ mode, initialName = "", initialCode = "", onSubmit
           autoComplete="off"
           spellCheck={false}
         />
-        <p className="mt-1 text-xs text-[#6B7280]">請輸入以 / 開頭的 8 碼手機條碼</p>
+        <p className="mt-1 text-xs text-foreground-secondary">請輸入以 / 開頭的 8 碼手機條碼</p>
       </div>
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-[#DC2626]">{error}</p>}
 
       <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={saving} className="min-h-11 flex-1 bg-[#E9285C] hover:bg-[#D01F50]">
+        <Button type="submit" disabled={saving} className="min-h-11 flex-1 bg-primary hover:bg-[#D01F50]">
           {saving ? "儲存中…" : "儲存"}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={saving} className="min-h-11">

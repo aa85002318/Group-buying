@@ -73,7 +73,7 @@ export default function CourseDetailPage() {
   if (!course) {
     return (
       <div className="py-12 text-center">
-        <p className="text-muted-foreground">找不到課程</p>
+        <p className="text-foreground-secondary">找不到課程</p>
         <Link href="/courses" className="mt-3 inline-block text-primary">返回課程列表</Link>
       </div>
     );
@@ -83,30 +83,30 @@ export default function CourseDetailPage() {
     <div className="page-enter space-y-5 pb-8">
       <Link href="/courses" className="text-sm font-bold text-primary">← 課程中心</Link>
       <div className="card-surface space-y-3 p-5">
-        <span className="sticker bg-[#3A86FF] text-white">剩餘 {course.seats_left} 名</span>
-        <h1 className="text-xl font-black text-coffee">{course.title}</h1>
-        <p className="text-sm text-muted-foreground">老師：{course.teacher_name}</p>
-        {course.location && <p className="text-sm text-muted-foreground">地點：{course.location}</p>}
+        <span className="sticker bg-info text-white">剩餘 {course.seats_left} 名</span>
+        <h1 className="text-xl font-black text-foreground">{course.title}</h1>
+        <p className="text-sm text-foreground-secondary">老師：{course.teacher_name}</p>
+        {course.location && <p className="text-sm text-foreground-secondary">地點：{course.location}</p>}
         {course.start_at && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-foreground-secondary">
             時間：{new Date(course.start_at).toLocaleString("zh-TW")}
           </p>
         )}
-        <p className="text-2xl font-black text-primary">
+        <p className="text-2xl font-black text-price">
           {course.price > 0 ? formatCurrency(course.price) : "免費／另洽"}
         </p>
-        {course.description && <p className="text-sm leading-relaxed text-coffee">{course.description}</p>}
+        {course.description && <p className="text-sm leading-relaxed text-foreground">{course.description}</p>}
       </div>
 
       <section className="card-surface space-y-3 p-5">
-        <h2 className="font-bold text-coffee">線上報名</h2>
+        <h2 className="font-bold text-foreground">線上報名</h2>
         <Input className="min-h-12" placeholder="學員姓名" value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} />
         <Input className="min-h-12" type="tel" placeholder="手機" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} />
         <Input className="min-h-12" type="email" placeholder="Email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
         <Button className="w-full" disabled={submitting} onClick={enroll}>
           {submitting ? "報名中…" : course.seats_left > 0 ? "立即報名" : "加入候補"}
         </Button>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-foreground-secondary">
           線上付款將於後續版本完善；目前先建立報名與電子票券。額滿可進入候補名單。
         </p>
       </section>
@@ -115,11 +115,11 @@ export default function CourseDetailPage() {
         <div className="rounded-[20px] bg-green-50 p-5 text-sm text-green-900">
           <p>{message}</p>
           {ticketCode && (
-            <div className="mt-4 rounded-2xl bg-white p-4 text-center shadow-card">
-              <p className="text-xs text-muted-foreground">電子票券</p>
-              <p className="mt-1 font-mono text-lg font-black tracking-wider text-coffee">{ticketCode}</p>
+            <div className="mt-4 rounded-2xl bg-surface p-4 text-center shadow-card">
+              <p className="text-xs text-foreground-secondary">電子票券</p>
+              <p className="mt-1 font-mono text-lg font-black tracking-wider text-foreground">{ticketCode}</p>
               {qrPayload && (
-                <p className="mt-2 break-all text-[10px] text-muted-foreground">{qrPayload}</p>
+                <p className="mt-2 break-all text-[10px] text-foreground-secondary">{qrPayload}</p>
               )}
               <p className="mt-2 text-xs">報到時出示此代碼／QR Payload</p>
             </div>

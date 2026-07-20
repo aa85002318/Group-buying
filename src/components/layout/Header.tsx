@@ -73,14 +73,14 @@ const FALLBACK_MENU_CATEGORIES = [
   "季節限定",
 ] as const;
 
-const CATEGORY_VISUALS: Array<{ icon: LucideIcon; background: string }> = [
-  { icon: CakeSlice, background: "bg-[#FF8A00]" },
-  { icon: Leaf, background: "bg-[#23B26D]" },
-  { icon: Snowflake, background: "bg-[#268CFF]" },
-  { icon: CupSoda, background: "bg-[#A93DDB]" },
-  { icon: SprayCan, background: "bg-[#00AFC1]" },
-  { icon: CookingPot, background: "bg-[#FFC400]" },
-  { icon: CalendarDays, background: "bg-[#E9288A]" },
+const CATEGORY_VISUALS: Array<{ icon: LucideIcon; background: string; foreground: string }> = [
+  { icon: CakeSlice, background: "bg-groupBuy-soft", foreground: "text-groupBuy" },
+  { icon: Leaf, background: "bg-success-soft", foreground: "text-success" },
+  { icon: Snowflake, background: "bg-info-soft", foreground: "text-info" },
+  { icon: CupSoda, background: "bg-primary-soft", foreground: "text-primary" },
+  { icon: SprayCan, background: "bg-info-soft", foreground: "text-info" },
+  { icon: CookingPot, background: "bg-warning-soft", foreground: "text-foreground" },
+  { icon: CalendarDays, background: "bg-primary-soft", foreground: "text-primary" },
 ];
 
 const SIDE_MENU_ICONS: Record<SideMenuIconKey, LucideIcon> = {
@@ -100,15 +100,15 @@ const SIDE_MENU_COLORS: Record<
   SideMenuColorKey,
   { background: string; foreground: string }
 > = {
-  berry: { background: "bg-[#FFE9EE]", foreground: "text-[#FF4D6D]" },
-  coral: { background: "bg-[#FFE4E7]", foreground: "text-[#FF3B5C]" },
-  orange: { background: "bg-[#FFF2D9]", foreground: "text-[#FF9800]" },
-  yellow: { background: "bg-[#FFF7D6]", foreground: "text-[#F5B400]" },
-  purple: { background: "bg-[#F5EAFE]", foreground: "text-[#A93DDB]" },
-  blue: { background: "bg-[#EEF3FF]", foreground: "text-[#3B82F6]" },
-  green: { background: "bg-[#E8F8EF]", foreground: "text-[#23B26D]" },
-  teal: { background: "bg-[#E5F8FA]", foreground: "text-[#00AFC1]" },
-  pink: { background: "bg-[#FFF0F6]", foreground: "text-[#FF5A8A]" },
+  berry: { background: "bg-primary-soft", foreground: "text-primary" },
+  coral: { background: "bg-error-soft", foreground: "text-error" },
+  orange: { background: "bg-groupBuy-soft", foreground: "text-groupBuy" },
+  yellow: { background: "bg-warning-soft", foreground: "text-foreground" },
+  purple: { background: "bg-info-soft", foreground: "text-info" },
+  blue: { background: "bg-info-soft", foreground: "text-info" },
+  green: { background: "bg-success-soft", foreground: "text-success" },
+  teal: { background: "bg-success-soft", foreground: "text-success" },
+  pink: { background: "bg-primary-soft", foreground: "text-primary" },
 };
 
 type SideMenuItemProps = {
@@ -131,7 +131,7 @@ function SideMenuItem({
   onNavigate,
 }: SideMenuItemProps) {
   const className =
-    "group flex h-14 w-full items-center gap-3 px-5 text-left transition-all duration-200 ease-in-out hover:translate-x-1.5 hover:bg-[#FFF5F7] active:bg-[#FFE2EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E9285C]/40";
+    "group flex h-14 w-full items-center gap-3 px-5 text-left transition-all duration-200 ease-in-out hover:translate-x-1.5 hover:bg-surface-soft active:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40";
   const content = (
     <>
       <span
@@ -143,15 +143,15 @@ function SideMenuItem({
         <Icon className={cn("h-[26px] w-[26px]", iconColor)} aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-bold text-[#202124]">{title}</span>
+        <span className="block truncate text-sm font-bold text-foreground">{title}</span>
         {description && (
-          <span className="block truncate text-[11px] font-medium text-[#6B7280]">
+          <span className="block truncate text-[11px] font-medium text-foreground-secondary">
             {description}
           </span>
         )}
       </span>
       <ChevronRight
-        className="h-4 w-4 shrink-0 text-[#9CA3AF] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[#E9285C]"
+        className="h-4 w-4 shrink-0 text-foreground-secondary transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary"
         aria-hidden
       />
     </>
@@ -184,7 +184,7 @@ function MenuSectionTitle({
   return (
     <div className="flex items-center gap-2 px-5 pb-2 pt-4">
       <Icon className={cn("h-5 w-5", iconColor)} aria-hidden />
-      <h2 className="text-sm font-black tracking-wide text-[#202124]">{title}</h2>
+      <h2 className="text-sm font-black tracking-wide text-foreground">{title}</h2>
     </div>
   );
 }
@@ -244,7 +244,7 @@ function CategoryMenu({
         aria-controls="header-category-menu"
         aria-label={isOpen ? "收合商品導覽" : "展開商品導覽"}
         onClick={() => setIsOpen((open) => !open)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-line bg-white text-brand-red shadow-sm transition hover:border-brand-red/30 hover:bg-brand-blush focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-line bg-surface text-brand-red shadow-sm transition hover:border-brand-red/30 hover:bg-brand-blush focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30"
       >
         <Menu className="h-5 w-5" aria-hidden />
       </button>
@@ -255,25 +255,25 @@ function CategoryMenu({
           <div className="fixed inset-0 z-[80]">
           <button
             type="button"
-            className="absolute inset-0 bg-[#202124]/35 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-[var(--text-primary)]/35 backdrop-blur-[2px]"
             onClick={closeMenu}
             aria-label="關閉選單"
           />
           <aside
             id="header-category-menu"
             aria-label="主要購物選單"
-            className="absolute bottom-3 left-3 top-3 flex flex-col overflow-hidden rounded-[24px] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+            className="absolute bottom-3 left-3 top-3 flex flex-col overflow-hidden rounded-[24px] bg-surface shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
             style={{ width: "min(360px, calc(100vw - 24px))" }}
           >
-            <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#E5E7EB] px-5">
+            <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5">
               <div>
-                <p className="text-base font-black text-[#202124]">CHIMEIDIY 購物選單</p>
-                <p className="text-[11px] font-medium text-[#6B7280]">快速找到今天最值得買的商品</p>
+                <p className="text-base font-black text-foreground">CHIMEIDIY 購物選單</p>
+                <p className="text-[11px] font-medium text-foreground-secondary">快速找到今天最值得買的商品</p>
               </div>
               <button
                 type="button"
                 onClick={closeMenu}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFF0F4] text-[#E9285C] transition-colors duration-200 hover:bg-[#FFE2EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E9285C]/40"
+                className="flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-full bg-surface-soft text-primary transition-colors duration-200 hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 aria-label="關閉選單"
               >
                 <X className="h-5 w-5" />
@@ -289,7 +289,7 @@ function CategoryMenu({
                 return (
                   <div key={section.id}>
                     {sectionIndex > 0 && (
-                      <div className="mx-5 my-3 border-t border-[#E5E7EB]" />
+                      <div className="mx-5 my-3 border-t border-border" />
                     )}
                     <MenuSectionTitle
                       title={section.title}
@@ -304,7 +304,7 @@ function CategoryMenu({
                 aria-expanded={categoriesOpen}
                 aria-controls="side-menu-categories"
                 onClick={() => setCategoriesOpen((open) => !open)}
-                className="group flex h-14 w-full items-center gap-3 px-5 text-left transition-all duration-200 ease-in-out hover:translate-x-1.5 hover:bg-[#FFF5F7] active:bg-[#FFE2EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E9285C]/40"
+                className="group flex h-14 w-full items-center gap-3 px-5 text-left transition-all duration-200 ease-in-out hover:translate-x-1.5 hover:bg-surface-soft active:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
               >
                 <span
                   className={cn(
@@ -326,17 +326,17 @@ function CategoryMenu({
                   })()}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-bold text-[#202124]">
+                  <span className="block text-sm font-bold text-foreground">
                     {trigger.label}
                   </span>
-                  <span className="block text-[11px] font-medium text-[#6B7280]">
+                  <span className="block text-[11px] font-medium text-foreground-secondary">
                     {trigger.description}
                   </span>
                 </span>
                 <ChevronDown
                   className={cn(
-                    "h-5 w-5 text-[#9CA3AF] transition-transform duration-200 ease-in-out",
-                    categoriesOpen && "rotate-180 text-[#E9285C]"
+                    "h-5 w-5 text-foreground-secondary transition-transform duration-200 ease-in-out",
+                    categoriesOpen && "rotate-180 text-primary"
                   )}
                   aria-hidden
                 />
@@ -345,7 +345,7 @@ function CategoryMenu({
                 id="side-menu-categories"
                 aria-hidden={!categoriesOpen}
                 className={cn(
-                  "grid overflow-hidden bg-[#FAFAFA] transition-[grid-template-rows] duration-200 ease-in-out",
+                  "grid overflow-hidden bg-surface-soft transition-[grid-template-rows] duration-200 ease-in-out",
                   categoriesOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
                 )}
                         >
@@ -360,17 +360,18 @@ function CategoryMenu({
                           href={category.href}
                           tabIndex={categoriesOpen ? 0 : -1}
                           onClick={closeMenu}
-                          className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-white px-3 shadow-sm transition-all duration-200 ease-in-out hover:translate-x-1 hover:bg-[#FFF5F7] active:bg-[#FFE2EA]"
+                          className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-surface px-3 shadow-sm transition-all duration-200 ease-in-out hover:translate-x-1 hover:bg-surface-soft active:bg-primary-soft"
                         >
                           <span
                             className={cn(
-                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white",
-                              visual.background
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                              visual.background,
+                              visual.foreground
                             )}
                           >
                             <Icon className="h-5 w-5" aria-hidden />
                           </span>
-                          <span className="line-clamp-2 text-xs font-bold text-[#202124]">
+                          <span className="line-clamp-2 text-xs font-bold text-foreground">
                             {category.name}
                           </span>
                         </Link>
@@ -454,7 +455,7 @@ function SearchBar({
         onChange={(e) => setQuery(e.target.value)}
         autoFocus={autoFocus}
         placeholder="搜尋商品、品牌或團購活動"
-        className="h-10 w-full rounded-full border-[1.5px] border-[#F2B4AE] bg-brand-warm pl-10 pr-10 text-sm text-brand-ink outline-none transition placeholder:text-brand-muted focus:border-brand-red focus:shadow-brand-ring focus-visible:border-brand-red focus-visible:shadow-brand-ring"
+        className="h-10 w-full rounded-full border-[1.5px] border-border bg-background pl-10 pr-10 text-sm text-foreground outline-none transition placeholder:text-foreground-secondary focus:border-primary focus:shadow-brand-ring focus-visible:border-primary focus-visible:shadow-brand-ring"
       />
       <button
         type="submit"
@@ -512,7 +513,7 @@ function CollapsibleSearch() {
       {isOpen && (
         <div
           id="header-search-panel"
-          className="absolute left-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-brand-line bg-white p-2 shadow-xl"
+          className="absolute left-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-brand-line bg-surface p-2 shadow-xl"
         >
           <SearchBar id="header-search" autoFocus onSearch={() => setIsOpen(false)} />
         </div>
@@ -666,10 +667,10 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
   if (items.length === 0) return null;
 
   const cardStyles = [
-    "bg-[#FF4D36] text-white",
-    "bg-[#E9285C] text-white",
-    "bg-[#FFC400] text-[#202124]",
-    "bg-[#A93DDB] text-white",
+    "bg-groupBuy text-white",
+    "bg-primary text-white",
+    "bg-warning text-foreground",
+    "bg-info text-white",
   ];
   const fontStyles = {
     small: {
@@ -753,7 +754,7 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
 }
 
 function CategoryMenuFallback() {
-  return <div className="h-10 w-10 rounded-xl border border-brand-line bg-white" />;
+  return <div className="h-10 w-10 rounded-xl border border-brand-line bg-surface" />;
 }
 
 function SearchFallback({ className }: { className?: string }) {
@@ -822,7 +823,7 @@ export function Header() {
   return (
     <header
       ref={headerRef}
-      className="fixed left-0 right-0 top-0 z-50 border-b border-brand-line/80 bg-white/95 shadow-[0_1px_0_rgba(242,222,220,0.9)] backdrop-blur-sm"
+      className="fixed left-0 right-0 top-0 z-50 border-b border-brand-line/80 bg-surface/95 shadow-[0_1px_0_rgba(242,222,220,0.9)] backdrop-blur-sm"
     >
       <div className="mx-auto w-full max-w-7xl px-4 md:px-8 lg:px-12">
         <div className="flex flex-col gap-2 py-2.5 md:py-3">

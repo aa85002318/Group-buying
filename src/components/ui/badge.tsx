@@ -2,20 +2,23 @@ import { cn } from "@/lib/utils";
 import { HTMLAttributes, forwardRef } from "react";
 
 const variants: Record<string, string> = {
-  default: "bg-tag-bg text-tag-text",
-  tag: "bg-tag-bg text-tag-text",
-  new: "bg-[#C45CDB] text-white shadow-sticker",
-  hot: "bg-brand-gradient text-white shadow-sticker",
-  live: "bg-[#E53935] text-white shadow-sticker animate-live",
-  preorder: "bg-[#3A86FF] text-white shadow-sticker",
-  limited: "bg-promo-gradient text-brand-ink shadow-sticker",
-  countdown: "bg-[#FFF0F4] text-countdown",
-  success: "bg-[#E8F8EE] text-[#31B057]",
-  warning: "bg-[#FFF4E5] text-[#FF9F1C]",
-  danger: "bg-[#FDECEA] text-[#E53935]",
-  primary: "bg-tag-bg text-tag-text",
-  secondary: "bg-muted text-muted-foreground",
-  mint: "bg-[#E6F8F3] text-[#4CC9A6]",
+  default: "bg-surface-soft text-primary",
+  tag: "bg-surface-soft text-primary",
+  new: "bg-primary text-white shadow-sticker",
+  hot: "bg-error text-white shadow-sticker",
+  live: "bg-error text-white shadow-sticker animate-live",
+  preorder: "bg-warning text-foreground shadow-sticker",
+  limited: "bg-groupBuy text-white shadow-sticker",
+  countdown: "bg-error-soft text-error",
+  success: "bg-success-soft text-success",
+  warning: "bg-warning-soft text-foreground",
+  danger: "bg-error-soft text-error",
+  primary: "bg-primary-soft text-primary",
+  secondary: "bg-surface-soft text-foreground-secondary",
+  mint: "bg-success-soft text-success",
+  groupBuy: "bg-groupBuy text-white shadow-sticker",
+  disabled: "bg-disabled/20 text-disabled",
+  info: "bg-info-soft text-info",
 };
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {

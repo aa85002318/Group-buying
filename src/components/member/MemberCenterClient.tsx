@@ -67,19 +67,19 @@ function MenuLink({
         featured ? "bg-gradient-to-r from-[#FFF5F7] to-white" : ""
       }`}
     >
-      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${featured ? "bg-[#E9285C]/10 text-[#E9285C]" : "bg-[#F7F8FC] text-[#173F75]"}`}>
+      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${featured ? "bg-primary/10 text-primary" : "bg-[#F7F8FC] text-[#173F75]"}`}>
         <Icon className="h-5 w-5" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
-          <span className="font-medium text-[#202124]">{label}</span>
+          <span className="font-medium text-foreground">{label}</span>
           {badge != null && badge > 0 && (
-            <span className="rounded-full bg-[#E9285C] px-2 py-0.5 text-[10px] font-bold text-white">{badge}</span>
+            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">{badge}</span>
           )}
         </span>
-        {subtitle && <span className="block text-xs text-[#6B7280]">{subtitle}</span>}
+        {subtitle && <span className="block text-xs text-foreground-secondary">{subtitle}</span>}
       </span>
-      <ChevronRight className="h-5 w-5 shrink-0 text-[#6B7280]" />
+      <ChevronRight className="h-5 w-5 shrink-0 text-foreground-secondary" />
     </Link>
   );
 }
@@ -147,9 +147,9 @@ export function MemberCenterClient() {
   if (!loading && !profile && isSupabaseConfigured()) {
     return (
       <div className="space-y-4 py-12 text-center">
-        <p className="text-[#6B7280]">請先登入以使用會員中心</p>
+        <p className="text-foreground-secondary">請先登入以使用會員中心</p>
         <Link href={`${APP_ROUTES.login}?next=${encodeURIComponent(APP_ROUTES.member)}`}>
-          <Button className="min-h-11 bg-[#E9285C]">登入</Button>
+          <Button className="min-h-11 bg-primary">登入</Button>
         </Link>
       </div>
     );
@@ -162,15 +162,15 @@ export function MemberCenterClient() {
       <h1 className="text-xl font-bold text-[#173F75]">我的</h1>
 
       {/* A. 會員摘要卡 */}
-      <div className="rounded-[20px] bg-white p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+      <div className="rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#E9285C] to-[#FF6A3D] text-xl font-bold text-white">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#FF6A3D] text-xl font-bold text-white">
             {profile?.full_name?.[0] ?? "?"}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-lg font-bold text-[#202124]">{profile?.full_name ?? "會員"}</p>
-            <p className="text-sm text-[#6B7280]">{maskPhone(profile?.phone)}</p>
-            <p className="truncate text-sm text-[#6B7280]">{profile?.email}</p>
+            <p className="text-lg font-bold text-foreground">{profile?.full_name ?? "會員"}</p>
+            <p className="text-sm text-foreground-secondary">{maskPhone(profile?.phone)}</p>
+            <p className="truncate text-sm text-foreground-secondary">{profile?.email}</p>
             <p className="text-sm font-medium text-[#173F75]">會員編號：{memberNo}</p>
           </div>
         </div>
@@ -187,7 +187,7 @@ export function MemberCenterClient() {
 
       {/* B. 我的訂單 */}
       <section>
-        <h2 className="mb-2 px-1 text-sm font-medium text-[#6B7280]">我的訂單</h2>
+        <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">我的訂單</h2>
         <div className="grid grid-cols-4 gap-2">
           {[
             { label: "全部", href: APP_ROUTES.orders, count: summary?.total },
@@ -195,10 +195,10 @@ export function MemberCenterClient() {
             { label: "待取貨", href: `${APP_ROUTES.orders}?filter=pickup`, count: summary?.readyForPickup },
             { label: "已完成", href: `${APP_ROUTES.orders}?filter=completed`, count: summary?.completed },
           ].map((item) => (
-            <Link key={item.label} href={item.href} className="relative rounded-[16px] bg-white py-3 text-center shadow-[0_2px_12px_rgba(23,63,117,0.06)]">
-              <span className="block text-xs text-[#6B7280]">{item.label}</span>
+            <Link key={item.label} href={item.href} className="relative rounded-[16px] bg-surface py-3 text-center shadow-[0_2px_12px_rgba(23,63,117,0.06)]">
+              <span className="block text-xs text-foreground-secondary">{item.label}</span>
               {item.count != null && item.count > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E9285C] px-1 text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
                   {item.count > 99 ? "99+" : item.count}
                 </span>
               )}
@@ -209,8 +209,8 @@ export function MemberCenterClient() {
 
       {/* C. 常用功能 */}
       <section>
-        <h2 className="mb-2 px-1 text-sm font-medium text-[#6B7280]">常用功能</h2>
-        <div className="divide-y overflow-hidden rounded-[20px] bg-white shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+        <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">常用功能</h2>
+        <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
           <MenuLink href={APP_ROUTES.memberCarrier} icon={Barcode} label="發票載具" subtitle={summary?.hasCarrier ? "已設定 · 結帳時快速出示手機條碼" : "結帳時快速出示手機條碼"} featured />
           <MenuLink href={APP_ROUTES.memberFavorites} icon={Heart} label="我的收藏" subtitle="查看已收藏的團購商品" />
           <MenuLink href={APP_ROUTES.memberAddresses} icon={MapPin} label="收件地址" subtitle="管理宅配與聯絡地址" />
@@ -222,8 +222,8 @@ export function MemberCenterClient() {
 
       {/* D. 內容與服務 */}
       <section>
-        <h2 className="mb-2 px-1 text-sm font-medium text-[#6B7280]">內容與服務</h2>
-        <div className="divide-y overflow-hidden rounded-[20px] bg-white shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+        <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">內容與服務</h2>
+        <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
           <MenuLink href={APP_ROUTES.stores} icon={Store} label="門市資訊" />
           <MenuLink href={APP_ROUTES.support} icon={Headphones} label="客服中心" />
           <MenuLink href={APP_ROUTES.faq} icon={HelpCircle} label="常見問題" />
@@ -235,8 +235,8 @@ export function MemberCenterClient() {
 
       {/* E. 帳號設定 */}
       <section>
-        <h2 className="mb-2 px-1 text-sm font-medium text-[#6B7280]">帳號設定</h2>
-        <div className="divide-y overflow-hidden rounded-[20px] bg-white shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+        <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">帳號設定</h2>
+        <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
           <MenuLink href={APP_ROUTES.memberAccountSettings} icon={Shield} label="帳號與隱私" />
           <MenuLink href={APP_ROUTES.memberNotificationSettings} icon={Bell} label="通知設定" />
           <MenuLink href={APP_ROUTES.terms} icon={FileText} label="使用條款" />

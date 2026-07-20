@@ -53,10 +53,10 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
           className={cn(
             "absolute left-2 top-2 z-10 inline-flex h-8 min-w-14 items-center justify-center rounded-full px-2 text-xs font-black shadow-sticker",
             rank === 1
-              ? "bg-brand-gradient text-white"
+              ? "bg-primary text-white"
               : rank === 2
-                ? "bg-[#FF7A45] text-white"
-                : "bg-[#FFC83D] text-[#222222]"
+                ? "bg-groupBuy text-white"
+                : "bg-warning text-foreground"
           )}
         >
           TOP {rank}
@@ -73,15 +73,15 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
                 unoptimized
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+              <div className="flex h-full items-center justify-center text-xs text-foreground-secondary">
                 暫無圖片
               </div>
             )}
           </div>
           <div className="flex min-w-0 flex-col justify-center">
-            <h3 className="line-clamp-2 text-sm font-bold text-coffee">{product.name}</h3>
-            <p className="mt-2 text-lg font-black text-primary">{formatCurrency(product.price)}</p>
-            <p className="mt-1 text-xs font-semibold text-muted-foreground">
+            <h3 className="line-clamp-2 text-sm font-bold text-foreground">{product.name}</h3>
+            <p className="mt-2 text-lg font-black text-price">{formatCurrency(product.price)}</p>
+            <p className="mt-1 text-xs font-semibold text-foreground-secondary">
               已售 {product.sold_count ?? 0} 件
             </p>
           </div>
@@ -94,7 +94,7 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
     <article
       className={cn(
         "flex h-full flex-col overflow-hidden rounded-[20px] border bg-card shadow-card transition duration-250 ease-brand hover:-translate-y-1 hover:shadow-lift",
-        variant === "closing" ? "border-2 border-[#E53935]" : "border-border/70"
+        variant === "closing" ? "border-2 border-error" : "border-border"
       )}
     >
       <Link href={href} className="block">
@@ -109,7 +109,7 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
               unoptimized
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-full items-center justify-center text-sm text-foreground-secondary">
               暫無圖片
             </div>
           )}
@@ -127,19 +127,19 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
 
       <div className="flex flex-1 flex-col p-3">
         <Link href={href}>
-          <h3 className="line-clamp-2 min-h-10 text-sm font-bold leading-5 text-coffee">
+          <h3 className="line-clamp-2 min-h-10 text-sm font-bold leading-5 text-foreground">
             {product.name}
           </h3>
         </Link>
 
         <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-lg font-black text-primary">{formatCurrency(product.price)}</span>
+          <span className="text-lg font-black text-price">{formatCurrency(product.price)}</span>
           {saving > 0 && (
             <>
-              <span className="text-xs text-muted-foreground line-through">
+              <span className="text-xs text-foreground-secondary line-through">
                 {formatCurrency(product.original_price!)}
               </span>
-              <span className="rounded-full bg-[#FFF0F4] px-2 py-0.5 text-[10px] font-black text-primary">
+              <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-black text-price">
                 現省 {formatCurrency(saving)}
               </span>
             </>
@@ -150,7 +150,7 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
           {variant === "closing" ? (
             <Link
               href={href}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-[#E53935] px-3 text-sm font-black text-white shadow-brand transition hover:opacity-95 active:scale-[0.98]"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-error px-3 text-sm font-black text-white shadow-brand transition hover:opacity-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
             >
               結團前搶購
               <ArrowRight className="h-4 w-4" />
@@ -167,7 +167,7 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
             </button>
           )}
           {message && (
-            <p className="mt-1.5 text-center text-[11px] font-medium text-muted-foreground" role="status">
+            <p className="mt-1.5 text-center text-[11px] font-medium text-foreground-secondary" role="status">
               {message}
             </p>
           )}

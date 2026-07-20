@@ -43,7 +43,7 @@ export function InvoiceBarcode({ value, className, height = 80 }: InvoiceBarcode
   return (
     <div className={className}>
       <svg ref={svgRef} role="img" aria-label="發票手機條碼" className="w-full max-w-[320px]" />
-      <p className="mt-3 text-center font-mono text-lg tracking-widest text-[#202124]">{value}</p>
+      <p className="mt-3 text-center font-mono text-lg tracking-widest text-foreground">{value}</p>
     </div>
   );
 }

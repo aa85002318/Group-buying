@@ -12,7 +12,7 @@ export function RequireAuth({ children, fallback }: RequireAuthProps) {
   const { ready, authenticated } = useRequireAuth();
 
   if (!ready) {
-    return fallback ?? <p className="py-12 text-center text-[#6B7280]">載入中…</p>;
+    return fallback ?? <p className="py-12 text-center text-foreground-secondary">載入中…</p>;
   }
 
   if (!authenticated) return null;

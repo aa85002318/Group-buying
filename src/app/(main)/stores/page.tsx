@@ -43,12 +43,12 @@ export default function StoresPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-40 animate-pulse rounded-[20px] bg-white" />)}</div>
+        <div className="space-y-3">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-40 animate-pulse rounded-[20px] bg-surface" />)}</div>
       ) : sorted.length === 0 ? (
-        <p className="py-12 text-center text-[#6B7280]">目前尚無門市資訊</p>
+        <p className="py-12 text-center text-foreground-secondary">目前尚無門市資訊</p>
       ) : (
         sorted.map((store) => (
-          <article key={store.id} className="overflow-hidden rounded-[20px] bg-white shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+          <article key={store.id} className="overflow-hidden rounded-[20px] bg-surface shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
             {store.image_url && (
               <div className="relative h-40 w-full">
                 <Image src={store.image_url} alt={store.name} fill className="object-cover" />
@@ -56,12 +56,12 @@ export default function StoresPage() {
             )}
             <div className="space-y-3 p-5">
               <h2 className="text-lg font-bold text-[#173F75]">{store.name}</h2>
-              <p className="flex items-start gap-2 text-sm text-[#6B7280]"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#E9285C]" />{store.address}</p>
+              <p className="flex items-start gap-2 text-sm text-foreground-secondary"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{store.address}</p>
               {store.phone && (
-                <p className="flex items-center gap-2 text-sm"><Phone className="h-4 w-4 text-[#E9285C]" /><a href={`tel:${store.phone}`} className="text-[#173F75]">{store.phone}</a></p>
+                <p className="flex items-center gap-2 text-sm"><Phone className="h-4 w-4 text-primary" /><a href={`tel:${store.phone}`} className="text-[#173F75]">{store.phone}</a></p>
               )}
-              {store.business_hours && <p className="text-sm text-[#6B7280]">營業時間：{store.business_hours}</p>}
-              <p className="text-sm text-[#6B7280]">{store.pickup_available !== false ? "✓ 提供團購取貨" : "不提供取貨"}</p>
+              {store.business_hours && <p className="text-sm text-foreground-secondary">營業時間：{store.business_hours}</p>}
+              <p className="text-sm text-foreground-secondary">{store.pickup_available !== false ? "✓ 提供團購取貨" : "不提供取貨"}</p>
               <div className="flex flex-wrap gap-2 pt-1">
                 {store.map_url && (
                   <a href={store.map_url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-xl bg-[#173F75] px-4 text-sm text-white">

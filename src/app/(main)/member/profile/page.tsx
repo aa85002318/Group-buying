@@ -139,7 +139,7 @@ export default function MemberProfilePage() {
         </div>
 
         {loading ? (
-          <p className="py-12 text-center text-[#6B7280]">載入中…</p>
+          <p className="py-12 text-center text-foreground-secondary">載入中…</p>
         ) : (
           <>
             {!emailVerified && (
@@ -152,14 +152,14 @@ export default function MemberProfilePage() {
               />
             )}
 
-            <form onSubmit={save} className="space-y-4 rounded-[20px] bg-white p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+            <form onSubmit={save} className="space-y-4 rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#202124]">姓名 *</label>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">姓名 *</label>
                 <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} className="min-h-12" required />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#202124]">手機 *</label>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">手機 *</label>
                 <Input
                   type="tel"
                   value={form.phone}
@@ -170,21 +170,21 @@ export default function MemberProfilePage() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#202124]">Email</label>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">Email</label>
                 <Input type="email" value={email} disabled className="min-h-12 bg-[#F7F8FC]" />
-                <p className="mt-1 text-xs text-[#6B7280]">Email 為登入帳號，如需變更請聯絡客服</p>
+                <p className="mt-1 text-xs text-foreground-secondary">Email 為登入帳號，如需變更請聯絡客服</p>
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#202124]">
-                  生日 <span className="text-[#6B7280]">（選填）</span>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                  生日 <span className="text-foreground-secondary">（選填）</span>
                 </label>
                 <Input type="date" value={form.birthday} onChange={(e) => setForm({ ...form, birthday: e.target.value })} className="min-h-12" />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#202124]">
-                  性別 <span className="text-[#6B7280]">（選填）</span>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                  性別 <span className="text-foreground-secondary">（選填）</span>
                 </label>
                 <select
                   className="input-field min-h-12 w-full"
@@ -200,8 +200,8 @@ export default function MemberProfilePage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-[#202124]">
-                    縣市 <span className="text-[#6B7280]">（選填）</span>
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">
+                    縣市 <span className="text-foreground-secondary">（選填）</span>
                   </label>
                   <select
                     className="input-field min-h-12 w-full"
@@ -215,8 +215,8 @@ export default function MemberProfilePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-[#202124]">
-                    行政區 <span className="text-[#6B7280]">（選填）</span>
+                  <label className="mb-1.5 block text-sm font-medium text-foreground">
+                    行政區 <span className="text-foreground-secondary">（選填）</span>
                   </label>
                   <select
                     className="input-field min-h-12 w-full"
@@ -233,8 +233,8 @@ export default function MemberProfilePage() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#202124]">
-                  聯絡地址 <span className="text-[#6B7280]">（選填）</span>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                  聯絡地址 <span className="text-foreground-secondary">（選填）</span>
                 </label>
                 <Input
                   value={form.contact_address}
@@ -247,7 +247,7 @@ export default function MemberProfilePage() {
               {errorMessage && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-[#DC2626]">{errorMessage}</p>}
               {successMessage && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{successMessage}</p>}
 
-              <Button type="submit" disabled={saving} className="min-h-11 w-full bg-[#E9285C] hover:bg-[#D01F50]">
+              <Button type="submit" disabled={saving} className="min-h-11 w-full bg-primary hover:bg-[#D01F50]">
                 {saving ? "儲存中…" : "儲存"}
               </Button>
             </form>

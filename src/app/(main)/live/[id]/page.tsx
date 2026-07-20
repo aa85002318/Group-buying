@@ -140,7 +140,7 @@ export default function LiveDetailPage({ params }: { params: { id: string } }) {
         <div className="mb-3 max-h-48 space-y-2 overflow-y-auto rounded-xl bg-muted/50 p-3">
           {chat.map((m, i) => (
             <p key={i} className={`text-sm ${m.role === "user" ? "text-right text-primary" : "text-coffee"}`}>
-              <span className="rounded-lg bg-white px-2 py-1 shadow-sm">{m.text}</span>
+              <span className="rounded-lg bg-surface px-2 py-1 shadow-sm">{m.text}</span>
             </p>
           ))}
         </div>

@@ -38,17 +38,18 @@ const ICONS: Record<BrandIconName, LucideIcon> = {
   member: Users,
 };
 
+/** Soft tint + colored icon — Visual System 2.0 */
 const TONES: Record<BrandIconName, string> = {
-  products: "bg-[#FFF0F4] text-[#E9285C]",
-  groupBuy: "bg-[#FFF3EC] text-[#FF7A45]",
-  live: "bg-[#FDECEA] text-[#E53935]",
-  courses: "bg-[#EAF2FF] text-[#3A86FF]",
-  articles: "bg-[#E6F8F3] text-[#4CC9A6]",
-  favorites: "bg-[#FFF0F4] text-[#E9285C]",
-  carrier: "bg-[#FFF8E0] text-[#B8860B]",
-  stores: "bg-[#EAF2FF] text-[#3A86FF]",
-  support: "bg-[#E6F8F3] text-[#4CC9A6]",
-  member: "bg-[#FFF3EC] text-[#FF7A45]",
+  products: "bg-primary-soft text-primary",
+  groupBuy: "bg-groupBuy-soft text-groupBuy",
+  live: "bg-error-soft text-error",
+  courses: "bg-warning-soft text-foreground",
+  articles: "bg-info-soft text-info",
+  favorites: "bg-primary-soft text-primary",
+  carrier: "bg-warning-soft text-foreground",
+  stores: "bg-success-soft text-success",
+  support: "bg-info-soft text-info",
+  member: "bg-surface-soft text-primary",
 };
 
 type BrandIconProps = {
@@ -64,7 +65,7 @@ const SIZE = {
   lg: { wrap: "h-14 w-14", icon: "h-7 w-7" },
 };
 
-/** Unified colorful rounded brand icons */
+/** Unified soft brand icons */
 export function BrandIcon({ name, className, size = "md", label }: BrandIconProps) {
   const Icon = ICONS[name];
   const s = SIZE[size];

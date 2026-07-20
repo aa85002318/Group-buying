@@ -54,7 +54,7 @@ export function CourseCard({ course }: { course: CourseCardData }) {
         </div>
         <div className="space-y-3 p-4">
           <div className="flex items-center gap-2">
-            <div className="relative h-9 w-9 overflow-hidden rounded-full bg-[#FFF0F4]">
+            <div className="relative h-9 w-9 overflow-hidden rounded-full bg-surface-soft">
               {course.teacherImage ? (
                 <Image src={course.teacherImage} alt={course.teacherName} fill className="object-cover" unoptimized />
               ) : (
@@ -64,11 +64,11 @@ export function CourseCard({ course }: { course: CourseCardData }) {
               )}
             </div>
             <div>
-              <p className="text-xs font-bold text-muted-foreground">{course.teacherName}</p>
-              <p className="text-[11px] text-muted-foreground">{course.dateLabel}</p>
+              <p className="text-xs font-bold text-foreground-secondary">{course.teacherName}</p>
+              <p className="text-[11px] text-foreground-secondary">{course.dateLabel}</p>
             </div>
           </div>
-          <h3 className="line-clamp-2 text-sm font-bold text-coffee">{course.title}</h3>
+          <h3 className="line-clamp-2 text-sm font-bold text-foreground">{course.title}</h3>
           <span className="btn-brand block w-full text-center">立即報名</span>
         </div>
       </CourseLink>

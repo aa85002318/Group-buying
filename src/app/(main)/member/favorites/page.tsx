@@ -48,12 +48,12 @@ export default function MemberFavoritesPage() {
         </div>
 
         {loading ? (
-          <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-24 animate-pulse rounded-[20px] bg-white" />)}</div>
+          <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-24 animate-pulse rounded-[20px] bg-surface" />)}</div>
         ) : favorites.length === 0 ? (
-          <div className="rounded-[20px] bg-white py-16 text-center shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
-            <HeartOff className="mx-auto h-12 w-12 text-[#6B7280]" />
-            <p className="mt-4 text-[#6B7280]">目前還沒有收藏商品</p>
-            <Link href={APP_ROUTES.products}><Button className="mt-4 bg-[#E9285C]">去逛逛商品</Button></Link>
+          <div className="rounded-[20px] bg-surface py-16 text-center shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+            <HeartOff className="mx-auto h-12 w-12 text-foreground-secondary" />
+            <p className="mt-4 text-foreground-secondary">目前還沒有收藏商品</p>
+            <Link href={APP_ROUTES.products}><Button className="mt-4 bg-primary">去逛逛商品</Button></Link>
           </div>
         ) : (
           <div className="space-y-3">
@@ -63,13 +63,13 @@ export default function MemberFavoritesPage() {
               const inactive = p.is_active === false || p.status === "inactive";
               const soldOut = p.stock <= 0 || p.status === "sold_out";
               return (
-                <div key={fav.id} className="flex gap-3 rounded-[20px] bg-white p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+                <div key={fav.id} className="flex gap-3 rounded-[20px] bg-surface p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#F7F8FC]">
                     {p.image_url && <Image src={p.image_url} alt={p.name} fill className="object-cover" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <Link href={`/products/${p.id}`} className="font-medium text-[#202124] line-clamp-2">{p.name}</Link>
-                    <p className="mt-1 font-bold text-[#E9285C]">{formatCurrency(Number(p.price))}</p>
+                    <Link href={`/products/${p.id}`} className="font-medium text-foreground line-clamp-2">{p.name}</Link>
+                    <p className="mt-1 font-bold text-primary">{formatCurrency(Number(p.price))}</p>
                     {inactive && <p className="text-xs text-[#DC2626]">商品目前已下架</p>}
                     {!inactive && soldOut && <p className="text-xs text-[#DC2626]">已售完</p>}
                     <div className="mt-2 flex gap-2">

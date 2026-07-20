@@ -72,17 +72,17 @@ export default function SubscriptionSettingsPage() {
           <Link href={APP_ROUTES.member} className="text-primary">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-xl font-black text-coffee">訂閱通知</h1>
+          <h1 className="text-xl font-black text-foreground">訂閱通知</h1>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-foreground-secondary">
           裝置推播將於後續版本開放；此處管理 App 內／Email 訂閱偏好。
         </p>
         <div className="space-y-3">
           {LABELS.map((item) => (
             <label key={item.key} className="card-surface flex items-center justify-between gap-3 p-4">
               <span>
-                <span className="block font-bold text-coffee">{item.label}</span>
-                <span className="text-xs text-muted-foreground">{item.desc}</span>
+                <span className="block font-bold text-foreground">{item.label}</span>
+                <span className="text-xs text-foreground-secondary">{item.desc}</span>
               </span>
               <input
                 type="checkbox"

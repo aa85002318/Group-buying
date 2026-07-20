@@ -50,7 +50,7 @@ export function RecommendHomeSection() {
         <section>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="h-7 w-1.5 rounded-full bg-[#757575]" />
+              <span className="h-7 w-1.5 rounded-full bg-foreground-secondary" />
               <h2 className="section-title">最近看過</h2>
             </div>
           </div>

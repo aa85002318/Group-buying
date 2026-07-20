@@ -180,7 +180,7 @@ export default function HomePage() {
         href="/ai"
         className="flex items-center gap-3 rounded-[22px] bg-hero-gradient px-4 py-4 text-white shadow-lift transition hover:-translate-y-0.5"
       >
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-lg font-black">AI</span>
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface/20 text-lg font-black">AI</span>
         <span className="min-w-0 flex-1">
           <span className="block font-black">AI 烘焙助手</span>
           <span className="block text-xs text-white/90">材料推薦 · 份量換算 · 失敗分析</span>
@@ -254,7 +254,7 @@ export default function HomePage() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="h-7 w-1.5 rounded-full bg-[#3A86FF]" />
+            <span className="h-7 w-1.5 rounded-full bg-info" />
             <h2 className="section-title">烘焙課程</h2>
           </div>
           <Link href="/courses" className="text-sm font-bold text-primary">

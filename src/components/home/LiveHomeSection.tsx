@@ -23,7 +23,7 @@ export function LiveHomeSection({ livestreams }: { livestreams: Livestream[] }) 
     <section>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="h-7 w-1.5 rounded-full bg-[#E53935]" />
+          <span className="h-7 w-1.5 rounded-full bg-error" />
           <h2 className="section-title">直播專區</h2>
           <Badge variant="live">LIVE</Badge>
         </div>
@@ -64,7 +64,7 @@ export function LiveHomeSection({ livestreams }: { livestreams: Livestream[] }) 
               )}
             </div>
             <div className="p-3">
-              <p className="line-clamp-2 text-sm font-bold text-coffee">{l.title}</p>
+              <p className="line-clamp-2 text-sm font-bold text-foreground">{l.title}</p>
             </div>
           </Link>
         ))}

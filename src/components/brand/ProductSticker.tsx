@@ -3,11 +3,11 @@ import { cn } from "@/lib/utils";
 export type ProductStickerType = "new" | "hot" | "live" | "preorder" | "limited";
 
 const STICKERS: Record<ProductStickerType, { label: string; className: string }> = {
-  new: { label: "NEW", className: "bg-[#C45CDB] text-white -rotate-6" },
-  hot: { label: "HOT", className: "bg-brand-gradient text-white rotate-3" },
-  live: { label: "LIVE", className: "bg-[#E53935] text-white -rotate-3 animate-live" },
-  preorder: { label: "預購", className: "bg-[#3A86FF] text-white rotate-2" },
-  limited: { label: "限量", className: "bg-promo-gradient text-[#222222] -rotate-2" },
+  new: { label: "NEW", className: "bg-primary text-white -rotate-6" },
+  hot: { label: "HOT", className: "bg-error text-white rotate-3" },
+  live: { label: "LIVE", className: "bg-error text-white -rotate-3 animate-live" },
+  preorder: { label: "預購", className: "bg-warning text-foreground rotate-2" },
+  limited: { label: "限量", className: "bg-groupBuy text-white -rotate-2" },
 };
 
 type ProductStickerProps = {
@@ -15,7 +15,7 @@ type ProductStickerProps = {
   className?: string;
 };
 
-/** Folded-corner style product sticker */
+/** Product corner sticker — Visual System 2.0 tones */
 export function ProductSticker({ type, className }: ProductStickerProps) {
   const s = STICKERS[type];
   return (

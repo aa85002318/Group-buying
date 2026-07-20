@@ -40,14 +40,14 @@ export function FavoriteButton({ productId, className, size = "md" }: FavoriteBu
         disabled={pending}
         onClick={handleClick}
         className={cn(
-          "flex items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-sm transition",
+          "flex items-center justify-center rounded-full bg-surface/90 shadow-md backdrop-blur-sm transition",
           btnSize,
           pending && "opacity-60",
           className
         )}
       >
         <Heart
-          className={cn(iconSize, favorited ? "fill-[#E9285C] text-[#E9285C]" : "text-[#6B7280]")}
+          className={cn(iconSize, favorited ? "fill-[#E9285C] text-primary" : "text-foreground-secondary")}
         />
       </button>
       {toast && (

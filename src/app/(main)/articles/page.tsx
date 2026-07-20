@@ -47,8 +47,8 @@ export default function ArticlesPage() {
   return (
     <div className="page-enter space-y-5">
       <div>
-        <h1 className="text-xl font-black text-coffee">文章中心</h1>
-        <p className="mt-1 text-sm text-muted-foreground">烘焙知識 · 食譜分享 · 生活靈感</p>
+        <h1 className="text-xl font-black text-foreground">文章中心</h1>
+        <p className="mt-1 text-sm text-foreground-secondary">烘焙知識 · 食譜分享 · 生活靈感</p>
       </div>
 
       <div className="flex gap-2 overflow-x-auto scrollbar-none">
@@ -66,7 +66,7 @@ export default function ArticlesPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">尚無已發布文章</p>
+        <p className="py-12 text-center text-sm text-foreground-secondary">尚無已發布文章</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {filtered.map((a) => (
@@ -82,10 +82,10 @@ export default function ArticlesPage() {
               </div>
               <div className="space-y-2 p-4">
                 {a.product_categories?.name && (
-                  <span className="text-[11px] font-bold text-[#4CC9A6]">{a.product_categories.name}</span>
+                  <span className="text-[11px] font-bold text-success">{a.product_categories.name}</span>
                 )}
-                <h2 className="line-clamp-2 font-bold text-coffee">{a.title}</h2>
-                <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <h2 className="line-clamp-2 font-bold text-foreground">{a.title}</h2>
+                <p className="flex items-center gap-1 text-xs text-foreground-secondary">
                   <Clock3 className="h-3.5 w-3.5" />
                   約 {readingMinutes(a.content)} 分鐘 ·{" "}
                   {new Date(a.created_at).toLocaleDateString("zh-TW")}

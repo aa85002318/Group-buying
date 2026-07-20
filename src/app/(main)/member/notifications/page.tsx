@@ -80,21 +80,21 @@ export default function MemberNotificationsPage() {
 
         <div className="flex gap-2 overflow-x-auto pb-1">
           {TABS.map((t) => (
-            <button key={t.value} type="button" onClick={() => setTab(t.value)} className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${tab === t.value ? "bg-[#E9285C] text-white" : "bg-white text-[#6B7280] border border-[#E8EBF4]"}`}>
+            <button key={t.value} type="button" onClick={() => setTab(t.value)} className={`shrink-0 rounded-full px-4 py-1.5 text-sm ${tab === t.value ? "bg-primary text-white" : "bg-surface text-foreground-secondary border border-border"}`}>
               {t.label}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <p className="text-center text-[#6B7280]">載入中…</p>
+          <p className="text-center text-foreground-secondary">載入中…</p>
         ) : items.length === 0 ? (
-          <div className="rounded-[20px] bg-white py-16 text-center text-[#6B7280] shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+          <div className="rounded-[20px] bg-surface py-16 text-center text-foreground-secondary shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
             <Bell className="mx-auto h-10 w-10 opacity-40" />
             <p className="mt-3">目前沒有通知</p>
           </div>
         ) : (
-          <div className="divide-y overflow-hidden rounded-[20px] bg-white shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+          <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
             {items.map((n) => {
               const Icon = ICONS[n.notification_type] ?? Bell;
               return (
@@ -102,11 +102,11 @@ export default function MemberNotificationsPage() {
                   <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#173F75]" />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
-                      <span className="font-medium text-[#202124]">{n.title}</span>
-                      {!n.is_read && <span className="h-2 w-2 rounded-full bg-[#E9285C]" />}
+                      <span className="font-medium text-foreground">{n.title}</span>
+                      {!n.is_read && <span className="h-2 w-2 rounded-full bg-primary" />}
                     </span>
-                    <span className="mt-1 block text-sm text-[#6B7280] line-clamp-2">{n.message}</span>
-                    <span className="mt-1 block text-xs text-[#6B7280]">{formatDate(n.created_at)}</span>
+                    <span className="mt-1 block text-sm text-foreground-secondary line-clamp-2">{n.message}</span>
+                    <span className="mt-1 block text-xs text-foreground-secondary">{formatDate(n.created_at)}</span>
                   </span>
                 </button>
               );

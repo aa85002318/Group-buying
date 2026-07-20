@@ -20,10 +20,10 @@ interface ProductScrollSectionProps {
 }
 
 const BADGE_CLASS = {
-  new: "bg-[#C45CDB] text-white",
-  hot: "bg-brand-gradient text-white",
-  live: "bg-[#E53935] text-white",
-  mint: "bg-[#4CC9A6] text-white",
+  new: "bg-primary text-white",
+  hot: "bg-error text-white",
+  live: "bg-error text-white",
+  mint: "bg-success text-white",
 };
 
 export function ProductScrollSection({
@@ -42,7 +42,7 @@ export function ProductScrollSection({
     <section
       className={cn(
         isClosing
-          ? "rounded-[22px] border-2 border-[#E53935] bg-card p-3 shadow-lift md:p-4"
+          ? "rounded-[22px] border-2 border-error bg-card p-3 shadow-lift md:p-4"
           : "py-1"
       )}
     >
@@ -56,7 +56,7 @@ export function ProductScrollSection({
           {!isClosing && (
             <span className="h-7 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
           )}
-          <h2 className={cn("text-xl font-black", isClosing ? "text-white" : "text-coffee")}>
+          <h2 className={cn("text-xl font-black", isClosing ? "text-white" : "text-foreground")}>
             {title}
           </h2>
           {badge && (
@@ -80,7 +80,7 @@ export function ProductScrollSection({
       </div>
 
       {products.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">{emptyText}</p>
+        <p className="py-4 text-center text-sm text-foreground-secondary">{emptyText}</p>
       ) : (
         <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 scrollbar-none">
           {products.map((p, index) => (

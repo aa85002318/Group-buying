@@ -17,13 +17,13 @@ interface CategoryGridProps {
   categories: ProductCategory[];
 }
 
-const ICON_BACKGROUNDS = [
-  "bg-[#FF7A45]",
-  "bg-[#31B057]",
-  "bg-[#3A86FF]",
-  "bg-[#FFC83D]",
-  "bg-[#4CC9A6]",
-  "bg-[#E9285C]",
+const ICON_TONES = [
+  { bg: "bg-groupBuy-soft", fg: "text-groupBuy" },
+  { bg: "bg-success-soft", fg: "text-success" },
+  { bg: "bg-info-soft", fg: "text-info" },
+  { bg: "bg-warning-soft", fg: "text-foreground" },
+  { bg: "bg-primary-soft", fg: "text-primary" },
+  { bg: "bg-error-soft", fg: "text-error" },
 ];
 
 const CATEGORY_ICONS = [Utensils, Sprout, Snowflake, CookingPot, Sparkles, CalendarDays];
@@ -115,13 +115,13 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   const thumbLeftPercent = scrollState.progress * (100 - thumbWidthPercent);
 
   return (
-    <section className="relative rounded-[20px] bg-white p-4 shadow-card md:p-5">
+    <section className="relative rounded-[20px] bg-surface p-4 shadow-card md:p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-black text-[#202124]">商品分類</h2>
+        <h2 className="text-lg font-black text-foreground">商品分類</h2>
         {scrollState.canScroll && (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#6B7280]">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-foreground-secondary">
             向右滑動
-            <ChevronRight className="h-3.5 w-3.5 text-[#E9285C]" aria-hidden />
+            <ChevronRight className="h-3.5 w-3.5 text-primary" aria-hidden />
           </span>
         )}
       </div>
@@ -152,13 +152,13 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                 style={{ width: MOBILE_ITEM_WIDTH, minWidth: MOBILE_ITEM_WIDTH }}
               >
                 <div
-                  className={`relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[18px] text-white shadow-[0_6px_14px_rgba(32,33,36,0.16)] transition-transform duration-200 group-hover:scale-105 group-active:scale-95 sm:h-16 sm:w-16 ${
-                    ICON_BACKGROUNDS[index % ICON_BACKGROUNDS.length]
-                  }`}
+                  className={`relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[18px] shadow-card transition-transform duration-200 group-hover:scale-105 group-active:scale-95 sm:h-16 sm:w-16 ${
+                    ICON_TONES[index % ICON_TONES.length].bg
+                  } ${ICON_TONES[index % ICON_TONES.length].fg}`}
                 >
                   <Icon className="h-7 w-7 stroke-[2.25]" aria-hidden />
                 </div>
-                <span className="line-clamp-2 text-center text-sm font-semibold text-[#202124]">
+                <span className="line-clamp-2 text-center text-sm font-semibold text-foreground">
                   {category.name}
                 </span>
               </Link>
@@ -168,7 +168,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
 
         {scrollState.canScroll && !scrollState.atEnd && (
           <div
-            className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white via-white/90 to-transparent"
+            className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-surface via-surface/90 to-transparent"
             aria-hidden
           />
         )}
@@ -177,18 +177,18 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
       {scrollState.canScroll && (
         <div className="mt-3 space-y-1.5">
           <div
-            className="mx-auto flex h-1.5 w-28 items-center rounded-full bg-[#F3D7DF] px-0.5"
+            className="mx-auto flex h-1.5 w-28 items-center rounded-full bg-primary-soft px-0.5"
             aria-hidden
           >
             <div
-              className="h-1 rounded-full bg-[#E9285C] transition-[width,margin-left] duration-150 ease-out"
+              className="h-1 rounded-full bg-primary transition-[width,margin-left] duration-150 ease-out"
               style={{
                 width: `${thumbWidthPercent}%`,
                 marginLeft: `${thumbLeftPercent}%`,
               }}
             />
           </div>
-          <p className="text-center text-[11px] font-medium text-[#6B7280]">
+          <p className="text-center text-[11px] font-medium text-foreground-secondary">
             左右滑動或拖曳查看更多分類
           </p>
         </div>

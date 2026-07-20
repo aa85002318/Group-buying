@@ -82,7 +82,7 @@ export default function LivePage() {
                   <Image src={l.thumbnail_url} alt={l.title} fill className="object-cover" unoptimized />
                 )}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/15">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-primary shadow-brand">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface text-primary shadow-brand">
                     {l.status === "live" ? (
                       <Radio className="h-5 w-5" />
                     ) : (

@@ -14,7 +14,7 @@ export function VideoSection({ videos }: VideoSectionProps) {
     <section>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="h-7 w-1.5 rounded-full bg-[#FF7A45]" />
+          <span className="h-7 w-1.5 rounded-full bg-groupBuy" />
           <h2 className="section-title">影音專區</h2>
         </div>
         <Link href="/videos" className="text-sm font-bold text-primary">
@@ -23,7 +23,7 @@ export function VideoSection({ videos }: VideoSectionProps) {
       </div>
 
       {displayVideos.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">暫無影片</p>
+        <p className="py-4 text-center text-sm text-foreground-secondary">暫無影片</p>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {displayVideos.map((v) => (
@@ -46,7 +46,7 @@ export function VideoSection({ videos }: VideoSectionProps) {
                 </div>
               </div>
               <div className="p-2.5">
-                <p className="line-clamp-2 text-sm font-bold text-coffee">{v.title}</p>
+                <p className="line-clamp-2 text-sm font-bold text-foreground">{v.title}</p>
               </div>
             </Link>
           ))}

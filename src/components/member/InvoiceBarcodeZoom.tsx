@@ -47,7 +47,7 @@ export function InvoiceBarcodeZoom({ open, value, onClose, onCopy }: InvoiceBarc
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-white"
+      className="fixed inset-0 z-[100] flex flex-col bg-surface"
       style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
       role="dialog"
       aria-modal="true"
@@ -67,8 +67,8 @@ export function InvoiceBarcodeZoom({ open, value, onClose, onCopy }: InvoiceBarc
       </div>
       <div className="flex flex-1 flex-col items-center justify-center px-6 pb-8">
         <InvoiceBarcode value={value} height={120} className="w-full max-w-sm" />
-        <p className="mt-4 font-mono text-lg tracking-wider text-[#202124]">{value}</p>
-        <p className="mt-4 text-center text-sm text-[#6B7280]">請將螢幕亮度調高後出示</p>
+        <p className="mt-4 font-mono text-lg tracking-wider text-foreground">{value}</p>
+        <p className="mt-4 text-center text-sm text-foreground-secondary">請將螢幕亮度調高後出示</p>
       </div>
     </div>
   );

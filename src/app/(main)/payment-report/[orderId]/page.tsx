@@ -72,7 +72,7 @@ export default function PaymentReportPage({ params }: { params: { orderId: strin
         小時內完成匯款，並填寫下方資訊。門市／後台確認收款後，訂單才正式成立並可取貨。
       </p>
 
-      <div className="rounded-xl bg-white p-4 text-sm shadow-card">
+      <div className="rounded-xl bg-surface p-4 text-sm shadow-card">
         <p className="font-medium text-coffee">匯款帳號</p>
         <p className="mt-2">
           {bank.bankName}（{bank.bankCode}）
@@ -85,7 +85,7 @@ export default function PaymentReportPage({ params }: { params: { orderId: strin
         <p className="mt-2 text-xs text-muted-foreground">{bank.note}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-white p-4 shadow-card">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-surface p-4 shadow-card">
         <div>
           <label className="text-sm font-medium">匯款金額</label>
           <Input

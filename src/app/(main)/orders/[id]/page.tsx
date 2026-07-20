@@ -108,7 +108,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </ol>
 
           {gateway === "bank_transfer" && (
-            <div className="rounded-lg bg-white/70 p-3 text-coffee">
+            <div className="rounded-lg bg-surface/70 p-3 text-coffee">
               <p className="font-medium">匯款帳號</p>
               <p>
                 {bank.bankName}（{bank.bankCode}）
@@ -141,7 +141,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         </div>
       )}
 
-      <div className="space-y-2 rounded-xl bg-white p-4 text-sm shadow-card">
+      <div className="space-y-2 rounded-xl bg-surface p-4 text-sm shadow-card">
         <p>
           <span className="text-muted-foreground">訂單編號：</span>
           {order.order_no ?? order.order_number}
@@ -158,7 +158,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         )}
       </div>
 
-      <div className="space-y-3 rounded-xl bg-white p-4 text-sm shadow-card">
+      <div className="space-y-3 rounded-xl bg-surface p-4 text-sm shadow-card">
         <h2 className="font-medium text-coffee">配送資訊</h2>
         {shipment ? (
           <>
@@ -206,7 +206,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         )}
       </div>
 
-      <div className="space-y-2 rounded-xl bg-white p-4 text-sm shadow-card">
+      <div className="space-y-2 rounded-xl bg-surface p-4 text-sm shadow-card">
         <h2 className="font-medium text-coffee">付款資訊</h2>
         {payment || gateway ? (
           <>
@@ -231,7 +231,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       </div>
 
       {shipment?.method === "store_pickup" && (
-        <div className="rounded-xl bg-white p-4 shadow-card">
+        <div className="rounded-xl bg-surface p-4 shadow-card">
           <h2 className="mb-3 font-medium">取貨 QR Code</h2>
           {paid ? (
             <PickupQrCode orderId={order.id} />
@@ -243,7 +243,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         </div>
       )}
 
-      <div className="rounded-xl bg-white p-4 shadow-card">
+      <div className="rounded-xl bg-surface p-4 shadow-card">
         <h2 className="mb-2 font-medium">商品明細</h2>
         {(order.order_items ?? []).map((item) => (
           <div key={item.id} className="flex justify-between border-b py-2 text-sm last:border-0">

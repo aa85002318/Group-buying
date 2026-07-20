@@ -43,7 +43,7 @@ function SearchField({ id, className }: { id: string; className?: string }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="搜尋商品、品牌或團購名稱"
-        className="h-11 w-full rounded-full border border-border bg-brand-blush pl-10 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:shadow-brand-ring focus-visible:border-primary"
+        className="h-11 w-full rounded-full border border-border bg-brand-blush pl-10 pr-4 text-sm text-foreground outline-none transition placeholder:text-foreground-secondary focus:border-primary focus:shadow-brand-ring focus-visible:border-primary"
       />
     </form>
   );

@@ -90,15 +90,15 @@ export default function AccountSettingsPage() {
           <h1 className="text-xl font-bold text-[#173F75]">帳號與隱私</h1>
         </div>
 
-        <div className="rounded-[20px] bg-white p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)] space-y-3">
+        <div className="rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)] space-y-3">
           <h2 className="font-semibold text-[#173F75]">帳號資訊</h2>
           <div>
-            <p className="text-xs text-[#6B7280]">登入 Email</p>
-            <p className="text-[#202124]">{email || "—"}</p>
+            <p className="text-xs text-foreground-secondary">登入 Email</p>
+            <p className="text-foreground">{email || "—"}</p>
           </div>
           <div>
-            <p className="text-xs text-[#6B7280]">手機號碼</p>
-            <p className="text-[#202124]">{maskPhone(phone)}</p>
+            <p className="text-xs text-foreground-secondary">手機號碼</p>
+            <p className="text-foreground">{maskPhone(phone)}</p>
           </div>
           <div className="flex gap-3 pt-2">
             <Link href={APP_ROUTES.privacy} className="text-sm text-[#173F75] underline">隱私權政策</Link>
@@ -106,16 +106,16 @@ export default function AccountSettingsPage() {
           </div>
         </div>
 
-        <div className="rounded-[20px] bg-white p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)] space-y-3">
+        <div className="rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)] space-y-3">
           <h2 className="font-semibold text-[#173F75]">修改密碼</h2>
           <Input type="password" className="min-h-12" placeholder="新密碼（至少 8 碼）" value={password} onChange={(e) => setPassword(e.target.value)} />
           <Input type="password" className="min-h-12" placeholder="確認新密碼" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
           <Button className="min-h-11 w-full bg-[#173F75]" onClick={changePassword} disabled={saving}>更新密碼</Button>
         </div>
 
-        <div className="rounded-[20px] border border-red-100 bg-white p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)] space-y-3">
+        <div className="rounded-[20px] border border-red-100 bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)] space-y-3">
           <h2 className="font-semibold text-[#DC2626]">刪除帳號申請</h2>
-          <p className="text-sm text-[#6B7280]">提交申請後，我們將由客服人員審核處理。帳號不會立即刪除。</p>
+          <p className="text-sm text-foreground-secondary">提交申請後，我們將由客服人員審核處理。帳號不會立即刪除。</p>
           <Input className="min-h-12" placeholder="申請原因（選填）" value={reason} onChange={(e) => setReason(e.target.value)} />
           <Input className="min-h-12" placeholder='請輸入「刪除帳號」以確認' value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} />
           <Button variant="outline" className="min-h-11 w-full border-[#DC2626] text-[#DC2626]" onClick={requestDeletion} disabled={saving}>提交刪除申請</Button>

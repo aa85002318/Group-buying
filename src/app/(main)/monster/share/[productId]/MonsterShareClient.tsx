@@ -196,7 +196,7 @@ export default function MonsterShareClient() {
           onChange={(e) => setReviewText(e.target.value)}
           rows={5}
           placeholder="寫下你的真實使用心得…"
-          className="w-full rounded-xl border border-border bg-white p-3 text-sm focus:border-[#C94C4C] focus:outline-none focus:ring-1 focus:ring-[#C94C4C]"
+          className="w-full rounded-xl border border-border bg-surface p-3 text-sm focus:border-[#C94C4C] focus:outline-none focus:ring-1 focus:ring-[#C94C4C]"
         />
         <p className="text-xs text-[#8A8A8A]">{reviewText.trim().length} 字</p>
       </div>

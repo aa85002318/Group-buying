@@ -109,11 +109,11 @@ export default function MemberAddressesPage() {
             <Link href={APP_ROUTES.member}><ArrowLeft className="h-5 w-5 text-[#173F75]" /></Link>
             <h1 className="text-xl font-bold text-[#173F75]">收件地址</h1>
           </div>
-          <Button size="sm" onClick={openCreate} className="bg-[#E9285C]"><Plus className="mr-1 h-4 w-4" />新增</Button>
+          <Button size="sm" onClick={openCreate} className="bg-primary"><Plus className="mr-1 h-4 w-4" />新增</Button>
         </div>
 
         {(creating || editing) && (
-          <div className="space-y-3 rounded-[20px] bg-white p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+          <div className="space-y-3 rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
             <h2 className="font-semibold text-[#173F75]">{creating ? "新增地址" : "編輯地址"}</h2>
             <Input className="min-h-12" placeholder="收件人姓名 *" value={form.recipient_name} onChange={(e) => setForm({ ...form, recipient_name: e.target.value })} />
             <Input className="min-h-12" placeholder="手機 *" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
@@ -136,27 +136,27 @@ export default function MemberAddressesPage() {
             </label>
             {error && <p className="text-sm text-[#DC2626]">{error}</p>}
             <div className="flex gap-2">
-              <Button className="min-h-11 flex-1 bg-[#E9285C]" onClick={save} disabled={saving}>{saving ? "儲存中…" : "儲存"}</Button>
+              <Button className="min-h-11 flex-1 bg-primary" onClick={save} disabled={saving}>{saving ? "儲存中…" : "儲存"}</Button>
               <Button variant="outline" className="min-h-11" onClick={() => { setCreating(false); setEditing(null); }}>取消</Button>
             </div>
           </div>
         )}
 
         {loading ? (
-          <p className="text-center text-[#6B7280]">載入中…</p>
+          <p className="text-center text-foreground-secondary">載入中…</p>
         ) : addresses.length === 0 ? (
-          <p className="rounded-[20px] bg-white py-12 text-center text-[#6B7280] shadow-[0_4px_24px_rgba(23,63,117,0.06)]">尚無收件地址</p>
+          <p className="rounded-[20px] bg-surface py-12 text-center text-foreground-secondary shadow-[0_4px_24px_rgba(23,63,117,0.06)]">尚無收件地址</p>
         ) : (
           <div className="space-y-3">
             {addresses.map((a) => (
-              <div key={a.id} className="rounded-[20px] bg-white p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+              <div key={a.id} className="rounded-[20px] bg-surface p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-medium text-[#202124]">{a.recipient_name} · {a.phone}</p>
-                    <p className="mt-1 text-sm text-[#6B7280]">{a.city}{a.district}{a.address_line}</p>
+                    <p className="font-medium text-foreground">{a.recipient_name} · {a.phone}</p>
+                    <p className="mt-1 text-sm text-foreground-secondary">{a.city}{a.district}{a.address_line}</p>
                     {a.label && <p className="mt-1 text-xs text-[#173F75]">{a.label}</p>}
                   </div>
-                  {a.is_default && <Star className="h-5 w-5 fill-[#FFC83D] text-[#FFC83D]" />}
+                  {a.is_default && <Star className="h-5 w-5 fill-[#FFC83D] text-warning" />}
                 </div>
                 <div className="mt-3 flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => openEdit(a)}>編輯</Button>

@@ -104,7 +104,7 @@ export default function SupportPage() {
     <div className="space-y-6 pb-6">
       <div>
         <h1 className="text-xl font-bold text-[#173F75]">客服中心</h1>
-        <p className="mt-1 text-sm text-[#6B7280]">我們會盡快協助您處理問題</p>
+        <p className="mt-1 text-sm text-foreground-secondary">我們會盡快協助您處理問題</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -112,35 +112,35 @@ export default function SupportPage() {
           href={LINE_URL}
           target="_blank"
           rel="noreferrer"
-          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-white p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]"
+          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]"
         >
           <MessageCircle className="h-8 w-8 text-[#06C755]" />
           <div>
-            <p className="font-medium text-[#202124]">LINE 客服</p>
-            <p className="text-xs text-[#6B7280]">@diy_chimei</p>
+            <p className="font-medium text-foreground">LINE 客服</p>
+            <p className="text-xs text-foreground-secondary">@diy_chimei</p>
           </div>
-          <ChevronRight className="ml-auto h-5 w-5 text-[#6B7280]" />
+          <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
         </a>
         <a
           href={`tel:${PHONE.replace(/-/g, "")}`}
-          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-white p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]"
+          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]"
         >
-          <Phone className="h-8 w-8 text-[#E9285C]" />
+          <Phone className="h-8 w-8 text-primary" />
           <div>
-            <p className="font-medium text-[#202124]">電話客服</p>
-            <p className="text-xs text-[#6B7280]">{PHONE}</p>
+            <p className="font-medium text-foreground">電話客服</p>
+            <p className="text-xs text-foreground-secondary">{PHONE}</p>
           </div>
-          <ChevronRight className="ml-auto h-5 w-5 text-[#6B7280]" />
+          <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
         </a>
       </div>
 
-      <section className="rounded-[20px] bg-white p-5 shadow-card">
-        <h2 className="font-bold text-coffee">AI 客服聊天</h2>
-        <p className="mt-1 text-xs text-muted-foreground">即時回答常見問題；複雜案件請改填表單或 LINE。</p>
+      <section className="rounded-[20px] bg-surface p-5 shadow-card">
+        <h2 className="font-bold text-foreground">AI 客服聊天</h2>
+        <p className="mt-1 text-xs text-foreground-secondary">即時回答常見問題；複雜案件請改填表單或 LINE。</p>
         <div className="mt-3 max-h-56 space-y-2 overflow-y-auto rounded-xl bg-muted/40 p-3">
           {chat.map((m, i) => (
             <div key={i} className={`text-sm ${m.role === "user" ? "text-right" : ""}`}>
-              <span className={`inline-block rounded-2xl px-3 py-2 ${m.role === "user" ? "bg-brand-gradient text-white" : "bg-white text-coffee shadow-sm"}`}>
+              <span className={`inline-block rounded-2xl px-3 py-2 ${m.role === "user" ? "bg-brand-gradient text-white" : "bg-surface text-foreground shadow-sm"}`}>
                 {m.content}
               </span>
             </div>
@@ -170,20 +170,20 @@ export default function SupportPage() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 rounded-[18px] bg-white px-4 py-3 shadow-[0_4px_24px_rgba(23,63,117,0.06)]"
+              className="flex items-center gap-3 rounded-[18px] bg-surface px-4 py-3 shadow-[0_4px_24px_rgba(23,63,117,0.06)]"
             >
-              <item.icon className="h-5 w-5 shrink-0 text-[#E9285C]" />
+              <item.icon className="h-5 w-5 shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-[#202124]">{item.label}</p>
-                <p className="text-xs text-[#6B7280]">{item.desc}</p>
+                <p className="font-medium text-foreground">{item.label}</p>
+                <p className="text-xs text-foreground-secondary">{item.desc}</p>
               </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-[#6B7280]" />
+              <ChevronRight className="h-5 w-5 shrink-0 text-foreground-secondary" />
             </Link>
           ))}
         </div>
       </section>
 
-      <section className="rounded-[20px] bg-white p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+      <section className="rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
         <h2 className="flex items-center gap-2 font-medium text-[#173F75]">
           <FileText className="h-4 w-4" />
           聯絡表單
@@ -220,7 +220,7 @@ export default function SupportPage() {
               onChange={(e) => setMessage(e.target.value)}
               required
             />
-            <Button type="submit" className="min-h-11 w-full bg-[#E9285C] hover:bg-[#C91F4D]" disabled={submitting}>
+            <Button type="submit" className="min-h-11 w-full bg-primary hover:bg-[#C91F4D]" disabled={submitting}>
               {submitting ? "送出中…" : "送出問題"}
             </Button>
           </form>

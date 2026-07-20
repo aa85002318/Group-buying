@@ -97,7 +97,7 @@ export default function ProfileDeletePage() {
         </p>
       </div>
 
-      <div className="space-y-3 rounded-xl bg-white p-4 text-sm shadow-card">
+      <div className="space-y-3 rounded-xl bg-surface p-4 text-sm shadow-card">
         <p className="font-medium text-coffee">刪除後將立即生效，且無法復原：</p>
         <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
           <li>無法再以此帳號登入</li>
@@ -119,7 +119,7 @@ export default function ProfileDeletePage() {
           門市／管理帳號無法於前台自行刪除，請透過客服協助處理。
         </div>
       ) : (
-        <div className="space-y-3 rounded-xl bg-white p-4 shadow-card">
+        <div className="space-y-3 rounded-xl bg-surface p-4 shadow-card">
           <label className="block text-sm">
             請輸入「{CONFIRM_PHRASE}」以確認
             <Input

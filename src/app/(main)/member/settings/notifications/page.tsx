@@ -63,17 +63,17 @@ export default function NotificationSettingsPage() {
           <h1 className="text-xl font-bold text-[#173F75]">通知設定</h1>
         </div>
 
-        <div className="space-y-3 rounded-[20px] bg-white p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+        <div className="space-y-3 rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
           {toggles.map((t) => (
             <label key={t.key} className="flex min-h-11 items-center justify-between gap-3">
-              <span className="text-[#202124]">{t.label}</span>
+              <span className="text-foreground">{t.label}</span>
               <input type="checkbox" checked={prefs[t.key]} onChange={(e) => setPrefs({ ...prefs, [t.key]: e.target.checked })} />
             </label>
           ))}
-          <p className="text-xs text-[#6B7280]">關閉 App 內通知後，部分重要訂單狀態仍可能顯示於訂單頁面。</p>
-          <p className="text-xs text-[#6B7280]">裝置推播功能將於後續版本開放。</p>
+          <p className="text-xs text-foreground-secondary">關閉 App 內通知後，部分重要訂單狀態仍可能顯示於訂單頁面。</p>
+          <p className="text-xs text-foreground-secondary">裝置推播功能將於後續版本開放。</p>
           {saved && <p className="text-sm text-green-700">已儲存</p>}
-          <Button className="min-h-11 w-full bg-[#E9285C]" onClick={save} disabled={saving}>{saving ? "儲存中…" : "儲存設定"}</Button>
+          <Button className="min-h-11 w-full bg-primary" onClick={save} disabled={saving}>{saving ? "儲存中…" : "儲存設定"}</Button>
         </div>
       </div>
     </RequireAuth>

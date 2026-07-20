@@ -109,17 +109,17 @@ export default function MemberCarrierPage() {
         )}
 
         {loading ? (
-          <p className="py-12 text-center text-[#6B7280]">載入中…</p>
+          <p className="py-12 text-center text-foreground-secondary">載入中…</p>
         ) : offline && !carrier ? (
           <p className="rounded-[20px] bg-amber-50 px-4 py-6 text-center text-sm text-amber-900">
             目前無法連線，請重新連線後開啟發票載具
           </p>
         ) : mode === "create" && !carrier ? (
           <div className="space-y-5">
-            <div className="rounded-[20px] bg-white p-8 text-center shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
-              <Barcode className="mx-auto h-14 w-14 text-[#E9285C]" strokeWidth={1.5} />
-              <h2 className="mt-4 text-lg font-bold text-[#202124]">尚未設定發票載具</h2>
-              <p className="mt-2 text-sm text-[#6B7280]">新增手機條碼後，結帳時可直接開啟出示</p>
+            <div className="rounded-[20px] bg-surface p-8 text-center shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+              <Barcode className="mx-auto h-14 w-14 text-primary" strokeWidth={1.5} />
+              <h2 className="mt-4 text-lg font-bold text-foreground">尚未設定發票載具</h2>
+              <p className="mt-2 text-sm text-foreground-secondary">新增手機條碼後，結帳時可直接開啟出示</p>
             </div>
             <CarrierForm
               mode="create"
@@ -137,9 +137,9 @@ export default function MemberCarrierPage() {
           />
         ) : carrier ? (
           <div className="space-y-4">
-            <div className="rounded-[20px] bg-white p-6 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
-              <p className="text-sm font-medium text-[#6B7280]">{carrier.carrier_name ?? "我的手機條碼"}</p>
-              <div className="mt-4 flex justify-center rounded-[20px] bg-white px-4 py-6">
+            <div className="rounded-[20px] bg-surface p-6 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+              <p className="text-sm font-medium text-foreground-secondary">{carrier.carrier_name ?? "我的手機條碼"}</p>
+              <div className="mt-4 flex justify-center rounded-[20px] bg-surface px-4 py-6">
                 <InvoiceBarcode value={carrier.carrier_code} />
               </div>
               <button
@@ -185,7 +185,7 @@ export default function MemberCarrierPage() {
               </Button>
             </div>
 
-            <div className="rounded-[20px] bg-[#F7F8FC] p-4 text-sm text-[#6B7280]">
+            <div className="rounded-[20px] bg-[#F7F8FC] p-4 text-sm text-foreground-secondary">
               <p className="font-medium text-[#173F75]">使用提醒</p>
               <ul className="mt-2 list-inside list-disc space-y-1">
                 <li>結帳前請確認條碼清晰可掃</li>
@@ -196,7 +196,7 @@ export default function MemberCarrierPage() {
           </div>
         ) : null}
 
-        <div className="space-y-2 rounded-[20px] border border-[#E8EBF4] bg-white p-4 text-xs leading-relaxed text-[#6B7280]">
+        <div className="space-y-2 rounded-[20px] border border-border bg-surface p-4 text-xs leading-relaxed text-foreground-secondary">
           <p>
             此功能僅協助您儲存及顯示發票手機條碼，方便門市結帳時出示，不代表已完成財政部手機條碼申請或歸戶。
           </p>
@@ -205,9 +205,9 @@ export default function MemberCarrierPage() {
 
         {deleteConfirm && (
           <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/40 p-4 sm:items-center">
-            <div className="w-full max-w-sm rounded-[20px] bg-white p-6 shadow-xl">
-              <h3 className="text-lg font-bold text-[#202124]">確定刪除發票載具？</h3>
-              <p className="mt-2 text-sm text-[#6B7280]">刪除後需要重新輸入手機條碼，才能再次使用。</p>
+            <div className="w-full max-w-sm rounded-[20px] bg-surface p-6 shadow-xl">
+              <h3 className="text-lg font-bold text-foreground">確定刪除發票載具？</h3>
+              <p className="mt-2 text-sm text-foreground-secondary">刪除後需要重新輸入手機條碼，才能再次使用。</p>
               <div className="mt-6 flex gap-3">
                 <Button type="button" variant="outline" className="min-h-11 flex-1" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
                   取消

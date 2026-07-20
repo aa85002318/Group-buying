@@ -1,4 +1,4 @@
-@import "../styles/design-tokens.css";
+@import "../styles/tokens.css";
 
 @tailwind base;
 @tailwind components;
@@ -6,44 +6,37 @@
 
 @layer base {
   :root {
-    --brand-primary: var(--color-primary);
-    --brand-dark: #c41f4d;
-    --sale-red: var(--color-primary);
-    --accent-orange: var(--color-secondary);
-    --coupon-yellow: var(--color-yellow);
-    --reward-purple: #c45cdb;
-    --fresh-green: var(--color-success);
-    --frozen-blue: var(--color-blue);
-    --page-background: var(--color-bg);
-    --card-background: var(--color-card);
-    --text-primary: var(--color-dark);
-    --text-secondary: var(--color-gray);
-    --background: var(--page-background);
+    /* Bridge vars used by older components */
+    --brand-primary: var(--primary);
+    --brand-dark: var(--primary-hover);
+    --sale-red: var(--price);
+    --accent-orange: var(--group-buy);
+    --coupon-yellow: var(--warning);
+    --reward-purple: var(--info);
+    --fresh-green: var(--success);
+    --frozen-blue: var(--info);
+    --page-background: var(--background);
+    --card-background: var(--surface);
     --foreground: var(--text-primary);
-    --primary: var(--brand-primary);
-    --primary-light: #f94c77;
-    --primary-dark: var(--brand-dark);
+    --primary-light: var(--primary-soft);
+    --primary-dark: var(--primary-hover);
     --primary-foreground: #ffffff;
-    --promo: var(--color-secondary);
-    --pink: var(--brand-primary);
-    --pink-light: #fff0f4;
-    --card: var(--card-background);
+    --promo: var(--group-buy);
+    --pink: var(--primary);
+    --pink-light: var(--surface-soft);
+    --card: var(--surface);
     --card-foreground: var(--text-primary);
-    --muted: var(--color-muted);
+    --muted: var(--surface-soft);
     --muted-foreground: var(--text-secondary);
-    --border: var(--color-border);
-    --tag-bg: #fff0f4;
-    --tag-text: var(--brand-primary);
-    --countdown: var(--color-error);
-    --nav-active: var(--brand-primary);
+    --tag-bg: var(--surface-soft);
+    --tag-text: var(--primary);
+    --countdown: var(--error);
+    --nav-active: var(--primary);
     --nav-inactive: var(--text-secondary);
     --nav-icon: var(--text-secondary);
-    --brand-red: var(--brand-primary);
-    --brand-orange: var(--accent-orange);
-    --success: var(--fresh-green);
-    --header-height: 10rem;
+    --brand-red: var(--primary);
+    --brand-orange: var(--group-buy);
     --header-content-gap: 10mm;
-    --bottom-nav-height: 4.5rem;
   }
 
   *,
@@ -57,7 +50,7 @@
   }
 
   body {
-    @apply bg-background text-coffee antialiased overflow-x-hidden;
+    @apply bg-background text-foreground antialiased overflow-x-hidden;
     font-family: var(--font-sans);
   }
 
@@ -67,29 +60,25 @@
   }
 
   ::selection {
-    background: color-mix(in srgb, var(--color-primary) 22%, white);
-    color: var(--color-dark);
+    background: color-mix(in srgb, var(--primary) 22%, white);
+    color: var(--text-primary);
   }
 
-  /* Design System 2.0 — dark mode foundation */
+  /* Design System 2.0 — dark mode foundation (storefront opt-in) */
   .dark {
-    --color-bg: #1a1514;
-    --color-card: #241e1c;
-    --color-dark: #f5f0ee;
-    --color-gray: #a89f9a;
-    --color-border: #3a322f;
-    --color-muted: #2a2321;
-    --page-background: var(--color-bg);
-    --card-background: var(--color-card);
-    --text-primary: var(--color-dark);
-    --text-secondary: var(--color-gray);
-    --background: var(--page-background);
+    --background: #1a1514;
+    --surface: #241e1c;
+    --surface-soft: #2a2321;
+    --text-primary: #f5f0ee;
+    --text-secondary: #a89f9a;
+    --border: #3a322f;
+    --page-background: var(--background);
+    --card-background: var(--surface);
     --foreground: var(--text-primary);
-    --card: var(--card-background);
+    --card: var(--surface);
     --card-foreground: var(--text-primary);
-    --muted: var(--color-muted);
+    --muted: var(--surface-soft);
     --muted-foreground: var(--text-secondary);
-    --border: var(--color-border);
   }
 
   @media (min-width: 768px) {
@@ -101,19 +90,23 @@
 
 @layer components {
   .btn-brand {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-brand transition duration-250 ease-brand hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-brand transition duration-250 ease-brand hover:-translate-y-0.5 hover:bg-primary-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-group-buy {
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-groupBuy px-5 py-2.5 text-sm font-bold text-white shadow-brand transition duration-250 ease-brand hover:-translate-y-0.5 hover:bg-groupBuy-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-groupBuy/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button border-2 border-primary bg-white px-5 py-2.5 text-sm font-bold text-primary transition duration-250 ease-brand hover:bg-brand-blush active:scale-[0.98];
+    @apply inline-flex min-h-11 items-center justify-center rounded-button border-2 border-primary bg-surface px-5 py-2.5 text-sm font-bold text-primary transition duration-250 ease-brand hover:bg-surface-soft active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
   }
 
   .btn-ghost {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-transparent px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-brand-blush;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-transparent px-4 py-2.5 text-sm font-semibold text-foreground-secondary transition hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30;
   }
 
   .card-surface {
-    @apply rounded-card border border-border bg-card shadow-card transition duration-250 ease-brand;
+    @apply rounded-card border border-border bg-surface shadow-card transition duration-250 ease-brand;
   }
 
   .card-lift {
@@ -121,15 +114,15 @@
   }
 
   .section-title {
-    @apply text-xl font-black tracking-tight text-coffee;
+    @apply text-xl font-black tracking-tight text-foreground;
   }
 
   .input-field {
-    @apply min-h-12 w-full rounded-input border border-border bg-card px-3 text-sm text-coffee placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30;
+    @apply min-h-12 w-full rounded-input border border-border bg-surface px-3 text-sm text-foreground placeholder:text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:cursor-not-allowed disabled:bg-surface-soft disabled:text-disabled;
   }
 
   .skeleton {
-    @apply animate-pulse rounded-lg bg-[#f0e4e0];
+    @apply animate-pulse rounded-lg bg-surface-soft;
   }
 
   .page-enter {
@@ -138,6 +131,10 @@
 
   .sticker {
     @apply inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide shadow-sticker;
+  }
+
+  .price-text {
+    @apply font-black text-price;
   }
 }
 
@@ -160,12 +157,16 @@
   }
 
   .bg-dots {
-    background-image: radial-gradient(circle, rgba(233, 40, 92, 0.12) 1.5px, transparent 1.6px);
+    background-image: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--primary) 12%, transparent) 1.5px,
+      transparent 1.6px
+    );
     background-size: 14px 14px;
   }
 
   .bg-wave {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80'%3E%3Cpath fill='%23FFF8F6' d='M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80'%3E%3Cpath fill='%23FFF9F3' d='M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: bottom;
     background-size: 100% 40px;
@@ -196,10 +197,10 @@
 @keyframes live-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.45);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--error) 45%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(229, 57, 53, 0);
+    box-shadow: 0 0 0 8px transparent;
   }
 }
 

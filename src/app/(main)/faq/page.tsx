@@ -45,26 +45,26 @@ export default function FaqPage() {
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-secondary" />
         <Input className="min-h-12 pl-10" placeholder="搜尋問題…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       {loading ? (
-        <p className="text-center text-[#6B7280]">載入中…</p>
+        <p className="text-center text-foreground-secondary">載入中…</p>
       ) : grouped.length === 0 ? (
-        <p className="py-12 text-center text-[#6B7280]">找不到相關問題</p>
+        <p className="py-12 text-center text-foreground-secondary">找不到相關問題</p>
       ) : (
         grouped.map(([category, items]) => (
           <section key={category}>
-            <h2 className="mb-2 px-1 text-sm font-medium text-[#6B7280]">{category}</h2>
-            <div className="divide-y overflow-hidden rounded-[20px] bg-white shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+            <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">{category}</h2>
+            <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
               {items.map((f) => (
                 <div key={f.id}>
                   <button type="button" className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left" onClick={() => setOpenId(openId === f.id ? null : f.id)}>
-                    <span className="font-medium text-[#202124]">{f.question}</span>
-                    <ChevronDown className={`h-5 w-5 shrink-0 text-[#6B7280] transition ${openId === f.id ? "rotate-180" : ""}`} />
+                    <span className="font-medium text-foreground">{f.question}</span>
+                    <ChevronDown className={`h-5 w-5 shrink-0 text-foreground-secondary transition ${openId === f.id ? "rotate-180" : ""}`} />
                   </button>
-                  {openId === f.id && <div className="border-t px-4 pb-4 pt-2 text-sm leading-relaxed text-[#6B7280]">{f.answer}</div>}
+                  {openId === f.id && <div className="border-t px-4 pb-4 pt-2 text-sm leading-relaxed text-foreground-secondary">{f.answer}</div>}
                 </div>
               ))}
             </div>
