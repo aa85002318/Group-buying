@@ -142,6 +142,76 @@ export interface Article {
   product_categories?: ProductCategory;
 }
 
+export type ContentPublishStatus = "draft" | "scheduled" | "published" | "archived";
+
+export interface NewsCategoryRow {
+  id: string;
+  name: string;
+  slug: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NewsPost {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string | null;
+  cover_image: string | null;
+  category_id: string | null;
+  content: string | null;
+  is_featured: boolean;
+  is_important: boolean;
+  status: ContentPublishStatus;
+  published_at: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  related_url: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  sort_order: number;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  news_categories?: NewsCategoryRow | null;
+}
+
+export interface CmsBanner {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  image_url: string | null;
+  mobile_image_url?: string | null;
+  link_url: string | null;
+  button_text?: string | null;
+  badge_text?: string | null;
+  placement?: string;
+  status?: "draft" | "active" | "inactive";
+  is_active: boolean;
+  sort_order: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HomepageBlock {
+  id: string;
+  block_key: string;
+  title: string;
+  subtitle?: string | null;
+  is_visible: boolean;
+  sort_order: number;
+  display_count?: number;
+  source_mode?: "auto" | "manual";
+  manual_ids?: string[];
+  config?: Record<string, unknown>;
+  updated_at: string;
+}
+
 export interface Product {
   id: string;
   category_id: string | null;
@@ -436,7 +506,6 @@ export interface Video {
 }
 
 export type RecipeDifficulty = "easy" | "medium" | "hard";
-export type ContentPublishStatus = "draft" | "scheduled" | "published" | "archived";
 
 export interface RecipeCategory {
   id: string;

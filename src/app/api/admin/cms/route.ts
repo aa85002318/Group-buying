@@ -73,15 +73,29 @@ export async function POST(request: Request) {
   }
 
   if (kind === "banner") {
+    if (body.link_url) {
+      const { isSafeLinkUrl } = await import("@/lib/cms/safeHtml");
+      if (!isSafeLinkUrl(body.link_url)) {
+        return NextResponse.json({ error: "連結不合法（禁止 javascript:）" }, { status: 400 });
+      }
+    }
     const { data, error } = await admin
       .from("cms_banners")
       .insert({
         title: body.title,
         subtitle: body.subtitle ?? null,
         image_url: body.image_url ?? null,
+        mobile_image_url: body.mobile_image_url ?? null,
         link_url: body.link_url ?? null,
+        button_text: body.button_text ?? null,
+        placement: body.placement ?? "home_hero",
+        status: body.status ?? "active",
         sort_order: body.sort_order ?? 0,
         is_active: body.is_active !== false,
+        starts_at: body.starts_at ?? null,
+        ends_at: body.ends_at ?? null,
+        created_by: auth!.profile.id,
+        updated_by: auth!.profile.id,
       })
       .select()
       .single();
@@ -110,6 +124,15 @@ export async function PATCH(request: Request) {
     kind === "page" ? "cms_pages" : kind === "banner" ? "cms_banners" : "homepage_blocks";
 
   if (kind === "page") updates.updated_by = auth!.profile.id;
+  if (kind === "banner") {
+    if (updates.link_url) {
+      const { isSafeLinkUrl } = await import("@/lib/cms/safeHtml");
+      if (!isSafeLinkUrl(String(updates.link_url))) {
+        return NextResponse.json({ error: "連結不合法" }, { status: 400 });
+      }
+    }
+    updates.updated_by = auth!.profile.id;
+  }
 
   const { data: old } = await admin.from(table).select("*").eq("id", id).single();
   const { data, error } = await admin.from(table).update(updates).eq("id", id).select().single();

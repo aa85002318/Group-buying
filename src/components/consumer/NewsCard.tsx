@@ -5,6 +5,7 @@ import type { NewsItem } from "@/lib/consumer-hub";
 const CATEGORY_LABEL: Record<string, string> = {
   new: "新品",
   campaign: "活動",
+  promo: "優惠",
   store: "門市公告",
   course: "課程",
   live: "直播",
@@ -14,6 +15,14 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 export function NewsCard({ item }: { item: NewsItem }) {
+  const toneClass = item.important
+    ? "bg-error-soft text-error"
+    : item.category === "system"
+      ? "bg-info-soft text-info"
+      : item.category === "closure"
+        ? "bg-warning-soft text-warning"
+        : "bg-primary-soft text-primary";
+
   return (
     <Link
       href={item.href}
@@ -21,7 +30,7 @@ export function NewsCard({ item }: { item: NewsItem }) {
       aria-label={item.title}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[11px] font-bold text-primary">
+        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${toneClass}`}>
           {CATEGORY_LABEL[item.category] ?? item.category}
         </span>
         {item.pinned && <StatusBadge tone="info" label="置頂" />}

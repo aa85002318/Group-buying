@@ -2,12 +2,22 @@ import { NextResponse } from "next/server";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { CmsBanner } from "@/lib/types/database";
+
+function isBannerLive(b: CmsBanner, now: Date): boolean {
+  if (!b.is_active) return false;
+  if (b.status && b.status !== "active") return false;
+  if (b.starts_at && new Date(b.starts_at) > now) return false;
+  if (b.ends_at && new Date(b.ends_at) < now) return false;
+  return true;
+}
 
 /** Public CMS: banners, homepage blocks, pages, store announcements */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type") ?? "home";
   const slug = searchParams.get("slug");
+  const placement = searchParams.get("placement");
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json({
@@ -31,12 +41,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ page: data });
   }
 
-  const [banners, blocks, announcements] = await Promise.all([
-    admin
-      .from("cms_banners")
-      .select("*")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true }),
+  if (type === "banners" || placement) {
+    let query = admin.from("cms_banners").select("*").eq("is_active", true).order("sort_order", {
+      ascending: true,
+    });
+    if (placement) query = query.eq("placement", placement);
+    const { data } = await query;
+    const now = new Date();
+    const banners = ((data ?? []) as CmsBanner[]).filter((b) => isBannerLive(b, now));
+    return NextResponse.json({ banners });
+  }
+
+  const [bannersRes, blocks, announcements] = await Promise.all([
+    admin.from("cms_banners").select("*").eq("is_active", true).order("sort_order", { ascending: true }),
     supabase
       .from("homepage_blocks")
       .select("*")
@@ -50,8 +67,11 @@ export async function GET(request: Request) {
       .limit(10),
   ]);
 
+  const now = new Date();
+  const banners = ((bannersRes.data ?? []) as CmsBanner[]).filter((b) => isBannerLive(b, now));
+
   return NextResponse.json({
-    banners: banners.data ?? [],
+    banners,
     blocks: blocks.data ?? [],
     announcements: announcements.data ?? [],
   });

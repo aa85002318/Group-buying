@@ -69,7 +69,7 @@ export const MOCK_NEWS: NewsItem[] = [
     imageUrl: null,
     pinned: true,
     important: false,
-    href: "/news",
+    href: "/news/new-flour-arrival",
   },
   {
     id: "n2",
@@ -78,17 +78,17 @@ export const MOCK_NEWS: NewsItem[] = [
     category: "course",
     publishedAt: "2026-07-18",
     imageUrl: null,
-    href: "/courses",
+    href: "/news/weekend-baking-class",
   },
   {
     id: "n3",
-    title: "門市營業時間調整公告",
-    summary: "週日延長營業至 20:00，詳見門市資訊。",
-    category: "store",
+    title: "系統維護公告：週日凌晨 2–4 點",
+    summary: "維護期間下單與登入可能暫時無法使用。",
+    category: "system",
     publishedAt: "2026-07-15",
     imageUrl: null,
     important: true,
-    href: "/stores",
+    href: "/news/system-maintenance",
   },
 ];
 

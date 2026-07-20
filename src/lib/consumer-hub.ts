@@ -75,6 +75,7 @@ export type NewsCategory =
   | "all"
   | "new"
   | "campaign"
+  | "promo"
   | "store"
   | "course"
   | "live"
