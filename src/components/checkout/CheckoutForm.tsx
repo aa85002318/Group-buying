@@ -17,6 +17,23 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
 import type { PaymentGateway, ShipmentMethod, Store } from "@/lib/types/database";
 
+type MemberAddress = {
+  id: string;
+  recipient_name: string;
+  phone: string;
+  postal_code: string | null;
+  city: string;
+  district: string;
+  address_line: string;
+  label: string | null;
+  is_default: boolean;
+};
+
+function formatAddressSnapshot(a: MemberAddress) {
+  const postal = a.postal_code ? `${a.postal_code} ` : "";
+  return `${postal}${a.city}${a.district}${a.address_line}`;
+}
+
 function OptionCard({
   selected,
   disabled,
@@ -64,7 +81,9 @@ export function CheckoutForm() {
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [shippingAddress] = useState("");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [savedAddresses, setSavedAddresses] = useState<MemberAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
   const [cvsStoreId] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [couponCode, setCouponCode] = useState("");
@@ -97,12 +116,28 @@ export function CheckoutForm() {
       .then((r) => r.json())
       .then((meRes) => {
         if (meRes.profile) {
-          setRecipientName(meRes.profile.full_name ?? "");
-          setRecipientPhone(meRes.profile.phone ?? "");
+          if (!recipientName) setRecipientName(meRes.profile.full_name ?? "");
+          if (!recipientPhone) setRecipientPhone(meRes.profile.phone ?? "");
         }
         if (meRes.user?.email) setCustomerEmail(meRes.user.email);
       })
       .catch(() => {});
+
+    fetch("/api/member/addresses")
+      .then((r) => (r.ok ? r.json() : { addresses: [] }))
+      .then((addrRes) => {
+        const list = (addrRes.addresses ?? []) as MemberAddress[];
+        setSavedAddresses(list);
+        const defaultAddr = list.find((a) => a.is_default) ?? list[0];
+        if (defaultAddr) {
+          setSelectedAddressId(defaultAddr.id);
+          setRecipientName(defaultAddr.recipient_name);
+          setRecipientPhone(defaultAddr.phone);
+          setShippingAddress(formatAddressSnapshot(defaultAddr));
+        }
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   const shippingFee = useMemo(() => shippingFeeForMethod(shipmentMethod), [shipmentMethod]);
@@ -120,6 +155,10 @@ export function CheckoutForm() {
     }
     if (!recipientName.trim() || !recipientPhone.trim()) {
       alert("請填寫聯絡人姓名與電話");
+      return;
+    }
+    if (shipmentMethod === "home_delivery" && !shippingAddress.trim()) {
+      alert("請選擇或填寫宅配地址");
       return;
     }
 
@@ -299,6 +338,39 @@ export function CheckoutForm() {
 
       <section className="space-y-3">
         <h2 className="font-medium text-coffee">聯絡資訊</h2>
+
+        {savedAddresses.length > 0 && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">已儲存的地址</label>
+            <div className="space-y-2">
+              {savedAddresses.map((addr) => (
+                <OptionCard
+                  key={addr.id}
+                  selected={selectedAddressId === addr.id}
+                  title={`${addr.label ? `${addr.label} · ` : ""}${addr.recipient_name}`}
+                  description={`${addr.phone} · ${formatAddressSnapshot(addr)}`}
+                  hint={addr.is_default ? "預設" : undefined}
+                  onSelect={() => {
+                    setSelectedAddressId(addr.id);
+                    setRecipientName(addr.recipient_name);
+                    setRecipientPhone(addr.phone);
+                    setShippingAddress(formatAddressSnapshot(addr));
+                  }}
+                />
+              ))}
+            </div>
+            <Link href="/member/addresses" className="inline-block text-sm text-primary hover:underline">
+              管理收件地址
+            </Link>
+          </div>
+        )}
+
+        {savedAddresses.length === 0 && (
+          <Link href="/member/addresses" className="inline-block text-sm text-primary hover:underline">
+            新增常用收件地址
+          </Link>
+        )}
+
         <div className="space-y-2">
           <label className="block text-sm font-medium">聯絡人姓名</label>
           <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="收件人姓名" required />

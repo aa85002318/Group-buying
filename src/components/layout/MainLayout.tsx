@@ -1,16 +1,19 @@
 import { Header } from "@/components/layout/Header";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { ClientProviders } from "@/components/layout/ClientProviders";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="mx-auto w-full max-w-7xl overflow-x-hidden px-4 pb-24 pt-[calc(var(--header-height)+var(--header-content-gap))] md:px-8 md:pb-4 lg:px-12">
-        {children}
-        <SiteFooter />
-        <MobileBottomNav />
+    <ClientProviders>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="mx-auto w-full max-w-7xl overflow-x-hidden px-4 pb-24 pt-[calc(var(--header-height)+var(--header-content-gap))] md:px-8 md:pb-4 lg:px-12">
+          {children}
+          <SiteFooter />
+          <MobileBottomNav />
+        </div>
       </div>
-    </div>
+    </ClientProviders>
   );
 }

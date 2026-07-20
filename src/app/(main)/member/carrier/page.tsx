@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Barcode, Maximize2, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Barcode, Copy, Maximize2, Pencil, Trash2 } from "lucide-react";
 import { RequireAuth } from "@/components/member/RequireAuth";
 import { CarrierForm } from "@/components/member/CarrierForm";
 import { InvoiceBarcode } from "@/components/member/InvoiceBarcode";
@@ -26,8 +26,16 @@ export default function MemberCarrierPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [offline, setOffline] = useState(false);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
   const load = useCallback(() => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setOffline(true);
+      setLoading(false);
+      return;
+    }
+    setOffline(false);
     setLoading(true);
     fetch("/api/member/carrier")
       .then((r) => r.json())
@@ -75,6 +83,17 @@ export default function MemberCarrierPage() {
     }
   };
 
+  const copyBarcode = async () => {
+    if (!carrier?.carrier_code) return;
+    try {
+      await navigator.clipboard.writeText(carrier.carrier_code);
+      setCopyMessage("已複製手機條碼");
+      setTimeout(() => setCopyMessage(null), 2000);
+    } catch {
+      alert("無法複製，請長按條碼文字手動複製");
+    }
+  };
+
   return (
     <RequireAuth>
       <div className="space-y-5 pb-4">
@@ -91,6 +110,10 @@ export default function MemberCarrierPage() {
 
         {loading ? (
           <p className="py-12 text-center text-[#6B7280]">載入中…</p>
+        ) : offline && !carrier ? (
+          <p className="rounded-[20px] bg-amber-50 px-4 py-6 text-center text-sm text-amber-900">
+            目前無法連線，請重新連線後開啟發票載具
+          </p>
         ) : mode === "create" && !carrier ? (
           <div className="space-y-5">
             <div className="rounded-[20px] bg-white p-8 text-center shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
@@ -119,9 +142,26 @@ export default function MemberCarrierPage() {
               <div className="mt-4 flex justify-center rounded-[20px] bg-white px-4 py-6">
                 <InvoiceBarcode value={carrier.carrier_code} />
               </div>
+              <button
+                type="button"
+                onClick={copyBarcode}
+                className="mt-3 w-full text-center font-mono text-sm tracking-wider text-[#173F75] underline-offset-2 hover:underline"
+              >
+                {carrier.carrier_code}
+              </button>
+              {copyMessage && <p className="mt-2 text-center text-xs text-green-700">{copyMessage}</p>}
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                onClick={copyBarcode}
+                variant="outline"
+                className="min-h-11 flex-1"
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                複製條碼
+              </Button>
               <Button
                 type="button"
                 onClick={() => setZoomOpen(true)}
@@ -180,7 +220,12 @@ export default function MemberCarrierPage() {
           </div>
         )}
 
-        <InvoiceBarcodeZoom open={zoomOpen} value={carrier?.carrier_code ?? ""} onClose={() => setZoomOpen(false)} />
+        <InvoiceBarcodeZoom
+          open={zoomOpen}
+          value={carrier?.carrier_code ?? ""}
+          onClose={() => setZoomOpen(false)}
+          onCopy={carrier ? copyBarcode : undefined}
+        />
       </div>
     </RequireAuth>
   );

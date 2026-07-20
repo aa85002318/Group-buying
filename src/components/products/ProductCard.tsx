@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { formatCurrency } from "@/lib/utils";
 
 interface ProductCardProps {
@@ -25,9 +26,12 @@ export function ProductCard({
 }: ProductCardProps) {
   const link = href ?? `/products/${id}`;
   return (
-    <Link href={link}>
+    <Link href={link} className="block">
       <Card className="overflow-hidden transition-shadow hover:shadow-lg">
         <div className="relative aspect-square bg-muted">
+          <div className="absolute right-2 top-2 z-10">
+            <FavoriteButton productId={id} size="sm" />
+          </div>
           {groupBuyLabel && (
             <Badge variant="tag" className="absolute left-2 top-2 z-10">
               {groupBuyLabel}

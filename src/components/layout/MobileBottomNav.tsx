@@ -38,7 +38,7 @@ const NAV_ITEMS = [
     showBadge: true,
   },
   {
-    href: APP_ROUTES.profile,
+    href: APP_ROUTES.member,
     label: "我的",
     icon: User,
     match: (p: string) => p.startsWith("/profile") || p.startsWith("/member"),

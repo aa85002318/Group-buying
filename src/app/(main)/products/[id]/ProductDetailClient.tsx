@@ -10,6 +10,7 @@ import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
 import { getMockProductById } from "@/lib/mock-data";
 import { RecommendedProducts } from "@/components/products/RecommendedProducts";
+import { FavoriteButton } from "@/components/member/FavoriteButton";
 import type { Product } from "@/lib/types/database";
 
 export default function ProductDetailClient({ id }: { id: string }) {
@@ -118,6 +119,9 @@ export default function ProductDetailClient({ id }: { id: string }) {
 
       <div className="space-y-3">
         <div className="relative aspect-square overflow-hidden rounded-xl bg-muted">
+          <div className="absolute right-3 top-3 z-10">
+            <FavoriteButton productId={product.id} />
+          </div>
           {images.length > 0 ? (
             <Image
               src={images[activeImage]}

@@ -1,4 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  notifyOrderCompleted,
+  notifyOrderCreated,
+  notifyOrderStatusChange,
+  notifyReadyForPickup,
+} from "@/lib/services/memberNotificationService";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/config";
 import {
@@ -7,7 +13,7 @@ import {
   MOCK_USER_ID,
 } from "@/lib/mock-data";
 import type { CommissionSourceType, Order, OrderItem, PaymentGateway, ShipmentMethod } from "@/lib/types/database";
-import { generateOrderNumber } from "@/lib/utils";
+import { generateOrderNumber, ORDER_STATUS_LABELS } from "@/lib/utils";
 import { createPickupCodeForOrder, generatePickupToken } from "@/lib/services/pickupService";
 import { shippingFeeForMethod } from "@/lib/checkout/options";
 import { recordInitialPayment } from "@/lib/services/paymentService";
@@ -338,6 +344,8 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { or
     }
   }
 
+  await notifyOrderCreated(admin, input.userId, order.id, orderNumber);
+
   return {
     ...order,
     discount: order.discount_amount ?? discount,
@@ -466,6 +474,19 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
   if (status === "ready_for_pickup") {
     await sendOrderLineNotification(orderId, "arrival").catch(() => {});
+  }
+
+  const userId = data.user_id as string | undefined;
+  const orderNo = (data.order_number ?? data.order_no ?? orderId) as string;
+  if (userId) {
+    if (status === "ready_for_pickup") {
+      await notifyReadyForPickup(admin, userId, orderId, orderNo).catch(() => {});
+    } else if (status === "completed") {
+      await notifyOrderCompleted(admin, userId, orderId, orderNo).catch(() => {});
+    } else if (status !== "cancelled") {
+      const label = ORDER_STATUS_LABELS[status] ?? status;
+      await notifyOrderStatusChange(admin, userId, orderId, orderNo, label).catch(() => {});
+    }
   }
 
   return data;

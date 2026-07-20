@@ -94,6 +94,7 @@ export interface Profile {
   full_name: string | null;
   birthday: string | null;
   member_code: string;
+  member_number?: string | null;
   role: UserRole;
   avatar_url: string | null;
   gender?: "female" | "male" | "other" | "prefer_not_to_say" | null;

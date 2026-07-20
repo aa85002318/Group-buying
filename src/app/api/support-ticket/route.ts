@@ -10,12 +10,19 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const now = new Date().toISOString();
+  const subject = body.subject?.trim();
+  const description = (body.description ?? body.message ?? body.subject)?.trim();
+  const contactName = body.contactName?.trim() || auth!.profile.full_name || "會員";
+
+  if (!subject || !description) {
+    return NextResponse.json({ error: "請填寫問題主旨與內容" }, { status: 400 });
+  }
 
   const ticket = {
     id: `ticket-${Date.now()}`,
     user_id: auth!.profile.id,
     order_id: body.orderId ?? null,
-    subject: body.subject,
+    subject,
     status: "open" as const,
     priority: (body.priority ?? "medium") as "low" | "medium" | "high",
     assigned_to: null,
@@ -33,11 +40,14 @@ export async function POST(request: Request) {
     .from("support_tickets")
     .insert({
       user_id: auth!.profile.id,
-      order_id: body.orderId,
-      subject: body.subject,
-      description: body.description ?? body.subject,
-      category: body.category ?? "general",
+      order_id: body.orderId ?? null,
+      subject,
+      description,
+      category: body.category ?? "other",
       priority: body.priority ?? "medium",
+      contact_name: contactName,
+      contact_phone: body.contactPhone ?? auth!.profile.phone ?? null,
+      contact_email: body.contactEmail ?? auth!.user?.email ?? null,
     })
     .select()
     .single();
