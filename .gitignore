@@ -45,3 +45,4 @@ android/build/
 android/.idea/
 *.xcuserstate
 *.xcworkspace/xcuserdata/
+.env*

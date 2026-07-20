@@ -5,8 +5,10 @@ import { BRAND_NAME, BRAND_SUBTITLE } from "@/lib/env";
 import {
   DEFAULT_HEADER_NAV_ITEMS,
   DEFAULT_HEADER_PROMO_ITEMS,
+  DEFAULT_SIDE_MENU_SECTIONS,
   normalizeHeaderNavItems,
   normalizeHeaderPromoItems,
+  normalizeSideMenuSections,
   type HeaderNavItem,
 } from "@/lib/site-header";
 
@@ -17,6 +19,7 @@ export async function GET() {
       brandSubtitle: BRAND_SUBTITLE,
       links: DEFAULT_HEADER_NAV_ITEMS,
       promoItems: DEFAULT_HEADER_PROMO_ITEMS,
+      sideMenuSections: DEFAULT_SIDE_MENU_SECTIONS,
     });
   }
 
@@ -24,7 +27,9 @@ export async function GET() {
 
   const { data: settings } = await supabase
     .from("site_header_settings")
-    .select("brand_title,brand_subtitle,nav_items,promo_items,page_keys,category_ids")
+    .select(
+      "brand_title,brand_subtitle,nav_items,promo_items,side_menu_sections,page_keys,category_ids"
+    )
     .eq("singleton_key", "main")
     .maybeSingle();
 
@@ -71,6 +76,7 @@ export async function GET() {
   }
 
   const promoItems = normalizeHeaderPromoItems(settings?.promo_items);
+  const sideMenuSections = normalizeSideMenuSections(settings?.side_menu_sections);
 
   return NextResponse.json({
     brandTitle,
@@ -84,5 +90,7 @@ export async function GET() {
     promoItems: Array.isArray(settings?.promo_items)
       ? promoItems
       : DEFAULT_HEADER_PROMO_ITEMS,
+    sideMenuSections:
+      sideMenuSections.length > 0 ? sideMenuSections : DEFAULT_SIDE_MENU_SECTIONS,
   });
 }

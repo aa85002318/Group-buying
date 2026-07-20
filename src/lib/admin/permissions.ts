@@ -12,6 +12,9 @@ export function isStoreStaffAllowedPath(path: string): boolean {
 }
 
 export const ADMIN_ONLY_PATHS = [
+  "/admin/site-header",
+  "/admin/header-promos",
+  "/admin/side-menu",
   "/admin/products",
   "/admin/categories",
   "/admin/articles",
@@ -42,7 +45,8 @@ export type AdminNavItem = {
 
 export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin", label: "儀表板" },
-  { href: "/admin/site-header", label: "頁首設定", roles: ["admin"] },
+  { href: "/admin/header-promos", label: "開團快捷資訊", roles: ["admin"] },
+  { href: "/admin/side-menu", label: "側邊選單", roles: ["admin"] },
   { href: "/admin/products", label: "商品", roles: ["admin"] },
   { href: "/admin/categories", label: "分類管理", roles: ["admin"] },
   { href: "/admin/articles", label: "文章管理", roles: ["admin"] },

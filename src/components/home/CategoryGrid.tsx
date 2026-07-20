@@ -1,6 +1,10 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
+  ChevronRight,
   CookingPot,
   Snowflake,
   Sparkles,
@@ -13,44 +17,182 @@ interface CategoryGridProps {
   categories: ProductCategory[];
 }
 
+const ICON_BACKGROUNDS = [
+  "bg-[#FF8A00]",
+  "bg-[#23B26D]",
+  "bg-[#268CFF]",
+  "bg-[#FFC400]",
+  "bg-[#00AFC1]",
+  "bg-[#E9288A]",
+];
+
+const CATEGORY_ICONS = [Utensils, Sprout, Snowflake, CookingPot, Sparkles, CalendarDays];
+
+/** 手機一列約 4 格，第 5 格微露提示可右滑 */
+const MOBILE_ITEM_WIDTH = "calc((100% - 0.75rem * 3) / 4)";
+
 export function CategoryGrid({ categories }: CategoryGridProps) {
-  const iconBackgrounds = [
-    "bg-[#FF8A00]",
-    "bg-[#23B26D]",
-    "bg-[#268CFF]",
-    "bg-[#FFC400]",
-    "bg-[#00AFC1]",
-    "bg-[#E9288A]",
-  ];
-  const categoryIcons = [Utensils, Sprout, Snowflake, CookingPot, Sparkles, CalendarDays];
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false });
+  const [scrollState, setScrollState] = useState({
+    progress: 0,
+    thumbRatio: 1,
+    canScroll: false,
+    atEnd: true,
+  });
+
+  const updateScrollTrack = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) {
+      setScrollState({ progress: 0, thumbRatio: 1, canScroll: false, atEnd: true });
+      return;
+    }
+
+    const thumbRatio = Math.min(1, el.clientWidth / el.scrollWidth);
+    const progress = el.scrollLeft / maxScroll;
+    setScrollState({
+      progress,
+      thumbRatio,
+      canScroll: true,
+      atEnd: el.scrollLeft >= maxScroll - 2,
+    });
+  }, []);
+
+  useEffect(() => {
+    updateScrollTrack();
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(updateScrollTrack);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [categories, updateScrollTrack]);
+
+  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    if (!el || !scrollState.canScroll) return;
+
+    dragRef.current = {
+      active: true,
+      startX: event.pageX,
+      scrollLeft: el.scrollLeft,
+      moved: false,
+    };
+    el.style.cursor = "grabbing";
+    el.style.userSelect = "none";
+  };
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    if (!el || !dragRef.current.active) return;
+
+    event.preventDefault();
+    const delta = event.pageX - dragRef.current.startX;
+    if (Math.abs(delta) > 4) dragRef.current.moved = true;
+    el.scrollLeft = dragRef.current.scrollLeft - delta;
+  };
+
+  const stopDragging = () => {
+    const el = scrollRef.current;
+    if (el) {
+      el.style.cursor = "";
+      el.style.userSelect = "";
+    }
+    dragRef.current.active = false;
+  };
+
+  const handleItemClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (dragRef.current.moved) {
+      event.preventDefault();
+      dragRef.current.moved = false;
+    }
+  };
+
+  const thumbWidthPercent = scrollState.thumbRatio * 100;
+  const thumbLeftPercent = scrollState.progress * (100 - thumbWidthPercent);
 
   return (
-    <section className="rounded-[20px] bg-white p-4 shadow-card md:p-5">
-      <h2 className="mb-4 text-lg font-black text-[#202124]">商品分類</h2>
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-6 md:gap-4">
-        {categories.map((c, index) => {
-          const Icon = categoryIcons[index % categoryIcons.length];
-
-          return (
-            <Link
-              key={c.id}
-              href={`/products?category=${c.id}`}
-              className="group flex min-h-11 flex-col items-center gap-2 rounded-2xl py-1 transition-transform active:scale-95"
-            >
-              <div
-                className={`relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[18px] text-white shadow-[0_6px_14px_rgba(32,33,36,0.16)] transition-transform duration-200 group-hover:scale-105 group-active:scale-95 sm:h-16 sm:w-16 ${
-                  iconBackgrounds[index % iconBackgrounds.length]
-                }`}
-              >
-                <Icon className="h-7 w-7 stroke-[2.25]" aria-hidden />
-              </div>
-              <span className="line-clamp-2 text-center text-sm font-semibold text-[#202124]">
-                {c.name}
-              </span>
-            </Link>
-          );
-        })}
+    <section className="relative rounded-[20px] bg-white p-4 shadow-card md:p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-black text-[#202124]">商品分類</h2>
+        {scrollState.canScroll && (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#6B7280]">
+            向右滑動
+            <ChevronRight className="h-3.5 w-3.5 text-[#E9285C]" aria-hidden />
+          </span>
+        )}
       </div>
+
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          onScroll={updateScrollTrack}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={stopDragging}
+          onMouseLeave={stopDragging}
+          className={[
+            "flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1 scrollbar-none",
+            scrollState.canScroll ? "cursor-grab active:cursor-grabbing" : "",
+          ].join(" ")}
+        >
+          {categories.map((category, index) => {
+            const Icon = CATEGORY_ICONS[index % CATEGORY_ICONS.length];
+
+            return (
+              <Link
+                key={category.id}
+                href={`/products?category=${category.id}`}
+                onClick={handleItemClick}
+                draggable={false}
+                className="group flex shrink-0 snap-start flex-col items-center gap-2 py-1 transition-transform active:scale-95"
+                style={{ width: MOBILE_ITEM_WIDTH, minWidth: MOBILE_ITEM_WIDTH }}
+              >
+                <div
+                  className={`relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[18px] text-white shadow-[0_6px_14px_rgba(32,33,36,0.16)] transition-transform duration-200 group-hover:scale-105 group-active:scale-95 sm:h-16 sm:w-16 ${
+                    ICON_BACKGROUNDS[index % ICON_BACKGROUNDS.length]
+                  }`}
+                >
+                  <Icon className="h-7 w-7 stroke-[2.25]" aria-hidden />
+                </div>
+                <span className="line-clamp-2 text-center text-sm font-semibold text-[#202124]">
+                  {category.name}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+
+        {scrollState.canScroll && !scrollState.atEnd && (
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white via-white/90 to-transparent"
+            aria-hidden
+          />
+        )}
+      </div>
+
+      {scrollState.canScroll && (
+        <div className="mt-3 space-y-1.5">
+          <div
+            className="mx-auto flex h-1.5 w-28 items-center rounded-full bg-[#F3D7DF] px-0.5"
+            aria-hidden
+          >
+            <div
+              className="h-1 rounded-full bg-[#E9285C] transition-[width,margin-left] duration-150 ease-out"
+              style={{
+                width: `${thumbWidthPercent}%`,
+                marginLeft: `${thumbLeftPercent}%`,
+              }}
+            />
+          </div>
+          <p className="text-center text-[11px] font-medium text-[#6B7280]">
+            左右滑動或拖曳查看更多分類
+          </p>
+        </div>
+      )}
     </section>
   );
 }

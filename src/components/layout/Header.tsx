@@ -1,15 +1,35 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
+  CakeSlice,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  Clock3,
+  CookingPot,
+  CupSoda,
+  FileText,
+  Flame,
+  Leaf,
   Menu,
   Package,
+  PackagePlus,
+  PlayCircle,
+  Radio,
   Search,
+  ShoppingBag,
   ShoppingCart,
+  Snowflake,
+  Sparkles,
+  SprayCan,
+  Star,
   User,
+  Video,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -18,23 +38,17 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { useCart } from "@/hooks/useCart";
-import {
-  HEADER_CATEGORY_LINKS,
-  isMinimalChromePath,
-} from "@/lib/navigation";
+import { isMinimalChromePath } from "@/lib/navigation";
 import { APP_ROUTES } from "@/lib/site-links";
 import {
   DEFAULT_HEADER_PROMO_ITEMS,
+  DEFAULT_SIDE_MENU_SECTIONS,
   type HeaderPromoItem,
+  type SideMenuColorKey,
+  type SideMenuIconKey,
+  type SideMenuSection,
 } from "@/lib/site-header";
-
-type HeaderChip = {
-  href: string;
-  label: string;
-  badge?: "hot" | "live";
-  iconEmoji?: string | null;
-  icon?: LucideIcon;
-};
+import type { ProductCategory } from "@/lib/types/database";
 
 function BrandLockup({ className }: { className?: string }) {
   return (
@@ -49,43 +63,181 @@ function BrandLockup({ className }: { className?: string }) {
   );
 }
 
-function CategoryMenu({ className, links }: { className?: string; links: HeaderChip[] }) {
+const FALLBACK_MENU_CATEGORIES = [
+  "烘焙食品",
+  "生鮮食材",
+  "冷凍食品",
+  "零食飲料",
+  "居家清潔",
+  "廚房用品",
+  "季節限定",
+] as const;
+
+const CATEGORY_VISUALS: Array<{ icon: LucideIcon; background: string }> = [
+  { icon: CakeSlice, background: "bg-[#FF8A00]" },
+  { icon: Leaf, background: "bg-[#23B26D]" },
+  { icon: Snowflake, background: "bg-[#268CFF]" },
+  { icon: CupSoda, background: "bg-[#A93DDB]" },
+  { icon: SprayCan, background: "bg-[#00AFC1]" },
+  { icon: CookingPot, background: "bg-[#FFC400]" },
+  { icon: CalendarDays, background: "bg-[#E9288A]" },
+];
+
+const SIDE_MENU_ICONS: Record<SideMenuIconKey, LucideIcon> = {
+  flame: Flame,
+  package: PackagePlus,
+  clock: Clock3,
+  star: Star,
+  "shopping-bag": ShoppingBag,
+  radio: Radio,
+  play: PlayCircle,
+  video: Video,
+  article: FileText,
+  sparkles: Sparkles,
+};
+
+const SIDE_MENU_COLORS: Record<
+  SideMenuColorKey,
+  { background: string; foreground: string }
+> = {
+  berry: { background: "bg-[#FFE9EE]", foreground: "text-[#FF4D6D]" },
+  coral: { background: "bg-[#FFE4E7]", foreground: "text-[#FF3B5C]" },
+  orange: { background: "bg-[#FFF2D9]", foreground: "text-[#FF9800]" },
+  yellow: { background: "bg-[#FFF7D6]", foreground: "text-[#F5B400]" },
+  purple: { background: "bg-[#F5EAFE]", foreground: "text-[#A93DDB]" },
+  blue: { background: "bg-[#EEF3FF]", foreground: "text-[#3B82F6]" },
+  green: { background: "bg-[#E8F8EF]", foreground: "text-[#23B26D]" },
+  teal: { background: "bg-[#E5F8FA]", foreground: "text-[#00AFC1]" },
+  pink: { background: "bg-[#FFF0F6]", foreground: "text-[#FF5A8A]" },
+};
+
+type SideMenuItemProps = {
+  href: string;
+  title: string;
+  description?: string;
+  icon: LucideIcon;
+  iconBackground: string;
+  iconColor: string;
+  onNavigate: () => void;
+};
+
+function SideMenuItem({
+  href,
+  title,
+  description,
+  icon: Icon,
+  iconBackground,
+  iconColor,
+  onNavigate,
+}: SideMenuItemProps) {
+  const className =
+    "group flex h-14 w-full items-center gap-3 px-5 text-left transition-all duration-200 ease-in-out hover:translate-x-1.5 hover:bg-[#FFF5F7] active:bg-[#FFE2EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E9285C]/40";
+  const content = (
+    <>
+      <span
+        className={cn(
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
+          iconBackground
+        )}
+      >
+        <Icon className={cn("h-[26px] w-[26px]", iconColor)} aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-bold text-[#202124]">{title}</span>
+        {description && (
+          <span className="block truncate text-[11px] font-medium text-[#6B7280]">
+            {description}
+          </span>
+        )}
+      </span>
+      <ChevronRight
+        className="h-4 w-4 shrink-0 text-[#9CA3AF] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[#E9285C]"
+        aria-hidden
+      />
+    </>
+  );
+
+  if (href.startsWith("http://") || href.startsWith("https://")) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className} onClick={onNavigate}>
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className} onClick={onNavigate}>
+      {content}
+    </Link>
+  );
+}
+
+function MenuSectionTitle({
+  title,
+  icon: Icon,
+  iconColor,
+}: {
+  title: string;
+  icon: LucideIcon;
+  iconColor: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 px-5 pb-2 pt-4">
+      <Icon className={cn("h-5 w-5", iconColor)} aria-hidden />
+      <h2 className="text-sm font-black tracking-wide text-[#202124]">{title}</h2>
+    </div>
+  );
+}
+
+function CategoryMenu({
+  className,
+  categories,
+  sections,
+}: {
+  className?: string;
+  categories: ProductCategory[];
+  sections: SideMenuSection[];
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
 
   useEffect(() => {
     setIsOpen(false);
   }, [pathname, searchParams]);
 
-  const isActive = (href: string) => {
-    if (href.startsWith("http://") || href.startsWith("https://")) return false;
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
 
-    const baseHref = href.split("?")[0];
-
-    if (baseHref === "/products") {
-      const params = new URLSearchParams(href.split("?")[1] ?? "");
-      const expectedCategory = params.get("category");
-      const pathnameParams = searchParams.toString();
-      const current = new URLSearchParams(pathnameParams);
-      const currentCategory = current.get("category");
-      const currentSearch = current.get("search");
-
-      if (expectedCategory) {
-        return pathname === "/products" && currentCategory === expectedCategory && !currentSearch;
-      }
-
-      // "全部商品" => no category & no search
-      return pathname === "/products" && !currentCategory && !currentSearch;
-    }
-
-    if (baseHref === "/") return pathname === "/";
-    if (pathname === baseHref) return true;
-    return pathname.startsWith(`${baseHref}/`);
-  };
+  const closeMenu = () => setIsOpen(false);
+  const displayedSections = sections.length > 0 ? sections : DEFAULT_SIDE_MENU_SECTIONS;
+  const displayedCategories =
+    categories.length > 0
+      ? categories.map((category) => ({
+          id: category.id,
+          name: category.name,
+          href: `/products?category=${category.id}`,
+        }))
+      : FALLBACK_MENU_CATEGORIES.map((name, index) => ({
+          id: `fallback-${index}`,
+          name,
+          href: "/categories",
+        }));
 
   return (
-    <div className={cn("relative w-fit max-w-full", className)}>
+    <div className={cn("w-fit max-w-full", className)}>
       <button
         type="button"
         aria-expanded={isOpen}
@@ -97,89 +249,163 @@ function CategoryMenu({ className, links }: { className?: string; links: HeaderC
         <Menu className="h-5 w-5" aria-hidden />
       </button>
 
-      {isOpen && (
-        <nav
-          id="header-category-menu"
-          aria-label="商品分類"
-          className="absolute left-0 top-full z-50 mt-2 max-h-[min(60vh,28rem)] w-[min(30rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-brand-line bg-white p-2 shadow-xl"
-        >
-          <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-        {links.map(({ label, href, icon: Icon, badge, iconEmoji }) => {
-          const active = isActive(href);
-          const classNameValue = cn(
-            "inline-flex h-10 min-w-0 items-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red/30",
-            active
-              ? "bg-brand-gradient text-white shadow-brand"
-              : "bg-transparent text-brand-ink hover:bg-brand-blush hover:text-brand-red"
-          );
-          const content = (
-            <>
-              {iconEmoji ? (
+      {isOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 z-[80]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-[#202124]/35 backdrop-blur-[2px]"
+            onClick={closeMenu}
+            aria-label="關閉選單"
+          />
+          <aside
+            id="header-category-menu"
+            aria-label="主要購物選單"
+            className="absolute bottom-3 left-3 top-3 flex flex-col overflow-hidden rounded-[24px] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+            style={{ width: "min(360px, calc(100vw - 24px))" }}
+          >
+            <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#E5E7EB] px-5">
+              <div>
+                <p className="text-base font-black text-[#202124]">CHIMEIDIY 購物選單</p>
+                <p className="text-[11px] font-medium text-[#6B7280]">快速找到今天最值得買的商品</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeMenu}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFF0F4] text-[#E9285C] transition-colors duration-200 hover:bg-[#FFE2EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E9285C]/40"
+                aria-label="關閉選單"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-5">
+              {displayedSections.map((section, sectionIndex) => {
+                const SectionIcon = SIDE_MENU_ICONS[section.icon];
+                const sectionColor = SIDE_MENU_COLORS[section.color];
+                const trigger = section.items[0];
+
+                return (
+                  <div key={section.id}>
+                    {sectionIndex > 0 && (
+                      <div className="mx-5 my-3 border-t border-[#E5E7EB]" />
+                    )}
+                    <MenuSectionTitle
+                      title={section.title}
+                      icon={SectionIcon}
+                      iconColor={sectionColor.foreground}
+                    />
+
+                    {section.kind === "categories" && trigger ? (
+                      <>
+                        <button
+                type="button"
+                aria-expanded={categoriesOpen}
+                aria-controls="side-menu-categories"
+                onClick={() => setCategoriesOpen((open) => !open)}
+                className="group flex h-14 w-full items-center gap-3 px-5 text-left transition-all duration-200 ease-in-out hover:translate-x-1.5 hover:bg-[#FFF5F7] active:bg-[#FFE2EA] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E9285C]/40"
+              >
                 <span
                   className={cn(
-                    "flex h-4 w-4 items-center justify-center text-sm",
-                    active ? "text-white" : "text-brand-orange"
+                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
+                    SIDE_MENU_COLORS[trigger.color].background
                   )}
-                  aria-hidden
                 >
-                  {iconEmoji}
+                  {(() => {
+                    const TriggerIcon = SIDE_MENU_ICONS[trigger.icon];
+                    return (
+                      <TriggerIcon
+                        className={cn(
+                          "h-[26px] w-[26px]",
+                          SIDE_MENU_COLORS[trigger.color].foreground
+                        )}
+                        aria-hidden
+                      />
+                    );
+                  })()}
                 </span>
-              ) : Icon ? (
-                <Icon
-                  className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-brand-orange")}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-[#202124]">
+                    {trigger.label}
+                  </span>
+                  <span className="block text-[11px] font-medium text-[#6B7280]">
+                    {trigger.description}
+                  </span>
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-5 w-5 text-[#9CA3AF] transition-transform duration-200 ease-in-out",
+                    categoriesOpen && "rotate-180 text-[#E9285C]"
+                  )}
                   aria-hidden
                 />
-              ) : null}
-              <span>{label}</span>
-              {badge === "hot" && !active && (
-                <span className="text-[10px] font-bold text-brand-orange" aria-hidden>
-                  HOT
-                </span>
-              )}
-              {badge === "live" && (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-                    active ? "bg-white/20 text-white" : "bg-brand-red text-white"
-                  )}
-                >
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
-                  LIVE
-                </span>
-              )}
-            </>
-          );
-
-          const isExternal = href.startsWith("http://") || href.startsWith("https://");
-          if (isExternal) {
-            return (
-              <a
-                key={`${label}-${href}`}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={classNameValue}
-                onClick={() => setIsOpen(false)}
-              >
-                {content}
-              </a>
-            );
-          }
-
-          return (
-            <Link
-              key={`${label}-${href}`}
-              href={href}
-              className={classNameValue}
-              onClick={() => setIsOpen(false)}
-            >
-              {content}
-            </Link>
-          );
-        })}
-          </div>
-        </nav>
-      )}
+                        </button>
+                        <div
+                id="side-menu-categories"
+                aria-hidden={!categoriesOpen}
+                className={cn(
+                  "grid overflow-hidden bg-[#FAFAFA] transition-[grid-template-rows] duration-200 ease-in-out",
+                  categoriesOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                )}
+                        >
+                          <div className="min-h-0 overflow-hidden">
+                  <div className="grid grid-cols-2 gap-2 px-5 py-3">
+                    {displayedCategories.map((category, index) => {
+                      const visual = CATEGORY_VISUALS[index % CATEGORY_VISUALS.length];
+                      const Icon = visual.icon;
+                      return (
+                        <Link
+                          key={category.id}
+                          href={category.href}
+                          tabIndex={categoriesOpen ? 0 : -1}
+                          onClick={closeMenu}
+                          className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-white px-3 shadow-sm transition-all duration-200 ease-in-out hover:translate-x-1 hover:bg-[#FFF5F7] active:bg-[#FFE2EA]"
+                        >
+                          <span
+                            className={cn(
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white",
+                              visual.background
+                            )}
+                          >
+                            <Icon className="h-5 w-5" aria-hidden />
+                          </span>
+                          <span className="line-clamp-2 text-xs font-bold text-[#202124]">
+                            {category.name}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      section.items.map((item) => {
+                        const ItemIcon = SIDE_MENU_ICONS[item.icon];
+                        const itemColor = SIDE_MENU_COLORS[item.color];
+                        return (
+                          <SideMenuItem
+                            key={item.id}
+                            href={item.href}
+                            title={item.label}
+                            description={item.description}
+                            icon={ItemIcon}
+                            iconBackground={itemColor.background}
+                            iconColor={itemColor.foreground}
+                            onNavigate={closeMenu}
+                          />
+                        );
+                      })
+                    )}
+                  </div>
+                );
+              })}
+            </nav>
+          </aside>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
@@ -445,6 +671,23 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
     "bg-[#FFC400] text-[#202124]",
     "bg-[#A93DDB] text-white",
   ];
+  const fontStyles = {
+    small: {
+      value: "text-lg",
+      suffix: "text-xs",
+      label: "text-[9px] sm:text-[10px]",
+    },
+    medium: {
+      value: "text-xl",
+      suffix: "text-sm",
+      label: "text-[10px] sm:text-[11px]",
+    },
+    large: {
+      value: "text-2xl",
+      suffix: "text-base",
+      label: "text-xs sm:text-sm",
+    },
+  } as const;
 
   return (
     <div
@@ -452,7 +695,8 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
       className="overflow-hidden"
     >
       <ul className="grid grid-cols-4 gap-1.5">
-        {items.map(({ id, label, value, suffix, icon_emoji, href }, index) => {
+        {items.map(({ id, label, value, suffix, icon_emoji, href, font_size }, index) => {
+          const typography = fontStyles[font_size ?? "medium"];
           const targetHref =
             href ??
             (id === "today" || id === "ending"
@@ -472,12 +716,12 @@ function QuickPromoStrip({ items }: { items: HeaderPromoItem[] }) {
               </span>
               <span className="relative z-10 min-w-0">
                 {value ? (
-                  <span className="block text-xl font-black leading-none">
+                  <span className={cn("block font-black leading-none", typography.value)}>
                     {value}
-                    <span className="ml-0.5 text-sm">{suffix}</span>
+                    <span className={cn("ml-0.5", typography.suffix)}>{suffix}</span>
                   </span>
                 ) : null}
-                <span className="mt-1 block truncate text-[10px] font-bold opacity-95 sm:text-[11px]">
+                <span className={cn("mt-1 block truncate font-bold opacity-95", typography.label)}>
                   {label}
                 </span>
               </span>
@@ -522,7 +766,9 @@ export function Header() {
   const [siteHeaderConfig, setSiteHeaderConfig] = useState<{
     links: Array<{ href: string; label: string; badge?: "hot" | "live"; icon_emoji?: string }>;
     promoItems?: HeaderPromoItem[];
+    sideMenuSections?: SideMenuSection[];
   } | null>(null);
+  const [menuCategories, setMenuCategories] = useState<ProductCategory[]>([]);
 
   useEffect(() => {
     // load from DB so header content can be managed in back-office
@@ -532,27 +778,21 @@ export function Header() {
       .catch(() => {});
   }, []);
 
-  const links: HeaderChip[] = useMemo(() => {
-    if (siteHeaderConfig?.links?.length) {
-      return siteHeaderConfig.links.map((l) => ({
-        href: l.href,
-        label: l.label,
-        badge: l.badge,
-        iconEmoji: l.icon_emoji ?? null,
-      }));
-    }
-
-    return HEADER_CATEGORY_LINKS.map(({ label, href, icon, badge }) => ({
-      href,
-      label,
-      badge,
-      icon,
-    }));
-  }, [siteHeaderConfig]);
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data?.categories)) setMenuCategories(data.categories);
+      })
+      .catch(() => {});
+  }, []);
 
   const promoItems = Array.isArray(siteHeaderConfig?.promoItems)
     ? siteHeaderConfig.promoItems
     : DEFAULT_HEADER_PROMO_ITEMS;
+  const sideMenuSections = Array.isArray(siteHeaderConfig?.sideMenuSections)
+    ? siteHeaderConfig.sideMenuSections
+    : DEFAULT_SIDE_MENU_SECTIONS;
 
   useEffect(() => {
     const header = headerRef.current;
@@ -592,7 +832,10 @@ export function Header() {
               {!isAuthPage && (
                 <>
                   <Suspense fallback={<CategoryMenuFallback />}>
-                    <CategoryMenu links={links} />
+                    <CategoryMenu
+                      categories={menuCategories}
+                      sections={sideMenuSections}
+                    />
                   </Suspense>
                   <Suspense fallback={<SearchFallback className="w-10" />}>
                     <CollapsibleSearch />
