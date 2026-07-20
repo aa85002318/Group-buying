@@ -5,17 +5,37 @@ import { getMockRelatedProductsForVideo, mockVideos } from "@/lib/mock-data";
 import type { Product } from "@/lib/types/database";
 
 async function fetchRelatedProducts(
-  video: { id: string; product_id?: string | null; products?: Product | null },
+  video: { id: string; product_id?: string | null; related_product_ids?: string[] | null; products?: Product | null },
   supabase: Awaited<ReturnType<typeof createClient>>
 ): Promise<Product[]> {
   const related: Product[] = [];
   const seen = new Set<string>();
 
-  const bound = video.products ?? (video.product_id
-    ? (await supabase.from("products").select("*, product_categories(name, slug)").eq("id", video.product_id).single()).data
-    : null);
+  if (video.related_product_ids?.length) {
+    const { data: byIds } = await supabase
+      .from("products")
+      .select("*, product_categories(name, slug)")
+      .in("id", video.related_product_ids)
+      .eq("is_active", true);
+    for (const p of byIds ?? []) {
+      related.push(p as Product);
+      seen.add(p.id);
+    }
+  }
 
-  if (bound) {
+  const bound =
+    video.products ??
+    (video.product_id
+      ? (
+          await supabase
+            .from("products")
+            .select("*, product_categories(name, slug)")
+            .eq("id", video.product_id)
+            .single()
+        ).data
+      : null);
+
+  if (bound && !seen.has(bound.id)) {
     related.push(bound as Product);
     seen.add(bound.id);
 
@@ -60,20 +80,24 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
 
   if (!isSupabaseConfigured()) {
-    const video = mockVideos.find((v) => v.id === id);
+    const video = mockVideos.find((v) => v.id === id || v.slug === id);
     if (!video) return NextResponse.json({ error: "影片不存在" }, { status: 404 });
     const related_products = getMockRelatedProductsForVideo(id);
     return NextResponse.json({ video, related_products });
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("videos")
-    .select("*, products(*, product_categories(name, slug))")
-    .eq("id", id)
-    .single();
+  const isUuid = /^[0-9a-f-]{36}$/i.test(id);
 
-  if (error) return NextResponse.json({ error: "影片不存在" }, { status: 404 });
+  let query = supabase
+    .from("videos")
+    .select("*, products(*, product_categories(name, slug))");
+
+  query = isUuid ? query.eq("id", id) : query.eq("slug", id);
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error || !data) return NextResponse.json({ error: "影片不存在" }, { status: 404 });
 
   const related_products = await fetchRelatedProducts(data, supabase);
   return NextResponse.json({ video: data, related_products });

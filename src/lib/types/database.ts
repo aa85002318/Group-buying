@@ -418,9 +418,93 @@ export interface Video {
   product_id?: string | null;
   view_count: number;
   is_active: boolean;
+  slug?: string | null;
+  summary?: string | null;
+  video_type?: "youtube" | "facebook" | "external" | "self_hosted" | null;
+  duration_seconds?: number | null;
+  category?: string | null;
+  related_recipe_ids?: string[] | null;
+  related_product_ids?: string[] | null;
+  status?: "draft" | "scheduled" | "published" | "archived" | null;
+  published_at?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  sort_order?: number;
   created_at: string;
   updated_at: string;
   products?: Product | null;
+}
+
+export type RecipeDifficulty = "easy" | "medium" | "hard";
+export type ContentPublishStatus = "draft" | "scheduled" | "published" | "archived";
+
+export interface RecipeCategory {
+  id: string;
+  name: string;
+  slug: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Recipe {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string | null;
+  cover_image: string | null;
+  category_id: string | null;
+  difficulty: RecipeDifficulty;
+  prep_time: number | null;
+  cook_time: number | null;
+  total_time: number | null;
+  servings: string | null;
+  content: string | null;
+  tips: string | null;
+  storage_method: string | null;
+  status: ContentPublishStatus;
+  published_at: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  related_video_id: string | null;
+  sort_order: number;
+  is_featured: boolean;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  recipe_categories?: RecipeCategory | null;
+  recipe_ingredients?: RecipeIngredient[];
+  recipe_steps?: RecipeStep[];
+  videos?: Video | null;
+}
+
+export interface RecipeIngredient {
+  id: string;
+  recipe_id: string;
+  group_name: string | null;
+  name: string;
+  amount: string | null;
+  unit: string | null;
+  product_id: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  products?: Product | null;
+}
+
+export interface RecipeStep {
+  id: string;
+  recipe_id: string;
+  step_number: number;
+  title: string | null;
+  description: string;
+  image_url: string | null;
+  note: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Livestream {

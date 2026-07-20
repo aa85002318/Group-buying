@@ -18,7 +18,7 @@ export const MOCK_RECIPES: RecipeSummary[] = [
     durationMinutes: 45,
     category: "餅乾",
     hasVideo: true,
-    href: "/articles",
+    href: "/recipes/butter-cookies",
   },
   {
     id: "r2",
@@ -28,7 +28,7 @@ export const MOCK_RECIPES: RecipeSummary[] = [
     durationMinutes: 90,
     category: "蛋糕",
     hasVideo: true,
-    href: "/videos",
+    href: "/recipes/swiss-roll",
   },
   {
     id: "r3",
@@ -38,7 +38,7 @@ export const MOCK_RECIPES: RecipeSummary[] = [
     durationMinutes: 180,
     category: "麵包",
     hasVideo: false,
-    href: "/articles",
+    href: "/recipes/brioche",
   },
 ];
 
@@ -48,14 +48,14 @@ export const MOCK_VIDEOS: VideoSummary[] = [
     title: "一分鐘教你過篩麵粉",
     coverImage: null,
     durationLabel: "1:12",
-    href: "/videos",
+    href: "/videos/sift-flour-1min",
   },
   {
     id: "v2",
     title: "奶油乳化失敗怎麼救",
     coverImage: null,
     durationLabel: "2:40",
-    href: "/videos",
+    href: "/videos/butter-emulsion-fix",
   },
 ];
 

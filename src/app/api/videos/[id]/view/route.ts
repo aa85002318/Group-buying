@@ -7,16 +7,20 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const { id } = await params;
 
   if (!isSupabaseConfigured()) {
-    const video = mockVideos.find((v) => v.id === id);
+    const video = mockVideos.find((v) => v.id === id || v.slug === id);
     if (video) video.view_count += 1;
     return NextResponse.json({ viewCount: video?.view_count ?? 0 });
   }
 
   const admin = createAdminClient();
-  const { data: video } = await admin.from("videos").select("view_count").eq("id", id).single();
+  const isUuid = /^[0-9a-f-]{36}$/i.test(id);
+  const { data: video } = isUuid
+    ? await admin.from("videos").select("id, view_count").eq("id", id).maybeSingle()
+    : await admin.from("videos").select("id, view_count").eq("slug", id).maybeSingle();
+
   if (!video) return NextResponse.json({ error: "影片不存在" }, { status: 404 });
 
   const newCount = Number(video.view_count) + 1;
-  await admin.from("videos").update({ view_count: newCount }).eq("id", id);
+  await admin.from("videos").update({ view_count: newCount }).eq("id", video.id);
   return NextResponse.json({ viewCount: newCount });
 }

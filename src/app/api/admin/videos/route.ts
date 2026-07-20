@@ -46,10 +46,22 @@ export async function POST(request: Request) {
     .from("videos")
     .insert({
       title: body.title,
-      description: body.description,
+      description: body.description ?? body.summary ?? null,
+      summary: body.summary ?? null,
       video_url: body.video_url,
-      thumbnail_url: body.thumbnail_url,
-      is_active: body.is_active ?? true,
+      thumbnail_url: body.thumbnail_url ?? null,
+      slug: body.slug ?? null,
+      video_type: body.video_type ?? null,
+      duration_seconds: body.duration_seconds ?? null,
+      category: body.category ?? null,
+      status: body.status ?? "published",
+      published_at: body.published_at ?? (body.status === "published" ? new Date().toISOString() : null),
+      is_active: body.is_active ?? body.status !== "archived",
+      sort_order: body.sort_order ?? 0,
+      seo_title: body.seo_title ?? null,
+      seo_description: body.seo_description ?? null,
+      created_by: auth!.profile.id,
+      updated_by: auth!.profile.id,
     })
     .select()
     .single();
