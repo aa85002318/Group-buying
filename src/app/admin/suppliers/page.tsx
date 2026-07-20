@@ -117,8 +117,8 @@ export default function AdminSuppliersPage() {
       />
 
       {(creating || editing) && (
-        <div className="rounded-[20px] border border-[#E8EBF4] bg-white p-6 shadow-[0_4px_24px_rgba(30,58,138,0.06)] space-y-4">
-          <h2 className="font-semibold text-[#1E3A8A]">{creating ? "新增供應商" : `編輯：${editing?.name}`}</h2>
+        <div className="rounded-[20px] border border-border bg-white p-6 shadow-card space-y-4">
+          <h2 className="font-semibold text-foreground">{creating ? "新增供應商" : `編輯：${editing?.name}`}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <Input placeholder="供應商名稱 *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <Input placeholder="聯絡人" value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} />
@@ -145,7 +145,7 @@ export default function AdminSuppliersPage() {
         loading={loading}
         emptyText="尚無供應商"
         columns={[
-          { key: "name", header: "供應商", render: (s) => <span className="font-medium text-[#1E3A8A]">{s.name}</span> },
+          { key: "name", header: "供應商", render: (s) => <span className="font-medium text-foreground">{s.name}</span> },
           { key: "contact", header: "聯絡人", render: (s) => s.contact_name ?? "—" },
           { key: "phone", header: "電話", render: (s) => s.contact_phone ?? "—" },
           { key: "email", header: "Email", render: (s) => s.contact_email ?? "—" },

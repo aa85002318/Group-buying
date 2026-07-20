@@ -74,7 +74,48 @@ export function ServiceHubCard({ item }: { item: ServiceHubItem }) {
   );
 }
 
-export function ServiceHubGrid({ items = SERVICE_HUB_ITEMS }: { items?: ServiceHubItem[] }) {
+export function ServiceHubGrid({
+  items = SERVICE_HUB_ITEMS,
+  variant = "full",
+}: {
+  items?: ServiceHubItem[];
+  /** full = eight dashboard cards (legacy); compact unused on home — use PrimaryQuickActions */
+  variant?: "full" | "compact";
+}) {
+  if (variant === "compact") {
+    const primary = items.filter((i) =>
+      ["shop", "recipes", "groupBuy", "member"].includes(i.id)
+    );
+    return (
+      <section aria-label="主要服務入口">
+        <div className="grid grid-cols-4 gap-2">
+          {primary.map((item) => {
+            const Icon = ICONS[item.icon];
+            const style = HUB_ICON[item.id] ?? HUB_ICON.shop;
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="flex min-h-[72px] flex-col items-center justify-center gap-1.5 py-2"
+              >
+                <span
+                  className={cn(
+                    "flex h-[52px] w-[52px] items-center justify-center rounded-[18px]",
+                    style.well,
+                    style.icon
+                  )}
+                >
+                  <Icon className="h-6 w-6" aria-hidden />
+                </span>
+                <span className="text-[13px] font-medium text-caramel">{item.title}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section aria-label="八大服務入口">
       <div className="mb-3 flex items-end justify-between gap-2">

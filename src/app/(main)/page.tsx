@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { HomeWelcome } from "@/components/home/HomeWelcome";
 import { HomeSearchBar } from "@/components/home/HomeSearchBar";
-import { HeroCarousel } from "@/components/home/HeroCarousel";
-import { ServiceHubGrid } from "@/components/consumer/ServiceHubGrid";
+import { HomeHero } from "@/components/home/HomeHero";
+import { PrimaryQuickActions } from "@/components/home/PrimaryQuickActions";
+import { SecondaryServiceScroller } from "@/components/home/SecondaryServiceScroller";
 import { PopularCategories } from "@/components/home/PopularCategories";
 import {
   NewProductsSection,
@@ -56,22 +58,25 @@ export default function HomePage() {
   );
 
   return (
-    <div className="space-y-7 pb-4 pt-3 md:space-y-8">
-      <HomeSearchBar />
-
-      <HeroCarousel />
-
-      <ServiceHubGrid />
+    <div className="mx-auto max-w-[1280px] space-y-6 pb-6 pt-3 md:space-y-8 md:pt-4">
+      {/* First viewport: welcome + search + hero + primary + secondary peek */}
+      <div className="space-y-4 md:space-y-5">
+        <HomeWelcome />
+        <HomeSearchBar />
+        <HomeHero />
+        <PrimaryQuickActions />
+        <SecondaryServiceScroller />
+      </div>
 
       <PopularCategories />
 
-      <NewProductsSection products={newest} href="/products?sort=newest" />
+      <NewProductsSection products={newest} href="/products?sort=newest" title="今日新品" />
 
-      <PopularProductsSection products={popular} href="/products" />
+      <PopularProductsSection products={popular} href="/products" title="本週熱門" />
 
       <section className="space-y-3">
-        <SectionHeader title="食譜影音" href="/recipes" />
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <SectionHeader title="一分鐘教你做" href="/recipes" />
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {MOCK_RECIPES.slice(0, 4).map((r) => (
             <RecipeCard key={r.id} recipe={r} />
           ))}
@@ -79,9 +84,9 @@ export default function HomePage() {
       </section>
 
       <section className="space-y-3">
-        <SectionHeader title="即將收單團購" href="/group-buy" accentClass="bg-groupBuy" />
+        <SectionHeader title="即將收單" href="/group-buy" accentClass="bg-groupBuy" />
         {closing.length === 0 ? (
-          <div className="rounded-card border border-border bg-groupBuy-soft p-4 text-sm text-foreground-secondary">
+          <div className="rounded-[18px] border border-border-soft bg-groupBuy-soft p-4 text-sm text-foreground-secondary">
             目前沒有進行中的團購，稍後再來看看。
           </div>
         ) : (
@@ -93,7 +98,7 @@ export default function HomePage() {
                 <li key={e.id}>
                   <Link
                     href={`/group-buy/${e.id}`}
-                    className="flex items-center justify-between gap-3 rounded-card border border-border bg-surface p-3 shadow-card"
+                    className="flex items-center justify-between gap-3 rounded-[18px] border border-border-soft bg-surface p-3 shadow-card transition hover:-translate-y-0.5 hover:shadow-lift"
                   >
                     <span className="min-w-0">
                       <span className="block truncate font-semibold text-foreground">{e.title}</span>
@@ -137,35 +142,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="rounded-card border border-border bg-caramel-soft p-4">
-        <h2 className="font-bold text-caramel">門市服務</h2>
+      <section className="rounded-[18px] border border-border-soft bg-caramel-soft/60 p-4 md:p-5">
+        <h2 className="text-xl font-semibold text-caramel">門市服務</h2>
         <p className="mt-1 text-sm text-foreground-secondary">
           查詢商品擺放位置、聯絡客服、查看門市資訊。
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href="/store-map"
-            className="inline-flex min-h-11 items-center rounded-button bg-surface px-4 text-sm font-semibold text-caramel"
+            className="inline-flex min-h-11 items-center rounded-button bg-surface px-4 text-sm font-semibold text-caramel shadow-card"
           >
             門市地圖
           </Link>
           <Link
             href="/support"
-            className="inline-flex min-h-11 items-center rounded-button bg-surface px-4 text-sm font-semibold text-caramel"
+            className="inline-flex min-h-11 items-center rounded-button bg-surface px-4 text-sm font-semibold text-caramel shadow-card"
           >
             門市客服
           </Link>
           <Link
             href={APP_ROUTES.stores ?? "/stores"}
-            className="inline-flex min-h-11 items-center rounded-button bg-surface px-4 text-sm font-semibold text-caramel"
+            className="inline-flex min-h-11 items-center rounded-button bg-surface px-4 text-sm font-semibold text-caramel shadow-card"
           >
             門市資訊
           </Link>
         </div>
       </section>
 
-      <footer className="border-t border-border pt-4 text-center text-xs text-foreground-muted">
-        <p>CHIMEIDIY 烘焙生活平台 · App V1</p>
+      <footer className="border-t border-border-soft pt-4 text-center text-xs text-foreground-muted">
+        <p>CHIMEIDIY 烘焙生活平台</p>
         <p className="mt-1">
           <Link href="/terms" className="underline-offset-2 hover:underline">
             服務條款

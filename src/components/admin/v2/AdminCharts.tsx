@@ -17,12 +17,12 @@ export function AdminBarChart({ data, height = 160 }: BarChartProps) {
               className="w-full rounded-t-lg transition-all duration-500"
               style={{
                 height: `${Math.max((item.value / max) * 100, 4)}%`,
-                backgroundColor: item.color ?? "#FF4F7B",
+                backgroundColor: item.color ?? "#FF6B6B",
               }}
               title={`${item.label}: ${item.value}`}
             />
           </div>
-          <span className="truncate text-[10px] font-medium text-[#64748B]">{item.label}</span>
+          <span className="truncate text-[10px] font-medium text-foreground-secondary">{item.label}</span>
         </div>
       ))}
     </div>
@@ -35,11 +35,11 @@ type LineChartProps = {
   color?: string;
 };
 
-export function AdminLineChart({ data, height = 140, color = "#FF4F7B" }: LineChartProps) {
+export function AdminLineChart({ data, height = 140, color = "#FF6B6B" }: LineChartProps) {
   if (data.length === 0) {
     return (
       <div
-        className="flex items-center justify-center rounded-xl bg-[#F7F8FC] text-sm text-[#94A3B8]"
+        className="flex items-center justify-center rounded-xl bg-background text-sm text-foreground-muted"
         style={{ height }}
       >
         尚無資料
@@ -71,7 +71,7 @@ export function AdminLineChart({ data, height = 140, color = "#FF4F7B" }: LineCh
           points={`0,100 ${points.join(" ")} 100,100`}
         />
       </svg>
-      <div className="mt-2 flex justify-between text-[10px] text-[#94A3B8]">
+      <div className="mt-2 flex justify-between text-[10px] text-foreground-muted">
         <span>{data[0]?.label}</span>
         <span>{data[data.length - 1]?.label}</span>
       </div>
@@ -116,7 +116,7 @@ export function AdminDonutChart({ segments, size = 120 }: DonutChartProps) {
       </svg>
       <div className="space-y-1.5">
         {segments.map((seg) => (
-          <div key={seg.label} className="flex items-center gap-2 text-xs text-[#475569]">
+          <div key={seg.label} className="flex items-center gap-2 text-xs text-foreground-secondary">
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: seg.color }} />
             <span>{seg.label}</span>
             <span className="font-semibold">{Math.round((seg.value / total) * 100)}%</span>

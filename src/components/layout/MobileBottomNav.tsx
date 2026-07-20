@@ -26,7 +26,7 @@ export function MobileBottomNav() {
       className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-border-soft bg-surface"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="mx-auto grid h-14 min-h-[56px] grid-cols-5 items-stretch px-0.5 sm:px-1">
+      <div className="mx-auto grid h-[60px] min-h-[56px] grid-cols-5 items-stretch px-0.5 sm:px-1">
         {CONSUMER_BOTTOM_NAV.map((item) => {
           const active = item.match(pathname);
           const Icon = ICONS[item.href as keyof typeof ICONS] ?? Home;
@@ -47,7 +47,7 @@ export function MobileBottomNav() {
                     ? isGroup
                       ? "text-groupBuy"
                       : "text-primary"
-                    : "text-foreground-secondary"
+                    : "text-caramel"
                 )}
                 aria-hidden
               />
@@ -58,7 +58,7 @@ export function MobileBottomNav() {
                     ? isGroup
                       ? "font-bold text-groupBuy"
                       : "font-bold text-primary"
-                    : "font-medium text-foreground-secondary"
+                    : "font-medium text-caramel/70"
                 )}
               >
                 {item.label}

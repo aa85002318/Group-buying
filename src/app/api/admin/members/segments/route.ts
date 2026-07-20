@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   if (!isSupabaseConfigured()) {
     const mockMembers = [
       { user_id: mockProfile.id, gender: "female", age_group: "25-34", city: "台北市", district: "信義區", member_level: "一般會員", total_spent: 12800, total_orders: 5 },
-      { user_id: "user-2", gender: "male", age_group: "35-44", city: "新北市", district: "板橋區", member_level: "VIP", total_spent: 32000, total_orders: 12 },
+      { user_id: "user-2", gender: "male", age_group: "35-44", city: "新北市", district: "板橋區", member_level: "一般會員", total_spent: 32000, total_orders: 12 },
       { user_id: "user-3", gender: "female", age_group: "18-24", city: "台北市", district: "大安區", member_level: "一般會員", total_spent: 4500, total_orders: 2 },
     ];
 
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
         genders: ["male", "female", "unknown"],
         ageGroups: ["18-24", "25-34", "35-44", "45-54", "55+"],
         cities: ["台北市", "新北市", "台中市", "高雄市"],
-        memberLevels: ["一般會員", "VIP", "VVIP"],
+        memberLevels: ["一般會員"],
       },
       breakdowns: { gender: genderBreakdown, ageGroup: ageBreakdown, city: cityBreakdown },
       members: filtered.map((m) => ({

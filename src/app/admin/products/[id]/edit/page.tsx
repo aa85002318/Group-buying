@@ -83,7 +83,7 @@ export default function AdminProductEditPage() {
     }
   };
 
-  if (loading) return <p className="text-[#64748B]">載入中…</p>;
+  if (loading) return <p className="text-foreground-secondary">載入中…</p>;
 
   return (
     <div className="space-y-6">
@@ -101,7 +101,7 @@ export default function AdminProductEditPage() {
             <Link href={`/admin/products/${productId}/analysis`}>
               <Button variant="outline">查看分析</Button>
             </Link>
-            <Button onClick={save} disabled={saving} className="bg-[#FF4F7B] hover:bg-[#E63D6A]">
+            <Button onClick={save} disabled={saving} className="bg-primary hover:bg-[#E63D6A]">
               <Save className="mr-1.5 h-4 w-4" />
               {saving ? "儲存中…" : "儲存商品"}
             </Button>

@@ -105,6 +105,7 @@ export interface Profile {
   store_id: string | null;
   store_credit_balance?: number;
   is_active?: boolean;
+  admin_notes?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -249,6 +250,8 @@ export interface Order {
   share_source_id: string | null;
   livestream_id: string | null;
   notes: string | null;
+  /** 後台內部備註（非客戶可見） */
+  admin_notes?: string | null;
   channel?: "website" | "group_buy" | "store_reservation" | null;
   customer_name?: string | null;
   customer_phone?: string | null;

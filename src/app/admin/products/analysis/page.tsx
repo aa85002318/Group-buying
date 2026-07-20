@@ -76,9 +76,9 @@ export default function AdminProductsAnalysisPage() {
             { label: "總營業額", value: formatCurrency(summary.totalRevenue) },
             { label: "總售出數", value: summary.totalSold.toLocaleString() },
           ].map((item) => (
-            <div key={item.label} className="rounded-[20px] border border-[#E8EBF4] bg-white p-5 shadow-[0_4px_24px_rgba(30,58,138,0.06)]">
-              <p className="text-sm text-[#64748B]">{item.label}</p>
-              <p className="mt-1 text-2xl font-black text-[#1E3A8A]">{item.value}</p>
+            <div key={item.label} className="rounded-[20px] border border-border bg-white p-5 shadow-card">
+              <p className="text-sm text-foreground-secondary">{item.label}</p>
+              <p className="mt-1 text-2xl font-black text-foreground">{item.value}</p>
             </div>
           ))}
         </div>
@@ -92,8 +92,8 @@ export default function AdminProductsAnalysisPage() {
             onClick={() => setSort(opt.value)}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
               sort === opt.value
-                ? "bg-[#FF4F7B] text-white"
-                : "bg-white text-[#64748B] border border-[#E8EBF4] hover:border-[#FF4F7B]"
+                ? "bg-primary text-white"
+                : "bg-white text-foreground-secondary border border-border hover:border-primary"
             }`}
           >
             {opt.label}
@@ -102,8 +102,8 @@ export default function AdminProductsAnalysisPage() {
       </div>
 
       {chartData.length > 0 && (
-        <div className="rounded-[20px] border border-[#E8EBF4] bg-white p-6 shadow-[0_4px_24px_rgba(30,58,138,0.06)]">
-          <h3 className="mb-4 font-semibold text-[#1E3A8A]">Top 10 商品</h3>
+        <div className="rounded-[20px] border border-border bg-white p-6 shadow-card">
+          <h3 className="mb-4 font-semibold text-foreground">Top 10 商品</h3>
           <AdminBarChart data={chartData} />
         </div>
       )}
@@ -121,9 +121,9 @@ export default function AdminProductsAnalysisPage() {
                 {r.image_url ? (
                   <Image src={r.image_url} alt={r.name} width={40} height={40} className="h-10 w-10 rounded-lg object-cover" />
                 ) : (
-                  <div className="h-10 w-10 rounded-lg bg-[#F7F8FC]" />
+                  <div className="h-10 w-10 rounded-lg bg-background" />
                 )}
-                <span className="font-medium text-[#1E3A8A]">{r.name}</span>
+                <span className="font-medium text-foreground">{r.name}</span>
               </div>
             ),
           },

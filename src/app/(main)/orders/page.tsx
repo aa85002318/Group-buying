@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { OrdersClient } from "./OrdersClient";
 
+/** Legacy `/orders` — same App order data as `/member/orders` */
 export default function OrdersPage() {
   return (
     <Suspense
@@ -12,7 +13,7 @@ export default function OrdersPage() {
         </div>
       }
     >
-      <OrdersClient />
+      <OrdersClient appOrdersOnly />
     </Suspense>
   );
 }

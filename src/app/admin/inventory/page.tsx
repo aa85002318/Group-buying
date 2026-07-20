@@ -66,8 +66,8 @@ export default function AdminInventoryPage() {
             onClick={() => setFilter(f.value)}
             className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
               filter === f.value
-                ? "bg-[#FF4F7B] text-white"
-                : "bg-white text-[#475569] border border-[#E2E8F0] hover:border-[#FF4F7B]/40"
+                ? "bg-primary text-white"
+                : "bg-white text-foreground-secondary border border-border hover:border-primary/40"
             }`}
           >
             {f.label}

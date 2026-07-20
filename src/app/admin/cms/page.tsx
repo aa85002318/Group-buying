@@ -95,16 +95,16 @@ export default function AdminCmsPage() {
       />
 
       <section className="space-y-3">
-        <h2 className="text-lg font-black text-[#1E3A8A]">首頁區塊排序</h2>
+        <h2 className="text-lg font-black text-foreground">首頁區塊排序</h2>
         <div className="space-y-2">
           {blocks.map((b) => (
             <div
               key={b.id}
-              className="flex flex-wrap items-center gap-2 rounded-xl border border-[#E8EBF4] bg-white px-4 py-3"
+              className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-white px-4 py-3"
             >
               <span className="min-w-[140px] font-medium">{b.title}</span>
-              <span className="text-xs text-[#64748B]">{b.block_key}</span>
-              <span className="text-xs text-[#64748B]">order {b.sort_order}</span>
+              <span className="text-xs text-foreground-secondary">{b.block_key}</span>
+              <span className="text-xs text-foreground-secondary">order {b.sort_order}</span>
               <div className="ml-auto flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => void moveBlock(b, -1)}>
                   ↑
@@ -122,25 +122,25 @@ export default function AdminCmsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-black text-[#1E3A8A]">Banner（{banners.length}）</h2>
-        <p className="text-sm text-[#64748B]">
+        <h2 className="text-lg font-black text-foreground">Banner（{banners.length}）</h2>
+        <p className="text-sm text-foreground-secondary">
           使用 cms_banners；可於既有推播／行銷流程維護，或透過 API 新增。
         </p>
         <ul className="space-y-2">
           {banners.map((b) => (
             <li
               key={b.id}
-              className="rounded-xl border border-[#E8EBF4] bg-white px-4 py-3 text-sm"
+              className="rounded-xl border border-border bg-white px-4 py-3 text-sm"
             >
               {b.title} {b.is_active ? "" : "(停用)"}
             </li>
           ))}
-          {!banners.length && <li className="text-sm text-[#64748B]">尚無 Banner</li>}
+          {!banners.length && <li className="text-sm text-foreground-secondary">尚無 Banner</li>}
         </ul>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-black text-[#1E3A8A]">CMS 頁面</h2>
+        <h2 className="text-lg font-black text-foreground">CMS 頁面</h2>
         <div className="grid gap-2 sm:grid-cols-3">
           <Input
             placeholder="slug"
@@ -156,7 +156,7 @@ export default function AdminCmsPage() {
         </div>
         <ul className="space-y-2">
           {pages.map((p) => (
-            <li key={p.id} className="rounded-xl border border-[#E8EBF4] bg-white px-4 py-3 text-sm">
+            <li key={p.id} className="rounded-xl border border-border bg-white px-4 py-3 text-sm">
               /{p.slug} — {p.title} {p.is_published ? "✓ 已發布" : "草稿"}
             </li>
           ))}

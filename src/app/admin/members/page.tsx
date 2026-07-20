@@ -11,12 +11,17 @@ import { AdminBarChart, AdminDonutChart } from "@/components/admin/v2/AdminChart
 import { MemberBarcode } from "@/components/profile/MemberBarcode";
 import { useAdminList } from "@/hooks/useAdminList";
 import { formatCurrency, formatDate, ROLE_LABELS } from "@/lib/utils";
-import { formatBirthdayDisplay } from "@/lib/validation/customer";
 import type { Profile, UserRole } from "@/lib/types/database";
 
 type Member = Profile & {
   store_credit_balance?: number;
   email_verified?: boolean;
+  member_number?: string | null;
+  is_active?: boolean;
+  app_order_count?: number;
+  favorite_count?: number;
+  benefit_count?: number;
+  last_sign_in_at?: string | null;
 };
 
 const ROLES: UserRole[] = ["member", "admin", "store_staff", "group_leader", "promoter", "livestream_host"];
@@ -155,8 +160,8 @@ export default function AdminMembersPage() {
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title="會員管理"
-        description="會員資料、Email 驗證狀態、條碼、角色與購物金。未收到驗證信時可手動驗證。"
+        title="App 會員"
+        description="僅管理 CHIMEIDIY App 會員資料與 App 訂單統計。不含門市 POS 消費、門市發票或線下購買歷史。"
         actions={
           <Button variant={showSegments ? "default" : "outline"} onClick={() => setShowSegments((v) => !v)}>
             {showSegments ? "關閉分群" : "客戶分群"}
@@ -165,8 +170,8 @@ export default function AdminMembersPage() {
       />
 
       {showSegments && (
-        <div className="rounded-[20px] border border-[#E8EBF4] bg-white p-6 shadow-[0_4px_24px_rgba(30,58,138,0.06)] space-y-4">
-          <h2 className="font-semibold text-[#1E3A8A]">客戶分群篩選</h2>
+        <div className="rounded-[20px] border border-border bg-white p-6 shadow-card space-y-4">
+          <h2 className="font-semibold text-foreground">客戶分群篩選</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <select
               className="input-field"
@@ -203,41 +208,41 @@ export default function AdminMembersPage() {
               value={segmentFilters.memberLevel}
               onChange={(e) => setSegmentFilters({ ...segmentFilters, memberLevel: e.target.value })}
             >
-              <option value="">全部等級</option>
-              {(segmentData?.filters.memberLevels ?? []).map((l) => (
+              <option value="">全部（App 會員）</option>
+              {(segmentData?.filters.memberLevels ?? []).filter((l) => !/VIP/i.test(l)).map((l) => (
                 <option key={l} value={l}>{l}</option>
               ))}
             </select>
           </div>
 
           {segmentLoading ? (
-            <p className="text-sm text-[#64748B]">載入分群資料…</p>
+            <p className="text-sm text-foreground-secondary">載入分群資料…</p>
           ) : segmentData ? (
             <>
               <div className="grid gap-4 sm:grid-cols-4">
                 {[
                   { label: "符合人數", value: segmentData.summary.filteredCount },
-                  { label: "總消費", value: formatCurrency(segmentData.summary.totalSpent) },
-                  { label: "平均客單", value: formatCurrency(segmentData.summary.avgOrderValue) },
-                  { label: "會員總數", value: segmentData.summary.totalMembers },
+                  { label: "App 訂單總額", value: formatCurrency(segmentData.summary.totalSpent) },
+                  { label: "App 平均客單", value: formatCurrency(segmentData.summary.avgOrderValue) },
+                  { label: "App 會員總數", value: segmentData.summary.totalMembers },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-xl bg-[#F7F8FC] p-4">
-                    <p className="text-xs text-[#64748B]">{item.label}</p>
-                    <p className="mt-1 text-lg font-bold text-[#1E3A8A]">{item.value}</p>
+                  <div key={item.label} className="rounded-xl bg-background p-4">
+                    <p className="text-xs text-foreground-secondary">{item.label}</p>
+                    <p className="mt-1 text-lg font-bold text-foreground">{item.value}</p>
                   </div>
                 ))}
               </div>
               <div className="grid gap-4 lg:grid-cols-3">
                 <div>
-                  <p className="mb-2 text-sm font-medium text-[#64748B]">性別分布</p>
+                  <p className="mb-2 text-sm font-medium text-foreground-secondary">性別分布</p>
                   <AdminDonutChart segments={segmentData.breakdowns.gender} />
                 </div>
                 <div>
-                  <p className="mb-2 text-sm font-medium text-[#64748B]">年齡分布</p>
+                  <p className="mb-2 text-sm font-medium text-foreground-secondary">年齡分布</p>
                   <AdminBarChart data={segmentData.breakdowns.ageGroup} />
                 </div>
                 <div>
-                  <p className="mb-2 text-sm font-medium text-[#64748B]">縣市分布</p>
+                  <p className="mb-2 text-sm font-medium text-foreground-secondary">縣市分布</p>
                   <AdminBarChart data={segmentData.breakdowns.city} />
                 </div>
               </div>
@@ -325,9 +330,15 @@ export default function AdminMembersPage() {
       <AdminTable
         columns={[
           { key: "name", header: "姓名", render: (m) => m.full_name ?? "—" },
-          { key: "phone", header: "手機", render: (m) => m.phone ?? "—" },
-          { key: "birthday", header: "生日", render: (m) => formatBirthdayDisplay(m.birthday) },
+          { key: "phone", header: "電話", render: (m) => m.phone ?? "—" },
           { key: "email", header: "Email", render: (m) => m.email ?? "—" },
+          {
+            key: "memberNo",
+            header: "App 會員編號",
+            render: (m) => (
+              <span className="font-mono text-xs">{m.member_number ?? m.member_code ?? "—"}</span>
+            ),
+          },
           {
             key: "verified",
             header: "Email 驗證",
@@ -338,20 +349,29 @@ export default function AdminMembersPage() {
                 <StatusBadge label="未驗證" variant="warning" />
               ),
           },
-          { key: "code", header: "會員條碼", render: (m) => <span className="font-mono">{m.member_code}</span> },
           {
-            key: "role",
-            header: "角色",
-            render: (m) => <StatusBadge label={ROLE_LABELS[m.role] ?? m.role} variant="primary" />,
+            key: "active",
+            header: "帳號狀態",
+            render: (m) =>
+              m.is_active === false ? (
+                <StatusBadge label="已停用" variant="warning" />
+              ) : (
+                <StatusBadge label="啟用" variant="success" />
+              ),
           },
           {
-            key: "credit",
-            header: "購物金",
-            render: (m) => formatCurrency(m.store_credit_balance ?? 0),
+            key: "orders",
+            header: "App 訂單",
+            render: (m) => m.app_order_count ?? 0,
+          },
+          {
+            key: "favorites",
+            header: "收藏",
+            render: (m) => m.favorite_count ?? 0,
           },
           {
             key: "joined",
-            header: "加入時間",
+            header: "註冊日期",
             render: (m) => <span className="text-xs">{formatDate(m.created_at)}</span>,
           },
           {
@@ -359,12 +379,17 @@ export default function AdminMembersPage() {
             header: "操作",
             render: (m) => (
               <div className="flex flex-wrap justify-end gap-1">
+                <Link href={`/admin/members/${m.id}`}>
+                  <Button size="sm" variant="secondary">
+                    詳細
+                  </Button>
+                </Link>
                 <Link href={`/admin/members/${m.id}/analysis`}>
                   <Button size="sm" variant="outline">
                     分析
                   </Button>
                 </Link>
-                <Button size="sm" variant="secondary" onClick={() => openEdit(m)}>
+                <Button size="sm" variant="outline" onClick={() => openEdit(m)}>
                   編輯
                 </Button>
                 {!m.email_verified && (
@@ -384,11 +409,12 @@ export default function AdminMembersPage() {
         rows={displayRows}
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="搜尋姓名、手機、Email…"
+        searchPlaceholder="搜尋姓名、手機、Email、會員編號…"
         loading={loading}
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        emptyText="尚無 App 會員"
       />
     </div>
   );

@@ -11,32 +11,35 @@ export type PopularCategoryItem = {
   imageUrl?: string | null;
 };
 
-const FALLBACK: PopularCategoryItem[] = [
-  { id: "flour", name: "麵粉", href: "/products?search=麵粉" },
-  { id: "dairy", name: "奶油與乳製品", href: "/products?search=奶油" },
-  { id: "sugar", name: "糖類", href: "/products?search=糖" },
+const DEFAULT_CATEGORIES: PopularCategoryItem[] = [
+  { id: "flour", name: "麵粉與預拌粉", href: "/products?search=麵粉" },
   { id: "choco", name: "巧克力", href: "/products?search=巧克力" },
-  { id: "pack", name: "包裝材料", href: "/products?search=包裝" },
+  { id: "dairy", name: "乳製品", href: "/products?search=奶油" },
   { id: "tools", name: "烘焙器具", href: "/products?search=模" },
-  { id: "frozen", name: "冷凍食材", href: "/products?search=冷凍" },
-  { id: "deco", name: "裝飾材料", href: "/products?search=裝飾" },
+  { id: "pack", name: "包裝材料", href: "/products?search=包裝" },
+  { id: "frozen", name: "冷凍冷藏", href: "/products?search=冷凍" },
 ];
 
 type PopularCategoriesProps = {
   items?: PopularCategoryItem[];
   activeId?: string;
+  title?: string;
 };
 
-export function PopularCategories({ items = FALLBACK, activeId }: PopularCategoriesProps) {
+export function PopularCategories({
+  items = DEFAULT_CATEGORIES,
+  activeId,
+  title = "今天想買什麼？",
+}: PopularCategoriesProps) {
   return (
-    <section aria-label="熱門分類">
-      <h2 className="mb-3 text-base font-bold text-foreground">熱門分類</h2>
+    <section aria-label={title}>
+      <h2 className="mb-3 text-xl font-semibold tracking-tight text-caramel">{title}</h2>
       <div className="h-scroll md:mx-0 md:overflow-visible md:px-0">
-        <ul className="flex w-max gap-3 md:grid md:w-full md:grid-cols-8 md:gap-3">
+        <ul className="flex w-max gap-3 md:grid md:w-full md:grid-cols-6 md:gap-3">
           {items.map((item) => {
             const active = activeId === item.id;
             return (
-              <li key={item.id} className="w-[72px] shrink-0 md:w-auto">
+              <li key={item.id} className="w-[76px] shrink-0 md:w-auto">
                 <Link
                   href={item.href}
                   className={cn(
@@ -46,8 +49,8 @@ export function PopularCategories({ items = FALLBACK, activeId }: PopularCategor
                 >
                   <span
                     className={cn(
-                      "relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border bg-surface-soft md:h-16 md:w-16",
-                      active ? "border-primary" : "border-border"
+                      "relative flex aspect-square h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border bg-surface shadow-card md:h-16 md:w-16",
+                      active ? "border-primary" : "border-border-soft"
                     )}
                   >
                     {item.imageUrl ? (
@@ -55,20 +58,20 @@ export function PopularCategories({ items = FALLBACK, activeId }: PopularCategor
                         src={item.imageUrl}
                         alt=""
                         fill
-                        className="object-contain p-1"
+                        className="object-cover"
                         sizes="64px"
                         unoptimized
                       />
                     ) : (
-                      <span className="text-xs font-bold text-caramel">
-                        {item.name.slice(0, 1)}
+                      <span className="bg-peach-soft px-2 text-center text-[11px] font-bold leading-tight text-caramel">
+                        {item.name.slice(0, 2)}
                       </span>
                     )}
                   </span>
                   <span
                     className={cn(
-                      "line-clamp-2 text-center text-sm font-medium leading-tight",
-                      active ? "text-primary" : "text-foreground"
+                      "line-clamp-2 text-center text-[13px] font-medium leading-tight",
+                      active ? "text-primary" : "text-caramel"
                     )}
                   >
                     {item.name}

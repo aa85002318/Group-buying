@@ -156,7 +156,7 @@ export const SERVICE_HUB_ITEMS: ServiceHubItem[] = [
   },
   {
     id: "member",
-    title: "門市會員",
+    title: "我的會員",
     description: "會員條碼、載具與會員福利",
     href: "/member",
     tone: "success",
@@ -204,13 +204,13 @@ export const SERVICE_HUB_ITEMS: ServiceHubItem[] = [
   },
 ];
 
-/** Desktop secondary nav (subset of hub) */
+/** Desktop secondary nav (subset of hub — member/support in header) */
 export const CONSUMER_SECONDARY_NAV = [
   { href: "/shop", label: "烘焙材料" },
   { href: "/recipes", label: "食譜影音" },
-  { href: "/member", label: "門市會員" },
-  { href: "/group-buy", label: "團購", accent: "groupBuy" as const },
-  { href: "/ai-tools", label: "AI 工具" },
+  { href: "/group-buy", label: "團購專區", accent: "groupBuy" as const },
+  { href: "/news", label: "最新資訊" },
+  { href: "/ai-tools", label: "AI 助手" },
   { href: "/store-map", label: "門市地圖" },
 ] as const;
 

@@ -40,7 +40,7 @@ export function MemberBarcode({ value, title = "會員條碼", className }: Memb
       <div className="mx-auto flex w-fit flex-col items-center rounded-xl border border-border bg-white p-4 shadow-card">
         {dataUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={dataUrl} alt={`會員條碼 ${value}`} width={220} height={220} className="h-auto w-[220px]" />
+          <img src={dataUrl} alt="會員條碼" width={220} height={220} className="h-auto w-[220px]" />
         ) : (
           <div className="flex h-[220px] w-[220px] items-center justify-center text-sm text-muted-foreground">
             產生中…

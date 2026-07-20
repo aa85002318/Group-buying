@@ -76,7 +76,7 @@ function TagInput({
         {tags.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-[#FFF0F5] px-3 py-1 text-xs font-semibold text-[#FF4F7B]"
+            className="inline-flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary"
           >
             {tag}
             <button type="button" onClick={() => onChange(tags.filter((t) => t !== tag))}>
@@ -151,12 +151,12 @@ function MediaGallery({
             onDragStart={() => { dragIndex.current = index; }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(index)}
-            className="group relative overflow-hidden rounded-2xl border border-[#E8EBF4] bg-[#F7F8FC]"
+            className="group relative overflow-hidden rounded-2xl border border-border bg-background"
           >
             <div className="relative aspect-square">
               <Image src={url} alt="" fill className="object-cover" unoptimized />
               {index === 0 && (
-                <span className="absolute left-2 top-2 rounded-full bg-[#FF4F7B] px-2 py-0.5 text-[10px] font-bold text-white">
+                <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">
                   主圖
                 </span>
               )}
@@ -178,7 +178,7 @@ function MediaGallery({
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#FF4F7B]/40 bg-[#FFF8FA] text-sm font-semibold text-[#FF4F7B] transition hover:border-[#FF4F7B] hover:bg-[#FFF0F5]"
+            className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary-soft text-sm font-semibold text-primary transition hover:border-primary hover:bg-primary-soft"
           >
             <ImageIcon className="h-6 w-6" />
             {uploading ? "上傳中…" : "新增圖片"}
@@ -200,7 +200,7 @@ function MediaGallery({
           e.target.value = "";
         }}
       />
-      <p className="text-xs text-[#94A3B8]">最多 20 張，支援 JPG / PNG / WebP。拖曳可排序，第一張為主圖。</p>
+      <p className="text-xs text-foreground-muted">最多 20 張，支援 JPG / PNG / WebP。拖曳可排序，第一張為主圖。</p>
     </div>
   );
 }
@@ -250,7 +250,7 @@ export function AdminProductEditor({
   return (
     <div className="space-y-5">
       {productId && onAutoSave && (
-        <p className="text-right text-xs text-[#94A3B8]">
+        <p className="text-right text-xs text-foreground-muted">
           {autoSaveStatus === "saving" && "自動儲存中…"}
           {autoSaveStatus === "saved" && "已自動儲存"}
           {autoSaveStatus === "idle" && saving && "儲存中…"}
@@ -277,8 +277,8 @@ export function AdminProductEditor({
                   onClick={() => toggleCategory(c.id)}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     form.category_ids.includes(c.id)
-                      ? "bg-[#FF4F7B] text-white"
-                      : "bg-[#F1F5F9] text-[#475569] hover:bg-[#FFF0F5] hover:text-[#FF4F7B]"
+                      ? "bg-primary text-white"
+                      : "bg-[#F1F5F9] text-foreground-secondary hover:bg-primary-soft hover:text-primary"
                   }`}
                 >
                   {c.name}
@@ -342,7 +342,7 @@ export function AdminProductEditor({
 
       <AdminCard title="商品媒體" description="圖片與影片，支援拖曳排序" icon={<ImageIcon className="h-5 w-5" />}>
         <MediaGallery images={form.images} onChange={(images) => patch({ images })} />
-        <div className="mt-6 space-y-3 border-t border-[#EEF1F8] pt-5">
+        <div className="mt-6 space-y-3 border-t border-divider pt-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold text-[#334155]">商品影片</p>
             <Button type="button" size="sm" variant="secondary" onClick={() => patch({ videos: [...form.videos, createEmptyVideo()] })}>
@@ -350,7 +350,7 @@ export function AdminProductEditor({
             </Button>
           </div>
           {form.videos.map((video, index) => (
-            <div key={video.id} className="grid gap-3 rounded-2xl border border-[#EEF1F8] bg-[#F7F8FC] p-4 md:grid-cols-2">
+            <div key={video.id} className="grid gap-3 rounded-2xl border border-divider bg-background p-4 md:grid-cols-2">
               <AdminField label="標題">
                 <AdminInput value={video.title} onChange={(e) => {
                   const videos = [...form.videos];
@@ -531,13 +531,13 @@ export function AdminProductEditor({
           <AdminField label="成本">
             <AdminInput type="number" value={form.cost_price} onChange={(e) => patch({ cost_price: e.target.value })} />
           </AdminField>
-          <div className="flex flex-col justify-end rounded-2xl bg-[#F7F8FC] p-4">
-            <p className="text-xs text-[#64748B]">毛利率（自動計算）</p>
-            <p className="text-xl font-black text-[#1E3A8A]">
+          <div className="flex flex-col justify-end rounded-2xl bg-background p-4">
+            <p className="text-xs text-foreground-secondary">毛利率（自動計算）</p>
+            <p className="text-xl font-black text-foreground">
               {marginRate != null ? `${marginRate}%` : "—"}
             </p>
             {marginAmount != null && (
-              <p className="text-sm text-[#64748B]">毛利 {formatCurrency(marginAmount)}</p>
+              <p className="text-sm text-foreground-secondary">毛利 {formatCurrency(marginAmount)}</p>
             )}
           </div>
         </div>
@@ -546,7 +546,7 @@ export function AdminProductEditor({
       <AdminCard title="商品規格" description="容量、尺寸、顏色、口味等" icon={<Settings2 className="h-5 w-5" />} defaultOpen={false}>
         <div className="space-y-3">
           {form.variants.map((variant, index) => (
-            <div key={variant.id} className="grid gap-3 rounded-2xl border border-[#EEF1F8] p-4 md:grid-cols-4">
+            <div key={variant.id} className="grid gap-3 rounded-2xl border border-divider p-4 md:grid-cols-4">
               <AdminField label="規格名稱">
                 <AdminInput value={variant.name} onChange={(e) => {
                   const variants = [...form.variants];
@@ -584,7 +584,7 @@ export function AdminProductEditor({
       <AdminCard title="批次管理" description="批號、效期與到貨日期" icon={<BarChart3 className="h-5 w-5" />} defaultOpen={false}>
         <div className="space-y-3">
           {form.batches.map((batch, index) => (
-            <div key={batch.id} className="grid gap-3 rounded-2xl border border-[#EEF1F8] p-4 md:grid-cols-3">
+            <div key={batch.id} className="grid gap-3 rounded-2xl border border-divider p-4 md:grid-cols-3">
               <AdminField label="批號">
                 <AdminInput value={batch.batch_number} onChange={(e) => {
                   const batches = [...form.batches];

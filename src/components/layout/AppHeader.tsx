@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Search, ShoppingCart, User } from "lucide-react";
+import { ArrowLeft, Bell, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -53,6 +53,18 @@ function MemberButton() {
   );
 }
 
+function NotifyButton() {
+  return (
+    <Link
+      href={APP_ROUTES.memberNotifications}
+      className="relative inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-caramel transition hover:bg-caramel-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
+      aria-label="通知中心"
+    >
+      <Bell className="h-5 w-5" aria-hidden />
+    </Link>
+  );
+}
+
 function BackButton({ href }: { href?: string }) {
   const router = useRouter();
 
@@ -68,24 +80,12 @@ function BackButton({ href }: { href?: string }) {
   );
 }
 
-function SearchButton() {
-  return (
-    <Link
-      href={APP_ROUTES.search}
-      className="inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-caramel transition hover:bg-caramel-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
-      aria-label="搜尋"
-    >
-      <Search className="h-5 w-5" aria-hidden />
-    </Link>
-  );
-}
-
 function resolveVariant(pathname: string, variant?: AppHeaderVariant): AppHeaderVariant {
   if (variant) return variant;
   return pathname === "/" ? "home" : "standard";
 }
 
-/** Consumer Hub / App header — home includes hamburger + search + cart + member */
+/** Consumer Hub / App header — home: Logo left, notify/cart/member right */
 export function AppHeader({
   variant,
   title,
@@ -107,24 +107,24 @@ export function AppHeader({
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div
-        className="relative mx-auto flex h-[56px] w-full max-w-[var(--app-max-width)] items-center gap-1 px-2 sm:h-[60px] sm:px-3"
+        className="mx-auto flex h-14 w-full max-w-[var(--app-max-width)] items-center gap-1 px-4 sm:h-16"
         style={{
-          paddingLeft: "max(0.5rem, env(safe-area-inset-left, 0px))",
-          paddingRight: "max(0.5rem, env(safe-area-inset-right, 0px))",
+          paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
+          paddingRight: "max(1rem, env(safe-area-inset-right, 0px))",
         }}
       >
         {resolved === "home" ? (
           <>
-            <div className="relative z-10 flex shrink-0 items-center">
-              <AppHamburgerMenu />
-            </div>
-            <div className="pointer-events-none absolute inset-y-0 left-1/2 flex w-[min(140px,40vw)] -translate-x-1/2 items-center justify-center sm:w-[min(160px,44vw)]">
-              <div className="pointer-events-auto max-w-full">
+            <div className="flex min-w-0 flex-1 items-center gap-0.5">
+              <span className="shrink-0 scale-90 opacity-80">
+                <AppHamburgerMenu />
+              </span>
+              <div className="min-w-0">
                 <ChimeidiyLogo variant="header" priority />
               </div>
             </div>
-            <div className="ml-auto flex shrink-0 items-center">
-              <SearchButton />
+            <div className="flex shrink-0 items-center">
+              <NotifyButton />
               <CartButton />
               <MemberButton />
             </div>
@@ -133,9 +133,7 @@ export function AppHeader({
           <>
             <BackButton href={backHref} />
             <div className="min-w-0 flex-1 px-2 text-center">
-              <h1 className="truncate text-base font-bold text-foreground">
-                {title ?? "搜尋"}
-              </h1>
+              <h1 className="truncate text-base font-bold text-foreground">{title ?? "搜尋"}</h1>
             </div>
             <div className="flex w-11 shrink-0 justify-end">
               {showCart ? <CartButton /> : <span className="w-11" aria-hidden />}
@@ -145,9 +143,7 @@ export function AppHeader({
           <>
             <BackButton href={backHref} />
             <div className="min-w-0 flex-1 px-2 text-center">
-              <h1 className="truncate text-base font-bold text-foreground">
-                {title ?? ""}
-              </h1>
+              <h1 className="truncate text-base font-bold text-foreground">{title ?? ""}</h1>
             </div>
             <div className="flex shrink-0 items-center justify-end gap-0.5">
               <AppHamburgerMenu />
@@ -156,8 +152,7 @@ export function AppHeader({
           </>
         )}
       </div>
-      {/* Tablet / desktop secondary hub nav */}
-      <div className="mx-auto hidden w-full max-w-[var(--app-max-width)] md:block">
+      <div className="mx-auto hidden w-full max-w-[1280px] md:block">
         <ConsumerHubNav />
       </div>
     </header>

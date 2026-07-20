@@ -107,8 +107,8 @@ export default function AdminBrandsPage() {
       />
 
       {(creating || editing) && (
-        <div className="rounded-[20px] border border-[#E8EBF4] bg-white p-6 shadow-[0_4px_24px_rgba(30,58,138,0.06)] space-y-4">
-          <h2 className="font-semibold text-[#1E3A8A]">{creating ? "新增品牌" : `編輯：${editing?.name}`}</h2>
+        <div className="rounded-[20px] border border-border bg-white p-6 shadow-card space-y-4">
+          <h2 className="font-semibold text-foreground">{creating ? "新增品牌" : `編輯：${editing?.name}`}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <Input placeholder="品牌名稱 *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <Input placeholder="網址代碼（slug）" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
@@ -140,10 +140,10 @@ export default function AdminBrandsPage() {
               b.logo_url ? (
                 <Image src={b.logo_url} alt={b.name} width={40} height={40} className="h-10 w-10 rounded-lg object-cover" />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F7F8FC] text-sm text-[#64748B]">—</div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-background text-sm text-foreground-secondary">—</div>
               ),
           },
-          { key: "name", header: "品牌名稱", render: (b) => <span className="font-medium text-[#1E3A8A]">{b.name}</span> },
+          { key: "name", header: "品牌名稱", render: (b) => <span className="font-medium text-foreground">{b.name}</span> },
           { key: "slug", header: "Slug", render: (b) => b.slug ?? "—" },
           { key: "product_count", header: "商品數", render: (b) => b.product_count },
           {

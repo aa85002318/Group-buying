@@ -98,9 +98,9 @@ export default function AdminProductImportPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-[20px] border border-[#E8EBF4] bg-white p-6 shadow-[0_4px_24px_rgba(30,58,138,0.06)]">
-          <h2 className="text-lg font-bold text-[#1E293B]">1. 下載範例檔</h2>
-          <p className="mt-2 text-sm text-[#64748B]">
+        <section className="rounded-[20px] border border-border bg-white p-6 shadow-card">
+          <h2 className="text-lg font-bold text-foreground">1. 下載範例檔</h2>
+          <p className="mt-2 text-sm text-foreground-secondary">
             欄位包含：名稱、分類、售價、成本、SKU、現貨、預購、溫層、影片、圖片、介紹、批號、效期
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -115,9 +115,9 @@ export default function AdminProductImportPage() {
           </div>
         </section>
 
-        <section className="rounded-[20px] border border-[#E8EBF4] bg-white p-6 shadow-[0_4px_24px_rgba(30,58,138,0.06)]">
-          <h2 className="text-lg font-bold text-[#1E293B]">2. 上傳並匯入</h2>
-          <p className="mt-2 text-sm text-[#64748B]">選擇填寫完成的 Excel 或 CSV 檔案</p>
+        <section className="rounded-[20px] border border-border bg-white p-6 shadow-card">
+          <h2 className="text-lg font-bold text-foreground">2. 上傳並匯入</h2>
+          <p className="mt-2 text-sm text-foreground-secondary">選擇填寫完成的 Excel 或 CSV 檔案</p>
           <input
             type="file"
             accept=".xlsx,.xls,.csv"
@@ -125,7 +125,7 @@ export default function AdminProductImportPage() {
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
           <Button
-            className="mt-4 bg-[#FF4F7B] hover:bg-[#E63D6A]"
+            className="mt-4 bg-primary hover:bg-[#E63D6A]"
             disabled={!file || importing}
             onClick={handleImport}
           >
@@ -136,8 +136,8 @@ export default function AdminProductImportPage() {
       </div>
 
       {result && (
-        <div className="rounded-[20px] border border-[#E8EBF4] bg-white p-6">
-          <p className="font-bold text-[#1E3A8A]">成功匯入 {result.imported} 筆商品</p>
+        <div className="rounded-[20px] border border-border bg-white p-6">
+          <p className="font-bold text-foreground">成功匯入 {result.imported} 筆商品</p>
           {result.errors.length > 0 && (
             <ul className="mt-3 space-y-1 text-sm text-red-600">
               {result.errors.map((err) => (

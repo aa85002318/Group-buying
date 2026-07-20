@@ -82,7 +82,7 @@ export default function AdminProductNewPage() {
                 返回列表
               </Button>
             </Link>
-            <Button onClick={save} disabled={saving} className="bg-[#FF4F7B] hover:bg-[#E63D6A]">
+            <Button onClick={save} disabled={saving} className="bg-primary hover:bg-[#E63D6A]">
               <Save className="mr-1.5 h-4 w-4" />
               {saving ? "儲存中…" : "儲存商品"}
             </Button>

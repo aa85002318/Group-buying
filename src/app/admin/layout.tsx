@@ -5,7 +5,7 @@ import { AdminDesktopSidebar, AdminMobileDrawer } from "@/components/layout/Admi
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminShell>
-      <div className="min-h-screen overflow-x-hidden bg-[#F7F8FC]">
+      <div className="min-h-screen overflow-x-hidden bg-background">
         <div className="flex min-h-screen w-full">
           <AdminDesktopSidebar />
           <div className="flex min-w-0 flex-1 flex-col">

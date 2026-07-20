@@ -41,7 +41,7 @@ export default function AdminProductAnalysisPage() {
       .finally(() => setLoading(false));
   }, [productId]);
 
-  if (loading) return <p className="text-[#64748B]">載入中…</p>;
+  if (loading) return <p className="text-foreground-secondary">載入中…</p>;
   if (!data) return <p className="text-red-600">無法載入單品分析</p>;
 
   return (
@@ -74,9 +74,9 @@ export default function AdminProductAnalysisPage() {
           { label: "轉換率", value: `${data.summary.conversionRate.toFixed(1)}%` },
           { label: "有效訂單", value: data.sources.activeOrders },
         ].map((item) => (
-          <div key={item.label} className="rounded-[20px] border border-[#E8EBF4] bg-white p-5 shadow-[0_4px_24px_rgba(30,58,138,0.06)]">
-            <p className="text-sm text-[#64748B]">{item.label}</p>
-            <p className="mt-1 text-2xl font-black text-[#1E3A8A]">{item.value}</p>
+          <div key={item.label} className="rounded-[20px] border border-border bg-white p-5 shadow-card">
+            <p className="text-sm text-foreground-secondary">{item.label}</p>
+            <p className="mt-1 text-2xl font-black text-foreground">{item.value}</p>
           </div>
         ))}
       </div>
@@ -87,24 +87,24 @@ export default function AdminProductAnalysisPage() {
         </AdminCard>
         <AdminCard title="流量與互動" description="瀏覽、收藏、影片關聯" icon={<Eye className="h-5 w-5" />}>
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl bg-[#F7F8FC] p-4">
-              <div className="flex items-center gap-2 text-[#475569]"><Eye className="h-4 w-4" />瀏覽數</div>
-              <p className="mt-2 text-2xl font-black text-[#1E293B]">{data.summary.viewCount}</p>
+            <div className="rounded-2xl bg-background p-4">
+              <div className="flex items-center gap-2 text-foreground-secondary"><Eye className="h-4 w-4" />瀏覽數</div>
+              <p className="mt-2 text-2xl font-black text-foreground">{data.summary.viewCount}</p>
             </div>
-            <div className="rounded-2xl bg-[#F7F8FC] p-4">
-              <div className="flex items-center gap-2 text-[#475569]"><Heart className="h-4 w-4" />收藏數</div>
-              <p className="mt-2 text-2xl font-black text-[#1E293B]">{data.summary.favoriteCount}</p>
+            <div className="rounded-2xl bg-background p-4">
+              <div className="flex items-center gap-2 text-foreground-secondary"><Heart className="h-4 w-4" />收藏數</div>
+              <p className="mt-2 text-2xl font-black text-foreground">{data.summary.favoriteCount}</p>
             </div>
-            <div className="rounded-2xl bg-[#F7F8FC] p-4">
-              <div className="flex items-center gap-2 text-[#475569]"><ShoppingCart className="h-4 w-4" />影片關聯</div>
-              <p className="mt-2 text-2xl font-black text-[#1E293B]">{data.sources.videos}</p>
+            <div className="rounded-2xl bg-background p-4">
+              <div className="flex items-center gap-2 text-foreground-secondary"><ShoppingCart className="h-4 w-4" />影片關聯</div>
+              <p className="mt-2 text-2xl font-black text-foreground">{data.sources.videos}</p>
             </div>
           </div>
           <div className="mt-5">
             <AdminBarChart
               data={[
-                { label: "瀏覽", value: data.summary.viewCount, color: "#1E3A8A" },
-                { label: "收藏", value: data.summary.favoriteCount, color: "#FF4F7B" },
+                { label: "瀏覽", value: data.summary.viewCount, color: "#5C4033" },
+                { label: "收藏", value: data.summary.favoriteCount, color: "#FF6B6B" },
                 { label: "售出", value: data.summary.soldQuantity, color: "#23B26D" },
               ]}
               height={180}

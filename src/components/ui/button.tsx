@@ -23,7 +23,7 @@ const buttonVariants = cva(
           "border border-border bg-transparent text-caramel hover:bg-peach-soft",
         ghost: "bg-transparent text-caramel hover:bg-caramel-soft",
         destructive:
-          "bg-error text-white hover:opacity-90 focus-visible:ring-error/40",
+          "bg-danger text-white hover:opacity-90 focus-visible:ring-danger/40",
         mint: "bg-success text-white shadow-card hover:opacity-95",
       },
       size: {

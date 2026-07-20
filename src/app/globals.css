@@ -24,16 +24,15 @@
     --promo: var(--group-buy);
     --pink: var(--primary);
     --pink-light: var(--surface-soft);
-    --card: var(--surface);
     --card-foreground: var(--text-primary);
     --muted: var(--surface-soft);
     --muted-foreground: var(--text-secondary);
     --tag-bg: var(--surface-soft);
     --tag-text: var(--primary);
-    --countdown: var(--error);
+    --countdown: var(--danger);
     --nav-active: var(--primary);
     --nav-inactive: var(--text-secondary);
-    --nav-icon: var(--text-secondary);
+    --nav-icon: var(--caramel);
     --brand-red: var(--primary);
     --brand-orange: var(--group-buy);
     --header-content-gap: 0px;
@@ -107,7 +106,7 @@
 
 @layer components {
   .section-title {
-    @apply text-xl font-bold tracking-tight text-caramel;
+    @apply text-xl font-semibold tracking-tight text-foreground;
   }
 
   .btn-brand {

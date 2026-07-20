@@ -29,7 +29,7 @@ function ProductGridSection({
   return (
     <section className={cn("space-y-3", className)} aria-label={title}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-bold text-foreground">{title}</h2>
+        <h2 className="text-xl font-semibold tracking-tight text-caramel">{title}</h2>
         {href && (
           <Link
             href={href}

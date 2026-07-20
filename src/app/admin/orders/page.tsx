@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { useAdminList } from "@/hooks/useAdminList";
 import { orderStatusVariant } from "@/lib/admin/status";
-import { formatCurrency, formatDate, ORDER_STATUS_LABELS } from "@/lib/utils";
-import type { Order, OrderItem, OrderStatus } from "@/lib/types/database";
+import {
+  formatCurrency,
+  formatDate,
+  ORDER_STATUS_LABELS,
+  SHIPMENT_METHOD_LABELS,
+} from "@/lib/utils";
+import type { Order, OrderStatus, Shipment } from "@/lib/types/database";
 
 const STATUS_OPTIONS: OrderStatus[] = [
   "awaiting_payment",
@@ -20,93 +26,93 @@ const STATUS_OPTIONS: OrderStatus[] = [
   "cancelled",
 ];
 
-type OrderDetail = Order & {
-  profiles?: { full_name?: string; email?: string; phone?: string } | null;
-  order_items?: OrderItem[];
-  pickup_store?: { name?: string; address?: string; phone?: string } | null;
+type AdminOrderRow = Order & {
+  profiles?: {
+    full_name?: string;
+    email?: string;
+    phone?: string;
+    member_number?: string;
+    member_code?: string;
+  } | null;
+  shipments?: Shipment[];
+  order_items?: Array<{ product_name: string; quantity: number }>;
 };
 
-const EMAIL_ACTIONS: Array<{ type: string; label: string }> = [
-  { type: "confirmation", label: "訂單確認信件" },
-  { type: "unpaid", label: "尚未付款通知" },
-  { type: "cancelled", label: "取消訂單" },
-  { type: "arrival", label: "到貨通知" },
-];
+function orderTypeLabel(o: AdminOrderRow): "團購" | "商城" {
+  if (o.group_buy_event_id || o.channel === "group_buy") return "團購";
+  return "商城";
+}
 
 export default function AdminOrdersPage() {
-  const { paginated, search, setSearch, page, setPage, totalPages, refresh, loading } = useAdminList<Order>(
-    "/api/admin/orders",
-    "orders",
-    ["order_number"]
-  );
+  const { items, search, setSearch, page, setPage, refresh, loading, error } =
+    useAdminList<AdminOrderRow>("/api/admin/orders", "orders", [
+      "order_number",
+      "customer_phone",
+      "customer_name",
+    ]);
   const [statusFilter, setStatusFilter] = useState("");
-  const [channelFilter, setChannelFilter] = useState("");
-  const [detail, setDetail] = useState<OrderDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [sending, setSending] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState("");
+  const [methodFilter, setMethodFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-  const filtered = paginated.filter((o) => {
-    if (statusFilter && o.status !== statusFilter) return false;
-    if (channelFilter && (o as Order & { channel?: string }).channel !== channelFilter) return false;
-    return true;
-  });
+  const filtered = useMemo(() => {
+    return items.filter((o) => {
+      if (statusFilter && o.status !== statusFilter) return false;
+      if (typeFilter === "group_buy" && !(o.group_buy_event_id || o.channel === "group_buy")) {
+        return false;
+      }
+      if (typeFilter === "mall" && (o.group_buy_event_id || o.channel === "group_buy")) {
+        return false;
+      }
+      if (methodFilter) {
+        const methods = (o.shipments ?? []).map((s) => s.method);
+        if (!methods.includes(methodFilter as Shipment["method"])) return false;
+      }
+      if (dateFrom && o.created_at < `${dateFrom}T00:00:00`) return false;
+      if (dateTo && o.created_at > `${dateTo}T23:59:59`) return false;
+
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const p = o.profiles;
+        const hit =
+          String(o.order_number ?? "").toLowerCase().includes(q) ||
+          String(o.customer_phone ?? "").includes(search) ||
+          String(o.customer_name ?? "").toLowerCase().includes(q) ||
+          String(p?.full_name ?? "").toLowerCase().includes(q) ||
+          String(p?.email ?? "").toLowerCase().includes(q) ||
+          String(p?.phone ?? "").includes(search) ||
+          String(p?.member_number ?? "").toLowerCase().includes(q) ||
+          String(p?.member_code ?? "").toLowerCase().includes(q);
+        if (!hit) return false;
+      }
+      return true;
+    });
+  }, [items, statusFilter, typeFilter, methodFilter, dateFrom, dateTo, search]);
+
+  const pageSize = 10;
+  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const updateStatus = async (id: string, status: OrderStatus) => {
-    await fetch(`/api/orders/${id}/status`, {
+    const res = await fetch(`/api/admin/orders/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error ?? "更新失敗");
+      return;
+    }
     refresh();
-    if (detail?.id === id) {
-      setDetail({ ...detail, status });
-    }
-  };
-
-  const openDetail = async (id: string) => {
-    setDetailLoading(true);
-    try {
-      const res = await fetch(`/api/admin/orders/${id}`);
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error ?? "載入失敗");
-        return;
-      }
-      setDetail(data.order as OrderDetail);
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  const resendEmail = async (type: string) => {
-    if (!detail) return;
-    setSending(type);
-    try {
-      const res = await fetch(`/api/admin/orders/${detail.id}/resend-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error ?? "寄送失敗");
-        return;
-      }
-      alert(
-        data.id
-          ? `信件已送出至客戶信箱（可至垃圾郵件匣確認）。Resend ID：${data.id}`
-          : "信件已送出至客戶信箱（可至垃圾郵件匣確認）。"
-      );
-    } finally {
-      setSending(null);
-    }
   };
 
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title="統一訂單中心"
-        description="來源：Website／Group Buy／Store Reservation — 保留 Channel、Status、Payment、Shipping、Pickup"
+        title="App 訂單"
+        description="此區僅管理透過 CHIMEIDIY App 建立的訂單。不包含門市 POS、現場刷卡或現金交易。"
         actions={
           <a
             href="/api/admin/orders/export?format=xlsx"
@@ -117,86 +123,16 @@ export default function AdminOrdersPage() {
         }
       />
 
-      {(detail || detailLoading) && (
-        <div className="space-y-4 rounded-xl border border-primary/20 bg-white p-4 shadow-card">
-          {detailLoading || !detail ? (
-            <p className="text-sm text-muted-foreground">載入訂單明細…</p>
-          ) : (
-            <>
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <h2 className="font-medium text-coffee">訂單 {detail.order_number}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {detail.profiles?.full_name ?? "會員"} · {detail.profiles?.email ?? "無 Email"}
-                    {detail.profiles?.phone ? ` · ${detail.profiles.phone}` : ""}
-                  </p>
-                  <p className="mt-1 text-sm">
-                    狀態：{ORDER_STATUS_LABELS[detail.status] ?? detail.status} · 金額{" "}
-                    {formatCurrency(detail.total_amount)} · {formatDate(detail.created_at)}
-                  </p>
-                  {detail.pickup_store?.name && (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      取貨：{detail.pickup_store.name}
-                      {detail.pickup_store.address ? `（${detail.pickup_store.address}）` : ""}
-                    </p>
-                  )}
-                </div>
-                <Button size="sm" variant="secondary" onClick={() => setDetail(null)}>
-                  關閉
-                </Button>
-              </div>
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        App 訂單來源：商城、團購、App 宅配、App 門市取貨。系統未串接 POS，不會顯示門市現場消費紀錄。
+      </div>
 
-              <div>
-                <p className="mb-2 text-sm font-medium text-coffee">產品資訊</p>
-                <div className="overflow-x-auto rounded-lg border border-border">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50 text-left">
-                      <tr>
-                        <th className="px-3 py-2">商品</th>
-                        <th className="px-3 py-2">單價</th>
-                        <th className="px-3 py-2">數量</th>
-                        <th className="px-3 py-2">小計</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(detail.order_items ?? []).map((item) => (
-                        <tr key={item.id} className="border-t border-border">
-                          <td className="px-3 py-2">{item.product_name}</td>
-                          <td className="px-3 py-2">{formatCurrency(item.unit_price)}</td>
-                          <td className="px-3 py-2">{item.quantity}</td>
-                          <td className="px-3 py-2">{formatCurrency(item.subtotal)}</td>
-                        </tr>
-                      ))}
-                      {(detail.order_items ?? []).length === 0 && (
-                        <tr>
-                          <td colSpan={4} className="px-3 py-3 text-muted-foreground">
-                            無產品明細
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-2 text-sm font-medium text-coffee">重發信件給客戶</p>
-                <div className="flex flex-wrap gap-2">
-                  {EMAIL_ACTIONS.map((a) => (
-                    <Button
-                      key={a.type}
-                      size="sm"
-                      variant="secondary"
-                      disabled={sending === a.type}
-                      onClick={() => resendEmail(a.type)}
-                    >
-                      {sending === a.type ? "寄送中…" : a.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+          <button type="button" className="ml-2 underline" onClick={() => refresh()}>
+            重試
+          </button>
         </div>
       )}
 
@@ -206,37 +142,49 @@ export default function AdminOrdersPage() {
             key: "order_number",
             header: "訂單編號",
             render: (o) => (
-              <button
-                type="button"
-                className="font-mono text-primary hover:underline"
-                onClick={() => openDetail(o.id)}
-              >
+              <Link href={`/admin/orders/${o.id}`} className="font-mono text-primary hover:underline">
                 {o.order_number}
-              </button>
+              </Link>
             ),
           },
           {
-            key: "member",
-            header: "會員",
+            key: "type",
+            header: "類型",
             render: (o) => {
-              const p = (o as Order & { profiles?: { full_name?: string } }).profiles;
-              return p?.full_name ?? "—";
+              const t = orderTypeLabel(o);
+              return (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs ${
+                    t === "團購" ? "bg-orange-100 text-orange-800" : "bg-rose-100 text-rose-800"
+                  }`}
+                >
+                  {t}
+                </span>
+              );
+            },
+          },
+          {
+            key: "member",
+            header: "App 會員",
+            render: (o) => {
+              const p = o.profiles;
+              return (
+                <div className="text-sm">
+                  <p>{p?.full_name ?? o.customer_name ?? "—"}</p>
+                  <p className="text-xs text-muted-foreground">{p?.phone ?? o.customer_phone ?? ""}</p>
+                </div>
+              );
+            },
+          },
+          {
+            key: "fulfillment",
+            header: "履約",
+            render: (o) => {
+              const method = o.shipments?.[0]?.method;
+              return method ? SHIPMENT_METHOD_LABELS[method] ?? method : "—";
             },
           },
           { key: "amount", header: "金額", render: (o) => formatCurrency(o.total_amount) },
-          {
-            key: "channel",
-            header: "渠道",
-            render: (o) => {
-              const ch = (o as Order & { channel?: string }).channel ?? "group_buy";
-              const labels: Record<string, string> = {
-                website: "Website",
-                group_buy: "Group Buy",
-                store_reservation: "Store",
-              };
-              return labels[ch] ?? ch;
-            },
-          },
           {
             key: "status",
             header: "狀態",
@@ -247,19 +195,26 @@ export default function AdminOrdersPage() {
               />
             ),
           },
-          { key: "time", header: "時間", render: (o) => <span className="text-xs">{formatDate(o.created_at)}</span> },
+          {
+            key: "time",
+            header: "建立時間",
+            render: (o) => <span className="text-xs">{formatDate(o.created_at)}</span>,
+          },
           {
             key: "actions",
             header: "操作",
             render: (o) => (
               <div className="flex flex-wrap items-center gap-1">
-                <Button size="sm" variant="secondary" onClick={() => openDetail(o.id)}>
-                  明細
-                </Button>
+                <Link href={`/admin/orders/${o.id}`}>
+                  <Button size="sm" variant="secondary">
+                    詳細
+                  </Button>
+                </Link>
                 <select
                   className="rounded border border-border px-2 py-1 text-xs"
                   value={o.status}
                   onChange={(e) => updateStatus(o.id, e.target.value as OrderStatus)}
+                  aria-label="修改訂單狀態"
                 >
                   {STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s}>
@@ -271,20 +226,24 @@ export default function AdminOrdersPage() {
             ),
           },
         ]}
-        rows={filtered}
+        rows={paginated}
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="搜尋訂單編號…"
+        searchPlaceholder="搜尋訂單編號、會員、電話…"
         loading={loading}
         page={page}
-        totalPages={totalPages}
+        totalPages={pages}
         onPageChange={setPage}
+        emptyText="尚無 App 訂單"
         toolbar={
           <div className="flex flex-wrap gap-2">
             <select
               className="rounded-lg border border-border px-3 py-2 text-sm"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
             >
               <option value="">全部狀態</option>
               {STATUS_OPTIONS.map((s) => (
@@ -295,14 +254,49 @@ export default function AdminOrdersPage() {
             </select>
             <select
               className="rounded-lg border border-border px-3 py-2 text-sm"
-              value={channelFilter}
-              onChange={(e) => setChannelFilter(e.target.value)}
+              value={typeFilter}
+              onChange={(e) => {
+                setTypeFilter(e.target.value);
+                setPage(1);
+              }}
             >
-              <option value="">全部渠道</option>
-              <option value="website">Website</option>
-              <option value="group_buy">Group Buy</option>
-              <option value="store_reservation">Store Reservation</option>
+              <option value="">全部類型</option>
+              <option value="mall">商城</option>
+              <option value="group_buy">團購</option>
             </select>
+            <select
+              className="rounded-lg border border-border px-3 py-2 text-sm"
+              value={methodFilter}
+              onChange={(e) => {
+                setMethodFilter(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">全部履約方式</option>
+              <option value="store_pickup">門市取貨</option>
+              <option value="home_delivery">宅配</option>
+              <option value="cvs_pickup">超商取貨</option>
+            </select>
+            <input
+              type="date"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
+              value={dateFrom}
+              onChange={(e) => {
+                setDateFrom(e.target.value);
+                setPage(1);
+              }}
+              aria-label="起始日期"
+            />
+            <input
+              type="date"
+              className="rounded-lg border border-border px-3 py-2 text-sm"
+              value={dateTo}
+              onChange={(e) => {
+                setDateTo(e.target.value);
+                setPage(1);
+              }}
+              aria-label="結束日期"
+            />
           </div>
         }
       />

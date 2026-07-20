@@ -77,8 +77,8 @@ export default function AdminReportsPage() {
             onClick={() => setPeriod(p)}
             className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
               period === p
-                ? "bg-[#FF4F7B] text-white"
-                : "border border-[#E2E8F0] bg-white text-[#475569]"
+                ? "bg-primary text-white"
+                : "border border-border bg-white text-foreground-secondary"
             }`}
           >
             {p === "today" ? "今日" : p === "week" ? "本週" : "本月"}
@@ -97,21 +97,21 @@ export default function AdminReportsPage() {
               { label: "售出商品數", value: report.summary.itemsSold },
               { label: "退貨", value: report.summary.returns },
             ].map((item) => (
-              <div key={item.label} className="rounded-[20px] border border-[#E8EBF4] bg-white p-5">
-                <p className="text-sm text-[#64748B]">{item.label}</p>
-                <p className="mt-1 text-2xl font-black text-[#1E3A8A]">{item.value}</p>
+              <div key={item.label} className="rounded-[20px] border border-border bg-white p-5">
+                <p className="text-sm text-foreground-secondary">{item.label}</p>
+                <p className="mt-1 text-2xl font-black text-foreground">{item.value}</p>
               </div>
             ))}
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-[20px] border border-[#E8EBF4] bg-white p-5">
-              <h2 className="mb-4 font-bold text-[#1E293B]">營業額趨勢</h2>
+            <section className="rounded-[20px] border border-border bg-white p-5">
+              <h2 className="mb-4 font-bold text-foreground">營業額趨勢</h2>
               <AdminLineChart data={report.trend} />
             </section>
-            <section className="rounded-[20px] border border-[#E8EBF4] bg-white p-5">
-              <h2 className="mb-4 font-bold text-[#1E293B]">熱銷商品</h2>
-              <AdminBarChart data={report.topProducts.map((d) => ({ ...d, color: "#FF4F7B" }))} />
+            <section className="rounded-[20px] border border-border bg-white p-5">
+              <h2 className="mb-4 font-bold text-foreground">熱銷商品</h2>
+              <AdminBarChart data={report.topProducts.map((d) => ({ ...d, color: "#FF6B6B" }))} />
             </section>
           </div>
         </>
@@ -119,20 +119,20 @@ export default function AdminReportsPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {exportReports.map((r) => (
-          <div key={r.title} className="rounded-[20px] border border-[#E8EBF4] bg-white p-5">
-            <h2 className="font-bold text-[#1E293B]">{r.title}</h2>
-            <p className="mt-1 text-sm text-[#64748B]">{r.description}</p>
-            <a href={r.href} className="mt-3 inline-flex text-sm font-semibold text-[#FF4F7B] hover:underline">
+          <div key={r.title} className="rounded-[20px] border border-border bg-white p-5">
+            <h2 className="font-bold text-foreground">{r.title}</h2>
+            <p className="mt-1 text-sm text-foreground-secondary">{r.description}</p>
+            <a href={r.href} className="mt-3 inline-flex text-sm font-semibold text-primary hover:underline">
               下載 Excel →
             </a>
           </div>
         ))}
       </div>
 
-      <div className="rounded-[20px] border border-[#E8EBF4] bg-white p-5">
-        <h2 className="font-bold text-[#1E293B]">單一商品團購報表</h2>
+      <div className="rounded-[20px] border border-border bg-white p-5">
+        <h2 className="font-bold text-foreground">單一商品團購報表</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <select className="h-11 rounded-xl border border-[#E2E8F0] px-3 text-sm" value={productId} onChange={(e) => setProductId(e.target.value)}>
+          <select className="h-11 rounded-xl border border-border px-3 text-sm" value={productId} onChange={(e) => setProductId(e.target.value)}>
             <option value="">選擇商品</option>
             {products.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>

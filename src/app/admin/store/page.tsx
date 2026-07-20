@@ -165,10 +165,10 @@ export default function AdminStorePage() {
               key={card.title}
               type="button"
               onClick={() => setTab(card.tab)}
-              className="rounded-[20px] border border-[#E8EBF4] bg-white p-5 text-left shadow-[0_4px_24px_rgba(30,58,138,0.06)]"
+              className="rounded-[20px] border border-border bg-white p-5 text-left shadow-card"
             >
-              <p className="text-lg font-black text-[#1E3A8A]">{card.title}</p>
-              <p className="mt-1 text-sm text-[#64748B]">{card.desc}</p>
+              <p className="text-lg font-black text-foreground">{card.title}</p>
+              <p className="mt-1 text-sm text-foreground-secondary">{card.desc}</p>
             </button>
           ))}
         </div>
@@ -176,9 +176,9 @@ export default function AdminStorePage() {
 
       {tab === "members" && (
         <div className="space-y-4">
-          <div className="rounded-[20px] border border-[#E8EBF4] bg-white p-5 space-y-3">
-            <p className="font-bold text-[#1E3A8A]">新增門市會員（僅電話）</p>
-            <p className="text-xs text-[#64748B]">
+          <div className="rounded-[20px] border border-border bg-white p-5 space-y-3">
+            <p className="font-bold text-foreground">新增門市會員（僅電話）</p>
+            <p className="text-xs text-foreground-secondary">
               不得寫入姓名、Email、地址；與線上會員電話相同時僅提示，不自動合併。
             </p>
             <div className="grid gap-2 sm:grid-cols-3">
@@ -205,11 +205,11 @@ export default function AdminStorePage() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-[#64748B]">載入中…</p>
+            <p className="text-sm text-foreground-secondary">載入中…</p>
           ) : (
-            <div className="overflow-x-auto rounded-[20px] border border-[#E8EBF4] bg-white">
+            <div className="overflow-x-auto rounded-[20px] border border-border bg-white">
               <table className="w-full text-sm">
-                <thead className="bg-[#F8FAFC] text-left text-[#64748B]">
+                <thead className="bg-[#F8FAFC] text-left text-foreground-secondary">
                   <tr>
                     <th className="px-4 py-3">電話</th>
                     <th className="px-4 py-3">編號</th>
@@ -220,7 +220,7 @@ export default function AdminStorePage() {
                 </thead>
                 <tbody>
                   {members.map((m) => (
-                    <tr key={String(m.id)} className="border-t border-[#E8EBF4]">
+                    <tr key={String(m.id)} className="border-t border-border">
                       <td className="px-4 py-3 font-medium">{String(m.phone)}</td>
                       <td className="px-4 py-3">{String(m.store_member_no ?? "—")}</td>
                       <td className="px-4 py-3">{String(m.source)}</td>
@@ -234,7 +234,7 @@ export default function AdminStorePage() {
                   ))}
                   {!members.length && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-[#64748B]">
+                      <td colSpan={5} className="px-4 py-8 text-center text-foreground-secondary">
                         尚無門市會員
                       </td>
                     </tr>
@@ -247,12 +247,12 @@ export default function AdminStorePage() {
       )}
 
       {tab !== "overview" && tab !== "members" && (
-        <div className="overflow-x-auto rounded-[20px] border border-[#E8EBF4] bg-white">
+        <div className="overflow-x-auto rounded-[20px] border border-border bg-white">
           {loading ? (
-            <p className="p-6 text-sm text-[#64748B]">載入中…</p>
+            <p className="p-6 text-sm text-foreground-secondary">載入中…</p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-[#F8FAFC] text-left text-[#64748B]">
+              <thead className="bg-[#F8FAFC] text-left text-foreground-secondary">
                 <tr>
                   <th className="px-4 py-3">ID</th>
                   <th className="px-4 py-3">商品</th>
@@ -264,17 +264,17 @@ export default function AdminStorePage() {
                 {items.map((item) => {
                   const product = item.products as { name?: string; sku?: string } | null;
                   return (
-                    <tr key={String(item.id)} className="border-t border-[#E8EBF4]">
+                    <tr key={String(item.id)} className="border-t border-border">
                       <td className="px-4 py-3 font-mono text-xs">
                         {String(item.id).slice(0, 8)}
                       </td>
                       <td className="px-4 py-3">
                         {product?.name ?? String(item.product_id ?? "—")}
                         {product?.sku ? (
-                          <span className="ml-2 text-xs text-[#64748B]">{product.sku}</span>
+                          <span className="ml-2 text-xs text-foreground-secondary">{product.sku}</span>
                         ) : null}
                       </td>
-                      <td className="px-4 py-3 text-[#64748B]">
+                      <td className="px-4 py-3 text-foreground-secondary">
                         {item.batch_no
                           ? `批號 ${String(item.batch_no)}`
                           : item.quantity != null
@@ -292,7 +292,7 @@ export default function AdminStorePage() {
                 })}
                 {!items.length && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-[#64748B]">
+                    <td colSpan={4} className="px-4 py-8 text-center text-foreground-secondary">
                       尚無資料 — 可透過 API POST /api/store 或 Excel Import 寫入
                     </td>
                   </tr>

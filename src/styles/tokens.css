@@ -1,117 +1,145 @@
 /**
- * CHIMEIDIY Version 1 — Frontend Design Tokens
- * Coral · Cream · Caramel · Butter · Peach
+ * CHIMEIDIY Brand Color V2 — Design Tokens
+ * Primary Coral · Secondary Yellow/Peach · Cream · Neutral Caramel · Warm Text
  * RGB channels keep Tailwind opacity modifiers (bg-primary/15).
  */
 
 :root {
-  /* Brand */
+  /* —— Brand Color V2 (canonical) —— */
   --primary: #ff6b6b;
   --primary-rgb: 255 107 107;
-  --primary-hover: #f05a5a;
-  --primary-hover-rgb: 240 90 90;
-  --primary-active: #e95050;
-  --primary-active-rgb: 233 80 80;
-  --primary-pressed: #e95050;
-  --primary-pressed-rgb: 233 80 80;
-  --primary-soft: #fff0ee;
-  --primary-subtle: #fff7f5;
-  --primary-light: #fff7f5;
+  --primary-hover: #ff5a5a;
+  --primary-hover-rgb: 255 90 90;
+  --primary-active: #f24e4e;
+  --primary-active-rgb: 242 78 78;
+  --primary-pressed: #f24e4e;
+  --primary-pressed-rgb: 242 78 78;
+  --primary-soft: #fff0ef;
+  --primary-subtle: #fff6f5;
+  --primary-light: #fff0ef;
 
-  /* Cream */
-  --cream: #fff7f1;
-  --cream-rgb: 255 247 241;
-  --cream-light: #fffbf8;
-  --cream-dark: #f7ede5;
-  --cream-white: #fff7f1;
-  --cream-soft: #fffbf8;
-  --cream-soft-rgb: 255 251 248;
+  --secondary-yellow: #ffd166;
+  --secondary-yellow-rgb: 255 209 102;
+  --secondary-yellow-soft: #fff6d9;
 
-  /* Caramel */
-  --caramel: #8b572a;
-  --caramel-rgb: 139 87 42;
-  --caramel-hover: #73461f;
-  --caramel-hover-rgb: 115 70 31;
-  --caramel-light: #a86b38;
-  --caramel-soft: #f5ede6;
+  --secondary-peach: #ffb4a2;
+  --secondary-peach-rgb: 255 180 162;
+  --secondary-peach-soft: #fff1ec;
 
-  /* Butter */
-  --butter: #ffd97a;
-  --butter-rgb: 255 217 122;
-  --butter-hover: #f5c95d;
-  --butter-soft: #fff4d3;
+  --background: #fff6e6;
+  --background-rgb: 255 246 230;
+  --background-soft: #fffaf0;
+  --background-soft-rgb: 255 250 240;
 
-  /* Peach */
-  --peach: #ffe3d6;
-  --peach-rgb: 255 227 214;
-  --peach-hover: #ffd4c3;
-  --peach-soft: #fff3ec;
+  --surface: #ffffff;
+  --surface-rgb: 255 255 255;
+  --card: #ffffff;
+  --card-hover: #fff9f4;
 
-  /* Group Buy */
+  --border: #efdcc8;
+  --border-rgb: 239 220 200;
+  --divider: #f2e4d5;
+  --divider-rgb: 242 228 213;
+
+  --text: #5c4033;
+  --text-rgb: 92 64 51;
+  --text-secondary: #7b6758;
+  --text-secondary-rgb: 123 103 88;
+
+  --success: #6dbb75;
+  --success-rgb: 109 187 117;
+  --success-soft: #eef8ef;
+
+  --warning: #f4b740;
+  --warning-rgb: 244 183 64;
+  --warning-soft: #fff6d9;
+
+  --danger: #ff6b6b;
+  --danger-rgb: 255 107 107;
+
+  --shadow: 0 4px 18px rgba(92, 64, 51, 0.08);
+
+  /* —— Cream (maps to Background Cream) —— */
+  --cream: #fff6e6;
+  --cream-rgb: 255 246 230;
+  --cream-light: #fffaf0;
+  --cream-dark: #f5e8d4;
+  --cream-white: #fff6e6;
+  --cream-soft: #fffaf0;
+  --cream-soft-rgb: 255 250 240;
+
+  /* —— Neutral Caramel (surface accent) + title brown via text —— */
+  --caramel-neutral: #e8c89b;
+  --caramel-neutral-rgb: 232 200 155;
+  /* text-caramel / icon caramel → warm brown (Text Primary) for contrast */
+  --caramel: #5c4033;
+  --caramel-rgb: 92 64 51;
+  --caramel-hover: #4a3429;
+  --caramel-hover-rgb: 74 52 41;
+  --caramel-light: #7b6758;
+  --caramel-soft: #f5ebdf;
+
+  /* —— Butter ← Secondary Yellow —— */
+  --butter: #ffd166;
+  --butter-rgb: 255 209 102;
+  --butter-hover: #f5c34a;
+  --butter-soft: #fff6d9;
+
+  /* —— Peach ← Secondary Peach —— */
+  --peach: #ffb4a2;
+  --peach-rgb: 255 180 162;
+  --peach-hover: #ffa58f;
+  --peach-soft: #fff1ec;
+
+  /* —— Group Buy (warm orange, distinct from primary) —— */
   --group-buy: #f89a4b;
   --group-buy-rgb: 248 154 75;
   --group-buy-hover: #e98234;
   --group-buy-hover-rgb: 233 130 52;
-  --group-buy-soft: #fff0e2;
-  --group-buy-subtle: #fff8f1;
+  --group-buy-soft: #fff3e6;
+  --group-buy-subtle: #fff8f0;
 
-  /* Background / Surface */
-  --background: #fff7f1;
-  --background-rgb: 255 247 241;
-  --background-soft: #fffbf8;
-  --background-soft-rgb: 255 251 248;
-  --surface: #ffffff;
-  --surface-rgb: 255 255 255;
-  --surface-soft: #fff9f5;
-  --surface-soft-rgb: 255 249 245;
-  --surface-warm: #fff3ec;
-  --surface-warm-rgb: 255 243 236;
+  /* —— Surface layers —— */
+  --surface-soft: #fff9f4;
+  --surface-soft-rgb: 255 249 244;
+  --surface-warm: #fff1ec;
+  --surface-warm-rgb: 255 241 236;
 
-  /* Text */
-  --text-primary: #4a3124;
-  --text-primary-rgb: 74 49 36;
-  --text-secondary: #80685b;
-  --text-secondary-rgb: 128 104 91;
-  --text-muted: #aa9a90;
-  --text-muted-rgb: 170 154 144;
+  /* —— Text (aliases) —— */
+  --text-primary: #5c4033;
+  --text-primary-rgb: 92 64 51;
+  --text-muted: #9a8778;
+  --text-muted-rgb: 154 135 120;
   --text-inverse: #ffffff;
 
-  /* Border */
-  --border: #efdcd0;
-  --border-rgb: 239 220 208;
-  --border-soft: #f5e9e1;
-  --border-soft-rgb: 245 233 225;
-  --border-strong: #ddbfae;
-  --border-strong-rgb: 221 191 174;
+  /* —— Border soft / strong —— */
+  --border-soft: #f2e4d5;
+  --border-soft-rgb: 242 228 213;
+  --border-strong: #e0c9ae;
+  --border-strong-rgb: 224 201 174;
 
-  /* Commerce */
-  --price: #f14f4f;
-  --price-rgb: 241 79 79;
-  --price-soft: #fff0ee;
+  /* —— Commerce —— */
+  --price: #ff6b6b;
+  --price-rgb: 255 107 107;
+  --price-soft: #fff0ef;
 
-  /* Status */
-  --success: #4c9b6a;
-  --success-rgb: 76 155 106;
-  --success-soft: #eaf5ee;
-  --warning: #e8a83d;
-  --warning-rgb: 232 168 61;
-  --warning-soft: #fff4d8;
-  --error: #d94f55;
-  --error-rgb: 217 79 85;
-  --error-soft: #fceaec;
-  --info: #4e89c7;
-  --info-rgb: 78 137 199;
-  --info-soft: #ebf3fa;
+  /* —— Status extras —— */
+  --error: #ff6b6b;
+  --error-rgb: 255 107 107;
+  --error-soft: #fff0ef;
+  --info: #6b9bd1;
+  --info-rgb: 107 155 209;
+  --info-soft: #eef4fb;
   --disabled: #a99d95;
   --disabled-rgb: 169 157 149;
   --disabled-soft: #f2eeeb;
 
-  /* Overlay / focus */
-  --overlay: rgba(74, 49, 36, 0.45);
+  /* —— Overlay / focus —— */
+  --overlay: rgba(92, 64, 51, 0.45);
   --ring-primary: rgba(255, 107, 107, 0.35);
   --ring-group-buy: rgba(248, 154, 75, 0.35);
 
-  /* Radius */
+  /* —— Radius —— */
   --radius-sm: 10px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -123,29 +151,34 @@
   --radius-image: 12px;
   --radius-button: 14px;
   --radius-input: 14px;
-  --radius-hero: 20px;
+  --radius-hero: 22px;
   --radius-sheet: 24px;
 
-  /* Shadow — soft only (caramel-based) */
-  --shadow-card: 0 2px 8px rgba(74, 49, 36, 0.04);
-  --shadow-lift: 0 6px 18px rgba(74, 49, 36, 0.08);
-  --shadow-brand: 0 6px 18px rgba(255, 107, 107, 0.12);
-  --shadow-sticker: 0 2px 8px rgba(74, 49, 36, 0.06);
-  --shadow-header: 0 2px 8px rgba(74, 49, 36, 0.04);
+  /* —— Shadow (V2) —— */
+  --shadow-card: 0 4px 18px rgba(92, 64, 51, 0.08);
+  --shadow-lift: 0 6px 22px rgba(92, 64, 51, 0.1);
+  --shadow-brand: 0 6px 18px rgba(255, 107, 107, 0.14);
+  --shadow-sticker: 0 2px 10px rgba(92, 64, 51, 0.08);
+  --shadow-header: 0 2px 10px rgba(92, 64, 51, 0.06);
 
-  /* Gradient — warm, no neon / purple */
+  /* —— Gradients —— */
   --gradient-primary: linear-gradient(135deg, var(--primary) 0%, #ff8f8f 100%);
-  --gradient-promo: linear-gradient(135deg, var(--butter) 0%, var(--group-buy) 100%);
-  --gradient-hero: linear-gradient(135deg, var(--cream) 0%, var(--peach-soft) 55%, var(--butter-soft) 100%);
+  --gradient-promo: linear-gradient(135deg, var(--secondary-yellow) 0%, var(--group-buy) 100%);
+  --gradient-hero: linear-gradient(
+    135deg,
+    var(--cream) 0%,
+    var(--secondary-peach-soft) 50%,
+    var(--secondary-yellow-soft) 100%
+  );
   --gradient-mint: linear-gradient(135deg, var(--success) 0%, var(--info) 100%);
 
-  /* Motion */
+  /* —— Motion —— */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-fast: 150ms;
   --duration-base: 250ms;
   --duration-slow: 400ms;
 
-  /* Layout */
+  /* —— Layout —— */
   --header-height: 3.5rem;
   --bottom-nav-height: 5.5rem;
   --touch-min: 44px;
@@ -153,23 +186,29 @@
   --app-max-width: 960px;
   --page-pad-x: 1rem;
 
-  /* Typography */
+  /* —— Typography —— */
   --font-sans: "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 
-  /* Legacy aliases */
+  /* —— Legacy aliases —— */
   --color-primary: var(--primary);
   --color-secondary: var(--group-buy);
-  --color-yellow: var(--warning);
+  --color-yellow: var(--secondary-yellow);
   --color-mint: var(--success);
   --color-blue: var(--info);
   --color-bg: var(--background);
-  --color-card: var(--surface);
+  --color-card: var(--card);
   --color-dark: var(--text-primary);
   --color-gray: var(--text-secondary);
   --color-border: var(--border);
   --color-muted: var(--surface-soft);
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --color-error: var(--error);
+  --color-error: var(--danger);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-max-width: 1200px;
+  }
 }

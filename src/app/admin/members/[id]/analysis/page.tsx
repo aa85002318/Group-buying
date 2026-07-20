@@ -42,7 +42,7 @@ export default function AdminMemberAnalysisPage() {
       .finally(() => setLoading(false));
   }, [memberId]);
 
-  if (loading) return <p className="text-[#64748B]">載入中…</p>;
+  if (loading) return <p className="text-foreground-secondary">載入中…</p>;
   if (!data) return <p className="text-red-600">無法載入會員分析</p>;
 
   return (
@@ -66,9 +66,9 @@ export default function AdminMemberAnalysisPage() {
           { label: "平均客單價", value: formatCurrency(data.summary.avgOrderValue) },
           { label: "待處理訂單", value: data.summary.pendingOrders },
         ].map((item) => (
-          <div key={item.label} className="rounded-[20px] border border-[#E8EBF4] bg-white p-5 shadow-[0_4px_24px_rgba(30,58,138,0.06)]">
-            <p className="text-sm text-[#64748B]">{item.label}</p>
-            <p className="mt-1 text-2xl font-black text-[#1E3A8A]">{item.value}</p>
+          <div key={item.label} className="rounded-[20px] border border-border bg-white p-5 shadow-card">
+            <p className="text-sm text-foreground-secondary">{item.label}</p>
+            <p className="mt-1 text-2xl font-black text-foreground">{item.value}</p>
           </div>
         ))}
       </div>
@@ -76,11 +76,11 @@ export default function AdminMemberAnalysisPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <AdminCard title="客戶輪廓" description="性別、年齡層、地區與會員等級" icon={<UserRound className="h-5 w-5" />}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl bg-[#F7F8FC] p-4"><p className="text-xs text-[#64748B]">性別</p><p className="mt-1 font-bold text-[#1E293B]">{data.summary.gender}</p></div>
-            <div className="rounded-2xl bg-[#F7F8FC] p-4"><p className="text-xs text-[#64748B]">年齡層</p><p className="mt-1 font-bold text-[#1E293B]">{data.summary.ageGroup}</p></div>
-            <div className="rounded-2xl bg-[#F7F8FC] p-4"><p className="text-xs text-[#64748B]">縣市</p><p className="mt-1 font-bold text-[#1E293B]">{data.summary.city}</p></div>
-            <div className="rounded-2xl bg-[#F7F8FC] p-4"><p className="text-xs text-[#64748B]">行政區</p><p className="mt-1 font-bold text-[#1E293B]">{data.summary.district}</p></div>
-            <div className="rounded-2xl bg-[#F7F8FC] p-4 sm:col-span-2"><p className="text-xs text-[#64748B]">會員等級</p><p className="mt-1 font-bold text-[#1E293B]">{data.summary.memberLevel}</p></div>
+            <div className="rounded-2xl bg-background p-4"><p className="text-xs text-foreground-secondary">性別</p><p className="mt-1 font-bold text-foreground">{data.summary.gender}</p></div>
+            <div className="rounded-2xl bg-background p-4"><p className="text-xs text-foreground-secondary">年齡層</p><p className="mt-1 font-bold text-foreground">{data.summary.ageGroup}</p></div>
+            <div className="rounded-2xl bg-background p-4"><p className="text-xs text-foreground-secondary">縣市</p><p className="mt-1 font-bold text-foreground">{data.summary.city}</p></div>
+            <div className="rounded-2xl bg-background p-4"><p className="text-xs text-foreground-secondary">行政區</p><p className="mt-1 font-bold text-foreground">{data.summary.district}</p></div>
+            <div className="rounded-2xl bg-background p-4 sm:col-span-2"><p className="text-xs text-foreground-secondary">會員等級</p><p className="mt-1 font-bold text-foreground">{data.summary.memberLevel}</p></div>
           </div>
         </AdminCard>
 
@@ -89,14 +89,14 @@ export default function AdminMemberAnalysisPage() {
         </AdminCard>
 
         <AdminCard title="消費趨勢" description="近期待付與消費變化" icon={<MapPin className="h-5 w-5" />}>
-          <AdminLineChart data={data.orderTrend} height={180} color="#1E3A8A" />
+          <AdminLineChart data={data.orderTrend} height={180} color="#5C4033" />
         </AdminCard>
 
         <AdminCard title="熱門商品" description="此會員最常購買的商品" icon={<UserRound className="h-5 w-5" />}>
           <AdminBarChart
             data={data.topProducts.map((item, index) => ({
               ...item,
-              color: ["#FF4F7B", "#1E3A8A", "#FFC400", "#23B26D", "#A93DDB"][index % 5],
+              color: ["#FF6B6B", "#5C4033", "#FFD166", "#23B26D", "#A93DDB"][index % 5],
             }))}
             height={180}
           />

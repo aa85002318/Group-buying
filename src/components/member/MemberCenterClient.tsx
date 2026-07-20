@@ -7,6 +7,7 @@ import {
   Bell,
   ChevronRight,
   FileText,
+  Gift,
   Headphones,
   Heart,
   HelpCircle,
@@ -14,6 +15,7 @@ import {
   MapPin,
   QrCode,
   Radio,
+  Settings,
   Shield,
   Store,
   User,
@@ -159,7 +161,7 @@ export function MemberCenterClient() {
 
   return (
     <div className="space-y-5 pb-4">
-      <h1 className="text-xl font-bold text-foreground">門市會員</h1>
+      <h1 className="text-xl font-bold text-caramel">會員中心</h1>
 
       {/* A. 會員摘要卡 */}
       <div className="rounded-[20px] bg-surface p-5 shadow-card">
@@ -171,7 +173,7 @@ export function MemberCenterClient() {
             <p className="text-lg font-bold text-foreground">{profile?.full_name ?? "會員"}</p>
             <p className="text-sm text-foreground-secondary">{maskPhone(profile?.phone)}</p>
             <p className="truncate text-sm text-foreground-secondary">{profile?.email}</p>
-            <p className="text-sm font-medium text-foreground-secondary">會員編號：{memberNo}</p>
+            <p className="text-sm font-medium text-caramel">App 會員編號：{memberNo}</p>
           </div>
         </div>
         <Link href={APP_ROUTES.memberProfile} className="mt-4 block">
@@ -185,32 +187,36 @@ export function MemberCenterClient() {
         )}
       </div>
 
-      {/* Benefits — no fake points */}
-      <section className="space-y-2">
-        <h2 className="px-1 text-sm font-medium text-foreground-secondary">會員福利</h2>
-        <div className="rounded-[20px] border border-border bg-success-soft p-4">
-          <p className="font-bold text-foreground">福利公告</p>
-          <p className="mt-1 text-sm text-foreground-secondary">
-            點數／優惠券發放系統開發中（Coming Soon）。線上會員與門市會員資料不會自動合併。
-          </p>
-        </div>
-        <div className="rounded-[20px] bg-surface p-4 shadow-card">
-          <p className="font-bold text-foreground">福利使用說明</p>
-          <p className="mt-1 text-sm text-foreground-secondary">
-            請使用會員條碼與發票載具於門市出示；已發放福利將顯示於此（目前尚無紀錄）。
-          </p>
-        </div>
+      {/* Quick: barcode + carrier */}
+      <section className="grid grid-cols-2 gap-3">
+        <Link
+          href={APP_ROUTES.memberBarcode}
+          className="flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-[16px] bg-surface p-3 text-center shadow-card"
+        >
+          <QrCode className="h-6 w-6 text-caramel" />
+          <span className="text-sm font-medium text-foreground">會員條碼</span>
+        </Link>
+        <Link
+          href={APP_ROUTES.memberCarrier}
+          className="flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-[16px] bg-surface p-3 text-center shadow-card"
+        >
+          <Barcode className="h-6 w-6 text-caramel" />
+          <span className="text-sm font-medium text-foreground">發票載具</span>
+        </Link>
       </section>
 
-      {/* B. 我的訂單 */}
+      {/* B. 我的 App 訂單 */}
       <section>
-        <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">我的訂單</h2>
+        <h2 className="mb-1 px-1 text-sm font-medium text-foreground-secondary">我的 App 訂單</h2>
+        <p className="mb-2 px-1 text-xs text-foreground-secondary">
+          僅顯示透過 CHIMEIDIY App 建立的商城與團購訂單，不包含門市現場消費紀錄。
+        </p>
         <div className="grid grid-cols-4 gap-2">
           {[
-            { label: "全部", href: APP_ROUTES.orders, count: summary?.total },
-            { label: "待付款", href: `${APP_ROUTES.orders}?filter=awaiting`, count: summary?.awaitingPayment },
-            { label: "待取貨", href: `${APP_ROUTES.orders}?filter=pickup`, count: summary?.readyForPickup },
-            { label: "已完成", href: `${APP_ROUTES.orders}?filter=completed`, count: summary?.completed },
+            { label: "全部", href: APP_ROUTES.memberOrders, count: summary?.total },
+            { label: "待付款", href: `${APP_ROUTES.memberOrders}?filter=awaiting`, count: summary?.awaitingPayment },
+            { label: "待取貨", href: `${APP_ROUTES.memberOrders}?filter=pickup`, count: summary?.readyForPickup },
+            { label: "已完成", href: `${APP_ROUTES.memberOrders}?filter=completed`, count: summary?.completed },
           ].map((item) => (
             <Link key={item.label} href={item.href} className="relative rounded-[16px] bg-surface py-3 text-center shadow-card">
               <span className="block text-xs text-foreground-secondary">{item.label}</span>
@@ -228,12 +234,13 @@ export function MemberCenterClient() {
       <section>
         <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">常用功能</h2>
         <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-card">
-          <MenuLink href={APP_ROUTES.memberCarrier} icon={Barcode} label="發票載具" subtitle={summary?.hasCarrier ? "已設定 · 結帳時快速出示手機條碼" : "結帳時快速出示手機條碼"} featured />
-          <MenuLink href={APP_ROUTES.memberFavorites} icon={Heart} label="我的收藏" subtitle="查看已收藏的團購商品" />
-          <MenuLink href={APP_ROUTES.memberAddresses} icon={MapPin} label="收件地址" subtitle="管理宅配與聯絡地址" />
-          <MenuLink href={APP_ROUTES.orders} icon={QrCode} label="取貨 QR Code" subtitle="查看訂單取貨碼" />
-          <MenuLink href={APP_ROUTES.memberNotifications} icon={Bell} label="通知中心" subtitle="查看訂單與活動通知" badge={summary?.unreadNotifications} />
+          <MenuLink href={APP_ROUTES.memberOrders} icon={QrCode} label="我的 App 訂單" subtitle="商城與團購訂單（不含門市現場消費）" featured />
+          <MenuLink href={APP_ROUTES.memberBenefits} icon={Gift} label="會員福利" subtitle="App 活動發放的福利（無點數／等級）" />
+          <MenuLink href={APP_ROUTES.memberFavorites} icon={Heart} label="我的收藏" subtitle="商品、食譜與影音收藏" />
+          <MenuLink href={APP_ROUTES.memberAddresses} icon={MapPin} label="地址管理" subtitle="管理宅配與聯絡地址" />
+          <MenuLink href={APP_ROUTES.memberNotifications} icon={Bell} label="通知中心" subtitle="訂單與活動通知" badge={summary?.unreadNotifications} />
           <MenuLink href={APP_ROUTES.memberProfile} icon={User} label="個人資料" subtitle="姓名、聯絡方式與地址" />
+          <MenuLink href={APP_ROUTES.memberSettings} icon={Settings} label="帳號設定" subtitle="隱私與通知偏好" />
         </div>
       </section>
 

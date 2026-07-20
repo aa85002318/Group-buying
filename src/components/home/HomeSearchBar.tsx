@@ -12,7 +12,7 @@ type HomeSearchBarProps = {
 };
 
 export function HomeSearchBar({
-  placeholder = "搜尋商品、食譜、品牌或門市位置",
+  placeholder = "搜尋商品、食譜、團購或門市位置",
   className,
 }: HomeSearchBarProps) {
   const router = useRouter();
@@ -47,7 +47,7 @@ export function HomeSearchBar({
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-2xl border border-border bg-cream-light py-2 pl-10 pr-12 text-sm text-foreground outline-none transition placeholder:text-foreground-muted focus:border-primary focus:shadow-brand-ring"
+        className="h-[50px] w-full rounded-2xl border border-border-soft bg-cream-light py-2 pl-10 pr-12 text-sm text-foreground outline-none transition placeholder:text-foreground-muted focus:border-primary focus:shadow-brand-ring"
       />
       <button
         type="button"

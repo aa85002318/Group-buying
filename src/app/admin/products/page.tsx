@@ -47,7 +47,7 @@ export default function AdminProductsPage() {
               </Button>
             </Link>
             <Link href="/admin/products/new">
-              <Button className="bg-[#FF4F7B] hover:bg-[#E63D6A]">
+              <Button className="bg-primary hover:bg-[#E63D6A]">
                 <PackagePlus className="mr-1.5 h-4 w-4" />
                 新增商品
               </Button>
@@ -64,10 +64,10 @@ export default function AdminProductsPage() {
         ].map((item) => (
           <div
             key={item.label}
-            className="rounded-[20px] border border-[#E8EBF4] bg-white p-5 shadow-[0_4px_24px_rgba(30,58,138,0.06)]"
+            className="rounded-[20px] border border-border bg-white p-5 shadow-card"
           >
-            <p className="text-sm text-[#64748B]">{item.label}</p>
-            <p className="mt-1 text-3xl font-black text-[#1E3A8A]">{item.value}</p>
+            <p className="text-sm text-foreground-secondary">{item.label}</p>
+            <p className="mt-1 text-3xl font-black text-foreground">{item.value}</p>
           </div>
         ))}
       </div>
@@ -94,9 +94,9 @@ export default function AdminProductsPage() {
             header: "商品",
             render: (p) => (
               <div>
-                <p className="font-semibold text-[#1E293B]">{p.name}</p>
+                <p className="font-semibold text-foreground">{p.name}</p>
                 {(p as { sku?: string }).sku && (
-                  <p className="text-xs text-[#94A3B8]">{(p as { sku?: string }).sku}</p>
+                  <p className="text-xs text-foreground-muted">{(p as { sku?: string }).sku}</p>
                 )}
               </div>
             ),
@@ -170,10 +170,10 @@ export default function AdminProductsPage() {
         onPageChange={setPage}
       />
 
-      <div className="rounded-[20px] border border-dashed border-[#E8EBF4] bg-[#F7F8FC] p-6 text-center">
-        <Download className="mx-auto h-8 w-8 text-[#FF4F7B]" />
+      <div className="rounded-[20px] border border-dashed border-border bg-background p-6 text-center">
+        <Download className="mx-auto h-8 w-8 text-primary" />
         <p className="mt-2 font-semibold text-[#334155]">需要批次新增商品？</p>
-        <p className="mt-1 text-sm text-[#64748B]">下載 Excel / CSV 範例，一次匯入多筆商品資料</p>
+        <p className="mt-1 text-sm text-foreground-secondary">下載 Excel / CSV 範例，一次匯入多筆商品資料</p>
         <Link href="/admin/products/import" className="mt-3 inline-block">
           <Button variant="secondary">前往批次匯入</Button>
         </Link>

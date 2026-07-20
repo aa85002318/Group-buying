@@ -232,7 +232,7 @@ export default function AdminSideMenuPage() {
                 <button
                   type="button"
                   onClick={() => addSection("links")}
-                  className="group flex min-h-[88px] items-center gap-3 rounded-2xl border-2 border-dashed border-[#F3B8C8] bg-[#FFF8FA] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#E9285C] hover:bg-[#FFF0F4]"
+                  className="group flex min-h-[88px] items-center gap-3 rounded-2xl border-2 border-dashed border-[#F3B8C8] bg-primary-soft p-4 text-left transition hover:-translate-y-0.5 hover:border-[#E9285C] hover:bg-[#FFF0F4]"
                 >
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FFE9EE] text-[#E9285C]">
                     <Plus className="h-5 w-5" />
@@ -399,7 +399,7 @@ export default function AdminSideMenuPage() {
                   <button
                     type="button"
                     onClick={() => updateSection(section.id, { items: [...section.items, createItem()] })}
-                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#F3B8C8] bg-[#FFF8FA] text-sm font-bold text-[#E9285C] transition hover:border-[#E9285C] hover:bg-[#FFF0F4]"
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#F3B8C8] bg-primary-soft text-sm font-bold text-[#E9285C] transition hover:border-[#E9285C] hover:bg-[#FFF0F4]"
                   >
                     <Plus className="h-4 w-4" />
                     新增區塊項目

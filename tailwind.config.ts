@@ -50,6 +50,7 @@ const config: Config = {
           hover: rgb("--caramel-hover-rgb"),
           light: "var(--caramel-light)",
           soft: "var(--caramel-soft)",
+          neutral: "var(--caramel-neutral)",
         },
         butter: {
           DEFAULT: rgb("--butter-rgb"),
@@ -60,6 +61,17 @@ const config: Config = {
           DEFAULT: rgb("--peach-rgb"),
           hover: "var(--peach-hover)",
           soft: "var(--peach-soft)",
+        },
+        yellow: {
+          DEFAULT: "var(--secondary-yellow)",
+          soft: "var(--secondary-yellow-soft)",
+        },
+        divider: {
+          DEFAULT: rgb("--divider-rgb"),
+        },
+        danger: {
+          DEFAULT: rgb("--danger-rgb"),
+          soft: "var(--primary-soft)",
         },
         groupBuy: {
           DEFAULT: rgb("--group-buy-rgb"),
@@ -99,13 +111,14 @@ const config: Config = {
         },
 
         card: {
-          DEFAULT: rgb("--surface-rgb"),
+          DEFAULT: "var(--card)",
+          hover: "var(--card-hover)",
           foreground: rgb("--text-primary-rgb"),
         },
         brand: {
           red: rgb("--primary-rgb"),
           orange: rgb("--group-buy-rgb"),
-          yellow: rgb("--warning-rgb"),
+          yellow: "var(--secondary-yellow)",
           mint: rgb("--success-rgb"),
           blue: rgb("--info-rgb"),
           ink: rgb("--text-primary-rgb"),
@@ -115,16 +128,19 @@ const config: Config = {
           line: rgb("--border-rgb"),
           success: rgb("--success-rgb"),
           warning: rgb("--warning-rgb"),
-          error: rgb("--error-rgb"),
+          error: rgb("--danger-rgb"),
           primary: rgb("--primary-rgb"),
           primaryLight: "var(--primary-soft)",
           primaryDark: rgb("--primary-hover-rgb"),
           pink: rgb("--primary-rgb"),
           pinkLight: rgb("--surface-soft-rgb"),
+          caramel: "var(--caramel-neutral)",
         },
         secondary: {
-          DEFAULT: rgb("--group-buy-rgb"),
-          foreground: "#ffffff",
+          DEFAULT: "var(--secondary-yellow)",
+          yellow: "var(--secondary-yellow)",
+          peach: "var(--secondary-peach)",
+          foreground: rgb("--text-primary-rgb"),
         },
         sale: rgb("--price-rgb"),
         promo: rgb("--group-buy-rgb"),
@@ -170,6 +186,7 @@ const config: Config = {
         brand: "var(--shadow-brand)",
         sticker: "var(--shadow-sticker)",
         header: "var(--shadow-header)",
+        soft: "var(--shadow)",
         "brand-ring": "0 0 0 4px var(--ring-primary)",
         angel: "var(--shadow-brand)",
       },
