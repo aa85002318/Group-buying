@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { VideoEmbed } from "@/components/videos/VideoEmbed";
 import { ProductCard } from "@/components/products/ProductCard";
+import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { mockVideos, getMockRelatedProductsForVideo } from "@/lib/mock-data";
 import type { Product, Video } from "@/lib/types/database";
 import { formatDate } from "@/lib/utils";
@@ -87,12 +88,7 @@ export default function VideoDetailPage({ params }: { params: { id: string } }) 
         >
           分享
         </button>
-        <Link
-          href="/member/favorites"
-          className="inline-flex min-h-11 items-center rounded-2xl bg-primary-soft px-4 text-sm font-medium text-primary"
-        >
-          收藏
-        </Link>
+        <FavoriteButton targetType="video" targetId={video.id} className="!h-11 !w-11 !rounded-2xl" />
         <Link href="/recipes" className="inline-flex min-h-11 items-center text-sm text-primary hover:underline">
           瀏覽相關食譜 →
         </Link>

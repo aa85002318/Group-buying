@@ -17,6 +17,7 @@ type Address = {
   city: string;
   district: string;
   address_line: string;
+  note?: string | null;
   label: string | null;
   is_default: boolean;
 };
@@ -28,6 +29,7 @@ const emptyForm = {
   city: "",
   district: "",
   address_line: "",
+  note: "",
   label: "",
   is_default: false,
 };
@@ -72,6 +74,7 @@ export default function MemberAddressesPage() {
       city: a.city,
       district: a.district,
       address_line: a.address_line,
+      note: a.note ?? "",
       label: a.label ?? "",
       is_default: a.is_default,
     });
@@ -98,6 +101,15 @@ export default function MemberAddressesPage() {
   const remove = async (id: string) => {
     if (!confirm("確定刪除此地址？")) return;
     await fetch(`/api/member/addresses/${id}`, { method: "DELETE" });
+    load();
+  };
+
+  const setDefault = async (id: string) => {
+    await fetch(`/api/member/addresses/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_default: true }),
+    });
     load();
   };
 
@@ -130,6 +142,7 @@ export default function MemberAddressesPage() {
             <Input className="min-h-12" placeholder="郵遞區號（選填）" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} />
             <Input className="min-h-12" placeholder="詳細地址 *" value={form.address_line} onChange={(e) => setForm({ ...form, address_line: e.target.value })} />
             <Input className="min-h-12" placeholder="地址標籤（選填）如：家、公司" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+            <Input className="min-h-12" placeholder="備註（選填）如：門口放" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={form.is_default} onChange={(e) => setForm({ ...form, is_default: e.target.checked })} />
               設為預設地址
@@ -155,11 +168,15 @@ export default function MemberAddressesPage() {
                     <p className="font-medium text-foreground">{a.recipient_name} · {a.phone}</p>
                     <p className="mt-1 text-sm text-foreground-secondary">{a.city}{a.district}{a.address_line}</p>
                     {a.label && <p className="mt-1 text-xs text-caramel">{a.label}</p>}
+                    {a.note && <p className="mt-1 text-xs text-foreground-secondary">備註：{a.note}</p>}
                   </div>
                   {a.is_default && <Star className="h-5 w-5 fill-warning text-warning" />}
                 </div>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={() => openEdit(a)}>編輯</Button>
+                  {!a.is_default && (
+                    <Button size="sm" variant="outline" onClick={() => setDefault(a.id)}>設為預設</Button>
+                  )}
                   <Button size="sm" variant="outline" onClick={() => remove(a.id)} className="text-error">刪除</Button>
                 </div>
               </div>

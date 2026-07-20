@@ -32,12 +32,21 @@ export async function GET() {
 
   const [ordersRes, favRes, addrRes, notifRes, carrierRes, profileRes] = await Promise.all([
     admin.from("orders").select("status").eq("user_id", userId),
-    admin.from("product_favorites").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    admin.from("favorites").select("id", { count: "exact", head: true }).eq("user_id", userId),
     admin.from("member_addresses").select("id", { count: "exact", head: true }).eq("user_id", userId),
     admin.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("is_read", false),
     admin.from("invoice_carriers").select("id").eq("user_id", userId).maybeSingle(),
     admin.from("profiles").select("member_number").eq("id", userId).single(),
   ]);
+
+  let favoriteCount = favRes.count ?? 0;
+  if (favRes.error?.code === "42P01") {
+    const legacy = await admin
+      .from("product_favorites")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    favoriteCount = legacy.count ?? 0;
+  }
 
   const orders = ordersRes.data ?? [];
   const countBy = (statuses: OrderStatus[]) =>
@@ -50,7 +59,7 @@ export async function GET() {
       readyForPickup: countBy(PICKUP),
       completed: countBy(COMPLETED),
       total: orders.length,
-      favoriteCount: favRes.count ?? 0,
+      favoriteCount,
       addressCount: addrRes.count ?? 0,
       unreadNotifications: notifRes.count ?? 0,
       hasCarrier: Boolean(carrierRes.data),

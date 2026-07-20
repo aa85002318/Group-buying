@@ -5,6 +5,7 @@ import Link from "next/link";
 import { IngredientList } from "@/components/recipes/IngredientList";
 import { RecipeStepList } from "@/components/recipes/RecipeStepList";
 import { VideoEmbed } from "@/components/videos/VideoEmbed";
+import { FavoriteButton } from "@/components/member/FavoriteButton";
 import type { Recipe } from "@/lib/types/database";
 import { formatDate } from "@/lib/utils";
 
@@ -159,12 +160,7 @@ export function RecipeDetailClient({ slug }: { slug: string }) {
         >
           分享食譜
         </button>
-        <Link
-          href="/member/favorites"
-          className="inline-flex min-h-11 items-center rounded-2xl bg-primary-soft px-4 text-sm font-medium text-primary"
-        >
-          收藏（登入後管理）
-        </Link>
+        <FavoriteButton targetType="recipe" targetId={recipe.id} className="!h-11 !w-11 !rounded-2xl" />
       </div>
 
       {related.length > 0 && (

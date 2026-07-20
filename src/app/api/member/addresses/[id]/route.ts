@@ -22,6 +22,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.address_line !== undefined) updates.address_line = body.address_line.trim();
   if (body.postal_code !== undefined) updates.postal_code = body.postal_code?.trim() || null;
   if (body.label !== undefined) updates.label = body.label?.trim() || null;
+  if (body.note !== undefined) updates.note = body.note?.trim() || null;
   if (body.is_default !== undefined) updates.is_default = Boolean(body.is_default);
 
   if (!isSupabaseConfigured()) {

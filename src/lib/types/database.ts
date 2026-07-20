@@ -212,6 +212,76 @@ export interface HomepageBlock {
   updated_at: string;
 }
 
+export type FavoriteTargetType = "product" | "recipe" | "video";
+
+export interface Favorite {
+  id: string;
+  user_id: string;
+  target_type: FavoriteTargetType;
+  target_id: string;
+  created_at: string;
+}
+
+export interface MemberAddress {
+  id: string;
+  user_id: string;
+  recipient_name: string;
+  phone: string;
+  postal_code: string | null;
+  city: string;
+  district: string;
+  address_line: string;
+  note?: string | null;
+  label: string | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type MemberBenefitStatus = "draft" | "active" | "disabled";
+export type MemberBenefitAssignmentStatus =
+  | "available"
+  | "used"
+  | "expired"
+  | "upcoming"
+  | "disabled"
+  | "revoked";
+
+export interface MemberBenefit {
+  id: string;
+  title: string;
+  summary: string | null;
+  description: string | null;
+  image_url: string | null;
+  usage_instructions: string | null;
+  usage_location: string | null;
+  status: MemberBenefitStatus;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MemberBenefitAssignment {
+  id: string;
+  benefit_id: string;
+  user_id: string;
+  status: MemberBenefitAssignmentStatus;
+  assigned_by: string | null;
+  assigned_at: string;
+  used_at: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  source: "manual" | "all_members" | "user_list" | "group_buy" | "campaign" | "course";
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+  member_benefits?: MemberBenefit | null;
+  profiles?: { id: string; full_name?: string | null; email?: string | null; phone?: string | null } | null;
+}
+
 export interface Product {
   id: string;
   category_id: string | null;

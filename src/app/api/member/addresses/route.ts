@@ -90,6 +90,7 @@ export async function POST(request: Request) {
     district,
     address_line: addressLine,
     label: body.label?.trim() || null,
+    note: body.note?.trim() || null,
     is_default: isDefault,
   };
 
