@@ -62,11 +62,12 @@ export type SideMenuSection = {
 };
 
 export const DEFAULT_HEADER_NAV_ITEMS: HeaderNavItem[] = [
-  { id: "products", label: "全部商品", href: "/products", icon_emoji: "🛍️" },
-  { id: "group_buy", label: "熱門團購", href: "/group-buy", badge: "hot", icon_emoji: "🔥" },
-  { id: "live", label: "直播專區", href: "/live", badge: "live", icon_emoji: "📡" },
-  { id: "videos", label: "影音專區", href: "/videos", icon_emoji: "🎬" },
-  { id: "articles", label: "文章專區", href: "/articles", icon_emoji: "📝" },
+  { id: "shop", label: "烘焙材料", href: "/shop", icon_emoji: "🛍️" },
+  { id: "recipes", label: "食譜影音", href: "/recipes", icon_emoji: "🎬" },
+  { id: "member", label: "門市會員", href: "/member", icon_emoji: "👤" },
+  { id: "group_buy", label: "團購", href: "/group-buy", badge: "hot", icon_emoji: "🔥" },
+  { id: "ai", label: "AI 工具", href: "/ai-tools", icon_emoji: "✨" },
+  { id: "store_map", label: "門市地圖", href: "/store-map", icon_emoji: "📍" },
 ];
 
 export const DEFAULT_HEADER_PROMO_ITEMS: HeaderPromoItem[] = [
@@ -97,6 +98,71 @@ export const DEFAULT_HEADER_PROMO_ITEMS: HeaderPromoItem[] = [
 ];
 
 export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
+  {
+    id: "services",
+    title: "主要服務",
+    icon: "sparkles",
+    color: "berry",
+    kind: "links",
+    items: [
+      {
+        id: "shop",
+        label: "烘焙材料",
+        description: "原料、器具、包裝",
+        href: "/shop",
+        icon: "package",
+        color: "berry",
+      },
+      {
+        id: "recipes",
+        label: "食譜影音",
+        description: "食譜教學與短影音",
+        href: "/recipes",
+        icon: "article",
+        color: "yellow",
+      },
+      {
+        id: "member",
+        label: "門市會員",
+        description: "條碼、載具與福利",
+        href: "/member",
+        icon: "star",
+        color: "green",
+      },
+      {
+        id: "group_buy",
+        label: "團購",
+        description: "限時開團與收單",
+        href: "/group-buy",
+        icon: "flame",
+        color: "orange",
+      },
+      {
+        id: "news",
+        label: "最新資訊",
+        description: "新品活動與公告",
+        href: "/news",
+        icon: "article",
+        color: "blue",
+      },
+      {
+        id: "ai",
+        label: "AI 烘焙助手",
+        description: "選品與食材食譜",
+        href: "/ai-tools",
+        icon: "sparkles",
+        color: "pink",
+      },
+      {
+        id: "store_map",
+        label: "門市地圖",
+        description: "商品擺放位置",
+        href: "/store-map",
+        icon: "package",
+        color: "teal",
+      },
+    ],
+  },
   {
     id: "today",
     title: "今日必逛",
@@ -132,7 +198,7 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         id: "popular",
         label: "熱門商品",
         description: "最多人購買",
-        href: "/products",
+        href: "/shop",
         icon: "flame",
         color: "coral",
       },
@@ -152,6 +218,39 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         href: "/categories",
         icon: "shopping-bag",
         color: "pink",
+      },
+    ],
+  },
+  {
+    id: "support",
+    title: "服務與支援",
+    icon: "article",
+    color: "blue",
+    kind: "links",
+    items: [
+      {
+        id: "support",
+        label: "客服中心",
+        description: "LINE、社群與表單",
+        href: "/support",
+        icon: "article",
+        color: "blue",
+      },
+      {
+        id: "stores",
+        label: "門市資訊",
+        description: "地址與營業時間",
+        href: "/stores",
+        icon: "package",
+        color: "green",
+      },
+      {
+        id: "faq",
+        label: "常見問題",
+        description: "FAQ",
+        href: "/faq",
+        icon: "article",
+        color: "yellow",
       },
     ],
   },

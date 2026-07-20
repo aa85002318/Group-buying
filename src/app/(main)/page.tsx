@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { BannerCarousel, type BannerItem } from "@/components/home/BannerCarousel";
-import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { ProductScrollSection } from "@/components/home/ProductScrollSection";
 import { VideoSection } from "@/components/home/VideoSection";
-import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
-import { LiveHomeSection } from "@/components/home/LiveHomeSection";
-import { ArticleHomeSection } from "@/components/home/ArticleHomeSection";
-import { RecommendHomeSection } from "@/components/home/RecommendHomeSection";
 import { StoreAnnouncementsSection } from "@/components/home/StoreAnnouncementsSection";
-import { CourseCard } from "@/components/courses/CourseCard";
-import { MOCK_COURSES } from "@/lib/mock-courses";
+import { ServiceHubGrid } from "@/components/consumer/ServiceHubGrid";
+import { HomeSearchBar } from "@/components/consumer/HomeSearchBar";
+import { SectionHeader } from "@/components/consumer/SectionHeader";
+import { RecipeCard } from "@/components/consumer/RecipeCard";
+import { NewsCard } from "@/components/consumer/NewsCard";
+import { AIEntryCard } from "@/components/consumer/AIEntryCard";
 import {
   getClosingSoonProducts,
   getNewThisWeekProducts,
@@ -19,23 +19,14 @@ import {
 } from "@/lib/home";
 import {
   getMockGroupBuyEventsWithProducts,
-  mockArticles,
   mockBanners,
-  mockCategories,
   mockLivestreams,
   mockProducts,
   mockVideos,
 } from "@/lib/mock-data";
-import type {
-  Article,
-  GroupBuyEvent,
-  Livestream,
-  Product,
-  ProductCategory,
-  Video,
-} from "@/lib/types/database";
+import { MOCK_NEWS, MOCK_RECIPES } from "@/lib/mock/consumer-hub";
+import type { GroupBuyEvent, Livestream, Product, Video } from "@/lib/types/database";
 import { formatCurrency } from "@/lib/utils";
-import Link from "next/link";
 
 type GroupBuyEventWithProducts = GroupBuyEvent & {
   group_buy_products?: Array<{
@@ -47,31 +38,25 @@ type GroupBuyEventWithProducts = GroupBuyEvent & {
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [categories, setCategories] = useState<ProductCategory[]>(mockCategories);
   const [events, setEvents] = useState<GroupBuyEventWithProducts[]>(getMockGroupBuyEventsWithProducts());
   const [featuredEvents, setFeaturedEvents] = useState<GroupBuyEventWithProducts[]>([]);
   const [videos, setVideos] = useState<Video[]>(mockVideos);
   const [livestreams, setLivestreams] = useState<Livestream[]>(mockLivestreams);
-  const [articles, setArticles] = useState<Article[]>(mockArticles);
 
   useEffect(() => {
     Promise.all([
       fetch("/api/products").then((r) => r.json()),
-      fetch("/api/categories").then((r) => r.json()),
       fetch("/api/group-buy-events").then((r) => r.json()),
       fetch("/api/group-buy-events?featured=true").then((r) => r.json()),
       fetch("/api/videos").then((r) => r.json()),
       fetch("/api/livestreams").then((r) => r.json()),
-      fetch("/api/articles").then((r) => r.json()),
     ])
-      .then(([productsRes, categoriesRes, eventsRes, featuredRes, videosRes, liveRes, articlesRes]) => {
+      .then(([productsRes, eventsRes, featuredRes, videosRes, liveRes]) => {
         if (productsRes.products?.length) setProducts(productsRes.products);
-        if (categoriesRes.categories?.length) setCategories(categoriesRes.categories);
         if (eventsRes.events?.length) setEvents(eventsRes.events);
         if (featuredRes.events?.length) setFeaturedEvents(featuredRes.events);
         if (videosRes.videos?.length) setVideos(videosRes.videos);
         if (liveRes.livestreams?.length) setLivestreams(liveRes.livestreams);
-        if (articlesRes.articles?.length) setArticles(articlesRes.articles);
       })
       .catch(() => {});
   }, []);
@@ -105,13 +90,11 @@ export default function HomePage() {
     const featuredBanners = featuredEvents
       .filter((e) => e.banner_url && e.status === "active")
       .map(toBanner);
-
     if (featuredBanners.length > 0) return featuredBanners;
 
     const eventBanners = events
       .filter((e) => e.banner_url && e.status === "active")
       .map(toBanner);
-
     if (eventBanners.length > 0) return eventBanners;
 
     return mockBanners.map((banner, index) => {
@@ -136,7 +119,7 @@ export default function HomePage() {
   const newThisWeek = useMemo(() => getNewThisWeekProducts(products), [products]);
   const closingSoon = useMemo(() => getClosingSoonProducts(products, events), [products, events]);
 
-  const ranked = useMemo(() => {
+  const hotProducts = useMemo(() => {
     const map = new Map<string, HomeProduct>();
     for (const event of events) {
       for (const item of event.group_buy_products ?? []) {
@@ -158,74 +141,40 @@ export default function HomePage() {
       if (list.length >= 8) break;
       if (!map.has(product.id)) list.push({ ...product, sold_count: 0 });
     }
-    return list;
+    return list.slice(0, 6);
   }, [events, products]);
-
-  const hotProducts = ranked.slice(0, 6);
-  const everyoneBuying = ranked.slice(0, 8);
-  const teacherPick = useMemo(() => {
-    const picks = [...products]
-      .filter((p) => p.is_active !== false)
-      .sort((a, b) => (b.original_price ?? 0) - (a.original_price ?? 0))
-      .slice(0, 6);
-    return picks.length ? picks : products.slice(0, 6);
-  }, [products]);
 
   return (
     <div className="page-enter space-y-8 pb-4">
+      <section className="space-y-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-groupBuy">烘焙生活平台</p>
+          <h1 className="mt-1 text-2xl font-black text-foreground md:text-3xl">
+            CHIMEIDIY 消費者中心
+          </h1>
+          <p className="mt-1 text-sm text-foreground-secondary">
+            買材料、看食譜、用會員、參加團購 — 同一個 App 全部搞定
+          </p>
+        </div>
+        <HomeSearchBar />
+      </section>
+
       <BannerCarousel banners={banners} />
-      <HomeQuickLinks />
 
-      <Link
-        href="/ai"
-        className="flex items-center gap-3 rounded-[22px] bg-hero-gradient px-4 py-4 text-white shadow-lift transition hover:-translate-y-0.5"
-      >
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface/20 text-lg font-black">AI</span>
-        <span className="min-w-0 flex-1">
-          <span className="block font-black">AI 烘焙助手</span>
-          <span className="block text-xs text-white/90">材料推薦 · 份量換算 · 失敗分析</span>
-        </span>
-        <span className="text-sm font-bold">開始 →</span>
-      </Link>
-
-      <CategoryGrid categories={categories} />
-
-      <RecommendHomeSection />
+      <ServiceHubGrid />
 
       <ProductScrollSection
         title="今日新品"
         products={newThisWeek}
-        seeMoreHref="/group-buy"
+        seeMoreHref="/shop"
         variant="new"
         badge="NEW"
         badgeTone="new"
         emptyText="今日尚無新商品"
       />
 
-      <LiveHomeSection livestreams={livestreams} />
-
       <ProductScrollSection
-        title="直播限定"
-        products={hotProducts.slice(0, 4)}
-        seeMoreHref="/live"
-        variant="hot"
-        badge="LIVE"
-        badgeTone="live"
-        emptyText="暫無直播限定商品"
-      />
-
-      <ProductScrollSection
-        title="老師推薦"
-        products={teacherPick}
-        seeMoreHref="/products"
-        variant="recommend"
-        badge="推薦"
-        badgeTone="mint"
-        emptyText="暫無推薦商品"
-      />
-
-      <ProductScrollSection
-        title="熱門排行"
+        title="熱門商品"
         products={hotProducts}
         seeMoreHref="/group-buy"
         variant="ranking"
@@ -234,16 +183,22 @@ export default function HomePage() {
         emptyText="暫無熱門商品"
       />
 
-      <ProductScrollSection
-        title="大家都在買"
-        products={everyoneBuying}
-        seeMoreHref="/products"
-        variant="hot"
-        emptyText="暫無商品"
-      />
+      <section>
+        <SectionHeader title="最新食譜／影音" href="/recipes" accentClass="bg-warning" />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {MOCK_RECIPES.map((recipe) => (
+            <RecipeCard key={recipe.id} recipe={recipe} />
+          ))}
+        </div>
+        {videos.length > 0 && (
+          <div className="mt-4">
+            <VideoSection videos={videos.slice(0, 4)} />
+          </div>
+        )}
+      </section>
 
       <ProductScrollSection
-        title="即將收單"
+        title="即將收單團購"
         products={closingSoon}
         seeMoreHref="/group-buy"
         showCutoff
@@ -252,27 +207,54 @@ export default function HomePage() {
       />
 
       <section>
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="h-7 w-1.5 rounded-full bg-info" />
-            <h2 className="section-title">烘焙課程</h2>
-          </div>
-          <Link href="/courses" className="text-sm font-bold text-primary">
-            查看更多
-          </Link>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-          {MOCK_COURSES.map((c) => (
-            <div key={c.id} className="w-[78%] shrink-0 sm:w-[46%] lg:w-[31%]">
-              <CourseCard course={c} />
-            </div>
+        <SectionHeader title="最新資訊" href="/news" accentClass="bg-info" />
+        <div className="grid gap-3 md:grid-cols-2">
+          {MOCK_NEWS.slice(0, 3).map((item) => (
+            <NewsCard key={item.id} item={item} />
           ))}
         </div>
       </section>
 
-      <ArticleHomeSection articles={articles} />
+      <section>
+        <SectionHeader title="AI 烘焙助手" href="/ai-tools" accentClass="bg-primary" />
+        <div className="grid gap-3 md:grid-cols-2">
+          <AIEntryCard
+            title="不知道怎麼挑產品？"
+            description="告訴我們目標與預算，獲得規則式商品建議。"
+            href="/ai-tools#pick-product"
+          />
+          <AIEntryCard
+            title="手上的食材能做什麼？"
+            description="勾選現有材料，找出可做的甜點與食譜。"
+            href="/ai-tools#pantry"
+          />
+        </div>
+        {livestreams.length > 0 && (
+          <p className="mt-3 text-xs text-foreground-secondary">
+            直播進行中也可搭配 AI 工具選品 →{" "}
+            <Link href="/live" className="font-bold text-primary">
+              直播專區
+            </Link>
+          </p>
+        )}
+      </section>
+
       <StoreAnnouncementsSection />
-      <VideoSection videos={videos} />
+
+      <section className="card-surface p-5">
+        <SectionHeader title="門市資訊" href="/stores" accentClass="bg-success" className="mb-2" />
+        <p className="text-sm text-foreground-secondary">
+          查詢營業時間、地址，或使用門市地圖找商品擺放位置。
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link href="/stores" className="btn-secondary">
+            門市列表
+          </Link>
+          <Link href="/store-map" className="btn-brand">
+            門市商品地圖
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

@@ -103,7 +103,7 @@ export default function SupportPage() {
   return (
     <div className="space-y-6 pb-6">
       <div>
-        <h1 className="text-xl font-bold text-[#173F75]">客服中心</h1>
+        <h1 className="text-xl font-bold text-foreground">客服中心</h1>
         <p className="mt-1 text-sm text-foreground-secondary">我們會盡快協助您處理問題</p>
       </div>
 
@@ -111,10 +111,10 @@ export default function SupportPage() {
         <a
           href={LINE_URL}
           target="_blank"
-          rel="noreferrer"
-          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]"
+          rel="noopener noreferrer"
+          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
         >
-          <MessageCircle className="h-8 w-8 text-[#06C755]" />
+          <MessageCircle className="h-8 w-8 text-success" />
           <div>
             <p className="font-medium text-foreground">LINE 客服</p>
             <p className="text-xs text-foreground-secondary">@diy_chimei</p>
@@ -123,12 +123,38 @@ export default function SupportPage() {
         </a>
         <a
           href={`tel:${PHONE.replace(/-/g, "")}`}
-          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]"
+          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
         >
           <Phone className="h-8 w-8 text-primary" />
           <div>
             <p className="font-medium text-foreground">電話客服</p>
             <p className="text-xs text-foreground-secondary">{PHONE}</p>
+          </div>
+          <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
+        </a>
+        <a
+          href="https://www.facebook.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
+        >
+          <FileText className="h-8 w-8 text-info" />
+          <div>
+            <p className="font-medium text-foreground">Facebook</p>
+            <p className="text-xs text-foreground-secondary">官方粉專（外部連結）</p>
+          </div>
+          <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
+        </a>
+        <a
+          href="https://www.instagram.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
+        >
+          <Headphones className="h-8 w-8 text-primary" />
+          <div>
+            <p className="font-medium text-foreground">Instagram</p>
+            <p className="text-xs text-foreground-secondary">烘焙靈感（外部連結）</p>
           </div>
           <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
         </a>

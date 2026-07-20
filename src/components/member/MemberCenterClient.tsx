@@ -159,19 +159,19 @@ export function MemberCenterClient() {
 
   return (
     <div className="space-y-5 pb-4">
-      <h1 className="text-xl font-bold text-[#173F75]">我的</h1>
+      <h1 className="text-xl font-bold text-foreground">門市會員</h1>
 
       {/* A. 會員摘要卡 */}
-      <div className="rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+      <div className="rounded-[20px] bg-surface p-5 shadow-card">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[#FF6A3D] text-xl font-bold text-white">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
             {profile?.full_name?.[0] ?? "?"}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-lg font-bold text-foreground">{profile?.full_name ?? "會員"}</p>
             <p className="text-sm text-foreground-secondary">{maskPhone(profile?.phone)}</p>
             <p className="truncate text-sm text-foreground-secondary">{profile?.email}</p>
-            <p className="text-sm font-medium text-[#173F75]">會員編號：{memberNo}</p>
+            <p className="text-sm font-medium text-foreground-secondary">會員編號：{memberNo}</p>
           </div>
         </div>
         <Link href={APP_ROUTES.memberProfile} className="mt-4 block">
@@ -184,6 +184,23 @@ export function MemberCenterClient() {
           </div>
         )}
       </div>
+
+      {/* Benefits — no fake points */}
+      <section className="space-y-2">
+        <h2 className="px-1 text-sm font-medium text-foreground-secondary">會員福利</h2>
+        <div className="rounded-[20px] border border-border bg-success-soft p-4">
+          <p className="font-bold text-foreground">福利公告</p>
+          <p className="mt-1 text-sm text-foreground-secondary">
+            點數／優惠券發放系統開發中（Coming Soon）。線上會員與門市會員資料不會自動合併。
+          </p>
+        </div>
+        <div className="rounded-[20px] bg-surface p-4 shadow-card">
+          <p className="font-bold text-foreground">福利使用說明</p>
+          <p className="mt-1 text-sm text-foreground-secondary">
+            請使用會員條碼與發票載具於門市出示；已發放福利將顯示於此（目前尚無紀錄）。
+          </p>
+        </div>
+      </section>
 
       {/* B. 我的訂單 */}
       <section>
