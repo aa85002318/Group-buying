@@ -98,6 +98,9 @@ export default function AdminProductEditPage() {
                 返回列表
               </Button>
             </Link>
+            <Link href={`/admin/products/${productId}/analysis`}>
+              <Button variant="outline">查看分析</Button>
+            </Link>
             <Button onClick={save} disabled={saving} className="bg-[#FF4F7B] hover:bg-[#E63D6A]">
               <Save className="mr-1.5 h-4 w-4" />
               {saving ? "儲存中…" : "儲存商品"}

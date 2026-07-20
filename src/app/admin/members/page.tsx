@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -227,6 +228,11 @@ export default function AdminMembersPage() {
             header: "操作",
             render: (m) => (
               <div className="flex flex-wrap justify-end gap-1">
+                <Link href={`/admin/members/${m.id}/analysis`}>
+                  <Button size="sm" variant="outline">
+                    分析
+                  </Button>
+                </Link>
                 <Button size="sm" variant="secondary" onClick={() => openEdit(m)}>
                   編輯
                 </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const SIZES = [
@@ -31,12 +31,13 @@ export function AdminRichTextEditor({
   placeholder = "輸入文章內容…",
 }: AdminRichTextEditorProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [htmlMode, setHtmlMode] = useState(false);
 
   useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== value) {
+    if (!htmlMode && ref.current && ref.current.innerHTML !== value) {
       ref.current.innerHTML = value || "";
     }
-  }, [value]);
+  }, [htmlMode, value]);
 
   const emit = () => {
     onChange(ref.current?.innerHTML ?? "");
@@ -45,6 +46,33 @@ export function AdminRichTextEditor({
   const run = (command: string, arg?: string) => {
     ref.current?.focus();
     document.execCommand(command, false, arg);
+    emit();
+  };
+
+  const insertLink = () => {
+    const url = window.prompt("請輸入連結網址", "https://");
+    if (!url) return;
+    run("createLink", url);
+  };
+
+  const insertTable = () => {
+    ref.current?.focus();
+    document.execCommand(
+      "insertHTML",
+      false,
+      [
+        "<table style='width:100%;border-collapse:collapse;margin:12px 0;'>",
+        "<thead><tr>",
+        "<th style='border:1px solid #CBD5E1;padding:8px;background:#F8FAFC;'>欄位 1</th>",
+        "<th style='border:1px solid #CBD5E1;padding:8px;background:#F8FAFC;'>欄位 2</th>",
+        "</tr></thead>",
+        "<tbody><tr>",
+        "<td style='border:1px solid #CBD5E1;padding:8px;'>內容</td>",
+        "<td style='border:1px solid #CBD5E1;padding:8px;'>內容</td>",
+        "</tr></tbody>",
+        "</table>",
+      ].join("")
+    );
     emit();
   };
 
@@ -59,6 +87,12 @@ export function AdminRichTextEditor({
         </Button>
         <Button type="button" size="sm" variant="secondary" onClick={() => run("underline")}>
           底線
+        </Button>
+        <Button type="button" size="sm" variant="secondary" onClick={() => run("formatBlock", "<h2>")}>
+          H2
+        </Button>
+        <Button type="button" size="sm" variant="secondary" onClick={() => run("formatBlock", "<h3>")}>
+          H3
         </Button>
         <span className="mx-1 h-5 w-px bg-border" />
         <select
@@ -98,19 +132,42 @@ export function AdminRichTextEditor({
         <Button type="button" size="sm" variant="secondary" onClick={() => run("insertUnorderedList")}>
           項目符號
         </Button>
+        <Button type="button" size="sm" variant="secondary" onClick={() => insertLink()}>
+          連結
+        </Button>
+        <Button type="button" size="sm" variant="secondary" onClick={() => insertTable()}>
+          表格
+        </Button>
         <Button type="button" size="sm" variant="secondary" onClick={() => run("removeFormat")}>
           清除格式
         </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={htmlMode ? "default" : "secondary"}
+          onClick={() => setHtmlMode((current) => !current)}
+        >
+          HTML
+        </Button>
       </div>
-      <div
-        ref={ref}
-        className="input-field min-h-[220px] rounded-none border-0 prose prose-sm max-w-none"
-        contentEditable
-        suppressContentEditableWarning
-        data-placeholder={placeholder}
-        onInput={emit}
-        onBlur={emit}
-      />
+      {htmlMode ? (
+        <textarea
+          className="min-h-[220px] w-full rounded-none border-0 bg-white p-4 font-mono text-sm outline-none"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+      ) : (
+        <div
+          ref={ref}
+          className="input-field min-h-[220px] rounded-none border-0 prose prose-sm max-w-none"
+          contentEditable
+          suppressContentEditableWarning
+          data-placeholder={placeholder}
+          onInput={emit}
+          onBlur={emit}
+        />
+      )}
     </div>
   );
 }

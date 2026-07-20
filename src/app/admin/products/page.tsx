@@ -140,9 +140,14 @@ export default function AdminProductsPage() {
             key: "actions",
             header: "操作",
             render: (p) => (
-              <Link href={`/admin/products/${p.id}/edit`}>
-                <Button size="sm" variant="secondary">編輯</Button>
-              </Link>
+              <div className="flex flex-wrap justify-end gap-1">
+                <Link href={`/admin/products/${p.id}/analysis`}>
+                  <Button size="sm" variant="outline">分析</Button>
+                </Link>
+                <Link href={`/admin/products/${p.id}/edit`}>
+                  <Button size="sm" variant="secondary">編輯</Button>
+                </Link>
+              </div>
             ),
           },
         ]}
