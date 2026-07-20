@@ -2,16 +2,16 @@ import Link from "next/link";
 import { BrandIcon, type BrandIconName } from "@/components/brand/BrandIcon";
 
 const LINKS: Array<{ href: string; label: string; icon: BrandIconName }> = [
-  { href: "/products", label: "商品", icon: "products" },
+  { href: "/ai", label: "AI助手", icon: "articles" },
   { href: "/group-buy", label: "團購", icon: "groupBuy" },
   { href: "/live", label: "直播", icon: "live" },
   { href: "/courses", label: "課程", icon: "courses" },
-  { href: "/articles", label: "文章", icon: "articles" },
+  { href: "/corporate", label: "企業", icon: "member" },
+  { href: "/products", label: "商品", icon: "products" },
   { href: "/member/favorites", label: "收藏", icon: "favorites" },
   { href: "/member/carrier", label: "發票", icon: "carrier" },
   { href: "/stores", label: "門市", icon: "stores" },
   { href: "/support", label: "客服", icon: "support" },
-  { href: "/member", label: "會員", icon: "member" },
 ];
 
 export function HomeQuickLinks() {

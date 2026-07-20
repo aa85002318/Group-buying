@@ -35,6 +35,11 @@ export default function ProductDetailClient({ id }: { id: string }) {
         if (d.product) {
           setProduct(d.product);
           setActiveImage(0);
+          fetch("/api/product-views", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ product_id: d.product.id }),
+          }).catch(() => {});
         } else {
           setNotFound(true);
         }

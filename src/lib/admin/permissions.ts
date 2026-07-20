@@ -35,6 +35,8 @@ export const ADMIN_ONLY_PATHS = [
   "/admin/commission-rules",
   "/admin/commission-records",
   "/admin/support",
+  "/admin/corporate",
+  "/admin/courses",
   "/admin/reports",
   "/admin/staff",
   "/admin/payment-records",
@@ -77,6 +79,8 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/commission-rules", label: "分潤規則", roles: ["admin"] },
   { href: "/admin/commission-records", label: "分潤紀錄", roles: ["admin"] },
   { href: "/admin/support", label: "客服", roles: ["admin"] },
+  { href: "/admin/corporate", label: "企業詢價", roles: ["admin"] },
+  { href: "/admin/courses", label: "課程", roles: ["admin"] },
   { href: "/admin/reports", label: "報表", roles: ["admin"] },
 ];
 

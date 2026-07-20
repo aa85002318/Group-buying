@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type ChipTone = "primary" | "secondary" | "mint" | "blue" | "yellow" | "gray";
+type ChipTone = "primary" | "secondary" | "mint" | "blue" | "yellow" | "gray" | "warning";
 
 const tones: Record<ChipTone, string> = {
   primary: "bg-[#FFF0F4] text-[#E9285C]",
@@ -10,6 +10,7 @@ const tones: Record<ChipTone, string> = {
   blue: "bg-[#EAF2FF] text-[#3A86FF]",
   yellow: "bg-[#FFF8E0] text-[#B8860B]",
   gray: "bg-[#F5F5F5] text-[#757575]",
+  warning: "bg-[#FFF4E5] text-[#FF9F1C]",
 };
 
 export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {

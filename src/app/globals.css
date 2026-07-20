@@ -70,6 +70,33 @@
     background: color-mix(in srgb, var(--color-primary) 22%, white);
     color: var(--color-dark);
   }
+
+  /* Design System 2.0 — dark mode foundation */
+  .dark {
+    --color-bg: #1a1514;
+    --color-card: #241e1c;
+    --color-dark: #f5f0ee;
+    --color-gray: #a89f9a;
+    --color-border: #3a322f;
+    --color-muted: #2a2321;
+    --page-background: var(--color-bg);
+    --card-background: var(--color-card);
+    --text-primary: var(--color-dark);
+    --text-secondary: var(--color-gray);
+    --background: var(--page-background);
+    --foreground: var(--text-primary);
+    --card: var(--card-background);
+    --card-foreground: var(--text-primary);
+    --muted: var(--color-muted);
+    --muted-foreground: var(--text-secondary);
+    --border: var(--color-border);
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --header-height: 8rem;
+    }
+  }
 }
 
 @layer components {

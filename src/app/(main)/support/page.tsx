@@ -38,6 +38,32 @@ export default function SupportPage() {
   const [orderId, setOrderId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chat, setChat] = useState<Array<{ role: "user" | "bot"; content: string }>>([
+    { role: "bot", content: "你好！我是 CHIMEIDIY AI 客服，可協助商品、配送、付款、課程、直播、退貨與門市問題。" },
+  ]);
+
+  const sendAiChat = async () => {
+    if (!chatInput.trim() || chatLoading) return;
+    const content = chatInput.trim();
+    setChatInput("");
+    setChat((c) => [...c, { role: "user", content }]);
+    setChatLoading(true);
+    try {
+      const res = await fetch("/api/ai/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content, sessionId: "support-web" }),
+      });
+      const data = await res.json();
+      setChat((c) => [...c, { role: "bot", content: data.reply ?? "暫時無法回覆，請改填下方表單。" }]);
+    } catch {
+      setChat((c) => [...c, { role: "bot", content: "連線失敗，請稍後再試或使用 LINE 客服。" }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const submitTicket = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +133,32 @@ export default function SupportPage() {
           <ChevronRight className="ml-auto h-5 w-5 text-[#6B7280]" />
         </a>
       </div>
+
+      <section className="rounded-[20px] bg-white p-5 shadow-card">
+        <h2 className="font-bold text-coffee">AI 客服聊天</h2>
+        <p className="mt-1 text-xs text-muted-foreground">即時回答常見問題；複雜案件請改填表單或 LINE。</p>
+        <div className="mt-3 max-h-56 space-y-2 overflow-y-auto rounded-xl bg-muted/40 p-3">
+          {chat.map((m, i) => (
+            <div key={i} className={`text-sm ${m.role === "user" ? "text-right" : ""}`}>
+              <span className={`inline-block rounded-2xl px-3 py-2 ${m.role === "user" ? "bg-brand-gradient text-white" : "bg-white text-coffee shadow-sm"}`}>
+                {m.content}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex gap-2">
+          <Input
+            className="min-h-11"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="例如：如何取貨？"
+            onKeyDown={(e) => e.key === "Enter" && sendAiChat()}
+          />
+          <Button type="button" onClick={sendAiChat} disabled={chatLoading}>
+            {chatLoading ? "…" : "送出"}
+          </Button>
+        </div>
+      </section>
 
       <section className="space-y-2">
         <h2 className="flex items-center gap-2 text-sm font-medium text-[#173F75]">
