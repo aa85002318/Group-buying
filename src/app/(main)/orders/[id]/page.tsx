@@ -93,7 +93,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       <OrderStatusBadges paymentStatus={order.payment_status} pickupStatus={order.pickup_status} />
 
       {awaiting && (
-        <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+        <div className="space-y-3 rounded-xl border border-warning/30 bg-warning-soft p-4 text-sm text-foreground">
           <p className="font-semibold">取貨前請先完成付款</p>
           <p>
             下單後請於{" "}
@@ -101,7 +101,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             （截止：{formatDate(deadline.toISOString())}）完成匯款或至門市繳費。
             <strong>繳費確認後訂單才正式成立</strong>，才能取貨。
           </p>
-          <ol className="list-decimal space-y-1 pl-5 text-amber-900/90">
+          <ol className="list-decimal space-y-1 pl-5 text-foreground-secondary">
             {ORDER_PAYMENT_FLOW_STEPS.map((step) => (
               <li key={step}>{step}</li>
             ))}

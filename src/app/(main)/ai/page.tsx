@@ -231,7 +231,7 @@ export default function AiBakingPage() {
         </section>
       )}
 
-      {error && <p className="rounded-xl bg-[#FDECEA] px-4 py-3 text-sm text-error">{error}</p>}
+      {error && <p className="rounded-xl bg-error-soft px-4 py-3 text-sm text-error">{error}</p>}
 
       {result != null && (
         <section className="card-surface space-y-3 p-5">

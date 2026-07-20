@@ -12,8 +12,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: rgb("--background-rgb"),
+        background: {
+          DEFAULT: rgb("--background-rgb"),
+          soft: "var(--background-soft)",
+        },
         cream: {
+          DEFAULT: "var(--cream)",
+          light: "var(--cream-light)",
+          dark: "var(--cream-dark)",
           white: "var(--cream-white)",
           soft: "var(--cream-soft)",
         },
@@ -31,9 +37,11 @@ const config: Config = {
         primary: {
           DEFAULT: rgb("--primary-rgb"),
           hover: rgb("--primary-hover-rgb"),
+          active: rgb("--primary-active-rgb"),
           pressed: rgb("--primary-pressed-rgb"),
           foreground: "#ffffff",
           soft: "var(--primary-soft)",
+          subtle: "var(--primary-subtle)",
           light: "var(--primary-light)",
           dark: rgb("--primary-hover-rgb"),
         },
@@ -45,20 +53,24 @@ const config: Config = {
         },
         butter: {
           DEFAULT: rgb("--butter-rgb"),
+          hover: "var(--butter-hover)",
           soft: "var(--butter-soft)",
         },
         peach: {
           DEFAULT: rgb("--peach-rgb"),
+          hover: "var(--peach-hover)",
           soft: "var(--peach-soft)",
         },
         groupBuy: {
           DEFAULT: rgb("--group-buy-rgb"),
           hover: rgb("--group-buy-hover-rgb"),
           soft: "var(--group-buy-soft)",
+          subtle: "var(--group-buy-subtle)",
           foreground: "#ffffff",
         },
         border: {
           DEFAULT: rgb("--border-rgb"),
+          soft: rgb("--border-soft-rgb"),
           strong: rgb("--border-strong-rgb"),
         },
         price: {

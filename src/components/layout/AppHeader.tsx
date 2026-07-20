@@ -2,12 +2,14 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Bell, Search, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Search, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
 import { APP_ROUTES } from "@/lib/site-links";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { ChimeidiyLogo } from "@/components/branding/ChimeidiyLogo";
+import { AppHamburgerMenu } from "@/components/layout/AppHamburgerMenu";
+import { ConsumerHubNav } from "@/components/consumer/ConsumerHubNav";
 
 export type AppHeaderVariant = "home" | "standard" | "detail" | "search";
 
@@ -39,14 +41,14 @@ function CartButton() {
   );
 }
 
-function NotifyButton() {
+function MemberButton() {
   return (
     <Link
-      href={APP_ROUTES.memberNotifications}
+      href={APP_ROUTES.member}
       className="inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-caramel transition hover:bg-caramel-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
-      aria-label="通知"
+      aria-label="我的會員"
     >
-      <Bell className="h-5 w-5" aria-hidden />
+      <User className="h-5 w-5" aria-hidden />
     </Link>
   );
 }
@@ -83,7 +85,7 @@ function resolveVariant(pathname: string, variant?: AppHeaderVariant): AppHeader
   return pathname === "/" ? "home" : "standard";
 }
 
-/** Mobile-first App header — home / standard / detail / search */
+/** Consumer Hub / App header — home includes hamburger + search + cart + member */
 export function AppHeader({
   variant,
   title,
@@ -99,29 +101,32 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full shrink-0 border-b border-border bg-surface",
+        "sticky top-0 z-50 w-full shrink-0 border-b border-border-soft bg-surface",
         className
       )}
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div
-        className="relative mx-auto flex h-[56px] w-full max-w-[var(--app-max-width)] items-center px-3 sm:h-[60px] sm:px-4"
+        className="relative mx-auto flex h-[56px] w-full max-w-[var(--app-max-width)] items-center gap-1 px-2 sm:h-[60px] sm:px-3"
         style={{
-          paddingLeft: "max(0.75rem, env(safe-area-inset-left, 0px))",
-          paddingRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
+          paddingLeft: "max(0.5rem, env(safe-area-inset-left, 0px))",
+          paddingRight: "max(0.5rem, env(safe-area-inset-right, 0px))",
         }}
       >
         {resolved === "home" ? (
           <>
-            {/* Absolute-centered logo — never squeezed by action buttons */}
-            <div className="pointer-events-none absolute inset-y-0 left-1/2 flex w-[min(148px,42vw)] -translate-x-1/2 items-center justify-center sm:w-[min(168px,46vw)]">
+            <div className="relative z-10 flex shrink-0 items-center">
+              <AppHamburgerMenu />
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 left-1/2 flex w-[min(140px,40vw)] -translate-x-1/2 items-center justify-center sm:w-[min(160px,44vw)]">
               <div className="pointer-events-auto max-w-full">
                 <ChimeidiyLogo variant="header" priority />
               </div>
             </div>
-            <div className="ml-auto flex shrink-0 items-center gap-0.5">
-              <NotifyButton />
+            <div className="ml-auto flex shrink-0 items-center">
+              <SearchButton />
               <CartButton />
+              <MemberButton />
             </div>
           </>
         ) : resolved === "search" ? (
@@ -144,17 +149,16 @@ export function AppHeader({
                 {title ?? ""}
               </h1>
             </div>
-            <div className="flex w-11 shrink-0 items-center justify-end gap-0.5">
-              {resolved === "detail" && !showCart ? (
-                <SearchButton />
-              ) : showCart ? (
-                <CartButton />
-              ) : (
-                <span className="w-11" aria-hidden />
-              )}
+            <div className="flex shrink-0 items-center justify-end gap-0.5">
+              <AppHamburgerMenu />
+              {showCart ? <CartButton /> : null}
             </div>
           </>
         )}
+      </div>
+      {/* Tablet / desktop secondary hub nav */}
+      <div className="mx-auto hidden w-full max-w-[var(--app-max-width)] md:block">
+        <ConsumerHubNav />
       </div>
     </header>
   );

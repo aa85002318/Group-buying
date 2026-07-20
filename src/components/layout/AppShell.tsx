@@ -7,7 +7,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh w-full overflow-x-hidden bg-cream-soft">
+    <div className="min-h-dvh w-full overflow-x-hidden bg-cream">
       <div className="app-shell relative mx-auto flex min-h-dvh w-full flex-col overflow-x-hidden bg-background md:shadow-lift">
         <AppHeader />
         <main

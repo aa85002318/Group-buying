@@ -47,11 +47,11 @@ export function FavoriteButton({ productId, className, size = "md" }: FavoriteBu
         )}
       >
         <Heart
-          className={cn(iconSize, favorited ? "fill-[#E9285C] text-primary" : "text-foreground-secondary")}
+          className={cn(iconSize, favorited ? "fill-primary text-primary" : "text-foreground-secondary")}
         />
       </button>
       {toast && (
-        <span className="absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[#202124] px-2 py-1 text-xs text-white">
+        <span className="absolute -top-8 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-xs text-white">
           {toast}
         </span>
       )}

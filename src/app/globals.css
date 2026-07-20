@@ -106,32 +106,32 @@
 }
 
 @layer components {
+  .section-title {
+    @apply text-xl font-bold tracking-tight text-caramel;
+  }
+
   .btn-brand {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-brand transition duration-250 ease-brand hover:-translate-y-0.5 hover:bg-primary-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-card transition duration-250 ease-brand hover:bg-primary-hover active:bg-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-group-buy {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-groupBuy px-5 py-2.5 text-sm font-bold text-white shadow-brand transition duration-250 ease-brand hover:-translate-y-0.5 hover:bg-groupBuy-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-groupBuy/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-groupBuy px-5 py-2.5 text-sm font-bold text-white shadow-card transition duration-250 ease-brand hover:bg-groupBuy-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-groupBuy/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button border-2 border-primary bg-surface px-5 py-2.5 text-sm font-bold text-primary transition duration-250 ease-brand hover:bg-surface-soft active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button border-2 border-primary bg-surface px-5 py-2.5 text-sm font-bold text-primary transition duration-250 ease-brand hover:bg-primary-soft active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
   }
 
   .btn-ghost {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-transparent px-4 py-2.5 text-sm font-semibold text-foreground-secondary transition hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-transparent px-4 py-2.5 text-sm font-semibold text-caramel transition hover:bg-caramel-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30;
   }
 
   .card-surface {
-    @apply rounded-card border border-border bg-surface shadow-card transition duration-250 ease-brand;
+    @apply rounded-card border border-border-soft bg-surface shadow-card transition duration-250 ease-brand;
   }
 
   .card-lift {
     @apply card-surface hover:-translate-y-1 hover:shadow-lift;
-  }
-
-  .section-title {
-    @apply text-xl font-black tracking-tight text-foreground;
   }
 
   .input-field {

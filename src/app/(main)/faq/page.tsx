@@ -40,8 +40,8 @@ export default function FaqPage() {
   return (
     <div className="space-y-5 pb-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#173F75]">常見問題</h1>
-        <Link href={APP_ROUTES.support} className="text-sm text-[#173F75]">聯絡客服</Link>
+        <h1 className="text-xl font-bold text-caramel">常見問題</h1>
+        <Link href={APP_ROUTES.support} className="text-sm text-caramel">聯絡客服</Link>
       </div>
 
       <div className="relative">
@@ -57,7 +57,7 @@ export default function FaqPage() {
         grouped.map(([category, items]) => (
           <section key={category}>
             <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">{category}</h2>
-            <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+            <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-card">
               {items.map((f) => (
                 <div key={f.id}>
                   <button type="button" className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left" onClick={() => setOpenId(openId === f.id ? null : f.id)}>

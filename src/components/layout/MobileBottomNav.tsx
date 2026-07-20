@@ -2,31 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutGrid, ShoppingCart, User, Users } from "lucide-react";
+import { Bot, Home, ShoppingBag, User, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { CONSUMER_BOTTOM_NAV } from "@/lib/consumer-hub";
-import { useCart } from "@/hooks/useCart";
 
 const ICONS = {
   "/": Home,
-  "/shop": LayoutGrid,
+  "/shop": ShoppingBag,
   "/group-buy": Users,
-  "/cart": ShoppingCart,
+  "/ai-tools": Bot,
   "/member": User,
 } as const;
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const { items } = useCart();
-  const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   if (isMinimalChromePath(pathname)) return null;
 
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-border bg-surface"
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-border-soft bg-surface"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div className="mx-auto grid h-14 min-h-[56px] grid-cols-5 items-stretch px-0.5 sm:px-1">
@@ -34,7 +31,6 @@ export function MobileBottomNav() {
           const active = item.match(pathname);
           const Icon = ICONS[item.href as keyof typeof ICONS] ?? Home;
           const isGroup = item.accent === "groupBuy";
-          const isCart = item.href === "/cart";
 
           return (
             <Link
@@ -44,24 +40,17 @@ export function MobileBottomNav() {
               aria-label={item.label}
               className="relative flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 text-[10px] sm:text-[11px]"
             >
-              <span className="relative shrink-0">
-                <Icon
-                  className={cn(
-                    "h-5 w-5",
-                    active
-                      ? isGroup
-                        ? "text-groupBuy"
-                        : "text-primary"
-                      : "text-caramel"
-                  )}
-                  aria-hidden
-                />
-                {isCart && cartCount > 0 && (
-                  <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-white">
-                    {cartCount > 99 ? "99+" : cartCount}
-                  </span>
+              <Icon
+                className={cn(
+                  "h-5 w-5 shrink-0",
+                  active
+                    ? isGroup
+                      ? "text-groupBuy"
+                      : "text-primary"
+                    : "text-foreground-secondary"
                 )}
-              </span>
+                aria-hidden
+              />
               <span
                 className={cn(
                   "max-w-full truncate",

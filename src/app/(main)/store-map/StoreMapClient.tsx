@@ -7,6 +7,23 @@ import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { STORE_ZONES, searchProductLocations } from "@/lib/mock/consumer-hub";
+import { cn } from "@/lib/utils";
+
+function zoneTone(code: string) {
+  switch (code) {
+    case "CHILL":
+      return { wrap: "bg-info-soft", label: "text-info" };
+    case "FREEZE":
+      return { wrap: "bg-info-soft", label: "text-info" };
+    case "TOOL":
+      return { wrap: "bg-peach-soft", label: "text-caramel" };
+    case "PACK":
+    case "COUNTER":
+      return { wrap: "bg-butter-soft", label: "text-caramel" };
+    default:
+      return { wrap: "bg-caramel-soft", label: "text-caramel" };
+  }
+}
 
 export function StoreMapClient() {
   const [q, setQ] = useState("");
@@ -19,7 +36,7 @@ export function StoreMapClient() {
   return (
     <div className="space-y-8 page-enter">
       <header className="space-y-3">
-        <h1 className="text-2xl font-black text-foreground">門市商品地圖</h1>
+        <h1 className="text-2xl font-bold text-caramel">門市商品地圖</h1>
         <p className="text-sm text-foreground-secondary">
           第一階段提供文字位置查詢與簡易分區圖。不做即時定位、Beacon 或 AR。
         </p>
@@ -43,22 +60,28 @@ export function StoreMapClient() {
       </header>
 
       <section>
-        <SectionHeader title="門市平面分區" accentClass="bg-success" />
+        <SectionHeader title="門市平面分區" accentClass="bg-caramel" />
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {STORE_ZONES.map((z) => (
-            <div key={z.code} className="rounded-[16px] border border-border bg-success-soft p-3">
-              <p className="text-xs font-bold text-success">{z.code}</p>
-              <p className="text-sm font-black text-foreground">{z.name}</p>
-              {z.hint && (
-                <p className="mt-1 text-[11px] text-foreground-secondary">{z.hint}</p>
-              )}
-            </div>
-          ))}
+          {STORE_ZONES.map((z) => {
+            const tone = zoneTone(z.code);
+            return (
+              <div
+                key={z.code}
+                className={cn("rounded-card border border-border-soft p-3", tone.wrap)}
+              >
+                <p className={cn("text-xs font-bold", tone.label)}>{z.code}</p>
+                <p className="text-sm font-bold text-foreground">{z.name}</p>
+                {z.hint && (
+                  <p className="mt-1 text-[11px] text-foreground-secondary">{z.hint}</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 
       <section className="space-y-3">
-        <SectionHeader title="查詢結果" accentClass="bg-info" />
+        <SectionHeader title="查詢結果" accentClass="bg-primary" />
         {!submitted && (
           <p className="text-sm text-foreground-secondary">輸入關鍵字後顯示區域／貨架／層架。</p>
         )}

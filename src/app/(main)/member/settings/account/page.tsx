@@ -86,12 +86,12 @@ export default function AccountSettingsPage() {
     <RequireAuth>
       <div className="mx-auto max-w-lg space-y-5 pb-4">
         <div className="flex items-center gap-3">
-          <Link href={APP_ROUTES.member}><ArrowLeft className="h-5 w-5 text-[#173F75]" /></Link>
-          <h1 className="text-xl font-bold text-[#173F75]">帳號與隱私</h1>
+          <Link href={APP_ROUTES.member}><ArrowLeft className="h-5 w-5 text-caramel" /></Link>
+          <h1 className="text-xl font-bold text-caramel">帳號與隱私</h1>
         </div>
 
-        <div className="rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)] space-y-3">
-          <h2 className="font-semibold text-[#173F75]">帳號資訊</h2>
+        <div className="rounded-[20px] bg-surface p-5 shadow-card space-y-3">
+          <h2 className="font-semibold text-caramel">帳號資訊</h2>
           <div>
             <p className="text-xs text-foreground-secondary">登入 Email</p>
             <p className="text-foreground">{email || "—"}</p>
@@ -101,27 +101,27 @@ export default function AccountSettingsPage() {
             <p className="text-foreground">{maskPhone(phone)}</p>
           </div>
           <div className="flex gap-3 pt-2">
-            <Link href={APP_ROUTES.privacy} className="text-sm text-[#173F75] underline">隱私權政策</Link>
-            <Link href={APP_ROUTES.terms} className="text-sm text-[#173F75] underline">使用條款</Link>
+            <Link href={APP_ROUTES.privacy} className="text-sm text-caramel underline">隱私權政策</Link>
+            <Link href={APP_ROUTES.terms} className="text-sm text-caramel underline">使用條款</Link>
           </div>
         </div>
 
-        <div className="rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)] space-y-3">
-          <h2 className="font-semibold text-[#173F75]">修改密碼</h2>
+        <div className="rounded-[20px] bg-surface p-5 shadow-card space-y-3">
+          <h2 className="font-semibold text-caramel">修改密碼</h2>
           <Input type="password" className="min-h-12" placeholder="新密碼（至少 8 碼）" value={password} onChange={(e) => setPassword(e.target.value)} />
           <Input type="password" className="min-h-12" placeholder="確認新密碼" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-          <Button className="min-h-11 w-full bg-[#173F75]" onClick={changePassword} disabled={saving}>更新密碼</Button>
+          <Button className="min-h-11 w-full bg-caramel" onClick={changePassword} disabled={saving}>更新密碼</Button>
         </div>
 
-        <div className="rounded-[20px] border border-red-100 bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)] space-y-3">
-          <h2 className="font-semibold text-[#DC2626]">刪除帳號申請</h2>
+        <div className="rounded-[20px] border border-red-100 bg-surface p-5 shadow-card space-y-3">
+          <h2 className="font-semibold text-error">刪除帳號申請</h2>
           <p className="text-sm text-foreground-secondary">提交申請後，我們將由客服人員審核處理。帳號不會立即刪除。</p>
           <Input className="min-h-12" placeholder="申請原因（選填）" value={reason} onChange={(e) => setReason(e.target.value)} />
           <Input className="min-h-12" placeholder='請輸入「刪除帳號」以確認' value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} />
-          <Button variant="outline" className="min-h-11 w-full border-[#DC2626] text-[#DC2626]" onClick={requestDeletion} disabled={saving}>提交刪除申請</Button>
+          <Button variant="outline" className="min-h-11 w-full border-error text-error" onClick={requestDeletion} disabled={saving}>提交刪除申請</Button>
         </div>
 
-        {error && <p className="text-sm text-[#DC2626]">{error}</p>}
+        {error && <p className="text-sm text-error">{error}</p>}
         {message && <p className="text-sm text-green-700">{message}</p>}
       </div>
     </RequireAuth>

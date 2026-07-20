@@ -1,1 +1,1 @@
-export { ServiceHubGrid, ServiceHubCard } from "./ServiceHubGrid";
+export { ServiceHubCard, ServiceHubGrid } from "@/components/consumer/ServiceHubGrid";

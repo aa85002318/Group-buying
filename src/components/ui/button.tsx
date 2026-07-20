@@ -3,23 +3,28 @@ import { cn } from "@/lib/utils";
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-button text-sm font-bold transition duration-250 ease-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:scale-[0.98] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0",
+  "inline-flex items-center justify-center gap-2 rounded-button text-sm font-bold transition duration-250 ease-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:scale-[0.98] disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-disabled disabled:text-white disabled:opacity-100 disabled:hover:translate-y-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-brand hover:-translate-y-0.5 hover:bg-primary-hover",
+          "bg-primary text-white shadow-card hover:bg-primary-hover active:bg-primary-active",
+        primary:
+          "bg-primary text-white shadow-card hover:bg-primary-hover active:bg-primary-active",
         groupBuy:
-          "bg-groupBuy text-white shadow-brand hover:-translate-y-0.5 hover:bg-groupBuy-hover focus-visible:ring-groupBuy/40",
+          "bg-groupBuy text-white shadow-card hover:bg-groupBuy-hover focus-visible:ring-groupBuy/40",
         promo:
-          "bg-groupBuy text-white shadow-sticker hover:-translate-y-0.5 hover:bg-groupBuy-hover",
+          "bg-groupBuy text-white shadow-card hover:bg-groupBuy-hover focus-visible:ring-groupBuy/40",
         secondary:
-          "border-2 border-primary bg-surface text-primary hover:bg-surface-soft",
+          "border-2 border-primary bg-surface text-primary hover:bg-primary-soft",
+        caramel:
+          "bg-caramel text-white shadow-card hover:bg-caramel-hover focus-visible:ring-caramel/40",
         outline:
-          "border border-border bg-transparent text-foreground hover:bg-surface-soft",
-        ghost: "bg-transparent text-foreground-secondary hover:bg-surface-soft",
-        destructive: "bg-error text-white hover:opacity-90 focus-visible:ring-error/40",
-        mint: "bg-success text-white shadow-card hover:-translate-y-0.5 hover:opacity-95",
+          "border border-border bg-transparent text-caramel hover:bg-peach-soft",
+        ghost: "bg-transparent text-caramel hover:bg-caramel-soft",
+        destructive:
+          "bg-error text-white hover:opacity-90 focus-visible:ring-error/40",
+        mint: "bg-success text-white shadow-card hover:opacity-95",
       },
       size: {
         default: "h-11 min-h-11 px-5 py-2",

@@ -199,15 +199,15 @@ export default function LoginClient() {
         )}
 
         {errorMessage && (
-          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{errorMessage}</p>
+          <p className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-foreground">{errorMessage}</p>
         )}
 
         {loginError && loginError !== "email_not_confirmed" && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">{loginError}</p>
+          <p className="rounded-lg bg-error-soft px-3 py-2 text-sm text-error">{loginError}</p>
         )}
 
         {loginError === "email_not_confirmed" && (
-          <div className="space-y-2 rounded-lg bg-amber-50 px-3 py-3 text-sm text-amber-900">
+          <div className="space-y-2 rounded-lg bg-warning-soft px-3 py-3 text-sm text-foreground">
             <p>此帳號尚未完成 Email 驗證，請先至信箱點擊驗證連結後再登入。</p>
             <Button
               type="button"

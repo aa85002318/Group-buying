@@ -41,8 +41,8 @@ export function CarrierForm({ mode, initialName = "", initialCode = "", onSubmit
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
-      <h2 className="text-lg font-bold text-[#173F75]">{mode === "create" ? "新增手機條碼" : "編輯載具"}</h2>
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-[20px] bg-surface p-5 shadow-card">
+      <h2 className="text-lg font-bold text-caramel">{mode === "create" ? "新增手機條碼" : "編輯載具"}</h2>
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-foreground">
@@ -73,10 +73,10 @@ export function CarrierForm({ mode, initialName = "", initialCode = "", onSubmit
         <p className="mt-1 text-xs text-foreground-secondary">請輸入以 / 開頭的 8 碼手機條碼</p>
       </div>
 
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-[#DC2626]">{error}</p>}
+      {error && <p className="rounded-lg bg-error-soft px-3 py-2 text-sm text-error">{error}</p>}
 
       <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={saving} className="min-h-11 flex-1 bg-primary hover:bg-[#D01F50]">
+        <Button type="submit" disabled={saving} className="min-h-11 flex-1 bg-primary hover:bg-primary-hover">
           {saving ? "儲存中…" : "儲存"}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={saving} className="min-h-11">

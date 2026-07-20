@@ -132,10 +132,10 @@ export default function MemberProfilePage() {
     <RequireAuth>
       <div className="mx-auto max-w-lg space-y-5 pb-4">
         <div className="flex items-center gap-3">
-          <Link href={APP_ROUTES.profile} className="text-[#173F75]">
+          <Link href={APP_ROUTES.profile} className="text-caramel">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-xl font-bold text-[#173F75]">會員資料</h1>
+          <h1 className="text-xl font-bold text-caramel">會員資料</h1>
         </div>
 
         {loading ? (
@@ -152,7 +152,7 @@ export default function MemberProfilePage() {
               />
             )}
 
-            <form onSubmit={save} className="space-y-4 rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+            <form onSubmit={save} className="space-y-4 rounded-[20px] bg-surface p-5 shadow-card">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-foreground">姓名 *</label>
                 <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} className="min-h-12" required />
@@ -171,7 +171,7 @@ export default function MemberProfilePage() {
 
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-foreground">Email</label>
-                <Input type="email" value={email} disabled className="min-h-12 bg-[#F7F8FC]" />
+                <Input type="email" value={email} disabled className="min-h-12 bg-surface-soft" />
                 <p className="mt-1 text-xs text-foreground-secondary">Email 為登入帳號，如需變更請聯絡客服</p>
               </div>
 
@@ -244,10 +244,10 @@ export default function MemberProfilePage() {
                 />
               </div>
 
-              {errorMessage && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-[#DC2626]">{errorMessage}</p>}
+              {errorMessage && <p className="rounded-lg bg-error-soft px-3 py-2 text-sm text-error">{errorMessage}</p>}
               {successMessage && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{successMessage}</p>}
 
-              <Button type="submit" disabled={saving} className="min-h-11 w-full bg-primary hover:bg-[#D01F50]">
+              <Button type="submit" disabled={saving} className="min-h-11 w-full bg-primary hover:bg-primary-hover">
                 {saving ? "儲存中…" : "儲存"}
               </Button>
             </form>

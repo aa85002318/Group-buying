@@ -47,7 +47,7 @@ export function HomeSearchBar({
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={placeholder}
-        className="h-12 w-full rounded-2xl border border-border bg-surface py-2 pl-10 pr-12 text-sm text-foreground outline-none transition placeholder:text-foreground-secondary focus:border-primary focus:shadow-brand-ring"
+        className="h-12 w-full rounded-2xl border border-border bg-cream-light py-2 pl-10 pr-12 text-sm text-foreground outline-none transition placeholder:text-foreground-muted focus:border-primary focus:shadow-brand-ring"
       />
       <button
         type="button"

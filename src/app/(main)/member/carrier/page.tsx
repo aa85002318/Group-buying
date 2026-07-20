@@ -98,10 +98,10 @@ export default function MemberCarrierPage() {
     <RequireAuth>
       <div className="space-y-5 pb-4">
         <div className="flex items-center gap-3">
-          <Link href={APP_ROUTES.profile} className="text-[#173F75]">
+          <Link href={APP_ROUTES.profile} className="text-caramel">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-xl font-bold text-[#173F75]">我的發票載具</h1>
+          <h1 className="text-xl font-bold text-caramel">我的發票載具</h1>
         </div>
 
         {successMessage && (
@@ -111,12 +111,12 @@ export default function MemberCarrierPage() {
         {loading ? (
           <p className="py-12 text-center text-foreground-secondary">載入中…</p>
         ) : offline && !carrier ? (
-          <p className="rounded-[20px] bg-amber-50 px-4 py-6 text-center text-sm text-amber-900">
+          <p className="rounded-[20px] bg-warning-soft px-4 py-6 text-center text-sm text-foreground">
             目前無法連線，請重新連線後開啟發票載具
           </p>
         ) : mode === "create" && !carrier ? (
           <div className="space-y-5">
-            <div className="rounded-[20px] bg-surface p-8 text-center shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+            <div className="rounded-[20px] bg-surface p-8 text-center shadow-card">
               <Barcode className="mx-auto h-14 w-14 text-primary" strokeWidth={1.5} />
               <h2 className="mt-4 text-lg font-bold text-foreground">尚未設定發票載具</h2>
               <p className="mt-2 text-sm text-foreground-secondary">新增手機條碼後，結帳時可直接開啟出示</p>
@@ -137,7 +137,7 @@ export default function MemberCarrierPage() {
           />
         ) : carrier ? (
           <div className="space-y-4">
-            <div className="rounded-[20px] bg-surface p-6 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+            <div className="rounded-[20px] bg-surface p-6 shadow-card">
               <p className="text-sm font-medium text-foreground-secondary">{carrier.carrier_name ?? "我的手機條碼"}</p>
               <div className="mt-4 flex justify-center rounded-[20px] bg-surface px-4 py-6">
                 <InvoiceBarcode value={carrier.carrier_code} />
@@ -145,7 +145,7 @@ export default function MemberCarrierPage() {
               <button
                 type="button"
                 onClick={copyBarcode}
-                className="mt-3 w-full text-center font-mono text-sm tracking-wider text-[#173F75] underline-offset-2 hover:underline"
+                className="mt-3 w-full text-center font-mono text-sm tracking-wider text-caramel underline-offset-2 hover:underline"
               >
                 {carrier.carrier_code}
               </button>
@@ -165,7 +165,7 @@ export default function MemberCarrierPage() {
               <Button
                 type="button"
                 onClick={() => setZoomOpen(true)}
-                className="min-h-11 flex-1 bg-[#173F75] hover:bg-[#122E57]"
+                className="min-h-11 flex-1 bg-caramel hover:bg-caramel-hover"
               >
                 <Maximize2 className="mr-2 h-4 w-4" />
                 放大條碼
@@ -178,15 +178,15 @@ export default function MemberCarrierPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setDeleteConfirm(true)}
-                className="min-h-11 flex-1 border-[#DC2626] text-[#DC2626] hover:bg-red-50"
+                className="min-h-11 flex-1 border-error text-error hover:bg-error-soft"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 刪除載具
               </Button>
             </div>
 
-            <div className="rounded-[20px] bg-[#F7F8FC] p-4 text-sm text-foreground-secondary">
-              <p className="font-medium text-[#173F75]">使用提醒</p>
+            <div className="rounded-[20px] bg-surface-soft p-4 text-sm text-foreground-secondary">
+              <p className="font-medium text-caramel">使用提醒</p>
               <ul className="mt-2 list-inside list-disc space-y-1">
                 <li>結帳前請確認條碼清晰可掃</li>
                 <li>建議將螢幕亮度調高後出示</li>
@@ -212,7 +212,7 @@ export default function MemberCarrierPage() {
                 <Button type="button" variant="outline" className="min-h-11 flex-1" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
                   取消
                 </Button>
-                <Button type="button" className="min-h-11 flex-1 bg-[#DC2626] hover:bg-[#B91C1C]" onClick={deleteCarrier} disabled={deleting}>
+                <Button type="button" className="min-h-11 flex-1 bg-error hover:opacity-90" onClick={deleteCarrier} disabled={deleting}>
                   {deleting ? "刪除中…" : "確定刪除"}
                 </Button>
               </div>

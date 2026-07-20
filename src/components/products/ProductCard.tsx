@@ -96,7 +96,7 @@ export function ProductCard({
   };
 
   return (
-    <article className="group flex min-w-0 flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card">
+    <article className="group flex min-w-0 flex-col overflow-hidden rounded-card border border-border-soft bg-surface shadow-card">
       <Link href={link} className="relative block aspect-square overflow-hidden bg-surface-soft">
         <div className="absolute right-2 top-2 z-10">
           <FavoriteButton productId={id} size="sm" />

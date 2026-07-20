@@ -187,7 +187,7 @@ export default function SupportPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="flex items-center gap-2 text-sm font-medium text-[#173F75]">
+        <h2 className="flex items-center gap-2 text-sm font-medium text-caramel">
           <Headphones className="h-4 w-4" />
           快速協助
         </h2>
@@ -196,7 +196,7 @@ export default function SupportPage() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 rounded-[18px] bg-surface px-4 py-3 shadow-[0_4px_24px_rgba(23,63,117,0.06)]"
+              className="flex items-center gap-3 rounded-[18px] bg-surface px-4 py-3 shadow-card"
             >
               <item.icon className="h-5 w-5 shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
@@ -209,8 +209,8 @@ export default function SupportPage() {
         </div>
       </section>
 
-      <section className="rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
-        <h2 className="flex items-center gap-2 font-medium text-[#173F75]">
+      <section className="rounded-[20px] bg-surface p-5 shadow-card">
+        <h2 className="flex items-center gap-2 font-medium text-caramel">
           <FileText className="h-4 w-4" />
           聯絡表單
         </h2>
@@ -246,7 +246,7 @@ export default function SupportPage() {
               onChange={(e) => setMessage(e.target.value)}
               required
             />
-            <Button type="submit" className="min-h-11 w-full bg-primary hover:bg-[#C91F4D]" disabled={submitting}>
+            <Button type="submit" className="min-h-11 w-full bg-primary hover:bg-primary-hover" disabled={submitting}>
               {submitting ? "送出中…" : "送出問題"}
             </Button>
           </form>

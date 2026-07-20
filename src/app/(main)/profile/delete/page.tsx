@@ -81,7 +81,7 @@ export default function ProfileDeletePage() {
         <p className="mt-1 text-sm text-muted-foreground">目前帳號：{email || "—"}</p>
       </div>
 
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+      <div className="rounded-xl border border-warning/30 bg-warning-soft p-4 text-sm text-foreground">
         <p className="font-medium">刪除會員前請先確認</p>
         <p className="mt-1 leading-relaxed">
           請確認您的訂單皆已完成（含取貨）。若尚有等待中的訂單，請先{" "}
@@ -115,7 +115,7 @@ export default function ProfileDeletePage() {
       </div>
 
       {isStaff ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="rounded-xl border border-warning/30 bg-warning-soft p-4 text-sm text-foreground">
           門市／管理帳號無法於前台自行刪除，請透過客服協助處理。
         </div>
       ) : (

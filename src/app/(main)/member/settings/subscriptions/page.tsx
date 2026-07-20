@@ -86,7 +86,7 @@ export default function SubscriptionSettingsPage() {
               </span>
               <input
                 type="checkbox"
-                className="h-5 w-5 accent-[#E9285C]"
+                className="h-5 w-5 accent-primary"
                 checked={sub[item.key]}
                 onChange={(e) => setSub({ ...sub, [item.key]: e.target.checked })}
               />

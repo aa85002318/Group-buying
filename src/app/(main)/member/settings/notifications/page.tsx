@@ -59,11 +59,11 @@ export default function NotificationSettingsPage() {
     <RequireAuth>
       <div className="space-y-5 pb-4">
         <div className="flex items-center gap-3">
-          <Link href={APP_ROUTES.member}><ArrowLeft className="h-5 w-5 text-[#173F75]" /></Link>
-          <h1 className="text-xl font-bold text-[#173F75]">通知設定</h1>
+          <Link href={APP_ROUTES.member}><ArrowLeft className="h-5 w-5 text-caramel" /></Link>
+          <h1 className="text-xl font-bold text-caramel">通知設定</h1>
         </div>
 
-        <div className="space-y-3 rounded-[20px] bg-surface p-5 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+        <div className="space-y-3 rounded-[20px] bg-surface p-5 shadow-card">
           {toggles.map((t) => (
             <label key={t.key} className="flex min-h-11 items-center justify-between gap-3">
               <span className="text-foreground">{t.label}</span>

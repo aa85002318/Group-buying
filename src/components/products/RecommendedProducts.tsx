@@ -114,7 +114,7 @@ export function RecommendedProducts({ productId }: RecommendedProductsProps) {
 
       {/* 手機滑軌 */}
       <div
-        className="mx-auto flex h-1.5 w-28 items-center rounded-full bg-[#E8DDD4] px-0.5 md:hidden"
+        className="mx-auto flex h-1.5 w-28 items-center rounded-full bg-border px-0.5 md:hidden"
         aria-hidden
       >
         <div

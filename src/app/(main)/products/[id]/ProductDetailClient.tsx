@@ -211,7 +211,7 @@ export default function ProductDetailClient({ id }: { id: string }) {
         )}
 
         {product.disclaimer && (
-          <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">{product.disclaimer}</p>
+          <p className="rounded-lg bg-butter-soft p-3 text-xs text-caramel">{product.disclaimer}</p>
         )}
 
         {ref && <p className="text-xs text-coffee">推薦碼：{ref}</p>}

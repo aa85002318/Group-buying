@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { HomeSearchBar } from "@/components/home/HomeSearchBar";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
-import { ServiceHubGrid } from "@/components/home/ServiceHubGrid";
+import { ServiceHubGrid } from "@/components/consumer/ServiceHubGrid";
 import { PopularCategories } from "@/components/home/PopularCategories";
 import {
   NewProductsSection,

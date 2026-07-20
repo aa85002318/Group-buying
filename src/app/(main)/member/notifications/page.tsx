@@ -72,8 +72,8 @@ export default function MemberNotificationsPage() {
       <div className="space-y-5 pb-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link href={APP_ROUTES.member}><ArrowLeft className="h-5 w-5 text-[#173F75]" /></Link>
-            <h1 className="text-xl font-bold text-[#173F75]">通知中心</h1>
+            <Link href={APP_ROUTES.member}><ArrowLeft className="h-5 w-5 text-caramel" /></Link>
+            <h1 className="text-xl font-bold text-caramel">通知中心</h1>
           </div>
           <Button size="sm" variant="outline" onClick={markAllRead}>全部已讀</Button>
         </div>
@@ -89,17 +89,17 @@ export default function MemberNotificationsPage() {
         {loading ? (
           <p className="text-center text-foreground-secondary">載入中…</p>
         ) : items.length === 0 ? (
-          <div className="rounded-[20px] bg-surface py-16 text-center text-foreground-secondary shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+          <div className="rounded-[20px] bg-surface py-16 text-center text-foreground-secondary shadow-card">
             <Bell className="mx-auto h-10 w-10 opacity-40" />
             <p className="mt-3">目前沒有通知</p>
           </div>
         ) : (
-          <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+          <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-card">
             {items.map((n) => {
               const Icon = ICONS[n.notification_type] ?? Bell;
               return (
-                <button key={n.id} type="button" onClick={() => openNotification(n)} className={`flex w-full gap-3 px-4 py-4 text-left hover:bg-[#F7F8FC] ${!n.is_read ? "bg-[#FFF5F7]/50" : ""}`}>
-                  <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#173F75]" />
+                <button key={n.id} type="button" onClick={() => openNotification(n)} className={`flex w-full gap-3 px-4 py-4 text-left hover:bg-surface-soft ${!n.is_read ? "bg-primary-soft/50" : ""}`}>
+                  <Icon className="mt-0.5 h-5 w-5 shrink-0 text-caramel" />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="font-medium text-foreground">{n.title}</span>

@@ -21,13 +21,13 @@ export function NewsCard({ item }: { item: NewsItem }) {
       aria-label={item.title}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-surface-soft px-2.5 py-0.5 text-[11px] font-bold text-primary">
+        <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-[11px] font-bold text-primary">
           {CATEGORY_LABEL[item.category] ?? item.category}
         </span>
         {item.pinned && <StatusBadge tone="info" label="置頂" />}
         {item.important && <StatusBadge tone="error" label="重要" />}
       </div>
-      <h3 className="mt-2 text-base font-black text-foreground">{item.title}</h3>
+      <h3 className="mt-2 text-base font-bold text-foreground">{item.title}</h3>
       <p className="mt-1 line-clamp-2 text-sm text-foreground-secondary">{item.summary}</p>
       <p className="mt-3 text-xs text-foreground-secondary">{item.publishedAt}</p>
     </Link>

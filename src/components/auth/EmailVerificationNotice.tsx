@@ -30,9 +30,9 @@ export function EmailVerificationNotice({
       : "請至信箱點擊驗證連結後再結帳。");
 
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
+    <div className="rounded-xl border border-warning/30 bg-warning-soft p-4 text-foreground">
       <p className={compact ? "text-sm font-medium" : "font-medium"}>{title}</p>
-      <p className="mt-1 text-sm text-amber-900/90">{body}</p>
+      <p className="mt-1 text-sm text-foreground-secondary">{body}</p>
       <div className={`flex flex-wrap gap-2 ${compact ? "mt-3" : "mt-4"}`}>
         {onResend && (
           <Button type="button" size="sm" variant="outline" disabled={resending} onClick={() => void onResend()}>

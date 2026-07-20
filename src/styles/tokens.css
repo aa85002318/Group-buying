@@ -1,7 +1,7 @@
 /**
- * CHIMEIDIY App V1 — Design Tokens
- * Warm cream · coral · caramel baking lifestyle
- * RGB channels enable Tailwind opacity modifiers (bg-primary/15).
+ * CHIMEIDIY Version 1 — Frontend Design Tokens
+ * Coral · Cream · Caramel · Butter · Peach
+ * RGB channels keep Tailwind opacity modifiers (bg-primary/15).
  */
 
 :root {
@@ -10,92 +10,106 @@
   --primary-rgb: 255 107 107;
   --primary-hover: #f05a5a;
   --primary-hover-rgb: 240 90 90;
-  --primary-pressed: #e94f4f;
-  --primary-pressed-rgb: 233 79 79;
-  --primary-soft: #fff1ef;
-  --primary-light: #ffe8e4;
+  --primary-active: #e95050;
+  --primary-active-rgb: 233 80 80;
+  --primary-pressed: #e95050;
+  --primary-pressed-rgb: 233 80 80;
+  --primary-soft: #fff0ee;
+  --primary-subtle: #fff7f5;
+  --primary-light: #fff7f5;
 
   /* Cream */
+  --cream: #fff7f1;
+  --cream-rgb: 255 247 241;
+  --cream-light: #fffbf8;
+  --cream-dark: #f7ede5;
   --cream-white: #fff7f1;
-  --cream-soft: #fff9f5;
-  --cream-soft-rgb: 255 249 245;
+  --cream-soft: #fffbf8;
+  --cream-soft-rgb: 255 251 248;
 
   /* Caramel */
   --caramel: #8b572a;
   --caramel-rgb: 139 87 42;
-  --caramel-hover: #75471f;
-  --caramel-hover-rgb: 117 71 31;
-  --caramel-light: #a56a36;
-  --caramel-soft: #f7f1eb;
+  --caramel-hover: #73461f;
+  --caramel-hover-rgb: 115 70 31;
+  --caramel-light: #a86b38;
+  --caramel-soft: #f5ede6;
 
   /* Butter */
   --butter: #ffd97a;
   --butter-rgb: 255 217 122;
-  --butter-soft: #fff5d8;
+  --butter-hover: #f5c95d;
+  --butter-soft: #fff4d3;
 
   /* Peach */
   --peach: #ffe3d6;
   --peach-rgb: 255 227 214;
-  --peach-soft: #fff5f0;
+  --peach-hover: #ffd4c3;
+  --peach-soft: #fff3ec;
 
   /* Group Buy */
-  --group-buy: #ff9a3d;
-  --group-buy-rgb: 255 154 61;
-  --group-buy-hover: #f0821f;
-  --group-buy-hover-rgb: 240 130 31;
-  --group-buy-soft: #fff2e5;
+  --group-buy: #f89a4b;
+  --group-buy-rgb: 248 154 75;
+  --group-buy-hover: #e98234;
+  --group-buy-hover-rgb: 233 130 52;
+  --group-buy-soft: #fff0e2;
+  --group-buy-subtle: #fff8f1;
 
-  /* Surface */
-  --background: #fff9f5;
-  --background-rgb: 255 249 245;
+  /* Background / Surface */
+  --background: #fff7f1;
+  --background-rgb: 255 247 241;
+  --background-soft: #fffbf8;
+  --background-soft-rgb: 255 251 248;
   --surface: #ffffff;
   --surface-rgb: 255 255 255;
-  --surface-soft: #fff7f2;
-  --surface-soft-rgb: 255 247 242;
-  --surface-warm: #fff4ee;
-  --surface-warm-rgb: 255 244 238;
+  --surface-soft: #fff9f5;
+  --surface-soft-rgb: 255 249 245;
+  --surface-warm: #fff3ec;
+  --surface-warm-rgb: 255 243 236;
 
   /* Text */
-  --text-primary: #4a352a;
-  --text-primary-rgb: 74 53 42;
+  --text-primary: #4a3124;
+  --text-primary-rgb: 74 49 36;
   --text-secondary: #80685b;
   --text-secondary-rgb: 128 104 91;
-  --text-muted: #b6a79d;
-  --text-muted-rgb: 182 167 157;
+  --text-muted: #aa9a90;
+  --text-muted-rgb: 170 154 144;
   --text-inverse: #ffffff;
 
   /* Border */
-  --border: #f0e3da;
-  --border-rgb: 240 227 218;
-  --border-strong: #e4d2c5;
-  --border-strong-rgb: 228 210 197;
+  --border: #efdcd0;
+  --border-rgb: 239 220 208;
+  --border-soft: #f5e9e1;
+  --border-soft-rgb: 245 233 225;
+  --border-strong: #ddbfae;
+  --border-strong-rgb: 221 191 174;
 
   /* Commerce */
-  --price: #ff5b4a;
-  --price-rgb: 255 91 74;
-  --price-soft: #fff0ed;
+  --price: #f14f4f;
+  --price-rgb: 241 79 79;
+  --price-soft: #fff0ee;
 
   /* Status */
-  --success: #4ba66a;
-  --success-rgb: 75 166 106;
-  --success-soft: #eaf6ee;
-  --warning: #f6b84a;
-  --warning-rgb: 246 184 74;
-  --warning-soft: #fff5db;
-  --error: #e35b5b;
-  --error-rgb: 227 91 91;
-  --error-soft: #fdebeb;
-  --info: #4d8edb;
-  --info-rgb: 77 142 219;
-  --info-soft: #eaf3fc;
-  --disabled: #afa49c;
-  --disabled-rgb: 175 164 156;
+  --success: #4c9b6a;
+  --success-rgb: 76 155 106;
+  --success-soft: #eaf5ee;
+  --warning: #e8a83d;
+  --warning-rgb: 232 168 61;
+  --warning-soft: #fff4d8;
+  --error: #d94f55;
+  --error-rgb: 217 79 85;
+  --error-soft: #fceaec;
+  --info: #4e89c7;
+  --info-rgb: 78 137 199;
+  --info-soft: #ebf3fa;
+  --disabled: #a99d95;
+  --disabled-rgb: 169 157 149;
   --disabled-soft: #f2eeeb;
 
   /* Overlay / focus */
-  --overlay: rgba(74, 53, 42, 0.45);
+  --overlay: rgba(74, 49, 36, 0.45);
   --ring-primary: rgba(255, 107, 107, 0.35);
-  --ring-group-buy: rgba(255, 154, 61, 0.35);
+  --ring-group-buy: rgba(248, 154, 75, 0.35);
 
   /* Radius */
   --radius-sm: 10px;
@@ -112,17 +126,17 @@
   --radius-hero: 20px;
   --radius-sheet: 24px;
 
-  /* Shadow — soft only */
-  --shadow-card: 0 2px 8px rgba(74, 53, 42, 0.04);
-  --shadow-lift: 0 6px 18px rgba(74, 53, 42, 0.08);
+  /* Shadow — soft only (caramel-based) */
+  --shadow-card: 0 2px 8px rgba(74, 49, 36, 0.04);
+  --shadow-lift: 0 6px 18px rgba(74, 49, 36, 0.08);
   --shadow-brand: 0 6px 18px rgba(255, 107, 107, 0.12);
-  --shadow-sticker: 0 2px 8px rgba(74, 53, 42, 0.06);
-  --shadow-header: 0 2px 8px rgba(74, 53, 42, 0.04);
+  --shadow-sticker: 0 2px 8px rgba(74, 49, 36, 0.06);
+  --shadow-header: 0 2px 8px rgba(74, 49, 36, 0.04);
 
-  /* Gradient — subtle, no neon */
-  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, #ff8a7a 100%);
+  /* Gradient — warm, no neon / purple */
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, #ff8f8f 100%);
   --gradient-promo: linear-gradient(135deg, var(--butter) 0%, var(--group-buy) 100%);
-  --gradient-hero: linear-gradient(135deg, var(--cream-white) 0%, var(--peach) 55%, var(--butter-soft) 100%);
+  --gradient-hero: linear-gradient(135deg, var(--cream) 0%, var(--peach-soft) 55%, var(--butter-soft) 100%);
   --gradient-mint: linear-gradient(135deg, var(--success) 0%, var(--info) 100%);
 
   /* Motion */

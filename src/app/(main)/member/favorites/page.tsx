@@ -43,14 +43,14 @@ export default function MemberFavoritesPage() {
     <RequireAuth>
       <div className="space-y-5 pb-4">
         <div className="flex items-center gap-3">
-          <Link href={APP_ROUTES.member}><ArrowLeft className="h-5 w-5 text-[#173F75]" /></Link>
-          <h1 className="text-xl font-bold text-[#173F75]">我的收藏</h1>
+          <Link href={APP_ROUTES.member}><ArrowLeft className="h-5 w-5 text-caramel" /></Link>
+          <h1 className="text-xl font-bold text-caramel">我的收藏</h1>
         </div>
 
         {loading ? (
           <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-24 animate-pulse rounded-[20px] bg-surface" />)}</div>
         ) : favorites.length === 0 ? (
-          <div className="rounded-[20px] bg-surface py-16 text-center shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+          <div className="rounded-[20px] bg-surface py-16 text-center shadow-card">
             <HeartOff className="mx-auto h-12 w-12 text-foreground-secondary" />
             <p className="mt-4 text-foreground-secondary">目前還沒有收藏商品</p>
             <Link href={APP_ROUTES.products}><Button className="mt-4 bg-primary">去逛逛商品</Button></Link>
@@ -63,18 +63,18 @@ export default function MemberFavoritesPage() {
               const inactive = p.is_active === false || p.status === "inactive";
               const soldOut = p.stock <= 0 || p.status === "sold_out";
               return (
-                <div key={fav.id} className="flex gap-3 rounded-[20px] bg-surface p-4 shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#F7F8FC]">
+                <div key={fav.id} className="flex gap-3 rounded-[20px] bg-surface p-4 shadow-card">
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-surface-soft">
                     {p.image_url && <Image src={p.image_url} alt={p.name} fill className="object-cover" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <Link href={`/products/${p.id}`} className="font-medium text-foreground line-clamp-2">{p.name}</Link>
                     <p className="mt-1 font-bold text-primary">{formatCurrency(Number(p.price))}</p>
-                    {inactive && <p className="text-xs text-[#DC2626]">商品目前已下架</p>}
-                    {!inactive && soldOut && <p className="text-xs text-[#DC2626]">已售完</p>}
+                    {inactive && <p className="text-xs text-error">商品目前已下架</p>}
+                    {!inactive && soldOut && <p className="text-xs text-error">已售完</p>}
                     <div className="mt-2 flex gap-2">
                       {!inactive && !soldOut && (
-                        <Button size="sm" className="bg-[#173F75]" onClick={() => addItem({ productId: p.id, name: p.name, price: Number(p.price), imageUrl: p.image_url, quantity: 1 })}>
+                        <Button size="sm" className="bg-caramel" onClick={() => addItem({ productId: p.id, name: p.name, price: Number(p.price), imageUrl: p.image_url, quantity: 1 })}>
                           加入購物車
                         </Button>
                       )}

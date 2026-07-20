@@ -38,8 +38,8 @@ export default function StoresPage() {
   return (
     <div className="space-y-5 pb-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#173F75]">門市資訊</h1>
-        <Link href={APP_ROUTES.member} className="text-sm text-[#173F75]">返回我的</Link>
+        <h1 className="text-xl font-bold text-caramel">門市資訊</h1>
+        <Link href={APP_ROUTES.member} className="text-sm text-caramel">返回我的</Link>
       </div>
 
       {loading ? (
@@ -48,23 +48,23 @@ export default function StoresPage() {
         <p className="py-12 text-center text-foreground-secondary">目前尚無門市資訊</p>
       ) : (
         sorted.map((store) => (
-          <article key={store.id} className="overflow-hidden rounded-[20px] bg-surface shadow-[0_4px_24px_rgba(23,63,117,0.06)]">
+          <article key={store.id} className="overflow-hidden rounded-[20px] bg-surface shadow-card">
             {store.image_url && (
               <div className="relative h-40 w-full">
                 <Image src={store.image_url} alt={store.name} fill className="object-cover" />
               </div>
             )}
             <div className="space-y-3 p-5">
-              <h2 className="text-lg font-bold text-[#173F75]">{store.name}</h2>
+              <h2 className="text-lg font-bold text-caramel">{store.name}</h2>
               <p className="flex items-start gap-2 text-sm text-foreground-secondary"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{store.address}</p>
               {store.phone && (
-                <p className="flex items-center gap-2 text-sm"><Phone className="h-4 w-4 text-primary" /><a href={`tel:${store.phone}`} className="text-[#173F75]">{store.phone}</a></p>
+                <p className="flex items-center gap-2 text-sm"><Phone className="h-4 w-4 text-primary" /><a href={`tel:${store.phone}`} className="text-caramel">{store.phone}</a></p>
               )}
               {store.business_hours && <p className="text-sm text-foreground-secondary">營業時間：{store.business_hours}</p>}
               <p className="text-sm text-foreground-secondary">{store.pickup_available !== false ? "✓ 提供團購取貨" : "不提供取貨"}</p>
               <div className="flex flex-wrap gap-2 pt-1">
                 {store.map_url && (
-                  <a href={store.map_url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-xl bg-[#173F75] px-4 text-sm text-white">
+                  <a href={store.map_url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-xl bg-caramel px-4 text-sm text-white">
                     <ExternalLink className="mr-1.5 h-4 w-4" />Google 地圖
                   </a>
                 )}

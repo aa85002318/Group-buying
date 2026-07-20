@@ -28,7 +28,7 @@ export function NetworkStatusBanner() {
   return (
     <div
       className={`fixed left-0 right-0 top-0 z-[80] px-4 py-2 text-center text-sm text-white md:hidden ${
-        online ? "bg-green-600" : "bg-[#173F75]"
+        online ? "bg-success" : "bg-caramel"
       }`}
       style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
     >

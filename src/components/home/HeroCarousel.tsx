@@ -42,7 +42,7 @@ const DEFAULT_SLIDES: HeroSlide[] = [
 
 const TONE_BG: Record<NonNullable<HeroSlide["tone"]>, string> = {
   cream: "bg-hero-gradient",
-  groupBuy: "bg-groupBuy-soft",
+  groupBuy: "bg-groupBuy-subtle",
   recipe: "bg-butter-soft",
 };
 

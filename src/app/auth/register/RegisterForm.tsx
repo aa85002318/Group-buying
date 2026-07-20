@@ -108,7 +108,7 @@ export default function RegisterForm() {
             {sendWarning ? "帳號已建立" : "請查收驗證信"}
           </h1>
           {sendWarning ? (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <p className="rounded-lg bg-warning-soft px-3 py-2 text-sm text-foreground">
               {sendWarning}
               <br />
               請至登入頁按「重新寄送驗證信」。
