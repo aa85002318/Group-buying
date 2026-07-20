@@ -2,15 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { HomeSearchBar } from "@/components/consumer/HomeSearchBar";
-import { SectionHeader } from "@/components/consumer/SectionHeader";
-import { CategoryGrid } from "@/components/home/CategoryGrid";
-import { ProductScrollSection } from "@/components/home/ProductScrollSection";
+import { HomeSearchBar } from "@/components/home/HomeSearchBar";
+import {
+  NewProductsSection,
+  PopularProductsSection,
+} from "@/components/home/NewProductsSection";
 import { getNewThisWeekProducts } from "@/lib/home";
-import { mockCategories, mockProducts } from "@/lib/mock-data";
-import type { Product, ProductCategory } from "@/lib/types/database";
+import { mockProducts } from "@/lib/mock-data";
+import type { Product } from "@/lib/types/database";
+import { cn } from "@/lib/utils";
 
-const QUICK_CATS = [
+const CHIPS = [
+  { label: "全部", href: "/products" },
   { label: "烘焙原料", href: "/products?search=粉" },
   { label: "器具", href: "/products?search=模" },
   { label: "包裝", href: "/products?search=包裝" },
@@ -21,16 +24,13 @@ const QUICK_CATS = [
 
 export function ShopHubClient() {
   const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [categories, setCategories] = useState<ProductCategory[]>(mockCategories);
+  const [active, setActive] = useState(CHIPS[0].label);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/products").then((r) => r.json()),
-      fetch("/api/categories").then((r) => r.json()),
-    ])
-      .then(([p, c]) => {
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((p) => {
         if (p.products?.length) setProducts(p.products);
-        if (c.categories?.length) setCategories(c.categories);
       })
       .catch(() => {});
   }, []);
@@ -39,62 +39,57 @@ export function ShopHubClient() {
   const popular = useMemo(() => products.slice(0, 8), [products]);
 
   return (
-    <div className="space-y-8 page-enter">
-      <header className="space-y-3">
-        <p className="text-xs font-bold text-primary">烘焙材料商城</p>
-        <h1 className="text-2xl font-black text-foreground">CHIMEIDIY 烘焙材料</h1>
-        <p className="text-sm text-foreground-secondary">
-          保留完整商品列表、購物車與結帳流程 — 本頁為入口整理。
-        </p>
+    <div className="space-y-6 pb-2 pt-3">
+      <header className="space-y-2">
+        <h1 className="text-xl font-bold text-foreground">烘焙材料</h1>
+        <p className="text-sm text-foreground-secondary">原料、器具、包裝一次購足</p>
         <HomeSearchBar placeholder="搜尋烘焙材料、品牌、SKU…" />
       </header>
 
-      <CategoryGrid categories={categories} />
-
-      <section>
-        <SectionHeader title="精選分類" href="/categories" />
-        <div className="flex flex-wrap gap-2">
-          {QUICK_CATS.map((c) => (
-            <Link
-              key={c.href}
-              href={c.href}
-              className="inline-flex min-h-11 items-center rounded-full border border-border bg-surface px-4 text-sm font-bold text-foreground hover:bg-surface-soft"
-            >
-              {c.label}
-            </Link>
-          ))}
+      <div className="-mx-4 overflow-x-auto px-4 scrollbar-none">
+        <div className="flex w-max gap-2">
+          {CHIPS.map((c) => {
+            const selected = active === c.label;
+            return (
+              <Link
+                key={c.label}
+                href={c.href}
+                onClick={() => setActive(c.label)}
+                className={cn(
+                  "inline-flex h-10 min-h-10 items-center rounded-full border px-4 text-sm font-semibold transition",
+                  selected
+                    ? "border-primary bg-primary text-white"
+                    : "border-border bg-surface text-caramel"
+                )}
+              >
+                {c.label}
+              </Link>
+            );
+          })}
         </div>
-      </section>
+      </div>
 
-      <ProductScrollSection
-        title="今日新品"
-        products={newest}
-        seeMoreHref="/products?sort=newest"
-        variant="new"
-        badge="NEW"
-        badgeTone="new"
-      />
-
-      <ProductScrollSection
-        title="人氣商品"
-        products={popular}
-        seeMoreHref="/products"
-        variant="hot"
-        badge="HOT"
-        badgeTone="hot"
-      />
-
-      <div className="flex flex-wrap gap-2">
-        <Link href="/products" className="btn-brand">
+      <section className="overflow-hidden rounded-hero border border-border bg-peach-soft p-5">
+        <p className="text-xs font-semibold text-caramel">商城活動</p>
+        <h2 className="mt-1 text-lg font-bold text-foreground">今日精選烘焙材料</h2>
+        <p className="mt-1 text-sm text-foreground-secondary">保留完整商品列表與結帳流程</p>
+        <Link
+          href="/products"
+          className="mt-3 inline-flex h-11 items-center rounded-button bg-primary px-4 text-sm font-bold text-white"
+        >
           瀏覽全部商品
         </Link>
-        <Link href="/products" className="btn-secondary">
-          品牌／分類逛逛
-        </Link>
-        <Link href="/cart" className="btn-ghost">
-          前往購物車
-        </Link>
-      </div>
+      </section>
+
+      <NewProductsSection products={newest} href="/products?sort=newest" title="推薦新品" />
+      <PopularProductsSection products={popular} href="/products" title="人氣商品" />
+
+      <Link
+        href="/products"
+        className="flex min-h-12 items-center justify-center rounded-card border border-border bg-surface text-sm font-bold text-primary shadow-card"
+      >
+        進入完整商品列表
+      </Link>
     </div>
   );
 }

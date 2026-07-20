@@ -1,10 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
+import { Plus } from "lucide-react";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { ProductSticker, type ProductStickerType } from "@/components/brand/ProductSticker";
-import { formatCurrency } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
+import { useCart } from "@/hooks/useCart";
+import { useState } from "react";
+
+export type ProductBadge = "new" | "hot" | "groupBuy" | "preorder" | "instock" | "soldout";
 
 interface ProductCardProps {
   id: string;
@@ -13,11 +18,40 @@ interface ProductCardProps {
   original_price?: number | null;
   image_url?: string | null;
   href?: string;
-  groupBuyLabel?: string;
+  brandOrSpec?: string | null;
+  badge?: ProductBadge;
+  /** @deprecated prefer badge — kept for existing call sites */
   sticker?: ProductStickerType;
-  /** Use group-buy CTA styling when true */
+  groupBuyLabel?: string;
   isGroupBuy?: boolean;
+  showQuickAdd?: boolean;
 }
+
+const BADGE_CLASS: Record<ProductBadge, string> = {
+  new: "bg-primary text-white",
+  hot: "bg-error text-white",
+  groupBuy: "bg-groupBuy text-white",
+  preorder: "bg-warning text-foreground",
+  instock: "bg-success text-white",
+  soldout: "bg-disabled text-white",
+};
+
+const BADGE_LABEL: Record<ProductBadge, string> = {
+  new: "新品",
+  hot: "熱門",
+  groupBuy: "團購",
+  preorder: "預購",
+  instock: "現貨",
+  soldout: "售完",
+};
+
+const STICKER_TO_BADGE: Partial<Record<ProductStickerType, ProductBadge>> = {
+  new: "new",
+  hot: "hot",
+  live: "hot",
+  preorder: "preorder",
+  limited: "hot",
+};
 
 export function ProductCard({
   id,
@@ -26,62 +60,108 @@ export function ProductCard({
   original_price,
   image_url,
   href,
-  groupBuyLabel,
+  brandOrSpec,
+  badge,
   sticker,
+  groupBuyLabel,
   isGroupBuy,
+  showQuickAdd = true,
 }: ProductCardProps) {
   const link = href ?? `/products/${id}`;
-  const saving =
-    original_price && original_price > price ? original_price - price : 0;
-  const groupBuy = Boolean(isGroupBuy || groupBuyLabel);
+  const groupBuy = Boolean(isGroupBuy || groupBuyLabel || badge === "groupBuy");
+  const resolvedBadge: ProductBadge | undefined =
+    badge ??
+    (groupBuyLabel ? "groupBuy" : undefined) ??
+    (sticker ? STICKER_TO_BADGE[sticker] : undefined);
+  const { addItem } = useCart();
+  const [adding, setAdding] = useState(false);
+
+  const onQuickAdd = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (adding || resolvedBadge === "soldout") return;
+    setAdding(true);
+    try {
+      await addItem({
+        productId: id,
+        name,
+        price,
+        imageUrl: image_url,
+      });
+    } catch {
+      /* toast optional in phase 1 */
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
-    <Link href={link} className="group block">
-      <Card className="overflow-hidden rounded-card border-border bg-surface shadow-card transition duration-250 ease-brand hover:-translate-y-1 hover:shadow-lift">
-        <div className="relative aspect-square overflow-hidden rounded-t-card bg-surface-soft">
-          <div className="absolute right-2 top-2 z-10">
-            <FavoriteButton productId={id} size="sm" />
-          </div>
-          {sticker && <ProductSticker type={sticker} />}
-          {!sticker && groupBuyLabel && (
-            <span className="sticker absolute left-2 top-2 z-10 bg-groupBuy text-white">
-              {groupBuyLabel}
-            </span>
-          )}
-          {image_url ? (
-            <Image
-              src={image_url}
-              alt={name}
-              fill
-              className="object-cover transition duration-400 ease-brand group-hover:scale-105"
-              sizes="(max-width:768px) 50vw, 25vw"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-foreground-secondary">
-              暫無圖片
-            </div>
-          )}
-          {saving > 0 && (
-            <span className="absolute bottom-2 left-2 rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-black text-foreground shadow-sticker">
-              現省 {formatCurrency(saving)}
-            </span>
-          )}
+    <article className="group flex min-w-0 flex-col overflow-hidden rounded-card border border-border bg-surface shadow-card">
+      <Link href={link} className="relative block aspect-square overflow-hidden bg-surface-soft">
+        <div className="absolute right-2 top-2 z-10">
+          <FavoriteButton productId={id} size="sm" />
         </div>
-        <CardContent className="p-3">
-          <h3 className="line-clamp-2 text-sm font-bold text-foreground">{name}</h3>
-          <div className="mt-1.5 flex items-baseline gap-2">
-            <span className={cn("price-text")}>{formatCurrency(price)}</span>
+        {sticker && !resolvedBadge && <ProductSticker type={sticker} />}
+        {resolvedBadge && (
+          <span
+            className={cn(
+              "absolute left-2 top-2 z-10 rounded-chip px-2 py-0.5 text-[10px] font-bold",
+              BADGE_CLASS[resolvedBadge]
+            )}
+          >
+            {groupBuyLabel ?? BADGE_LABEL[resolvedBadge]}
+          </span>
+        )}
+        {image_url ? (
+          <Image
+            src={image_url}
+            alt={name}
+            fill
+            className="object-contain p-2"
+            sizes="(max-width:768px) 50vw, 25vw"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-foreground-secondary">
+            暫無圖片
+          </div>
+        )}
+      </Link>
+
+      <div className="flex min-h-[7.5rem] flex-1 flex-col gap-1 p-3">
+        <Link href={link} className="min-w-0">
+          <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-medium text-foreground break-words">
+            {name}
+          </h3>
+          {brandOrSpec && (
+            <p className="mt-0.5 line-clamp-1 text-sm text-foreground-secondary">{brandOrSpec}</p>
+          )}
+        </Link>
+
+        <div className="mt-auto flex items-end justify-between gap-2 pt-1">
+          <div className="min-w-0">
+            <p className="font-semibold text-price">{formatCurrency(price)}</p>
             {original_price && original_price > price && (
-              <span className="text-xs text-foreground-secondary line-through">
+              <p className="text-xs text-foreground-muted line-through">
                 {formatCurrency(original_price)}
-              </span>
+              </p>
             )}
           </div>
-          {groupBuy && (
-            <span className="mt-2 inline-flex text-[10px] font-bold text-groupBuy">團購價</span>
+          {showQuickAdd && (
+            <button
+              type="button"
+              onClick={onQuickAdd}
+              disabled={adding || resolvedBadge === "soldout"}
+              aria-label="將商品加入購物車"
+              className={cn(
+                "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white transition active:scale-95 disabled:opacity-50",
+                groupBuy ? "bg-groupBuy hover:bg-groupBuy-hover" : "bg-primary hover:bg-primary-hover"
+              )}
+            >
+              <Plus className="h-5 w-5" aria-hidden />
+            </button>
           )}
-        </CardContent>
-      </Card>
-    </Link>
+        </div>
+      </div>
+    </article>
   );
 }

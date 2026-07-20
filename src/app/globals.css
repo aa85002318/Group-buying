@@ -36,7 +36,7 @@
     --nav-icon: var(--text-secondary);
     --brand-red: var(--primary);
     --brand-orange: var(--group-buy);
-    --header-content-gap: 10mm;
+    --header-content-gap: 0px;
   }
 
   *,

@@ -214,13 +214,14 @@ export const CONSUMER_SECONDARY_NAV = [
   { href: "/store-map", label: "門市地圖" },
 ] as const;
 
-/** Mobile bottom nav — 5 items */
+/** Mobile bottom nav — 5 items (App V1) */
 export const CONSUMER_BOTTOM_NAV = [
   { href: "/", label: "首頁", match: (p: string) => p === "/", accent: "primary" as const },
   {
     href: "/shop",
-    label: "商城",
-    match: (p: string) => p.startsWith("/shop") || p.startsWith("/products") || p.startsWith("/categories"),
+    label: "分類",
+    match: (p: string) =>
+      p.startsWith("/shop") || p.startsWith("/products") || p.startsWith("/categories"),
     accent: "primary" as const,
   },
   {
@@ -230,14 +231,14 @@ export const CONSUMER_BOTTOM_NAV = [
     accent: "groupBuy" as const,
   },
   {
-    href: "/ai-tools",
-    label: "AI 助手",
-    match: (p: string) => p.startsWith("/ai-tools") || p.startsWith("/ai"),
+    href: "/cart",
+    label: "購物車",
+    match: (p: string) => p.startsWith("/cart"),
     accent: "primary" as const,
   },
   {
     href: "/member",
-    label: "我的",
+    label: "會員",
     match: (p: string) => p.startsWith("/member") || p.startsWith("/profile"),
     accent: "primary" as const,
   },

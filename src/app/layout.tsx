@@ -3,8 +3,8 @@ import { CapacitorShell } from "@/components/capacitor/CapacitorShell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CHIMEIDIY 團購",
-  description: "CHIMEIDIY 棋美點心屋 — 團購、直播、烘焙課程與生活分享",
+  title: "CHIMEIDIY 烘焙生活平台",
+  description: "CHIMEIDIY 烘焙生活 App — 材料、食譜、會員、團購與門市服務",
   applicationName: "CHIMEIDIY",
   appleWebApp: {
     capable: true,
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
     title: "CHIMEIDIY",
   },
   icons: {
-    icon: [{ url: "/images/logo-mark.png", type: "image/png" }],
-    apple: [{ url: "/images/logo-mark.png" }],
+    icon: [{ url: "/branding/chimeidiy-app-icon.png", type: "image/png" }],
+    apple: [{ url: "/branding/chimeidiy-app-icon.png" }],
   },
   manifest: "/manifest.webmanifest",
 };
@@ -24,8 +24,8 @@ export const viewport: Viewport = {
   maximumScale: 5,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#E9285C" },
-    { media: "(prefers-color-scheme: dark)", color: "#E9285C" },
+    { media: "(prefers-color-scheme: light)", color: "#FF6B6B" },
+    { media: "(prefers-color-scheme: dark)", color: "#FF6B6B" },
   ],
 };
 

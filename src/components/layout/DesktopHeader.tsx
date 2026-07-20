@@ -1,2 +1,5 @@
-/** Desktop header is composed inside AppHeader for sticky height sync. */
-export { DesktopHeader } from "@/components/layout/AppHeader";
+/** @deprecated Desktop mega-header removed in App V1 — use AppHeader. */
+export function DesktopHeader(_props: { className?: string } = {}) {
+  void _props;
+  return null;
+}

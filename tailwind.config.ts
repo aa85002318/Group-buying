@@ -13,21 +13,43 @@ const config: Config = {
     extend: {
       colors: {
         background: rgb("--background-rgb"),
+        cream: {
+          white: "var(--cream-white)",
+          soft: "var(--cream-soft)",
+        },
         surface: {
           DEFAULT: rgb("--surface-rgb"),
           soft: rgb("--surface-soft-rgb"),
+          warm: "var(--surface-warm)",
         },
         foreground: {
           DEFAULT: rgb("--text-primary-rgb"),
           secondary: rgb("--text-secondary-rgb"),
+          muted: rgb("--text-muted-rgb"),
+          inverse: "var(--text-inverse)",
         },
         primary: {
           DEFAULT: rgb("--primary-rgb"),
           hover: rgb("--primary-hover-rgb"),
+          pressed: rgb("--primary-pressed-rgb"),
           foreground: "#ffffff",
           soft: "var(--primary-soft)",
-          light: "var(--primary-soft)",
+          light: "var(--primary-light)",
           dark: rgb("--primary-hover-rgb"),
+        },
+        caramel: {
+          DEFAULT: rgb("--caramel-rgb"),
+          hover: rgb("--caramel-hover-rgb"),
+          light: "var(--caramel-light)",
+          soft: "var(--caramel-soft)",
+        },
+        butter: {
+          DEFAULT: rgb("--butter-rgb"),
+          soft: "var(--butter-soft)",
+        },
+        peach: {
+          DEFAULT: rgb("--peach-rgb"),
+          soft: "var(--peach-soft)",
         },
         groupBuy: {
           DEFAULT: rgb("--group-buy-rgb"),
@@ -35,8 +57,14 @@ const config: Config = {
           soft: "var(--group-buy-soft)",
           foreground: "#ffffff",
         },
-        border: rgb("--border-rgb"),
-        price: rgb("--price-rgb"),
+        border: {
+          DEFAULT: rgb("--border-rgb"),
+          strong: rgb("--border-strong-rgb"),
+        },
+        price: {
+          DEFAULT: rgb("--price-rgb"),
+          soft: "var(--price-soft)",
+        },
         success: {
           DEFAULT: rgb("--success-rgb"),
           soft: "var(--success-soft)",
@@ -53,7 +81,10 @@ const config: Config = {
           DEFAULT: rgb("--info-rgb"),
           soft: "var(--info-soft)",
         },
-        disabled: rgb("--disabled-rgb"),
+        disabled: {
+          DEFAULT: rgb("--disabled-rgb"),
+          soft: "var(--disabled-soft)",
+        },
 
         card: {
           DEFAULT: rgb("--surface-rgb"),
@@ -98,7 +129,7 @@ const config: Config = {
         nav: {
           active: rgb("--primary-rgb"),
           inactive: rgb("--text-secondary-rgb"),
-          icon: rgb("--text-secondary-rgb"),
+          icon: rgb("--caramel-rgb"),
         },
         coffee: rgb("--text-primary-rgb"),
         muted: {
@@ -109,14 +140,17 @@ const config: Config = {
         "card-foreground": rgb("--text-primary-rgb"),
       },
       borderRadius: {
+        chip: "var(--radius-chip)",
         card: "var(--radius-card)",
         button: "var(--radius-button)",
         input: "var(--radius-input)",
+        hero: "var(--radius-hero)",
+        sheet: "var(--radius-sheet)",
         sticker: "9999px",
         image: "var(--radius-image)",
       },
       maxWidth: {
-        app: "80rem",
+        app: "var(--app-max-width)",
       },
       boxShadow: {
         card: "var(--shadow-card)",
@@ -133,7 +167,7 @@ const config: Config = {
         "mint-gradient": "var(--gradient-mint)",
         "hero-gradient": "var(--gradient-hero)",
         "promo-strip":
-          "linear-gradient(90deg, var(--surface-soft) 0%, var(--warning-soft) 100%)",
+          "linear-gradient(90deg, var(--surface-soft) 0%, var(--butter-soft) 100%)",
       },
       transitionTimingFunction: {
         brand: "var(--ease-out)",
@@ -152,7 +186,14 @@ const config: Config = {
         "fade-up": "fade-up 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
       },
       fontFamily: {
-        sans: ["PingFang TC", "Noto Sans TC", "Helvetica Neue", "system-ui", "sans-serif"],
+        sans: [
+          "Noto Sans TC",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "sans-serif",
+        ],
       },
       minHeight: {
         touch: "var(--touch-min)",
