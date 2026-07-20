@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 const sizes = {
   sm: { width: 36, height: 36, className: "h-9 w-9" },
   header: {
-    width: 204,
-    height: 71,
-    className: "h-auto w-[116px] sm:w-[140px] md:w-[180px]",
+    width: 320,
+    height: 99,
+    className: "h-auto w-[148px] sm:w-[180px] md:w-[220px]",
   },
   md: { width: 180, height: 180, className: "h-auto w-[180px]" },
   lg: { width: 260, height: 260, className: "h-auto w-[min(260px,80vw)]" },
@@ -46,7 +46,7 @@ export function Logo({
   const layout = textLayout ?? (size === "header" || size === "sm" ? "beside" : "below");
   const src =
     size === "header"
-      ? "/brand/chimeidiy-header-logo-transparent.png"
+      ? "/brand/chimeidiy-header-logo.png"
       : markOnly || withText
         ? "/images/logo-mark.png"
         : "/images/logo.png";
@@ -57,7 +57,11 @@ export function Logo({
       alt={title}
       width={width}
       height={height}
-      className={cn("shrink-0 bg-transparent object-contain", sizeClass, !withText && className)}
+      className={cn(
+        "shrink-0 bg-transparent object-contain",
+        sizeClass,
+        !withText && !href && className
+      )}
       priority={priority}
       unoptimized
     />
@@ -107,7 +111,13 @@ export function Logo({
 
   if (href) {
     return (
-      <Link href={href} className="inline-flex min-w-0 shrink-0 no-underline">
+      <Link
+        href={href}
+        className={cn(
+          "inline-flex min-w-0 shrink-0 items-center justify-center bg-transparent no-underline",
+          !withText && className
+        )}
+      >
         {content}
       </Link>
     );

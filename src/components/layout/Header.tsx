@@ -55,10 +55,9 @@ function BrandLockup({ className }: { className?: string }) {
     <Logo
       href="/"
       size="header"
-      markOnly
       priority
-      className={cn("max-w-full", className)}
-      title="CHIMEIDIY 團購"
+      className={cn("mx-auto max-w-full bg-transparent", className)}
+      title="CHIMEIDIY 烘焙生活平台"
     />
   );
 }
@@ -845,7 +844,9 @@ export function Header() {
               )}
             </div>
 
-            <BrandLockup className="max-w-[150px] justify-self-center sm:max-w-none" />
+            <div className="flex justify-center justify-self-center">
+              <BrandLockup className="max-w-[168px] sm:max-w-[200px] md:max-w-[240px]" />
+            </div>
 
             <div className="flex min-w-0 items-center justify-end gap-1">
               <AuthActions variant={authVariant} />
