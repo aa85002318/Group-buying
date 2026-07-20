@@ -10,7 +10,8 @@ const VARIANTS = {
     src: "/branding/chimeidiy-app-header-logo-v2.png",
     width: 320,
     height: 101,
-    className: "h-10 w-[148px] max-h-10 object-contain bg-transparent md:w-[168px]",
+    className:
+      "h-8 w-auto max-h-8 max-w-[min(132px,42vw)] object-contain bg-transparent sm:h-9 sm:max-h-9 sm:max-w-[150px] md:h-10 md:max-h-10 md:max-w-[168px]",
   },
   compact: {
     src: "/branding/chimeidiy-logo-compact.png",

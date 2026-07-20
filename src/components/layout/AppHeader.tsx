@@ -99,19 +99,27 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 border-b border-border bg-surface",
+        "sticky top-0 z-50 w-full shrink-0 border-b border-border bg-surface",
         className
       )}
-      style={{ paddingTop: "env(safe-area-inset-top)" }}
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      <div className="mx-auto flex h-[60px] w-full max-w-[960px] items-center gap-2 px-4">
+      <div
+        className="relative mx-auto flex h-[56px] w-full max-w-[var(--app-max-width)] items-center px-3 sm:h-[60px] sm:px-4"
+        style={{
+          paddingLeft: "max(0.75rem, env(safe-area-inset-left, 0px))",
+          paddingRight: "max(0.75rem, env(safe-area-inset-right, 0px))",
+        }}
+      >
         {resolved === "home" ? (
           <>
-            <div className="flex w-[92px] shrink-0" aria-hidden />
-            <div className="flex min-w-0 flex-1 items-center justify-center">
-              <ChimeidiyLogo variant="header" priority />
+            {/* Absolute-centered logo — never squeezed by action buttons */}
+            <div className="pointer-events-none absolute inset-y-0 left-1/2 flex w-[min(148px,42vw)] -translate-x-1/2 items-center justify-center sm:w-[min(168px,46vw)]">
+              <div className="pointer-events-auto max-w-full">
+                <ChimeidiyLogo variant="header" priority />
+              </div>
             </div>
-            <div className="flex w-[92px] shrink-0 items-center justify-end gap-0.5">
+            <div className="ml-auto flex shrink-0 items-center gap-0.5">
               <NotifyButton />
               <CartButton />
             </div>
@@ -119,7 +127,7 @@ export function AppHeader({
         ) : resolved === "search" ? (
           <>
             <BackButton href={backHref} />
-            <div className="min-w-0 flex-1 text-center">
+            <div className="min-w-0 flex-1 px-2 text-center">
               <h1 className="truncate text-base font-bold text-foreground">
                 {title ?? "搜尋"}
               </h1>
@@ -131,7 +139,7 @@ export function AppHeader({
         ) : (
           <>
             <BackButton href={backHref} />
-            <div className="min-w-0 flex-1 text-center">
+            <div className="min-w-0 flex-1 px-2 text-center">
               <h1 className="truncate text-base font-bold text-foreground">
                 {title ?? ""}
               </h1>

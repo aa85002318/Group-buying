@@ -22,6 +22,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  userScalable: true,
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FF6B6B" },
@@ -31,8 +32,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW" className="overflow-x-hidden">
-      <body className="min-h-screen overflow-x-hidden bg-background font-sans text-coffee antialiased">
+    <html lang="zh-TW" className="h-full overflow-x-hidden">
+      <body className="min-h-dvh w-full max-w-[100vw] overflow-x-hidden bg-background font-sans text-foreground antialiased">
         <CapacitorShell />
         {children}
       </body>

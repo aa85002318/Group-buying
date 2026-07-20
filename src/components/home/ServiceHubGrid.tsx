@@ -50,18 +50,21 @@ export function ServiceHubCard({ item }: { item: ServiceHubItem }) {
   return (
     <Link
       href={item.href}
-      className="group flex min-h-[74px] min-w-0 flex-col items-center gap-1.5 rounded-2xl p-1 transition active:bg-peach focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      className="group flex min-h-[70px] min-w-0 flex-col items-center gap-1 rounded-2xl p-0.5 transition active:bg-peach focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:min-h-[74px] sm:gap-1.5 sm:p-1"
       aria-label={item.title}
     >
       <span
         className={cn(
-          "inline-flex h-12 w-12 items-center justify-center rounded-2xl transition group-hover:bg-peach group-active:bg-peach md:h-[52px] md:w-[52px]",
+          "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition group-hover:bg-peach group-active:bg-peach sm:h-12 sm:w-12 md:h-[52px] md:w-[52px]",
           style.wrap
         )}
       >
-        <Icon className={cn("h-6 w-6 group-hover:text-primary", style.icon)} aria-hidden />
+        <Icon
+          className={cn("h-5 w-5 sm:h-6 sm:w-6 group-hover:text-primary", style.icon)}
+          aria-hidden
+        />
       </span>
-      <span className="line-clamp-2 max-w-full text-center text-[12px] font-semibold leading-tight text-foreground md:text-[13px]">
+      <span className="line-clamp-2 max-w-full break-words text-center text-[11px] font-semibold leading-tight text-foreground sm:text-[12px] md:text-[13px]">
         {item.title}
       </span>
     </Link>
@@ -70,8 +73,8 @@ export function ServiceHubCard({ item }: { item: ServiceHubItem }) {
 
 export function ServiceHubGrid({ items = SERVICE_HUB_ITEMS }: { items?: ServiceHubItem[] }) {
   return (
-    <section aria-label="八大功能入口">
-      <div className="grid grid-cols-4 gap-1 sm:gap-2">
+    <section aria-label="八大功能入口" className="min-w-0">
+      <div className="grid grid-cols-4 gap-0.5 sm:gap-2">
         {items.map((item) => (
           <ServiceHubCard key={item.id} item={item} />
         ))}

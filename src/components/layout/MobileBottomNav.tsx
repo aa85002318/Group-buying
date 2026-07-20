@@ -26,10 +26,10 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed bottom-0 left-0 right-0 z-50 mx-auto w-full max-w-[960px] border-t border-border bg-surface"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-border bg-surface"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="mx-auto grid h-14 min-h-[56px] grid-cols-5 items-center px-1">
+      <div className="mx-auto grid h-14 min-h-[56px] grid-cols-5 items-stretch px-0.5 sm:px-1">
         {CONSUMER_BOTTOM_NAV.map((item) => {
           const active = item.match(pathname);
           const Icon = ICONS[item.href as keyof typeof ICONS] ?? Home;
@@ -42,9 +42,9 @@ export function MobileBottomNav() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               aria-label={item.label}
-              className="relative flex min-h-touch min-w-0 flex-col items-center justify-center gap-0.5 text-[11px] transition-all"
+              className="relative flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 text-[10px] sm:text-[11px]"
             >
-              <span className="relative">
+              <span className="relative shrink-0">
                 <Icon
                   className={cn(
                     "h-5 w-5",
@@ -64,6 +64,7 @@ export function MobileBottomNav() {
               </span>
               <span
                 className={cn(
+                  "max-w-full truncate",
                   active
                     ? isGroup
                       ? "font-bold text-groupBuy"

@@ -47,16 +47,33 @@
 
   html {
     @apply overflow-x-hidden;
+    width: 100%;
+    max-width: 100%;
+    /* Prevent iOS rubber-band revealing sideways scroll */
+    overscroll-behavior-x: none;
   }
 
   body {
     @apply bg-background text-foreground antialiased overflow-x-hidden;
     font-family: var(--font-sans);
+    width: 100%;
+    max-width: 100%;
+    min-height: 100dvh;
+    overscroll-behavior-x: none;
+    /* Avoid 100vw scrollbar overflow on some browsers */
+    overflow-wrap: anywhere;
   }
 
   img,
-  video {
+  video,
+  canvas,
+  svg {
     @apply max-w-full h-auto;
+  }
+
+  /* Tables / pre that could force page width */
+  table {
+    max-width: 100%;
   }
 
   ::selection {
@@ -81,9 +98,9 @@
     --muted-foreground: var(--text-secondary);
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 640px) {
     :root {
-      --header-height: 8rem;
+      --header-height: 3.75rem;
     }
   }
 }
@@ -140,11 +157,11 @@
 
 @layer utilities {
   .safe-bottom {
-    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
   }
 
   .page-pad-x {
-    @apply px-4 md:px-6 lg:px-8;
+    @apply px-4 md:px-6;
   }
 
   .scrollbar-none {
@@ -154,6 +171,33 @@
 
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Isolate horizontal carousels so they never widen the page */
+  .h-scroll {
+    @apply -mx-4 overflow-x-auto overscroll-x-contain px-4 scrollbar-none;
+    touch-action: pan-x;
+  }
+
+  .app-shell {
+    width: 100%;
+    max-width: min(100%, var(--app-max-width));
+    min-height: 100dvh;
+    margin-inline: auto;
+    overflow-x: hidden;
+    background: var(--background);
+  }
+
+  .app-main-pad {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  @media (min-width: 768px) {
+    .app-main-pad {
+      padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
+      padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
+    }
   }
 
   .bg-dots {
@@ -166,7 +210,7 @@
   }
 
   .bg-wave {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80'%3E%3Cpath fill='%23FFF9F3' d='M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80'%3E%3Cpath fill='%23FFF9F5' d='M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: bottom;
     background-size: 100% 40px;

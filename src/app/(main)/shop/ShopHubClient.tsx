@@ -46,7 +46,7 @@ export function ShopHubClient() {
         <HomeSearchBar placeholder="搜尋烘焙材料、品牌、SKU…" />
       </header>
 
-      <div className="-mx-4 overflow-x-auto px-4 scrollbar-none">
+      <div className="h-scroll">
         <div className="flex w-max gap-2">
           {CHIPS.map((c) => {
             const selected = active === c.label;

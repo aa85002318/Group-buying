@@ -217,7 +217,12 @@ export default function ProductDetailClient({ id }: { id: string }) {
         {ref && <p className="text-xs text-coffee">推薦碼：{ref}</p>}
       </div>
 
-      <div className="sticky bottom-20 z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+      <div
+        className="sticky z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
+        style={{
+          bottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px))",
+        }}
+      >
         <div className="flex items-center gap-3">
           <div className="flex items-center rounded-lg border border-border bg-card">
             <button

@@ -31,7 +31,7 @@ export function PopularCategories({ items = FALLBACK, activeId }: PopularCategor
   return (
     <section aria-label="熱門分類">
       <h2 className="mb-3 text-base font-bold text-foreground">熱門分類</h2>
-      <div className="-mx-4 overflow-x-auto px-4 scrollbar-none md:mx-0 md:overflow-visible md:px-0">
+      <div className="h-scroll md:mx-0 md:overflow-visible md:px-0">
         <ul className="flex w-max gap-3 md:grid md:w-full md:grid-cols-8 md:gap-3">
           {items.map((item) => {
             const active = activeId === item.id;
