@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { AdminBarChart, AdminDonutChart } from "@/components/admin/v2/AdminCharts";
 import { MemberBarcode } from "@/components/profile/MemberBarcode";
 import { useAdminList } from "@/hooks/useAdminList";
 import { formatCurrency, formatDate, ROLE_LABELS } from "@/lib/utils";
@@ -20,12 +21,31 @@ type Member = Profile & {
 
 const ROLES: UserRole[] = ["member", "admin", "store_staff", "group_leader", "promoter", "livestream_host"];
 
+const GENDER_LABELS: Record<string, string> = { male: "男性", female: "女性", unknown: "未知" };
+
+type SegmentFilters = { gender: string; ageGroup: string; city: string; memberLevel: string };
+
+type SegmentData = {
+  summary: { totalMembers: number; filteredCount: number; totalSpent: number; avgOrderValue: number };
+  filters: { genders: string[]; ageGroups: string[]; cities: string[]; memberLevels: string[] };
+  breakdowns: {
+    gender: Array<{ label: string; value: number; color: string }>;
+    ageGroup: Array<{ label: string; value: number }>;
+    city: Array<{ label: string; value: number }>;
+  };
+  members: Array<{ user_id: string }>;
+};
+
 export default function AdminMembersPage() {
   const { paginated, search, setSearch, page, setPage, totalPages, refresh, loading } = useAdminList<Member>(
     "/api/admin/members",
     "members",
     ["email", "full_name", "member_code", "phone"]
   );
+  const [showSegments, setShowSegments] = useState(false);
+  const [segmentFilters, setSegmentFilters] = useState<SegmentFilters>({ gender: "", ageGroup: "", city: "", memberLevel: "" });
+  const [segmentData, setSegmentData] = useState<SegmentData | null>(null);
+  const [segmentLoading, setSegmentLoading] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -37,6 +57,30 @@ export default function AdminMembersPage() {
     role: "member" as UserRole,
     credit: "0",
   });
+
+  useEffect(() => {
+    if (!showSegments) return;
+    setSegmentLoading(true);
+    const params = new URLSearchParams();
+    if (segmentFilters.gender) params.set("gender", segmentFilters.gender);
+    if (segmentFilters.ageGroup) params.set("ageGroup", segmentFilters.ageGroup);
+    if (segmentFilters.city) params.set("city", segmentFilters.city);
+    if (segmentFilters.memberLevel) params.set("memberLevel", segmentFilters.memberLevel);
+    fetch(`/api/admin/members/segments?${params}`)
+      .then((r) => r.json())
+      .then((d) => setSegmentData(d))
+      .finally(() => setSegmentLoading(false));
+  }, [showSegments, segmentFilters]);
+
+  const segmentUserIds = useMemo(
+    () => new Set(segmentData?.members.map((m) => m.user_id) ?? []),
+    [segmentData]
+  );
+
+  const hasSegmentFilter = Boolean(segmentFilters.gender || segmentFilters.ageGroup || segmentFilters.city || segmentFilters.memberLevel);
+  const displayRows = hasSegmentFilter && segmentData
+    ? paginated.filter((m) => segmentUserIds.has(m.id))
+    : paginated;
 
   const openEdit = (m: Member) => {
     setEditing(m);
@@ -113,7 +157,94 @@ export default function AdminMembersPage() {
       <AdminPageHeader
         title="會員管理"
         description="會員資料、Email 驗證狀態、條碼、角色與購物金。未收到驗證信時可手動驗證。"
+        actions={
+          <Button variant={showSegments ? "default" : "outline"} onClick={() => setShowSegments((v) => !v)}>
+            {showSegments ? "關閉分群" : "客戶分群"}
+          </Button>
+        }
       />
+
+      {showSegments && (
+        <div className="rounded-[20px] border border-[#E8EBF4] bg-white p-6 shadow-[0_4px_24px_rgba(30,58,138,0.06)] space-y-4">
+          <h2 className="font-semibold text-[#1E3A8A]">客戶分群篩選</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <select
+              className="input-field"
+              value={segmentFilters.gender}
+              onChange={(e) => setSegmentFilters({ ...segmentFilters, gender: e.target.value })}
+            >
+              <option value="">全部性別</option>
+              {(segmentData?.filters.genders ?? ["male", "female", "unknown"]).map((g) => (
+                <option key={g} value={g}>{GENDER_LABELS[g] ?? g}</option>
+              ))}
+            </select>
+            <select
+              className="input-field"
+              value={segmentFilters.ageGroup}
+              onChange={(e) => setSegmentFilters({ ...segmentFilters, ageGroup: e.target.value })}
+            >
+              <option value="">全部年齡層</option>
+              {(segmentData?.filters.ageGroups ?? []).map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+            <select
+              className="input-field"
+              value={segmentFilters.city}
+              onChange={(e) => setSegmentFilters({ ...segmentFilters, city: e.target.value })}
+            >
+              <option value="">全部縣市</option>
+              {(segmentData?.filters.cities ?? []).map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <select
+              className="input-field"
+              value={segmentFilters.memberLevel}
+              onChange={(e) => setSegmentFilters({ ...segmentFilters, memberLevel: e.target.value })}
+            >
+              <option value="">全部等級</option>
+              {(segmentData?.filters.memberLevels ?? []).map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+          </div>
+
+          {segmentLoading ? (
+            <p className="text-sm text-[#64748B]">載入分群資料…</p>
+          ) : segmentData ? (
+            <>
+              <div className="grid gap-4 sm:grid-cols-4">
+                {[
+                  { label: "符合人數", value: segmentData.summary.filteredCount },
+                  { label: "總消費", value: formatCurrency(segmentData.summary.totalSpent) },
+                  { label: "平均客單", value: formatCurrency(segmentData.summary.avgOrderValue) },
+                  { label: "會員總數", value: segmentData.summary.totalMembers },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-xl bg-[#F7F8FC] p-4">
+                    <p className="text-xs text-[#64748B]">{item.label}</p>
+                    <p className="mt-1 text-lg font-bold text-[#1E3A8A]">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-4 lg:grid-cols-3">
+                <div>
+                  <p className="mb-2 text-sm font-medium text-[#64748B]">性別分布</p>
+                  <AdminDonutChart segments={segmentData.breakdowns.gender} />
+                </div>
+                <div>
+                  <p className="mb-2 text-sm font-medium text-[#64748B]">年齡分布</p>
+                  <AdminBarChart data={segmentData.breakdowns.ageGroup} />
+                </div>
+                <div>
+                  <p className="mb-2 text-sm font-medium text-[#64748B]">縣市分布</p>
+                  <AdminBarChart data={segmentData.breakdowns.city} />
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
+      )}
 
       {editing && (
         <div className="rounded-xl bg-white p-4 shadow-card">
@@ -250,7 +381,7 @@ export default function AdminMembersPage() {
             ),
           },
         ]}
-        rows={paginated}
+        rows={displayRows}
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="搜尋姓名、手機、Email…"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Download, PackagePlus, Upload } from "lucide-react";
+import { BarChart3, Download, PackagePlus, Upload } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -34,6 +34,12 @@ export default function AdminProductsPage() {
         description="Shopify 風格商品中心：新增、匯入、分類與庫存管理"
         actions={
           <div className="flex flex-wrap gap-2">
+            <Link href="/admin/products/analysis">
+              <Button variant="secondary">
+                <BarChart3 className="mr-1.5 h-4 w-4" />
+                分析總覽
+              </Button>
+            </Link>
             <Link href="/admin/products/import">
               <Button variant="secondary">
                 <Upload className="mr-1.5 h-4 w-4" />
