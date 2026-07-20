@@ -32,3 +32,17 @@ export function externalLinkProps(href: string): { target?: string; rel?: string
   }
   return {};
 }
+
+/** Strip all HTML tags for notification / plain-text surfaces (never trust raw HTML). */
+export function stripHtmlToText(html: string | null | undefined): string {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+

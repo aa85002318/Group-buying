@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       question,
       answer,
       is_active: body.is_active !== false,
+      is_featured: Boolean(body.is_featured),
       sort_order: Number(body.sort_order) || 0,
     })
     .select()

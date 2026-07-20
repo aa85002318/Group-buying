@@ -1,6 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type NotificationType = "order" | "pickup" | "product" | "livestream" | "system";
+export type NotificationType =
+  | "order"
+  | "pickup"
+  | "product"
+  | "livestream"
+  | "system"
+  | "group_buy"
+  | "campaign"
+  | "benefit"
+  | "store";
 
 export type CreateNotificationInput = {
   userId: string;
@@ -9,6 +18,8 @@ export type CreateNotificationInput = {
   message: string;
   linkUrl?: string | null;
   referenceId?: string | null;
+  summary?: string | null;
+  campaignId?: string | null;
 };
 
 /** Create in-app notification; respects user preferences when possible */
@@ -17,12 +28,16 @@ export async function createMemberNotification(
   input: CreateNotificationInput
 ): Promise<void> {
   try {
-    const prefMap: Record<NotificationType, keyof NotificationPrefs | null> = {
+    const prefMap: Partial<Record<NotificationType, keyof NotificationPrefs | null>> = {
       order: "order_updates",
       pickup: "pickup_reminders",
       product: "new_products",
       livestream: "livestreams",
       system: "marketing",
+      group_buy: "closing_soon",
+      campaign: "marketing",
+      benefit: "marketing",
+      store: "marketing",
     };
 
     type NotificationPrefs = {
@@ -51,9 +66,11 @@ export async function createMemberNotification(
       user_id: input.userId,
       notification_type: input.notificationType,
       title: input.title,
+      summary: input.summary ?? null,
       message: input.message,
       link_url: input.linkUrl ?? null,
       reference_id: input.referenceId ?? null,
+      campaign_id: input.campaignId ?? null,
     });
   } catch {
     // Table may not exist yet — graceful degrade

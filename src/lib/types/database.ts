@@ -673,6 +673,86 @@ export interface UserNotification {
   updated_at: string;
 }
 
+export type MemberNotificationCategory =
+  | "order"
+  | "pickup"
+  | "product"
+  | "livestream"
+  | "system"
+  | "group_buy"
+  | "campaign"
+  | "benefit"
+  | "store";
+
+export interface MemberNotification {
+  id: string;
+  user_id: string;
+  notification_type: MemberNotificationCategory;
+  title: string;
+  summary?: string | null;
+  message: string;
+  link_url: string | null;
+  reference_id: string | null;
+  campaign_id?: string | null;
+  is_read: boolean;
+  created_at: string;
+  read_at: string | null;
+}
+
+export type NotificationCampaignStatus = "draft" | "scheduled" | "sending" | "sent" | "cancelled";
+export type NotificationAudienceType = "all" | "users" | "order_status";
+
+export interface NotificationCampaign {
+  id: string;
+  title: string;
+  summary: string | null;
+  body: string;
+  category: MemberNotificationCategory;
+  target_type: string | null;
+  target_id: string | null;
+  link_url: string | null;
+  audience_type: NotificationAudienceType;
+  audience_filter: Record<string, unknown>;
+  status: NotificationCampaignStatus;
+  scheduled_at: string | null;
+  sent_at: string | null;
+  sent_count: number;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FaqItem {
+  id: string;
+  category: string;
+  question: string;
+  answer: string;
+  is_active: boolean;
+  is_featured?: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SupportSettings {
+  id: string;
+  settings_key: string;
+  phone: string | null;
+  email: string | null;
+  line_url: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  address: string | null;
+  business_hours: string | null;
+  google_map_url: string | null;
+  returns_info: string | null;
+  shipping_info: string | null;
+  support_info: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface RewardRecord {
   id: string;
   user_id: string;

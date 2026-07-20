@@ -1,18 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, Headphones, HelpCircle, MessageCircle, Package, Phone, Receipt, ShoppingBag, Truck } from "lucide-react";
+import {
+  ChevronRight,
+  ExternalLink,
+  FileText,
+  Headphones,
+  HelpCircle,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Package,
+  Phone,
+  Receipt,
+  ShoppingBag,
+  Truck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { APP_ROUTES } from "@/lib/site-links";
+import { externalLinkProps, isSafeLinkUrl } from "@/lib/cms/safeHtml";
+import type { SupportSettings } from "@/lib/types/database";
 
 const QUICK_LINKS = [
   { href: APP_ROUTES.faq, label: "常見問題", icon: HelpCircle, desc: "快速找到解答" },
-  { href: `${APP_ROUTES.faq}?category=order`, label: "訂單問題", icon: Package, desc: "付款、訂單狀態" },
-  { href: `${APP_ROUTES.faq}?category=pickup`, label: "取貨問題", icon: Truck, desc: "門市取貨與 QR Code" },
-  { href: `${APP_ROUTES.faq}?category=product`, label: "商品問題", icon: ShoppingBag, desc: "團購、收單、庫存" },
-  { href: `${APP_ROUTES.faq}?category=carrier`, label: "發票載具說明", icon: Receipt, desc: "手機條碼設定與使用" },
+  { href: "/support/orders", label: "訂單問題", icon: Package, desc: "App 訂單狀態與付款" },
+  { href: "/support/shipping", label: "配送問題", icon: Truck, desc: "宅配與運送說明" },
+  { href: "/support/returns", label: "退換貨", icon: FileText, desc: "退換貨說明" },
+  { href: `${APP_ROUTES.faq}?category=carrier`, label: "發票載具", icon: Receipt, desc: "手機條碼設定" },
+  { href: "/support/contact", label: "聯絡方式", icon: Headphones, desc: "電話／LINE／社群" },
 ] as const;
 
 const CATEGORIES = [
@@ -25,11 +42,9 @@ const CATEGORIES = [
   { value: "other", label: "其他" },
 ] as const;
 
-const LINE_URL = "https://line.me/R/ti/p/@diy_chimei";
-const PHONE = "02-2737-5508";
-
 export default function SupportPage() {
-  const [category, setCategory] = useState<string>("order");
+  const [settings, setSettings] = useState<Partial<SupportSettings>>({});
+  const [category, setCategory] = useState("order");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [contactName, setContactName] = useState("");
@@ -38,32 +53,20 @@ export default function SupportPage() {
   const [orderId, setOrderId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [chatInput, setChatInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
-  const [chat, setChat] = useState<Array<{ role: "user" | "bot"; content: string }>>([
-    { role: "bot", content: "你好！我是 CHIMEIDIY AI 客服，可協助商品、配送、付款、課程、直播、退貨與門市問題。" },
-  ]);
 
-  const sendAiChat = async () => {
-    if (!chatInput.trim() || chatLoading) return;
-    const content = chatInput.trim();
-    setChatInput("");
-    setChat((c) => [...c, { role: "user", content }]);
-    setChatLoading(true);
-    try {
-      const res = await fetch("/api/ai/support", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, sessionId: "support-web" }),
-      });
-      const data = await res.json();
-      setChat((c) => [...c, { role: "bot", content: data.reply ?? "暫時無法回覆，請改填下方表單。" }]);
-    } catch {
-      setChat((c) => [...c, { role: "bot", content: "連線失敗，請稍後再試或使用 LINE 客服。" }]);
-    } finally {
-      setChatLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetch("/api/support-settings")
+      .then((r) => r.json())
+      .then((d) => setSettings(d.settings ?? {}))
+      .catch(() => {});
+  }, []);
+
+  const lineUrl = settings.line_url && isSafeLinkUrl(settings.line_url) ? settings.line_url : null;
+  const phone = settings.phone || "02-2737-5508";
+  const fb = settings.facebook_url && isSafeLinkUrl(settings.facebook_url) ? settings.facebook_url : null;
+  const ig = settings.instagram_url && isSafeLinkUrl(settings.instagram_url) ? settings.instagram_url : null;
+  const mapUrl =
+    settings.google_map_url && isSafeLinkUrl(settings.google_map_url) ? settings.google_map_url : null;
 
   const submitTicket = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,93 +107,112 @@ export default function SupportPage() {
     <div className="space-y-6 pb-6">
       <div>
         <h1 className="text-xl font-bold text-foreground">客服中心</h1>
-        <p className="mt-1 text-sm text-foreground-secondary">我們會盡快協助您處理問題</p>
+        <p className="mt-1 text-sm text-foreground-secondary">
+          {settings.support_info || "我們會盡快協助您處理 App 相關問題"}
+        </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
+        {lineUrl && (
+          <a
+            href={lineUrl}
+            {...externalLinkProps(lineUrl)}
+            className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
+          >
+            <MessageCircle className="h-8 w-8 text-success" />
+            <div>
+              <p className="font-medium text-foreground">LINE 客服</p>
+              <p className="inline-flex items-center gap-1 text-xs text-foreground-secondary">
+                外部連結 <ExternalLink className="h-3 w-3" />
+              </p>
+            </div>
+            <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
+          </a>
+        )}
         <a
-          href={LINE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
-        >
-          <MessageCircle className="h-8 w-8 text-success" />
-          <div>
-            <p className="font-medium text-foreground">LINE 客服</p>
-            <p className="text-xs text-foreground-secondary">@diy_chimei</p>
-          </div>
-          <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
-        </a>
-        <a
-          href={`tel:${PHONE.replace(/-/g, "")}`}
+          href={`tel:${phone.replace(/-/g, "")}`}
           className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
         >
           <Phone className="h-8 w-8 text-primary" />
           <div>
             <p className="font-medium text-foreground">電話客服</p>
-            <p className="text-xs text-foreground-secondary">{PHONE}</p>
+            <p className="text-xs text-foreground-secondary">{phone}</p>
           </div>
           <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
         </a>
-        <a
-          href="https://www.facebook.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
-        >
-          <FileText className="h-8 w-8 text-info" />
-          <div>
-            <p className="font-medium text-foreground">Facebook</p>
-            <p className="text-xs text-foreground-secondary">官方粉專（外部連結）</p>
-          </div>
-          <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
-        </a>
-        <a
-          href="https://www.instagram.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
-        >
-          <Headphones className="h-8 w-8 text-primary" />
-          <div>
-            <p className="font-medium text-foreground">Instagram</p>
-            <p className="text-xs text-foreground-secondary">烘焙靈感（外部連結）</p>
-          </div>
-          <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
-        </a>
+        {settings.email && (
+          <a
+            href={`mailto:${settings.email}`}
+            className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
+          >
+            <Mail className="h-8 w-8 text-info" />
+            <div>
+              <p className="font-medium text-foreground">Email</p>
+              <p className="text-xs text-foreground-secondary">{settings.email}</p>
+            </div>
+            <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
+          </a>
+        )}
+        {fb && (
+          <a
+            href={fb}
+            {...externalLinkProps(fb)}
+            className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
+          >
+            <FileText className="h-8 w-8 text-info" />
+            <div>
+              <p className="font-medium text-foreground">Facebook</p>
+              <p className="inline-flex items-center gap-1 text-xs text-foreground-secondary">
+                外部連結 <ExternalLink className="h-3 w-3" />
+              </p>
+            </div>
+            <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
+          </a>
+        )}
+        {ig && (
+          <a
+            href={ig}
+            {...externalLinkProps(ig)}
+            className="flex min-h-[72px] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card"
+          >
+            <ShoppingBag className="h-8 w-8 text-primary" />
+            <div>
+              <p className="font-medium text-foreground">Instagram</p>
+              <p className="inline-flex items-center gap-1 text-xs text-foreground-secondary">
+                外部連結 <ExternalLink className="h-3 w-3" />
+              </p>
+            </div>
+            <ChevronRight className="ml-auto h-5 w-5 text-foreground-secondary" />
+          </a>
+        )}
       </div>
 
-      <section className="rounded-[20px] bg-surface p-5 shadow-card">
-        <h2 className="font-bold text-foreground">AI 客服聊天</h2>
-        <p className="mt-1 text-xs text-foreground-secondary">即時回答常見問題；複雜案件請改填表單或 LINE。</p>
-        <div className="mt-3 max-h-56 space-y-2 overflow-y-auto rounded-xl bg-muted/40 p-3">
-          {chat.map((m, i) => (
-            <div key={i} className={`text-sm ${m.role === "user" ? "text-right" : ""}`}>
-              <span className={`inline-block rounded-2xl px-3 py-2 ${m.role === "user" ? "bg-brand-gradient text-white" : "bg-surface text-foreground shadow-sm"}`}>
-                {m.content}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 flex gap-2">
-          <Input
-            className="min-h-11"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="例如：如何取貨？"
-            onKeyDown={(e) => e.key === "Enter" && sendAiChat()}
-          />
-          <Button type="button" onClick={sendAiChat} disabled={chatLoading}>
-            {chatLoading ? "…" : "送出"}
-          </Button>
-        </div>
-      </section>
+      {(settings.address || settings.business_hours || mapUrl) && (
+        <section className="rounded-[20px] bg-surface p-4 shadow-card">
+          <h2 className="font-bold text-caramel">門市資訊</h2>
+          {settings.address && (
+            <p className="mt-2 flex items-start gap-2 text-sm text-foreground-secondary">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+              {settings.address}
+            </p>
+          )}
+          {settings.business_hours && (
+            <p className="mt-1 text-sm text-foreground-secondary">營業時間：{settings.business_hours}</p>
+          )}
+          {mapUrl && (
+            <a
+              href={mapUrl}
+              {...externalLinkProps(mapUrl)}
+              className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary"
+            >
+              Google 地圖 <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          )}
+        </section>
+      )}
 
       <section className="space-y-2">
-        <h2 className="flex items-center gap-2 text-sm font-medium text-caramel">
-          <Headphones className="h-4 w-4" />
-          快速協助
-        </h2>
+        <h2 className="text-sm font-medium text-caramel">快速協助</h2>
         <div className="space-y-2">
           {QUICK_LINKS.map((item) => (
             <Link
@@ -210,43 +232,35 @@ export default function SupportPage() {
       </section>
 
       <section className="rounded-[20px] bg-surface p-5 shadow-card">
-        <h2 className="flex items-center gap-2 font-medium text-caramel">
-          <FileText className="h-4 w-4" />
-          聯絡表單
-        </h2>
+        <h2 className="font-medium text-caramel">聯絡表單</h2>
         {submitted ? (
           <p className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800">
             您的問題已送出，我們會盡快與您聯絡。
           </p>
         ) : (
           <form onSubmit={submitTicket} className="mt-4 space-y-3">
-            <div>
-              <label className="mb-1 block text-sm font-medium">問題分類</label>
-              <select
-                className="input-field min-h-12 w-full rounded-lg border border-border bg-card px-3 text-sm"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              className="input-field min-h-12 w-full"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
             <Input className="min-h-12" placeholder="聯絡姓名 *" value={contactName} onChange={(e) => setContactName(e.target.value)} required />
             <Input className="min-h-12" type="tel" placeholder="聯絡電話" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
             <Input className="min-h-12" type="email" placeholder="Email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
-            <Input className="min-h-12" placeholder="訂單編號（選填）" value={orderId} onChange={(e) => setOrderId(e.target.value)} />
+            <Input className="min-h-12" placeholder="App 訂單編號（選填）" value={orderId} onChange={(e) => setOrderId(e.target.value)} />
             <Input className="min-h-12" placeholder="問題主旨 *" value={subject} onChange={(e) => setSubject(e.target.value)} required />
             <textarea
-              className="input-field min-h-[120px] w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+              className="input-field min-h-[120px] w-full"
               placeholder="請描述您的問題 *"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               required
             />
-            <Button type="submit" className="min-h-11 w-full bg-primary hover:bg-primary-hover" disabled={submitting}>
+            <Button type="submit" className="min-h-11 w-full bg-primary" disabled={submitting}>
               {submitting ? "送出中…" : "送出問題"}
             </Button>
           </form>

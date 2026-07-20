@@ -5,156 +5,246 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { StatusBadge } from "@/components/admin/StatusBadge";
 import { formatDate } from "@/lib/utils";
-import { ROLE_LABELS } from "@/lib/utils";
+import { MEMBER_NOTIFICATION_CATEGORIES } from "@/lib/services/notificationCampaignService";
+import type { NotificationCampaign } from "@/lib/types/database";
 
-type PushNotification = {
-  id: string;
-  title: string;
-  body: string;
-  target_role: string | null;
-  sent_at: string;
+const STATUS_LABEL: Record<string, string> = {
+  draft: "草稿",
+  scheduled: "預約中",
+  sending: "發送中",
+  sent: "已發送",
+  cancelled: "已取消",
 };
 
 export default function AdminNotificationsPage() {
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [targetRole, setTargetRole] = useState("member");
-  const [sent, setSent] = useState(false);
-  const [history, setHistory] = useState<PushNotification[]>([]);
+  const [campaigns, setCampaigns] = useState<NotificationCampaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({
+    title: "",
+    summary: "",
+    body: "",
+    category: "system",
+    link_url: "",
+    audience_type: "all",
+    user_ids_text: "",
+    order_status: "awaiting_payment",
+    scheduled_at: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [preview, setPreview] = useState(false);
 
-  const [inAppTitle, setInAppTitle] = useState("");
-  const [inAppMessage, setInAppMessage] = useState("");
-  const [inAppType, setInAppType] = useState("system");
-  const [inAppUserId, setInAppUserId] = useState("");
-  const [inAppSending, setInAppSending] = useState(false);
-  const [inAppSent, setInAppSent] = useState<string | null>(null);
-
-  const loadHistory = () => {
-    fetch("/api/admin/push-notifications")
+  const load = () => {
+    setLoading(true);
+    fetch("/api/admin/notification-campaigns")
       .then((r) => r.json())
-      .then((d) => setHistory(d.notifications ?? []))
-      .catch(() => {});
+      .then((d) => setCampaigns(d.campaigns ?? []))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    loadHistory();
+    load();
   }, []);
 
-  const handleSend = async () => {
-    await fetch("/api/push-notifications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, body, targetRole }),
-    });
-    setSent(true);
-    setTitle("");
-    setBody("");
-    loadHistory();
-    setTimeout(() => setSent(false), 3000);
-  };
-
-  const sendInApp = async () => {
-    if (!inAppTitle.trim() || !inAppMessage.trim()) return;
-    setInAppSending(true);
+  const submit = async (action: "draft" | "schedule" | "send_now") => {
+    if (!form.title.trim() || !form.body.trim()) {
+      alert("請填寫標題與內容");
+      return;
+    }
+    if (action === "send_now" && !confirm("確定立即發送 App 內通知？（不會發送手機推播）")) return;
+    setSaving(true);
     try {
-      const res = await fetch("/api/admin/member-notifications", {
+      const res = await fetch("/api/admin/notification-campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: inAppTitle.trim(),
-          message: inAppMessage.trim(),
-          notification_type: inAppType,
-          user_id: inAppUserId.trim() || undefined,
+          ...form,
+          action,
+          audience_filter:
+            form.audience_type === "users"
+              ? { user_ids: form.user_ids_text.split(/[\s,]+/).filter(Boolean) }
+              : form.audience_type === "order_status"
+                ? { order_status: form.order_status }
+                : {},
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "發送失敗");
-      setInAppSent(`已建立 ${data.sent} 則 App 內通知（非手機推播）`);
-      setInAppTitle("");
-      setInAppMessage("");
-      setInAppUserId("");
-      setTimeout(() => setInAppSent(null), 4000);
+      if (!res.ok) throw new Error(data.error ?? "失敗");
+      alert(
+        action === "send_now"
+          ? `已發送 ${data.sent ?? 0} 則`
+          : action === "schedule"
+            ? "已預約"
+            : "已存草稿"
+      );
+      setForm({
+        title: "",
+        summary: "",
+        body: "",
+        category: "system",
+        link_url: "",
+        audience_type: "all",
+        user_ids_text: "",
+        order_status: "awaiting_payment",
+        scheduled_at: "",
+      });
+      setPreview(false);
+      load();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "發送失敗");
+      alert(e instanceof Error ? e.message : "失敗");
     } finally {
-      setInAppSending(false);
+      setSaving(false);
     }
   };
 
-  return (
-    <div className="space-y-8">
-      <AdminPageHeader title="通知管理" description="App 內通知與推播（推播需裝置授權）" />
+  const patch = async (id: string, action: "cancel" | "send_now") => {
+    if (action === "cancel" && !confirm("確定取消此預約／草稿？")) return;
+    if (action === "send_now" && !confirm("確定立即發送？")) return;
+    const res = await fetch(`/api/admin/notification-campaigns/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error ?? "操作失敗");
+      return;
+    }
+    load();
+  };
 
-      <section className="max-w-lg space-y-3 rounded-xl bg-white p-4 shadow-card">
-        <h2 className="font-medium text-coffee">App 內通知</h2>
-        <p className="text-xs text-muted-foreground">
-          建立於會員通知中心，不會發送瀏覽器或手機推播。
-        </p>
-        <Input placeholder="標題" value={inAppTitle} onChange={(e) => setInAppTitle(e.target.value)} />
+  return (
+    <div className="space-y-6">
+      <AdminPageHeader
+        title="通知管理"
+        description="App 內通知（訂單／團購／活動／福利／門市／系統）。不含 POS 消費通知；正式推播可預留但不串接付費服務。"
+      />
+
+      <section className="max-w-2xl space-y-3 rounded-xl bg-white p-4 shadow-card">
+        <h2 className="font-medium text-coffee">建立通知</h2>
+        <Input placeholder="標題 *" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+        <Input placeholder="摘要（選填）" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
         <textarea
           className="input-field min-h-[100px] w-full"
-          placeholder="內容"
-          value={inAppMessage}
-          onChange={(e) => setInAppMessage(e.target.value)}
+          placeholder="內容 *（純文字，不信任 HTML）"
+          value={form.body}
+          onChange={(e) => setForm({ ...form, body: e.target.value })}
         />
-        <select className="input-field w-full" value={inAppType} onChange={(e) => setInAppType(e.target.value)}>
-          <option value="system">系統公告</option>
-          <option value="product">商品通知</option>
-          <option value="livestream">直播通知</option>
-        </select>
-        <Input
-          placeholder="指定會員 user id（留空則全部會員）"
-          value={inAppUserId}
-          onChange={(e) => setInAppUserId(e.target.value)}
-        />
-        <Button onClick={sendInApp} disabled={inAppSending || !inAppTitle || !inAppMessage}>
-          {inAppSending ? "建立中…" : "建立 App 內通知"}
-        </Button>
-        {inAppSent && <p className="text-sm text-green-700">{inAppSent}</p>}
-      </section>
-
-      <section className="space-y-4">
-        <AdminPageHeader title="推播通知" description="裝置推播功能將於後續版本完善" />
-
-        <div className="max-w-lg space-y-3 rounded-xl bg-white p-4 shadow-card">
-          <Input placeholder="標題" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <textarea
-            className="input-field min-h-[100px]"
-            placeholder="內容"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-          />
-          <select className="input-field" value={targetRole} onChange={(e) => setTargetRole(e.target.value)}>
-            {Object.entries(ROLE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <select className="input-field" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+            {MEMBER_NOTIFICATION_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
             ))}
           </select>
-          <Button onClick={handleSend} disabled={!title || !body}>
-            發送推播
-          </Button>
-          {sent && <p className="text-sm text-green-700">已發送</p>}
+          <Input placeholder="導向連結（/orders/... 或 https）" value={form.link_url} onChange={(e) => setForm({ ...form, link_url: e.target.value })} />
         </div>
-
-        <div>
-          <h2 className="mb-3 font-medium text-coffee">推播紀錄</h2>
-          <AdminTable
-            columns={[
-              { key: "title", header: "標題", render: (n) => n.title },
-              { key: "body", header: "內容", render: (n) => <span className="line-clamp-2">{n.body}</span> },
-              {
-                key: "target",
-                header: "對象",
-                render: (n) => (n.target_role ? ROLE_LABELS[n.target_role] ?? n.target_role : "全部"),
-              },
-              { key: "sent", header: "發送時間", render: (n) => <span className="text-xs">{formatDate(n.sent_at)}</span> },
-            ]}
-            rows={history}
-            emptyText="尚無推播紀錄"
+        <select
+          className="input-field w-full"
+          value={form.audience_type}
+          onChange={(e) => setForm({ ...form, audience_type: e.target.value })}
+        >
+          <option value="all">全部 App 會員</option>
+          <option value="users">指定會員 ID</option>
+          <option value="order_status">依 App 訂單狀態</option>
+        </select>
+        {form.audience_type === "users" && (
+          <textarea
+            className="input-field min-h-[72px] w-full"
+            placeholder="會員 UUID，逗號或換行分隔"
+            value={form.user_ids_text}
+            onChange={(e) => setForm({ ...form, user_ids_text: e.target.value })}
           />
+        )}
+        {form.audience_type === "order_status" && (
+          <select
+            className="input-field w-full"
+            value={form.order_status}
+            onChange={(e) => setForm({ ...form, order_status: e.target.value })}
+          >
+            <option value="awaiting_payment">待付款</option>
+            <option value="payment_confirmed">已確認付款</option>
+            <option value="ready_for_pickup">待取貨</option>
+            <option value="completed">已完成</option>
+          </select>
+        )}
+        <Input
+          type="datetime-local"
+          value={form.scheduled_at}
+          onChange={(e) => setForm({ ...form, scheduled_at: e.target.value })}
+        />
+
+        {preview && (
+          <div className="rounded-xl border border-border bg-surface-soft p-4 text-sm">
+            <p className="font-bold">{form.title || "（無標題）"}</p>
+            {form.summary && <p className="mt-1 text-foreground-secondary">{form.summary}</p>}
+            <p className="mt-2 whitespace-pre-wrap">{form.body || "（無內容）"}</p>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setPreview((p) => !p)}>
+            {preview ? "關閉預覽" : "預覽"}
+          </Button>
+          <Button variant="secondary" disabled={saving} onClick={() => submit("draft")}>存草稿</Button>
+          <Button variant="outline" disabled={saving || !form.scheduled_at} onClick={() => submit("schedule")}>
+            預約發送
+          </Button>
+          <Button disabled={saving} onClick={() => submit("send_now")}>
+            {saving ? "處理中…" : "立即發送"}
+          </Button>
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 font-medium text-coffee">發送紀錄</h2>
+        <AdminTable
+          columns={[
+            { key: "title", header: "標題", render: (c) => c.title },
+            {
+              key: "category",
+              header: "分類",
+              render: (c) => MEMBER_NOTIFICATION_CATEGORIES.find((x) => x.value === c.category)?.label ?? c.category,
+            },
+            {
+              key: "status",
+              header: "狀態",
+              render: (c) => (
+                <StatusBadge
+                  label={STATUS_LABEL[c.status] ?? c.status}
+                  variant={c.status === "sent" ? "success" : c.status === "scheduled" ? "warning" : "secondary"}
+                />
+              ),
+            },
+            { key: "sent", header: "人數", render: (c) => c.sent_count },
+            {
+              key: "time",
+              header: "時間",
+              render: (c) => (
+                <span className="text-xs">
+                  {c.sent_at ? formatDate(c.sent_at) : c.scheduled_at ? `預約 ${formatDate(c.scheduled_at)}` : formatDate(c.created_at)}
+                </span>
+              ),
+            },
+            {
+              key: "actions",
+              header: "操作",
+              render: (c) => (
+                <div className="flex flex-wrap gap-1">
+                  {(c.status === "draft" || c.status === "scheduled") && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => patch(c.id, "send_now")}>立即發送</Button>
+                      <Button size="sm" variant="outline" onClick={() => patch(c.id, "cancel")}>取消</Button>
+                    </>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+          rows={campaigns}
+          loading={loading}
+          emptyText="尚無通知活動"
+        />
       </section>
     </div>
   );

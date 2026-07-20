@@ -21,6 +21,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (body.question !== undefined) updates.question = body.question.trim();
   if (body.answer !== undefined) updates.answer = body.answer.trim();
   if (body.is_active !== undefined) updates.is_active = Boolean(body.is_active);
+  if (body.is_featured !== undefined) updates.is_featured = Boolean(body.is_featured);
   if (body.sort_order !== undefined) updates.sort_order = Number(body.sort_order) || 0;
 
   const admin = createAdminClient();
