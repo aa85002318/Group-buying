@@ -3,6 +3,7 @@ export const STORE_STAFF_ADMIN_PATHS = [
   "/admin/orders",
   "/admin/payments",
   "/admin/pickup",
+  "/admin/store",
 ] as const;
 
 export function isStoreStaffAllowedPath(path: string): boolean {
@@ -37,6 +38,7 @@ export const ADMIN_ONLY_PATHS = [
   "/admin/support",
   "/admin/corporate",
   "/admin/courses",
+  "/admin/cms",
   "/admin/reports",
   "/admin/staff",
   "/admin/payment-records",
@@ -62,8 +64,10 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/articles", label: "文章管理", roles: ["admin"] },
   { href: "/admin/group-buy", label: "團購", roles: ["admin"] },
   { href: "/admin/stores", label: "取貨點", roles: ["admin"] },
+  { href: "/admin/store", label: "門市管理" },
+  { href: "/admin/cms", label: "統一 CMS", roles: ["admin"] },
   { href: "/admin/faqs", label: "FAQ", roles: ["admin"] },
-  { href: "/admin/orders", label: "訂單" },
+  { href: "/admin/orders", label: "訂單中心" },
   { href: "/admin/payments", label: "付款" },
   { href: "/admin/pickup", label: "取貨" },
   { href: "/admin/payment-records", label: "金流紀錄", roles: ["admin"] },

@@ -117,6 +117,8 @@ export interface ProductCategory {
   is_active?: boolean;
   icon_emoji?: string | null;
   icon_url?: string | null;
+  parent_id?: string | null;
+  banner_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -144,13 +146,24 @@ export interface Product {
   category_id: string | null;
   name: string;
   slug?: string | null;
+  subtitle?: string | null;
   description: string | null;
   short_description?: string | null;
   specifications?: string | null;
+  barcode?: string | null;
+  sku?: string | null;
+  unit?: string | null;
+  video_url?: string | null;
   price: number;
   sale_price?: number | null;
   original_price: number | null;
   cost_price?: number | null;
+  website_price?: number | null;
+  group_buy_price?: number | null;
+  msrp?: number | null;
+  publish_website?: boolean;
+  publish_group_buy?: boolean;
+  publish_store?: boolean;
   stock: number;
   image_url: string | null;
   images?: string[];
@@ -170,6 +183,7 @@ export interface Product {
   created_at: string;
   updated_at: string;
   product_categories?: ProductCategory;
+  product_channels?: Array<{ channel: string; is_enabled: boolean }>;
 }
 
 export interface GroupBuyEvent {
@@ -235,6 +249,7 @@ export interface Order {
   share_source_id: string | null;
   livestream_id: string | null;
   notes: string | null;
+  channel?: "website" | "group_buy" | "store_reservation" | null;
   customer_name?: string | null;
   customer_phone?: string | null;
   customer_email?: string | null;

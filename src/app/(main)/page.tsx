@@ -9,6 +9,7 @@ import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
 import { LiveHomeSection } from "@/components/home/LiveHomeSection";
 import { ArticleHomeSection } from "@/components/home/ArticleHomeSection";
 import { RecommendHomeSection } from "@/components/home/RecommendHomeSection";
+import { StoreAnnouncementsSection } from "@/components/home/StoreAnnouncementsSection";
 import { CourseCard } from "@/components/courses/CourseCard";
 import { MOCK_COURSES } from "@/lib/mock-courses";
 import {
@@ -270,6 +271,7 @@ export default function HomePage() {
       </section>
 
       <ArticleHomeSection articles={articles} />
+      <StoreAnnouncementsSection />
       <VideoSection videos={videos} />
     </div>
   );

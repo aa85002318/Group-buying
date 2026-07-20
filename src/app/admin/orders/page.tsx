@@ -40,11 +40,16 @@ export default function AdminOrdersPage() {
     ["order_number"]
   );
   const [statusFilter, setStatusFilter] = useState("");
+  const [channelFilter, setChannelFilter] = useState("");
   const [detail, setDetail] = useState<OrderDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
 
-  const filtered = statusFilter ? paginated.filter((o) => o.status === statusFilter) : paginated;
+  const filtered = paginated.filter((o) => {
+    if (statusFilter && o.status !== statusFilter) return false;
+    if (channelFilter && (o as Order & { channel?: string }).channel !== channelFilter) return false;
+    return true;
+  });
 
   const updateStatus = async (id: string, status: OrderStatus) => {
     await fetch(`/api/orders/${id}/status`, {
@@ -100,8 +105,8 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title="訂單管理"
-        description="訂單查詢、產品明細、重發客戶信件與匯出"
+        title="統一訂單中心"
+        description="來源：Website／Group Buy／Store Reservation — 保留 Channel、Status、Payment、Shipping、Pickup"
         actions={
           <a
             href="/api/admin/orders/export?format=xlsx"
@@ -220,6 +225,19 @@ export default function AdminOrdersPage() {
           },
           { key: "amount", header: "金額", render: (o) => formatCurrency(o.total_amount) },
           {
+            key: "channel",
+            header: "渠道",
+            render: (o) => {
+              const ch = (o as Order & { channel?: string }).channel ?? "group_buy";
+              const labels: Record<string, string> = {
+                website: "Website",
+                group_buy: "Group Buy",
+                store_reservation: "Store",
+              };
+              return labels[ch] ?? ch;
+            },
+          },
+          {
             key: "status",
             header: "狀態",
             render: (o) => (
@@ -262,18 +280,30 @@ export default function AdminOrdersPage() {
         totalPages={totalPages}
         onPageChange={setPage}
         toolbar={
-          <select
-            className="rounded-lg border border-border px-3 py-2 text-sm"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">全部狀態</option>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {ORDER_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-wrap gap-2">
+            <select
+              className="rounded-lg border border-border px-3 py-2 text-sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">全部狀態</option>
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {ORDER_STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
+            <select
+              className="rounded-lg border border-border px-3 py-2 text-sm"
+              value={channelFilter}
+              onChange={(e) => setChannelFilter(e.target.value)}
+            >
+              <option value="">全部渠道</option>
+              <option value="website">Website</option>
+              <option value="group_buy">Group Buy</option>
+              <option value="store_reservation">Store Reservation</option>
+            </select>
+          </div>
         }
       />
     </div>

@@ -10,6 +10,8 @@ export async function GET(request: Request) {
   const category = searchParams.get("category");
   const search = searchParams.get("search");
   const tag = searchParams.get("tag");
+  // Additive: optional channel filter (website | group_buy | store_only)
+  const channel = searchParams.get("channel");
 
   if (!isSupabaseConfigured()) {
     const products = filterProducts(mockProducts, { search, category, tag });
@@ -29,6 +31,14 @@ export async function GET(request: Request) {
 
   if (search) {
     query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+  }
+
+  if (channel === "website") {
+    query = query.eq("publish_website", true);
+  } else if (channel === "group_buy") {
+    query = query.eq("publish_group_buy", true);
+  } else if (channel === "store_only") {
+    query = query.eq("publish_store", true);
   }
 
   const { data, error } = await query;

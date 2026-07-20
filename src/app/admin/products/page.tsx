@@ -31,7 +31,7 @@ export default function AdminProductsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="商品管理"
-        description="Shopify 風格商品中心：新增、匯入、分類與庫存管理"
+        description="Product Master：商品只建立一次，透過渠道上架官網／團購／門市"
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/admin/products/analysis">
@@ -75,6 +75,9 @@ export default function AdminProductsPage() {
       <div className="flex flex-wrap gap-2">
         <Link href="/admin/products/categories">
           <Button variant="outline" size="sm">分類管理</Button>
+        </Link>
+        <Link href="/admin/store">
+          <Button variant="outline" size="sm">門市管理</Button>
         </Link>
         <Link href="/admin/inventory">
           <Button variant="outline" size="sm">庫存報表</Button>

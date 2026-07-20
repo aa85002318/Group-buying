@@ -11,6 +11,10 @@ import {
   attachProductRelations,
   syncAllProductRelations,
 } from "@/lib/services/productRelations";
+import {
+  syncProductChannels,
+  type ProductChannel,
+} from "@/lib/services/productChannelService";
 
 function normalizeImages(body: Record<string, unknown>) {
   const images = Array.isArray(body.images)
@@ -86,7 +90,24 @@ function mapProductRow(body: Record<string, unknown>) {
     product_info: body.product_info ?? null,
     disclaimer: body.product_info ?? body.disclaimer ?? null,
     expected_arrival_date: body.expected_arrival_date ?? null,
+    barcode: body.barcode ?? null,
+    unit: body.unit ?? null,
+    video_url: body.video_url ?? null,
+    website_price: body.website_price ?? null,
+    group_buy_price: body.group_buy_price ?? null,
+    msrp: body.msrp ?? null,
+    publish_website: body.publish_website !== false,
+    publish_group_buy: body.publish_group_buy !== false,
+    publish_store: body.publish_store !== false,
   };
+}
+
+async function maybeSyncChannels(productId: string, body: Record<string, unknown>) {
+  if (!Array.isArray(body.channels)) return;
+  const channels = (body.channels as string[]).filter((c): c is ProductChannel =>
+    ["website", "group_buy", "store_only", "hidden"].includes(c)
+  );
+  await syncProductChannels(productId, channels);
 }
 
 export async function GET(request: Request) {
@@ -152,6 +173,7 @@ export async function POST(request: Request) {
   try {
     await syncProductPickupStores(admin, data.id, pickup_store_ids);
     await syncAllProductRelations(admin, data.id, body);
+    await maybeSyncChannels(data.id, body);
   } catch (e) {
     const message = e instanceof Error ? e.message : "關聯資料儲存失敗";
     if (!message.includes("does not exist") && !message.includes("relation")) {
@@ -192,6 +214,7 @@ export async function PUT(request: Request) {
       await syncProductPickupStores(admin, id, pickup_store_ids);
     }
     await syncAllProductRelations(admin, id, body);
+    await maybeSyncChannels(id, body);
   } catch (e) {
     const message = e instanceof Error ? e.message : "關聯資料儲存失敗";
     if (!message.includes("does not exist") && !message.includes("relation")) {

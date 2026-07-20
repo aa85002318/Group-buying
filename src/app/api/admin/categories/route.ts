@@ -50,6 +50,10 @@ export async function POST(request: Request) {
       name: body.name,
       slug: body.slug ?? body.name.toLowerCase().replace(/\s+/g, "-"),
       sort_order: body.sort_order ?? 99,
+      parent_id: body.parent_id ?? null,
+      icon_emoji: body.icon_emoji ?? null,
+      icon_url: body.icon_url ?? null,
+      banner_url: body.banner_url ?? null,
     })
     .select()
     .single();

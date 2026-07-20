@@ -16,6 +16,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.icon_emoji !== undefined) updates.icon_emoji = body.icon_emoji;
   if (body.icon_url !== undefined) updates.icon_url = body.icon_url;
   if (body.sort_order !== undefined) updates.sort_order = body.sort_order;
+  if (body.parent_id !== undefined) updates.parent_id = body.parent_id;
+  if (body.banner_url !== undefined) updates.banner_url = body.banner_url;
 
   if (!isSupabaseConfigured()) {
     const idx = mockCategories.findIndex((c) => c.id === id);
