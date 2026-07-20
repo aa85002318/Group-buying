@@ -14,14 +14,14 @@ export async function PATCH(request: Request) {
   const auth = await getAuthUser();
   if (!auth) return NextResponse.json({ error: "未登入" }, { status: 401 });
 
-  let body: { full_name?: string; phone?: string; birthday?: string };
+  let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "無效的請求" }, { status: 400 });
   }
 
-  const parsed = buildProfileUpdates(body);
+  const parsed = buildProfileUpdates(body as Parameters<typeof buildProfileUpdates>[0]);
   if (!parsed.ok) {
     return NextResponse.json({ error: parsed.error }, { status: parsed.status ?? 400 });
   }

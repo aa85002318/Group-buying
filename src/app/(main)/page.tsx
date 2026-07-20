@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Barcode, ChevronRight } from "lucide-react";
 import { BannerCarousel, type BannerItem } from "@/components/home/BannerCarousel";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { ProductScrollSection } from "@/components/home/ProductScrollSection";
@@ -144,6 +146,20 @@ export default function HomePage() {
   return (
     <div className="space-y-10">
       <BannerCarousel banners={banners} />
+
+      <Link
+        href="/member/carrier"
+        className="flex items-center gap-3 rounded-[20px] bg-white px-4 py-3 shadow-[0_4px_24px_rgba(23,63,117,0.06)] transition hover:shadow-md"
+      >
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E9285C]/10 text-[#E9285C]">
+          <Barcode className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold text-[#202124]">發票載具</span>
+          <span className="block text-xs text-[#6B7280]">門市結帳快速出示</span>
+        </span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-[#6B7280]" />
+      </Link>
 
       <CategoryGrid categories={categories} />
 

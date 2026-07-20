@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrlFromRequest } from "@/lib/env";
+import { getSafeRedirectPath } from "@/lib/auth/safe-redirect";
 
 function errorRedirect(siteUrl: string, reason: string) {
   return NextResponse.redirect(`${siteUrl}/auth/error?reason=${encodeURIComponent(reason)}`);
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   const typeParam = searchParams.get("type");
   const next = searchParams.get("next") ?? "/";
   const siteUrl = requestUrl.origin || getSiteUrlFromRequest(request);
-  const redirectPath = next.startsWith("/") ? next : `/${next}`;
+  const redirectPath = getSafeRedirectPath(next, "/");
 
   const supabase = await createClient();
 

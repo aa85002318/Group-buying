@@ -10,12 +10,13 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { ROLE_LABELS } from "@/lib/utils";
 import { getAuthErrorMessage } from "@/lib/auth/error-messages";
+import { getSafeRedirectPath } from "@/lib/auth/safe-redirect";
 import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
 
 export default function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/";
+  const next = getSafeRedirectPath(searchParams.get("next"), "/");
   const lineUserId = searchParams.get("line_user_id");
   const errorCode = searchParams.get("error");
   const deleted = searchParams.get("deleted") === "1";
@@ -114,7 +115,7 @@ export default function LoginClient() {
       }
     }
 
-    router.push(next.startsWith("/") ? next : "/");
+    router.push(getSafeRedirectPath(next, "/"));
     router.refresh();
   };
 

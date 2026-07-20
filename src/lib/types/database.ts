@@ -96,6 +96,10 @@ export interface Profile {
   member_code: string;
   role: UserRole;
   avatar_url: string | null;
+  gender?: "female" | "male" | "other" | "prefer_not_to_say" | null;
+  city?: string | null;
+  district?: string | null;
+  contact_address?: string | null;
   referrer_user_id: string | null;
   store_id: string | null;
   store_credit_balance?: number;
