@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { Barcode, ChevronRight } from "lucide-react";
 import { BannerCarousel, type BannerItem } from "@/components/home/BannerCarousel";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { ProductScrollSection } from "@/components/home/ProductScrollSection";
 import { VideoSection } from "@/components/home/VideoSection";
+import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
+import { LiveHomeSection } from "@/components/home/LiveHomeSection";
+import { ArticleHomeSection } from "@/components/home/ArticleHomeSection";
+import { CourseCard } from "@/components/courses/CourseCard";
+import { MOCK_COURSES } from "@/lib/mock-courses";
 import {
   getClosingSoonProducts,
   getNewThisWeekProducts,
@@ -14,13 +17,23 @@ import {
 } from "@/lib/home";
 import {
   getMockGroupBuyEventsWithProducts,
+  mockArticles,
   mockBanners,
   mockCategories,
+  mockLivestreams,
   mockProducts,
   mockVideos,
 } from "@/lib/mock-data";
-import type { GroupBuyEvent, Product, ProductCategory, Video } from "@/lib/types/database";
+import type {
+  Article,
+  GroupBuyEvent,
+  Livestream,
+  Product,
+  ProductCategory,
+  Video,
+} from "@/lib/types/database";
 import { formatCurrency } from "@/lib/utils";
+import Link from "next/link";
 
 type GroupBuyEventWithProducts = GroupBuyEvent & {
   group_buy_products?: Array<{
@@ -36,6 +49,8 @@ export default function HomePage() {
   const [events, setEvents] = useState<GroupBuyEventWithProducts[]>(getMockGroupBuyEventsWithProducts());
   const [featuredEvents, setFeaturedEvents] = useState<GroupBuyEventWithProducts[]>([]);
   const [videos, setVideos] = useState<Video[]>(mockVideos);
+  const [livestreams, setLivestreams] = useState<Livestream[]>(mockLivestreams);
+  const [articles, setArticles] = useState<Article[]>(mockArticles);
 
   useEffect(() => {
     Promise.all([
@@ -44,13 +59,17 @@ export default function HomePage() {
       fetch("/api/group-buy-events").then((r) => r.json()),
       fetch("/api/group-buy-events?featured=true").then((r) => r.json()),
       fetch("/api/videos").then((r) => r.json()),
+      fetch("/api/livestreams").then((r) => r.json()),
+      fetch("/api/articles").then((r) => r.json()),
     ])
-      .then(([productsRes, categoriesRes, eventsRes, featuredRes, videosRes]) => {
+      .then(([productsRes, categoriesRes, eventsRes, featuredRes, videosRes, liveRes, articlesRes]) => {
         if (productsRes.products?.length) setProducts(productsRes.products);
         if (categoriesRes.categories?.length) setCategories(categoriesRes.categories);
         if (eventsRes.events?.length) setEvents(eventsRes.events);
         if (featuredRes.events?.length) setFeaturedEvents(featuredRes.events);
         if (videosRes.videos?.length) setVideos(videosRes.videos);
+        if (liveRes.livestreams?.length) setLivestreams(liveRes.livestreams);
+        if (articlesRes.articles?.length) setArticles(articlesRes.articles);
       })
       .catch(() => {});
   }, []);
@@ -114,17 +133,17 @@ export default function HomePage() {
 
   const newThisWeek = useMemo(() => getNewThisWeekProducts(products), [products]);
   const closingSoon = useMemo(() => getClosingSoonProducts(products, events), [products, events]);
-  const recommended = useMemo(() => {
-    const ranked = new Map<string, HomeProduct>();
 
+  const ranked = useMemo(() => {
+    const map = new Map<string, HomeProduct>();
     for (const event of events) {
       for (const item of event.group_buy_products ?? []) {
         const product = item.products;
         if (!product) continue;
-        const existing = ranked.get(product.id);
+        const existing = map.get(product.id);
         const soldCount = item.sold_count ?? 0;
         if ((existing?.sold_count ?? -1) >= soldCount) continue;
-        ranked.set(product.id, {
+        map.set(product.id, {
           ...product,
           price: item.special_price ?? product.price,
           href: `/group-buy/${event.id}`,
@@ -132,43 +151,90 @@ export default function HomePage() {
         });
       }
     }
-
-    const rankedProducts = Array.from(ranked.values()).sort(
-      (a, b) => (b.sold_count ?? 0) - (a.sold_count ?? 0)
-    );
+    const list = Array.from(map.values()).sort((a, b) => (b.sold_count ?? 0) - (a.sold_count ?? 0));
     for (const product of products) {
-      if (rankedProducts.length >= 3) break;
-      if (!ranked.has(product.id)) rankedProducts.push({ ...product, sold_count: 0 });
+      if (list.length >= 8) break;
+      if (!map.has(product.id)) list.push({ ...product, sold_count: 0 });
     }
-    return rankedProducts.slice(0, 3);
+    return list;
   }, [events, products]);
 
+  const hotProducts = ranked.slice(0, 6);
+  const everyoneBuying = ranked.slice(0, 8);
+  const teacherPick = useMemo(() => {
+    const picks = [...products]
+      .filter((p) => p.is_active !== false)
+      .sort((a, b) => (b.original_price ?? 0) - (a.original_price ?? 0))
+      .slice(0, 6);
+    return picks.length ? picks : products.slice(0, 6);
+  }, [products]);
+  const guessYouLike = useMemo(() => {
+    const shuffled = [...products];
+    return shuffled.slice(0, 6);
+  }, [products]);
+
   return (
-    <div className="space-y-10">
+    <div className="page-enter space-y-8 pb-4">
       <BannerCarousel banners={banners} />
-
-      <Link
-        href="/member/carrier"
-        className="flex items-center gap-3 rounded-[20px] bg-white px-4 py-3 shadow-[0_4px_24px_rgba(23,63,117,0.06)] transition hover:shadow-md"
-      >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E9285C]/10 text-[#E9285C]">
-          <Barcode className="h-5 w-5" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block font-semibold text-[#202124]">發票載具</span>
-          <span className="block text-xs text-[#6B7280]">門市結帳快速出示</span>
-        </span>
-        <ChevronRight className="h-5 w-5 shrink-0 text-[#6B7280]" />
-      </Link>
-
+      <HomeQuickLinks />
       <CategoryGrid categories={categories} />
 
       <ProductScrollSection
-        title="本週新品搶先看"
+        title="今日新品"
         products={newThisWeek}
         seeMoreHref="/group-buy"
         variant="new"
-        emptyText="本週尚無新商品"
+        badge="NEW"
+        badgeTone="new"
+        emptyText="今日尚無新商品"
+      />
+
+      <LiveHomeSection livestreams={livestreams} />
+
+      <ProductScrollSection
+        title="直播限定"
+        products={hotProducts.slice(0, 4)}
+        seeMoreHref="/live"
+        variant="hot"
+        badge="LIVE"
+        badgeTone="live"
+        emptyText="暫無直播限定商品"
+      />
+
+      <ProductScrollSection
+        title="老師推薦"
+        products={teacherPick}
+        seeMoreHref="/products"
+        variant="recommend"
+        badge="推薦"
+        badgeTone="mint"
+        emptyText="暫無推薦商品"
+      />
+
+      <ProductScrollSection
+        title="熱門排行"
+        products={hotProducts}
+        seeMoreHref="/group-buy"
+        variant="ranking"
+        badge="HOT"
+        badgeTone="hot"
+        emptyText="暫無熱門商品"
+      />
+
+      <ProductScrollSection
+        title="大家都在買"
+        products={everyoneBuying}
+        seeMoreHref="/products"
+        variant="hot"
+        emptyText="暫無商品"
+      />
+
+      <ProductScrollSection
+        title="猜你喜歡"
+        products={guessYouLike}
+        seeMoreHref="/products"
+        variant="new"
+        emptyText="暫無商品"
       />
 
       <ProductScrollSection
@@ -180,14 +246,26 @@ export default function HomePage() {
         emptyText="近期無即將截止的團購"
       />
 
-      <ProductScrollSection
-        title="團友熱買排行榜"
-        products={recommended}
-        seeMoreHref="/group-buy"
-        variant="ranking"
-        emptyText="暫無推薦商品"
-      />
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="h-7 w-1.5 rounded-full bg-[#3A86FF]" />
+            <h2 className="section-title">烘焙課程</h2>
+          </div>
+          <Link href="/courses" className="text-sm font-bold text-primary">
+            查看更多
+          </Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+          {MOCK_COURSES.map((c) => (
+            <div key={c.id} className="w-[78%] shrink-0 sm:w-[46%] lg:w-[31%]">
+              <CourseCard course={c} />
+            </div>
+          ))}
+        </div>
+      </section>
 
+      <ArticleHomeSection articles={articles} />
       <VideoSection videos={videos} />
     </div>
   );

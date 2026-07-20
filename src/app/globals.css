@@ -1,38 +1,40 @@
+@import "../styles/design-tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --brand-primary: #e9285c;
-    --brand-dark: #b81648;
-    --sale-red: #ff4d36;
-    --accent-orange: #ff8300;
-    --coupon-yellow: #ffc400;
-    --reward-purple: #a93ddb;
-    --fresh-green: #23b26d;
-    --frozen-blue: #268cff;
-    --page-background: #f7f7f9;
-    --card-background: #ffffff;
-    --text-primary: #202124;
-    --text-secondary: #6b7280;
+    --brand-primary: var(--color-primary);
+    --brand-dark: #c41f4d;
+    --sale-red: var(--color-primary);
+    --accent-orange: var(--color-secondary);
+    --coupon-yellow: var(--color-yellow);
+    --reward-purple: #c45cdb;
+    --fresh-green: var(--color-success);
+    --frozen-blue: var(--color-blue);
+    --page-background: var(--color-bg);
+    --card-background: var(--color-card);
+    --text-primary: var(--color-dark);
+    --text-secondary: var(--color-gray);
     --background: var(--page-background);
     --foreground: var(--text-primary);
     --primary: var(--brand-primary);
     --primary-light: #f94c77;
     --primary-dark: var(--brand-dark);
     --primary-foreground: #ffffff;
-    --promo: var(--sale-red);
+    --promo: var(--color-secondary);
     --pink: var(--brand-primary);
     --pink-light: #fff0f4;
     --card: var(--card-background);
     --card-foreground: var(--text-primary);
-    --muted: #f3f4f6;
+    --muted: var(--color-muted);
     --muted-foreground: var(--text-secondary);
-    --border: #e5e7eb;
+    --border: var(--color-border);
     --tag-bg: #fff0f4;
     --tag-text: var(--brand-primary);
-    --countdown: var(--sale-red);
+    --countdown: var(--color-error);
     --nav-active: var(--brand-primary);
     --nav-inactive: var(--text-secondary);
     --nav-icon: var(--text-secondary);
@@ -56,22 +58,59 @@
 
   body {
     @apply bg-background text-coffee antialiased overflow-x-hidden;
-    font-family: "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+    font-family: var(--font-sans);
   }
 
   img,
   video {
     @apply max-w-full h-auto;
   }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary) 22%, white);
+    color: var(--color-dark);
+  }
 }
 
 @layer components {
   .btn-brand {
-    @apply inline-flex items-center justify-center rounded-button bg-brand-gradient px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition hover:opacity-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-brand transition duration-250 ease-brand hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-button border-2 border-primary bg-white px-5 py-2.5 text-sm font-bold text-primary transition duration-250 ease-brand hover:bg-brand-blush active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-transparent px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-brand-blush;
   }
 
   .card-surface {
-    @apply rounded-card border border-border bg-card shadow-card;
+    @apply rounded-card border border-border bg-card shadow-card transition duration-250 ease-brand;
+  }
+
+  .card-lift {
+    @apply card-surface hover:-translate-y-1 hover:shadow-lift;
+  }
+
+  .section-title {
+    @apply text-xl font-black tracking-tight text-coffee;
+  }
+
+  .input-field {
+    @apply min-h-12 w-full rounded-input border border-border bg-card px-3 text-sm text-coffee placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-lg bg-[#f0e4e0];
+  }
+
+  .page-enter {
+    animation: page-fade-in var(--duration-base) var(--ease-out);
+  }
+
+  .sticker {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide shadow-sticker;
   }
 }
 
@@ -92,4 +131,55 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
+  .bg-dots {
+    background-image: radial-gradient(circle, rgba(233, 40, 92, 0.12) 1.5px, transparent 1.6px);
+    background-size: 14px 14px;
+  }
+
+  .bg-wave {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80'%3E%3Cpath fill='%23FFF8F6' d='M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: bottom;
+    background-size: 100% 40px;
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ribbon-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-8deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(-4deg);
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(229, 57, 53, 0);
+  }
+}
+
+.animate-ribbon {
+  animation: ribbon-float 3s ease-in-out infinite;
+}
+
+.animate-live {
+  animation: live-pulse 1.6s ease-out infinite;
 }

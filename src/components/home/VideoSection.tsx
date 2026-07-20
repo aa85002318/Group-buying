@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Play } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import type { Video } from "@/lib/types/database";
 
 interface VideoSectionProps {
@@ -13,9 +12,12 @@ export function VideoSection({ videos }: VideoSectionProps) {
 
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-coffee">影音專區</h2>
-        <Link href="/videos" className="text-sm text-primary">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="h-7 w-1.5 rounded-full bg-[#FF7A45]" />
+          <h2 className="section-title">影音專區</h2>
+        </div>
+        <Link href="/videos" className="text-sm font-bold text-primary">
           查看更多
         </Link>
       </div>
@@ -25,29 +27,27 @@ export function VideoSection({ videos }: VideoSectionProps) {
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {displayVideos.map((v) => (
-            <Link key={v.id} href={`/videos/${v.id}`}>
-              <Card className="overflow-hidden transition-shadow hover:shadow-lg">
-                <div className="relative aspect-video bg-muted">
-                  {v.thumbnail_url ? (
-                    <Image
-                      src={v.thumbnail_url}
-                      alt={v.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 512px) 50vw, 256px"
-                      unoptimized
-                    />
-                  ) : null}
-                  <div className="absolute inset-0 flex items-center justify-center bg-coffee/20">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
-                      <Play className="ml-0.5 h-4 w-4 fill-current" />
-                    </span>
-                  </div>
+            <Link key={v.id} href={`/videos/${v.id}`} className="card-lift overflow-hidden">
+              <div className="relative aspect-video bg-muted">
+                {v.thumbnail_url ? (
+                  <Image
+                    src={v.thumbnail_url}
+                    alt={v.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 512px) 50vw, 256px"
+                    unoptimized
+                  />
+                ) : null}
+                <div className="absolute inset-0 flex items-center justify-center bg-coffee/20">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-gradient text-white shadow-brand">
+                    <Play className="ml-0.5 h-4 w-4 fill-current" />
+                  </span>
                 </div>
-                <CardContent className="p-2.5">
-                  <p className="line-clamp-2 text-sm font-medium text-coffee">{v.title}</p>
-                </CardContent>
-              </Card>
+              </div>
+              <div className="p-2.5">
+                <p className="line-clamp-2 text-sm font-bold text-coffee">{v.title}</p>
+              </div>
             </Link>
           ))}
         </div>

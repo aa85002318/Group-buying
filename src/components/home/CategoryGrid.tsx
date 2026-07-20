@@ -18,12 +18,12 @@ interface CategoryGridProps {
 }
 
 const ICON_BACKGROUNDS = [
-  "bg-[#FF8A00]",
-  "bg-[#23B26D]",
-  "bg-[#268CFF]",
-  "bg-[#FFC400]",
-  "bg-[#00AFC1]",
-  "bg-[#E9288A]",
+  "bg-[#FF7A45]",
+  "bg-[#31B057]",
+  "bg-[#3A86FF]",
+  "bg-[#FFC83D]",
+  "bg-[#4CC9A6]",
+  "bg-[#E9285C]",
 ];
 
 const CATEGORY_ICONS = [Utensils, Sprout, Snowflake, CookingPot, Sparkles, CalendarDays];

@@ -5,6 +5,7 @@ import {
 } from "@/components/home/HomeProductCard";
 import type { HomeProduct } from "@/lib/home";
 import { ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ProductScrollSectionProps {
   title: string;
@@ -14,7 +15,16 @@ interface ProductScrollSectionProps {
   emptyText?: string;
   fourPerRow?: boolean;
   variant?: HomeProductCardVariant;
+  badge?: string;
+  badgeTone?: "new" | "hot" | "live" | "mint";
 }
+
+const BADGE_CLASS = {
+  new: "bg-[#C45CDB] text-white",
+  hot: "bg-brand-gradient text-white",
+  live: "bg-[#E53935] text-white",
+  mint: "bg-[#4CC9A6] text-white",
+};
 
 export function ProductScrollSection({
   title,
@@ -22,52 +32,46 @@ export function ProductScrollSection({
   seeMoreHref,
   emptyText = "暫無商品",
   variant = "new",
+  badge,
+  badgeTone = "new",
 }: ProductScrollSectionProps) {
   const isClosing = variant === "closing";
   const isRanking = variant === "ranking";
 
   return (
     <section
-      className={
+      className={cn(
         isClosing
-          ? "rounded-[20px] border-2 border-[#E9285C] bg-white p-3 shadow-[0_14px_34px_rgba(184,22,72,0.18)] md:p-4"
-          : "py-2"
-      }
+          ? "rounded-[22px] border-2 border-[#E53935] bg-card p-3 shadow-lift md:p-4"
+          : "py-1"
+      )}
     >
       <div
-        className={
-          isClosing
-            ? "mb-4 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#B81648] to-[#E9285C] px-4 py-3 text-white"
-            : "mb-4 flex items-center justify-between gap-3"
-        }
+        className={cn(
+          "mb-4 flex items-center justify-between gap-3",
+          isClosing && "rounded-2xl bg-brand-gradient px-4 py-3 text-white"
+        )}
       >
         <div className="flex items-center gap-2">
-          {variant === "new" && (
-            <span className="h-7 w-1.5 shrink-0 rounded-full bg-[#E9285C]" aria-hidden />
+          {!isClosing && (
+            <span className="h-7 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
           )}
-          <h2
-            className={
-              isClosing
-                ? "text-xl font-black text-white"
-                : "text-xl font-black text-[#202124]"
-            }
-          >
+          <h2 className={cn("text-xl font-black", isClosing ? "text-white" : "text-coffee")}>
             {title}
           </h2>
-          {variant === "new" && (
-            <span className="rounded-full bg-[#A93DDB] px-2.5 py-1 text-[10px] font-black text-white">
-              NEW
+          {badge && (
+            <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-black", BADGE_CLASS[badgeTone])}>
+              {badge}
             </span>
           )}
         </div>
         {seeMoreHref && (
           <Link
             href={seeMoreHref}
-            className={
-              isClosing
-                ? "inline-flex min-h-11 items-center gap-1 text-sm font-bold text-white"
-                : "inline-flex min-h-11 items-center gap-1 text-sm font-bold text-[#E9285C]"
-            }
+            className={cn(
+              "inline-flex min-h-11 items-center gap-1 text-sm font-bold",
+              isClosing ? "text-white" : "text-primary"
+            )}
           >
             查看更多
             <ArrowRight className="h-4 w-4" />
@@ -81,7 +85,7 @@ export function ProductScrollSection({
         <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 scrollbar-none">
           {products.map((p, index) => (
             <div
-              key={`${p.id}-${p.cutoff_at ?? ""}`}
+              key={`${p.id}-${p.cutoff_at ?? ""}-${index}`}
               className={
                 isRanking
                   ? "w-[88%] shrink-0 snap-start sm:w-[48%] lg:w-[calc((100%_-_1.5rem)_/_3)]"

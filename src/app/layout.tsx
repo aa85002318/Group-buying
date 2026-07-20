@@ -4,7 +4,18 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CHIMEIDIY 團購",
-  description: "CHIMEIDIY 團購 · 棋美點心屋 — 團購、直播、分潤一站式服務",
+  description: "CHIMEIDIY 棋美點心屋 — 團購、直播、烘焙課程與生活分享",
+  applicationName: "CHIMEIDIY",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CHIMEIDIY",
+  },
+  icons: {
+    icon: [{ url: "/images/logo-mark.png", type: "image/png" }],
+    apple: [{ url: "/images/logo-mark.png" }],
+  },
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
@@ -12,7 +23,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: "cover",
-  themeColor: "#D92D2D",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#E9285C" },
+    { media: "(prefers-color-scheme: dark)", color: "#E9285C" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

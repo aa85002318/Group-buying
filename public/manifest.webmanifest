@@ -1,0 +1,25 @@
+{
+  "name": "CHIMEIDIY 團購",
+  "short_name": "CHIMEIDIY",
+  "description": "棋美點心屋團購 · 烘焙生活分享",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF8F6",
+  "theme_color": "#E9285C",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "/images/logo-mark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo-mark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
