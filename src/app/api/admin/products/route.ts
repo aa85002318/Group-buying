@@ -7,6 +7,10 @@ import {
   attachPickupStoresToProducts,
   syncProductPickupStores,
 } from "@/lib/services/productPickupStores";
+import {
+  attachProductRelations,
+  syncAllProductRelations,
+} from "@/lib/services/productRelations";
 
 function normalizeImages(body: Record<string, unknown>) {
   const images = Array.isArray(body.images)
@@ -23,20 +27,57 @@ function normalizeImages(body: Record<string, unknown>) {
 
 function mapProductRow(body: Record<string, unknown>) {
   const { images, image_url } = normalizeImages(body);
-  const is_active = body.is_active !== false;
+  const status = body.status ?? (body.is_active !== false ? "active" : "inactive");
+  const is_active = status === "active";
+
   return {
     name: body.name,
-    category_id: body.category_id ?? null,
-    description: body.description ?? null,
+    subtitle: body.subtitle ?? null,
+    sku: body.sku ?? null,
+    category_id: body.category_id ?? (Array.isArray(body.category_ids) ? body.category_ids[0] : null) ?? null,
+    brand_id: body.brand_id ?? null,
+    supplier_id: body.supplier_id ?? null,
+    description: body.description ?? body.rich_description ?? null,
+    rich_description: body.rich_description ?? body.description ?? null,
     specifications: body.specifications ?? null,
     price: body.price,
     sale_price: body.sale_price ?? body.price ?? null,
     original_price: body.original_price ?? null,
+    live_price: body.live_price ?? null,
+    vip_price: body.vip_price ?? null,
     cost_price: body.cost_price ?? null,
+    gross_margin: body.gross_margin ?? null,
     stock: body.stock ?? 100,
+    preorder_stock: body.preorder_stock ?? 0,
+    safety_stock: body.safety_stock ?? 0,
+    min_stock_alert: body.min_stock_alert ?? 0,
+    inventory_mode: body.inventory_mode ?? "stock",
+    preorder_note: body.preorder_note ?? null,
+    auto_deduct_stock: body.auto_deduct_stock !== false,
+    allow_oversell: Boolean(body.allow_oversell),
+    temp_ambient: body.temp_ambient !== false,
+    temp_chilled: Boolean(body.temp_chilled),
+    temp_frozen: Boolean(body.temp_frozen),
+    ship_home: body.ship_home !== false,
+    ship_cvs: Boolean(body.ship_cvs),
+    ship_store_pickup: body.ship_store_pickup !== false,
+    weight_grams: body.weight_grams ?? null,
+    dimensions: body.dimensions ?? null,
+    seo_title: body.seo_title ?? null,
+    seo_description: body.seo_description ?? null,
+    seo_keywords: body.seo_keywords ?? null,
+    slug: body.slug ?? null,
+    tags: Array.isArray(body.tags) ? body.tags : [],
+    is_featured: Boolean(body.is_featured),
+    is_hot: Boolean(body.is_hot),
+    is_new: Boolean(body.is_new),
+    is_weekly_pick: Boolean(body.is_weekly_pick),
+    is_closing_soon: Boolean(body.is_closing_soon),
+    sort_order: body.sort_order ?? 0,
     image_url: image_url ?? null,
     images: images ?? [],
     is_active,
+    status,
     is_group_buy: Boolean(body.is_group_buy),
     group_buy_start_at: body.group_buy_start_at ?? null,
     group_buy_end_at: body.group_buy_end_at ?? null,
@@ -44,7 +85,7 @@ function mapProductRow(body: Record<string, unknown>) {
     supplier_name: body.supplier_name ?? null,
     product_info: body.product_info ?? null,
     disclaimer: body.product_info ?? body.disclaimer ?? null,
-    status: is_active ? "active" : "inactive",
+    expected_arrival_date: body.expected_arrival_date ?? null,
   };
 }
 
@@ -65,6 +106,7 @@ export async function GET(request: Request) {
   let query = admin
     .from("products")
     .select("*, product_categories(name, slug)")
+    .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
   if (search) query = query.ilike("name", `%${search}%`);
@@ -77,7 +119,8 @@ export async function GET(request: Request) {
     images: Array.isArray(p.images) ? p.images : p.image_url ? [p.image_url] : [],
   }));
 
-  const products = await attachPickupStoresToProducts(admin, normalized);
+  const withPickup = await attachPickupStoresToProducts(admin, normalized);
+  const products = await attachProductRelations(admin, withPickup);
   return NextResponse.json({ products });
 }
 
@@ -104,22 +147,20 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
   const { data, error } = await admin.from("products").insert(row).select().single();
-
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   try {
     await syncProductPickupStores(admin, data.id, pickup_store_ids);
+    await syncAllProductRelations(admin, data.id, body);
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "取貨門市儲存失敗" },
-      { status: 500 }
-    );
+    const message = e instanceof Error ? e.message : "關聯資料儲存失敗";
+    if (!message.includes("does not exist") && !message.includes("relation")) {
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
   }
 
   await logAudit(auth!.profile.id, "create", "product", data.id, null, data, request as never);
-  return NextResponse.json({
-    product: { ...data, pickup_store_ids },
-  });
+  return NextResponse.json({ product: { ...data, pickup_store_ids } });
 }
 
 export async function PUT(request: Request) {
@@ -146,14 +187,15 @@ export async function PUT(request: Request) {
   const { data, error } = await admin.from("products").update(row).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  if (pickup_store_ids !== undefined) {
-    try {
+  try {
+    if (pickup_store_ids !== undefined) {
       await syncProductPickupStores(admin, id, pickup_store_ids);
-    } catch (e) {
-      return NextResponse.json(
-        { error: e instanceof Error ? e.message : "取貨門市儲存失敗" },
-        { status: 500 }
-      );
+    }
+    await syncAllProductRelations(admin, id, body);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "關聯資料儲存失敗";
+    if (!message.includes("does not exist") && !message.includes("relation")) {
+      return NextResponse.json({ error: message }, { status: 500 });
     }
   }
 

@@ -1,11 +1,32 @@
 import { NextResponse } from "next/server";
 import { requireStaffOrAdmin } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
-import { mockStore, mockProducts, mockVideos, mockLivestreams } from "@/lib/mock-data";
+import { mockProducts, mockStore, mockVideos, mockLivestreams, mockCategories } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function startOfToday() {
   const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function startOfYesterday() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function endOfYesterday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function startOfWeek() {
+  const d = new Date();
+  const day = d.getDay() || 7;
+  d.setDate(d.getDate() - day + 1);
   d.setHours(0, 0, 0, 0);
   return d.toISOString();
 }
@@ -17,89 +38,227 @@ function startOfMonth() {
   return d.toISOString();
 }
 
+function daysAgo(n: number) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+async function aggregateOrders(
+  admin: ReturnType<typeof createAdminClient>,
+  from: string,
+  to?: string
+) {
+  let query = admin
+    .from("orders")
+    .select("total_amount, status, created_at")
+    .gte("created_at", from);
+
+  if (to) query = query.lt("created_at", to);
+
+  const { data } = await query;
+  const orders = data ?? [];
+  const paid = orders.filter((o) =>
+    ["payment_confirmed", "preparing", "ready_for_pickup", "completed"].includes(o.status)
+  );
+
+  return {
+    orderCount: orders.length,
+    revenue: paid.reduce((s, o) => s + Number(o.total_amount), 0),
+    avgOrderValue: paid.length ? paid.reduce((s, o) => s + Number(o.total_amount), 0) / paid.length : 0,
+    returns: orders.filter((o) => o.status === "refunded").length,
+  };
+}
+
 export async function GET() {
   const { error } = await requireStaffOrAdmin();
   if (error) return error;
 
   const today = startOfToday();
+  const yesterday = startOfYesterday();
+  const yesterdayEnd = endOfYesterday();
+  const weekStart = startOfWeek();
   const monthStart = startOfMonth();
 
   if (!isSupabaseConfigured()) {
     const orders = mockStore.orders;
     const todayOrders = orders.filter((o) => o.created_at >= today);
-    const monthlyCommissions = mockStore.commissions.filter(
-      (c) => c.created_at >= monthStart && ["approved", "issued"].includes(c.status)
-    );
+    const revenueTrend = Array.from({ length: 7 }, (_, i) => {
+      const day = daysAgo(6 - i);
+      const next = daysAgo(5 - i);
+      const dayOrders = orders.filter((o) => o.created_at >= day && o.created_at < next);
+      return {
+        label: new Date(day).toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" }),
+        value: dayOrders.reduce((s, o) => s + o.total_amount, 0),
+      };
+    });
 
     return NextResponse.json({
       stats: {
         todayOrders: todayOrders.length,
         todaySales: todayOrders.reduce((s, o) => s + o.total_amount, 0),
+        todayGrossProfit: todayOrders.reduce((s, o) => s + o.total_amount * 0.3, 0),
+        todayAvgOrder: todayOrders.length
+          ? todayOrders.reduce((s, o) => s + o.total_amount, 0) / todayOrders.length
+          : 0,
+        todayReturns: 0,
+        yesterdaySales: 0,
+        weekSales: orders.filter((o) => o.created_at >= weekStart).reduce((s, o) => s + o.total_amount, 0),
+        monthSales: orders.filter((o) => o.created_at >= monthStart).reduce((s, o) => s + o.total_amount, 0),
         pendingPayment: orders.filter((o) => o.status === "awaiting_payment").length,
         paymentPendingConfirm: orders.filter((o) => o.status === "payment_reported").length,
         readyPickup: orders.filter((o) => o.status === "ready_for_pickup").length,
         newMembers: 1,
-        shareOrders: orders.filter((o) => o.share_source_type).length,
-        pendingRewards: mockStore.rewards.filter((r) => r.status === "pending").length,
-        pendingCommissions: mockStore.commissions.filter((c) => c.status === "pending_review").length,
-        monthlyCommissionTotal: monthlyCommissions.reduce((s, c) => s + c.commission_amount, 0),
-        livestreamViews: mockLivestreams.reduce((s, l) => s + ((l as { view_count?: number }).view_count ?? 0), 0),
-        videoViews: mockVideos.reduce((s, v) => s + v.view_count, 0),
-        activeProducts: mockProducts.filter((p) => p.is_active).length,
-        activeGroupBuys: 1,
+        lowStockProducts: mockProducts.filter((p) => p.stock <= 5).length,
+        closingSoonProducts: mockProducts.filter((p) => p.is_group_buy).slice(0, 5),
       },
+      charts: {
+        revenueTrend,
+        topProducts: mockProducts.slice(0, 5).map((p, i) => ({
+          label: p.name,
+          value: (5 - i) * 12,
+        })),
+        topCategories: mockCategories.slice(0, 5).map((c, i) => ({
+          label: c.name,
+          value: (5 - i) * 8,
+        })),
+        genderRatio: [
+          { label: "女", value: 62, color: "#FF4F7B" },
+          { label: "男", value: 28, color: "#1E3A8A" },
+          { label: "未知", value: 10, color: "#94A3B8" },
+        ],
+        cityHotspots: [
+          { label: "台北", value: 35 },
+          { label: "台中", value: 22 },
+          { label: "高雄", value: 18 },
+          { label: "桃園", value: 15 },
+        ],
+      },
+      livestreamViews: mockLivestreams.reduce((s, l) => s + ((l as { view_count?: number }).view_count ?? 0), 0),
+      videoViews: mockVideos.reduce((s, v) => s + v.view_count, 0),
     });
   }
 
   const admin = createAdminClient();
 
   const [
-    todayOrdersRes,
+    todayAgg,
+    yesterdayAgg,
+    weekAgg,
+    monthAgg,
     pendingPaymentRes,
     paymentReportedRes,
     readyPickupRes,
     newMembersRes,
-    shareOrdersRes,
-    pendingRewardsRes,
-    pendingCommissionsRes,
-    monthlyCommissionRes,
+    lowStockRes,
+    closingSoonRes,
+    trendRes,
+    topProductsRes,
+    categoryRes,
+    genderRes,
+    cityRes,
     videoViewsRes,
     livestreamViewsRes,
   ] = await Promise.all([
-    admin.from("orders").select("total_amount").gte("created_at", today),
+    aggregateOrders(admin, today),
+    aggregateOrders(admin, yesterday, yesterdayEnd),
+    aggregateOrders(admin, weekStart),
+    aggregateOrders(admin, monthStart),
     admin.from("orders").select("id", { count: "exact", head: true }).eq("status", "awaiting_payment"),
     admin.from("orders").select("id", { count: "exact", head: true }).eq("status", "payment_reported"),
     admin.from("orders").select("id", { count: "exact", head: true }).eq("status", "ready_for_pickup"),
     admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", today),
-    admin.from("orders").select("id", { count: "exact", head: true }).not("share_source_type", "is", null),
-    admin.from("reward_records").select("id", { count: "exact", head: true }).eq("status", "pending"),
-    admin.from("commission_records").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
-    admin
-      .from("commission_records")
-      .select("commission_amount")
-      .gte("created_at", monthStart)
-      .in("status", ["approved", "issued"]),
+    admin.from("products").select("id", { count: "exact", head: true }).lte("stock", 5),
+    admin.from("products").select("id, name, group_buy_end_at").eq("is_closing_soon", true).limit(5),
+    admin.from("orders").select("total_amount, created_at").gte("created_at", daysAgo(6)),
+    admin.from("order_items").select("product_id, quantity, products(name)").limit(200),
+    admin.from("products").select("category_id, product_categories(name)").limit(200),
+    admin.from("customer_statistics").select("gender"),
+    admin.from("customer_statistics").select("city"),
     admin.from("videos").select("view_count"),
     admin.from("livestreams").select("view_count"),
   ]);
 
-  const todayOrders = todayOrdersRes.data ?? [];
-  const monthlyCommissions = monthlyCommissionRes.data ?? [];
+  const trendMap = new Map<string, number>();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const key = d.toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" });
+    trendMap.set(key, 0);
+  }
+  for (const order of trendRes.data ?? []) {
+    const key = new Date(order.created_at).toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" });
+    if (trendMap.has(key)) {
+      trendMap.set(key, (trendMap.get(key) ?? 0) + Number(order.total_amount));
+    }
+  }
+
+  const productSales = new Map<string, { label: string; value: number }>();
+  for (const item of topProductsRes.data ?? []) {
+    const name = (item.products as { name?: string } | null)?.name ?? "未知商品";
+    const current = productSales.get(item.product_id) ?? { label: name, value: 0 };
+    current.value += item.quantity;
+    productSales.set(item.product_id, current);
+  }
+
+  const categorySales = new Map<string, { label: string; value: number }>();
+  for (const product of categoryRes.data ?? []) {
+    const name = (product.product_categories as { name?: string } | null)?.name ?? "未分類";
+    const current = categorySales.get(name) ?? { label: name, value: 0 };
+    current.value += 1;
+    categorySales.set(name, current);
+  }
+
+  const genderCounts = { female: 0, male: 0, unknown: 0 };
+  for (const row of genderRes.data ?? []) {
+    if (row.gender === "female") genderCounts.female++;
+    else if (row.gender === "male") genderCounts.male++;
+    else genderCounts.unknown++;
+  }
+
+  const cityCounts = new Map<string, number>();
+  for (const row of cityRes.data ?? []) {
+    if (!row.city) continue;
+    cityCounts.set(row.city, (cityCounts.get(row.city) ?? 0) + 1);
+  }
 
   return NextResponse.json({
     stats: {
-      todayOrders: todayOrders.length,
-      todaySales: todayOrders.reduce((s, o) => s + Number(o.total_amount), 0),
+      todayOrders: todayAgg.orderCount,
+      todaySales: todayAgg.revenue,
+      todayGrossProfit: todayAgg.revenue * 0.3,
+      todayAvgOrder: todayAgg.avgOrderValue,
+      todayReturns: todayAgg.returns,
+      yesterdaySales: yesterdayAgg.revenue,
+      weekSales: weekAgg.revenue,
+      monthSales: monthAgg.revenue,
       pendingPayment: pendingPaymentRes.count ?? 0,
       paymentPendingConfirm: paymentReportedRes.count ?? 0,
       readyPickup: readyPickupRes.count ?? 0,
       newMembers: newMembersRes.count ?? 0,
-      shareOrders: shareOrdersRes.count ?? 0,
-      pendingRewards: pendingRewardsRes.count ?? 0,
-      pendingCommissions: pendingCommissionsRes.count ?? 0,
-      monthlyCommissionTotal: monthlyCommissions.reduce((s, c) => s + Number(c.commission_amount), 0),
-      livestreamViews: (livestreamViewsRes.data ?? []).reduce((s, l) => s + Number(l.view_count ?? 0), 0),
-      videoViews: (videoViewsRes.data ?? []).reduce((s, v) => s + Number(v.view_count ?? 0), 0),
+      lowStockProducts: lowStockRes.count ?? 0,
+      closingSoonProducts: closingSoonRes.data ?? [],
     },
+    charts: {
+      revenueTrend: Array.from(trendMap.entries()).map(([label, value]) => ({ label, value })),
+      topProducts: Array.from(productSales.values())
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5),
+      topCategories: Array.from(categorySales.values())
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5),
+      genderRatio: [
+        { label: "女", value: genderCounts.female, color: "#FF4F7B" },
+        { label: "男", value: genderCounts.male, color: "#1E3A8A" },
+        { label: "未知", value: genderCounts.unknown, color: "#94A3B8" },
+      ],
+      cityHotspots: Array.from(cityCounts.entries())
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5),
+    },
+    videoViews: (videoViewsRes.data ?? []).reduce((s, v) => s + Number(v.view_count ?? 0), 0),
+    livestreamViews: (livestreamViewsRes.data ?? []).reduce((s, l) => s + Number(l.view_count ?? 0), 0),
   });
 }
