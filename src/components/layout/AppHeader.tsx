@@ -107,10 +107,11 @@ export function AppHeader({
       <div className="mx-auto flex h-[60px] w-full max-w-[960px] items-center gap-2 px-4">
         {resolved === "home" ? (
           <>
-            <div className="min-w-0 flex-1">
+            <div className="flex w-[92px] shrink-0" aria-hidden />
+            <div className="flex min-w-0 flex-1 items-center justify-center">
               <ChimeidiyLogo variant="header" priority />
             </div>
-            <div className="flex shrink-0 items-center gap-0.5">
+            <div className="flex w-[92px] shrink-0 items-center justify-end gap-0.5">
               <NotifyButton />
               <CartButton />
             </div>

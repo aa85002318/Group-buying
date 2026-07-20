@@ -121,8 +121,10 @@ Tailwind：`bg-primary`、`bg-caramel-soft`、`text-caramel`、`bg-groupBuy`、`
 
 ## 14. App Access Guard
 
-- ≥1024 且非 dev／非 `NEXT_PUBLIC_ALLOW_DESKTOP=true`：顯示可關閉提示骨架（QR／Store 佔位）
-- 非正式安全機制；可「繼續瀏覽」
+- **預設開放網頁**：App 尚未上架，不顯示阻擋／強制提示
+- 日後設 `NEXT_PUBLIC_REQUIRE_APP=true` 才啟用桌機安裝提示
+- `NEXT_PUBLIC_ALLOW_DESKTOP=true` 可永久關閉提示
+- 非正式安全機制；會員安全仍靠 Auth／RLS
 
 ## 15. 尚未完成
 

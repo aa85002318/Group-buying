@@ -7,22 +7,22 @@ const ALT = "CHIMEIDIY 烘焙生活平台";
 
 const VARIANTS = {
   header: {
-    src: "/branding/chimeidiy-app-header-logo.png",
-    width: 170,
-    height: 40,
-    className: "h-10 w-[150px] max-h-10 object-contain md:w-[170px]",
+    src: "/branding/chimeidiy-app-header-logo-v2.png",
+    width: 320,
+    height: 101,
+    className: "h-10 w-[148px] max-h-10 object-contain bg-transparent md:w-[168px]",
   },
   compact: {
     src: "/branding/chimeidiy-logo-compact.png",
     width: 40,
     height: 40,
-    className: "h-10 w-10 max-h-10 object-contain",
+    className: "h-10 w-10 max-h-10 object-contain bg-transparent",
   },
   splash: {
-    src: "/branding/chimeidiy-app-header-logo.png",
+    src: "/branding/chimeidiy-app-header-logo-v2.png",
     width: 240,
-    height: 72,
-    className: "h-auto w-[min(240px,70vw)] max-h-20 object-contain",
+    height: 76,
+    className: "h-auto w-[min(240px,70vw)] max-h-20 object-contain bg-transparent",
   },
   icon: {
     src: "/branding/chimeidiy-app-icon.png",
