@@ -193,8 +193,8 @@
   --duration-slow: 400ms;
 
   /* —— Layout —— */
-  --header-height: 3.5rem;
-  --bottom-nav-height: 5.5rem;
+  --header-height: 4rem;
+  --bottom-nav-height: 5rem;
   --touch-min: 44px;
   --input-min: 48px;
   --app-max-width: 960px;

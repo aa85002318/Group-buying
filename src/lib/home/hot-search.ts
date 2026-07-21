@@ -12,12 +12,8 @@ export const DEFAULT_HOT_SEARCH_KEYWORDS: HotSearchKeyword[] = [
   { id: "butter", label: "奶油", sortOrder: 20 },
   { id: "dubai", label: "杜拜巧克力", sortOrder: 30 },
   { id: "moon", label: "中秋禮盒", sortOrder: 40 },
-  { id: "tart", label: "蛋塔", sortOrder: 50 },
-  { id: "cream", label: "鮮奶油", sortOrder: 60 },
-  { id: "mix", label: "預拌粉", sortOrder: 70 },
-  { id: "croissant", label: "可頌", sortOrder: 80 },
-  { id: "toast", label: "吐司", sortOrder: 90 },
-  { id: "cookie", label: "餅乾", sortOrder: 100 },
+  { id: "cheese", label: "乳酪", sortOrder: 50 },
+  { id: "mold", label: "烘焙模具", sortOrder: 60 },
 ];
 
 /** Parse keywords from homepage_blocks.config.keywords (Admin CMS). */

@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 const sizes = {
   sm: { width: 36, height: 36, className: "h-9 w-9" },
   header: {
-    width: 320,
-    height: 99,
+    width: 841,
+    height: 212,
     className: "h-auto w-[148px] sm:w-[180px] md:w-[220px]",
   },
   md: { width: 180, height: 180, className: "h-auto w-[180px]" },
@@ -46,7 +46,7 @@ export function Logo({
   const layout = textLayout ?? (size === "header" || size === "sm" ? "beside" : "below");
   const src =
     size === "header"
-      ? "/brand/chimeidiy-header-logo.png"
+      ? "/branding/chimeidiy-app-header-logo-v3.png"
       : markOnly || withText
         ? "/images/logo-mark.png"
         : "/images/logo.png";

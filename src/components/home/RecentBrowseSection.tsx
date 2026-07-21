@@ -96,8 +96,12 @@ export function RecentBrowseSection({
   onRetry,
   limit = 5,
   moreHref = "/member/recent",
-}: RecentBrowseSectionProps) {
+  showGuestEmpty = false,
+}: RecentBrowseSectionProps & { showGuestEmpty?: boolean }) {
   const shown = items.slice(0, limit);
+  const emptyText = showGuestEmpty
+    ? "登入後可同步瀏覽紀錄，先去逛逛熱門商品吧！"
+    : "還沒有瀏覽紀錄。去逛逛熱門商品吧！";
 
   return (
     <section className="space-y-3 rounded-[20px] bg-background py-1">
@@ -110,7 +114,7 @@ export function RecentBrowseSection({
         error={error}
         onRetry={onRetry}
         empty={!loading && !error && shown.length === 0}
-        emptyText="還沒有瀏覽紀錄。去逛逛熱門商品吧！"
+        emptyText={emptyText}
       >
         <div
           className={cn(
@@ -122,13 +126,13 @@ export function RecentBrowseSection({
             <BrowseCard key={`${item.type}-${item.id}`} item={item} />
           ))}
         </div>
-        {shown.length === 0 ? null : (
-          <p className="pt-1 text-center md:hidden">
-            <Link href="/products" className="text-sm font-semibold text-primary">
+        {shown.length === 0 ? (
+          <p className="pt-1 text-center">
+            <Link href="/products" className="text-sm font-semibold text-brand-primary">
               去逛逛熱門商品
             </Link>
           </p>
-        )}
+        ) : null}
       </HomeSectionFrame>
     </section>
   );

@@ -215,7 +215,7 @@ export const CONSUMER_SECONDARY_NAV = [
   { href: "/store-map", label: "門市地圖" },
 ] as const;
 
-/** Mobile bottom nav — Consumer Hub 1.0（5 項） */
+/** Mobile bottom nav — 方案二：首頁／商城／團購／食譜／我的（同高、無凸起） */
 export const CONSUMER_BOTTOM_NAV = [
   { href: "/", label: "首頁", match: (p: string) => p === "/", accent: "primary" as const },
   {
@@ -229,12 +229,13 @@ export const CONSUMER_BOTTOM_NAV = [
     href: "/group-buy",
     label: "團購",
     match: (p: string) => p.startsWith("/group-buy"),
-    accent: "groupBuy" as const,
+    accent: "primary" as const,
   },
   {
-    href: "/ai-tools",
-    label: "AI 助手",
-    match: (p: string) => p.startsWith("/ai-tools") || p.startsWith("/ai"),
+    href: "/recipes",
+    label: "食譜",
+    match: (p: string) =>
+      p.startsWith("/recipes") || p.startsWith("/videos") || p.startsWith("/articles"),
     accent: "primary" as const,
   },
   {

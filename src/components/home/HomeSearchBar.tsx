@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScanLine, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { APP_ROUTES } from "@/lib/site-links";
 
@@ -12,7 +12,7 @@ type HomeSearchBarProps = {
 };
 
 export function HomeSearchBar({
-  placeholder = "搜尋商品、食譜、團購或門市位置",
+  placeholder = "搜尋商品、食譜、品牌...",
   className,
 }: HomeSearchBarProps) {
   const router = useRouter();
@@ -29,13 +29,9 @@ export function HomeSearchBar({
   };
 
   return (
-    <form
-      onSubmit={submit}
-      role="search"
-      className={cn("relative w-full", className)}
-    >
+    <form onSubmit={submit} role="search" className={cn("relative w-full", className)}>
       <Search
-        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-secondary"
+        className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground-secondary"
         aria-hidden
       />
       <label htmlFor="app-home-search" className="sr-only">
@@ -47,15 +43,13 @@ export function HomeSearchBar({
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={placeholder}
-        className="h-[50px] w-full rounded-2xl border border-border bg-surface py-2 pl-10 pr-12 text-sm text-brand-caramel outline-none transition placeholder:text-foreground-muted focus:border-brand-primary focus:shadow-brand-ring"
+        className="h-12 w-full rounded-2xl border border-border bg-surface py-2 pl-11 pr-[5.5rem] text-sm text-brand-caramel outline-none transition placeholder:text-foreground-muted focus:border-brand-primary focus:shadow-brand-ring md:h-[52px]"
       />
       <button
-        type="button"
-        className="absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-brand-caramel transition hover:bg-surface-coral hover:text-brand-primary"
-        aria-label="掃描條碼（即將推出）"
-        disabled
+        type="submit"
+        className="absolute right-1.5 top-1/2 inline-flex h-9 -translate-y-1/2 items-center rounded-xl bg-brand-primary px-3.5 text-sm font-bold text-white transition duration-200 hover:bg-primary-hover active:scale-[0.98]"
       >
-        <ScanLine className="h-4 w-4" aria-hidden />
+        搜尋
       </button>
     </form>
   );

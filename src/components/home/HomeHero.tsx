@@ -1,160 +1,121 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import { APP_ROUTES } from "@/lib/site-links";
 import { cn } from "@/lib/utils";
 import { externalLinkProps, isSafeLinkUrl } from "@/lib/cms/safeHtml";
 import type { CmsBanner } from "@/lib/types/database";
 
-type HomeHeroProps = {
-  className?: string;
+type Slide = {
+  id: string;
+  title: string;
+  subtitle: string;
+  cta: string;
+  href: string;
+  image?: string | null;
 };
 
-function DefaultHero() {
+const DEFAULT_SLIDES: Slide[] = [
+  {
+    id: "default-1",
+    title: "今天想烤什麼？",
+    subtitle: "烘焙材料、食譜教學與限時團購一次找到",
+    cta: "逛烘焙材料",
+    href: APP_ROUTES.shop,
+  },
+  {
+    id: "default-2",
+    title: "一分鐘教你做",
+    subtitle: "跟著影音與食譜，輕鬆完成第一盤甜點",
+    cta: "看食譜",
+    href: APP_ROUTES.recipes,
+  },
+  {
+    id: "default-3",
+    title: "限時團購開跑",
+    subtitle: "精選原料即將收單，別錯過好價錢",
+    cta: "去跟團",
+    href: "/group-buy",
+  },
+];
+
+function BakingDecor() {
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-hero border border-border-soft bg-hero-gradient shadow-card",
-        "aspect-[16/9] min-h-[190px] max-h-[230px]",
-        "md:aspect-auto md:min-h-[360px] md:max-h-[430px] md:h-[400px]"
-      )}
-    >
-      <div
-        className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-peach/70 blur-[2px] md:h-56 md:w-56"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute bottom-0 right-1/4 h-24 w-24 rounded-full bg-butter/80 md:h-36 md:w-36"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute left-[40%] top-6 h-12 w-12 rounded-full bg-primary-soft/80 md:h-16 md:w-16"
-        aria-hidden
-      />
-
-      <div className="relative z-10 flex h-full flex-col justify-center gap-2 p-5 md:flex-row md:items-center md:justify-between md:gap-8 md:px-10 md:py-8">
-        <div className="max-w-[58%] md:max-w-[42%] md:shrink-0">
-          <p className="text-[11px] font-semibold tracking-wide text-caramel/80 md:text-sm">
-            CHIMEIDIY 烘焙生活平台
-          </p>
-          <h2 className="mt-1 text-[26px] font-bold leading-tight tracking-tight text-caramel md:text-[44px] lg:text-[48px]">
-            今天想烤什麼？
-          </h2>
-          <p className="mt-2 max-w-[18rem] text-sm leading-snug text-foreground-secondary md:max-w-sm md:text-base">
-            烘焙材料、食譜教學與限時團購一次找到
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-3 md:mt-5">
-            <Link
-              href={APP_ROUTES.shop}
-              className="inline-flex h-11 min-h-touch items-center justify-center rounded-button bg-brand-primary px-5 text-sm font-bold text-white shadow-card transition hover:bg-primary-hover active:scale-[0.98]"
-            >
-              逛烘焙材料
-            </Link>
-            <Link
-              href={APP_ROUTES.recipes}
-              className="inline-flex h-11 min-h-touch items-center justify-center rounded-button border border-border bg-surface px-5 text-sm font-semibold text-brand-caramel transition hover:bg-peach-light"
-            >
-              看看最新食譜 →
-            </Link>
-          </div>
-        </div>
-
-        <div
-          className="pointer-events-none absolute bottom-0 right-0 flex h-full w-[48%] items-end justify-end pr-2 pt-4 md:relative md:w-[58%] md:items-center md:justify-center md:pr-0 md:pt-0"
-          aria-hidden
-        >
-          <div className="relative flex h-[85%] w-full max-w-[280px] items-center justify-center md:h-[90%] md:max-w-[380px]">
-            <span className="absolute bottom-6 left-2 h-16 w-12 rounded-t-2xl rounded-b-md bg-surface/90 shadow-card md:bottom-10 md:left-6 md:h-24 md:w-16" />
-            <span className="absolute bottom-[4.5rem] left-4 text-[10px] font-bold text-caramel/50 md:bottom-28 md:left-10 md:text-xs">
-              FLOUR
-            </span>
-            <span className="absolute bottom-8 right-10 h-8 w-12 rounded-md bg-butter shadow-card md:bottom-14 md:right-16 md:h-10 md:w-14" />
-            <span className="absolute right-4 top-8 h-20 w-1.5 rotate-12 rounded-full bg-caramel/25 md:right-10 md:top-12 md:h-28" />
-            <span className="absolute right-2 top-6 h-4 w-4 rounded-full border-2 border-caramel/30 md:right-8 md:top-10 md:h-5 md:w-5" />
-            <span className="absolute bottom-16 right-2 h-7 w-5 rotate-[-20deg] rounded-full bg-cream-deep shadow-card md:bottom-24 md:right-6 md:h-9 md:w-7" />
-            <div className="relative z-10 mb-2 shadow-floating md:mb-0">
-              <Image
-                src="/branding/chimeidiy-app-icon.png"
-                alt=""
-                width={160}
-                height={160}
-                className="h-[100px] w-[100px] object-contain md:h-[168px] md:w-[168px]"
-                priority
-                unoptimized
-              />
-            </div>
-            <span className="absolute left-0 top-1/3 h-10 w-2 -rotate-45 rounded-full bg-butter md:h-14" />
-            <span className="absolute left-3 top-[28%] h-8 w-1.5 -rotate-[30deg] rounded-full bg-butter/80 md:h-12" />
-          </div>
-        </div>
-      </div>
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      <span className="absolute -right-6 -top-8 h-36 w-36 rounded-full bg-peach/60 blur-[1px]" />
+      <span className="absolute bottom-2 right-1/4 h-20 w-20 rounded-full bg-butter/70" />
+      <span className="absolute left-[42%] top-4 h-10 w-10 rounded-full bg-surface-coral" />
+      <span className="absolute bottom-8 right-8 h-8 w-12 rounded-md bg-butter shadow-soft" />
+      <span className="absolute bottom-16 right-16 h-6 w-6 rounded-full bg-surface border border-border" />
+      <span className="absolute right-6 top-10 h-16 w-1.5 rotate-12 rounded-full bg-caramel/20" />
     </div>
   );
 }
 
-function CmsHeroBanner({ banner }: { banner: CmsBanner }) {
-  const href =
-    banner.link_url && isSafeLinkUrl(banner.link_url) ? banner.link_url : APP_ROUTES.shop;
-  const linkExtra = externalLinkProps(href);
-  const image = banner.image_url;
-  const mobile = banner.mobile_image_url || image;
-
+function HeroSlide({ slide }: { slide: Slide }) {
+  const linkExtra = externalLinkProps(slide.href);
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-hero border border-border-soft bg-hero-gradient shadow-card",
-        "aspect-[16/9] min-h-[190px] max-h-[230px]",
-        "md:aspect-auto md:min-h-[360px] md:max-h-[430px] md:h-[400px]"
+        "relative overflow-hidden rounded-[22px] border border-border bg-hero-gradient shadow-soft",
+        "min-h-[220px] max-h-[260px] md:min-h-[240px]"
       )}
     >
-      {image ? (
+      <BakingDecor />
+      {slide.image ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={mobile ?? image}
+            src={slide.image}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover md:hidden"
+            className="absolute inset-0 h-full w-full object-cover opacity-90"
           />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={image}
-            alt=""
-            className="absolute inset-0 hidden h-full w-full object-cover md:block"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-cream/90 via-cream/55 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cream/95 via-cream/70 to-transparent" />
         </>
       ) : null}
-      <div className="relative z-10 flex h-full flex-col justify-center gap-2 p-5 md:max-w-[48%] md:px-10 md:py-8">
-        <p className="text-[11px] font-semibold tracking-wide text-caramel/80 md:text-sm">
-          CHIMEIDIY
-        </p>
-        <h2 className="text-[26px] font-bold leading-tight tracking-tight text-caramel md:text-[40px]">
-          {banner.title}
-        </h2>
-        {banner.subtitle ? (
-          <p className="max-w-[18rem] text-sm leading-snug text-foreground-secondary md:max-w-sm md:text-base">
-            {banner.subtitle}
+      <div className="relative z-10 flex h-full min-h-[220px] flex-col justify-center gap-2 p-5 md:flex-row md:items-center md:justify-between md:px-8">
+        <div className="max-w-[58%] md:max-w-[48%]">
+          <p className="text-[11px] font-semibold tracking-wide text-brand-caramel/80">
+            CHIMEIDIY 烘焙生活平台
           </p>
-        ) : null}
-        <div className="mt-3">
-          <Link
-            href={href}
-            {...linkExtra}
-            className="inline-flex h-11 min-h-touch items-center justify-center rounded-button bg-primary px-5 text-sm font-bold text-white shadow-card transition hover:bg-primary-hover"
-          >
-            {banner.button_text || "了解更多"}
-          </Link>
+          <h2 className="mt-1 text-[26px] font-bold leading-tight tracking-tight text-brand-caramel md:text-[36px]">
+            {slide.title}
+          </h2>
+          <p className="mt-2 max-w-[18rem] text-sm leading-snug text-foreground-secondary md:text-base">
+            {slide.subtitle}
+          </p>
+          <div className="mt-4">
+            <Link
+              href={slide.href}
+              {...linkExtra}
+              className="inline-flex h-11 min-h-touch items-center justify-center rounded-button bg-brand-primary px-5 text-sm font-bold text-white shadow-soft transition duration-200 hover:bg-primary-hover"
+            >
+              {slide.cta}
+            </Link>
+          </div>
+        </div>
+        <div className="pointer-events-none absolute bottom-2 right-2 flex h-[55%] w-[42%] items-end justify-end md:relative md:h-auto md:w-[40%] md:items-center md:justify-center">
+          <Image
+            src="/branding/chimeidiy-app-icon.png"
+            alt=""
+            width={140}
+            height={140}
+            className="h-[96px] w-[96px] object-contain drop-shadow-md md:h-[140px] md:w-[140px]"
+            priority
+            unoptimized
+          />
         </div>
       </div>
     </div>
   );
 }
 
-/** Visual-first hero — uses CMS home_hero banner when available, else brand default */
-export function HomeHero({ className }: HomeHeroProps) {
-  const [banner, setBanner] = useState<CmsBanner | null>(null);
+/** Hero with soft carousel — CMS banners when available, else brand defaults */
+export function HomeHero({ className }: { className?: string }) {
+  const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
+  const [index, setIndex] = useState(0);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -164,11 +125,21 @@ export function HomeHero({ className }: HomeHeroProps) {
       .then((d) => {
         if (cancelled) return;
         const list = (d.banners ?? []) as CmsBanner[];
-        setBanner(list[0] ?? null);
+        if (list.length) {
+          setSlides(
+            list.map((b, i) => ({
+              id: b.id ?? `cms-${i}`,
+              title: b.title,
+              subtitle: b.subtitle || "CHIMEIDIY 烘焙生活平台",
+              cta: b.button_text || "了解更多",
+              href:
+                b.link_url && isSafeLinkUrl(b.link_url) ? b.link_url : APP_ROUTES.shop,
+              image: b.image_url,
+            }))
+          );
+        }
       })
-      .catch(() => {
-        if (!cancelled) setBanner(null);
-      })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setReady(true);
       });
@@ -177,19 +148,40 @@ export function HomeHero({ className }: HomeHeroProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const t = window.setInterval(() => {
+      setIndex((i) => (i + 1) % slides.length);
+    }, 5000);
+    return () => window.clearInterval(t);
+  }, [slides.length]);
+
+  const current = slides[index] ?? slides[0];
+
   return (
     <section aria-label="主視覺" className={cn("relative", className)}>
       {!ready ? (
-        <div
-          className={cn(
-            "animate-pulse rounded-hero bg-muted",
-            "aspect-[16/9] min-h-[190px] max-h-[230px] md:h-[400px] md:max-h-[430px] md:min-h-[360px]"
-          )}
-        />
-      ) : banner ? (
-        <CmsHeroBanner banner={banner} />
+        <div className="min-h-[220px] animate-pulse rounded-[22px] bg-surface-peach md:min-h-[240px]" />
       ) : (
-        <DefaultHero />
+        <>
+          <HeroSlide slide={current} />
+          {slides.length > 1 ? (
+            <div className="mt-2 flex justify-center gap-1.5">
+              {slides.map((s, i) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  aria-label={`第 ${i + 1} 則 Banner`}
+                  onClick={() => setIndex(i)}
+                  className={cn(
+                    "h-1.5 rounded-full transition",
+                    i === index ? "w-5 bg-brand-primary" : "w-1.5 bg-border"
+                  )}
+                />
+              ))}
+            </div>
+          ) : null}
+        </>
       )}
     </section>
   );
