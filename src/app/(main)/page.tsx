@@ -6,7 +6,7 @@ import { Clock3, Heart, Play } from "lucide-react";
 import { HomeSearchBar } from "@/components/home/HomeSearchBar";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomeContentArea } from "@/components/home/HomeContentArea";
-import { PrimaryQuickActions } from "@/components/home/PrimaryQuickActions";
+import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
 import { FeatureDuoCards } from "@/components/home/FeatureDuoCards";
 import { PopularCategories } from "@/components/home/PopularCategories";
 import { HotSearchChips } from "@/components/home/HotSearchChips";
@@ -282,7 +282,7 @@ export default function HomePage() {
       {/* 中段純白區：Hero 底部到 Footer */}
       <HomeContentArea>
         <div className="home-page-inner space-y-6 min-[375px]:space-y-7 md:space-y-8">
-          <PrimaryQuickActions />
+          <HomeQuickMenuCarousel />
           <FeatureDuoCards />
 
           {recentBlock.visible ? (

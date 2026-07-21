@@ -71,6 +71,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/news", label: "最新資訊", roles: ["admin", "content_editor"] },
   { href: "/admin/banners", label: "Banner 管理", roles: ["admin", "content_editor"] },
   { href: "/admin/home", label: "首頁管理", roles: ["admin", "content_editor"] },
+  { href: "/admin/home/quick-menu", label: "首頁快捷選單", roles: ["admin", "content_editor"] },
   { href: "/admin/benefits", label: "會員福利", roles: ["admin"] },
   { href: "/admin/group-buy", label: "團購", roles: ["admin"] },
   { href: "/admin/stores", label: "取貨點", roles: ["admin"] },

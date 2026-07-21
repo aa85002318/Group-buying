@@ -200,6 +200,23 @@ export interface CmsBanner {
   updated_at: string;
 }
 
+export interface HomeQuickMenuItemRow {
+  id: string;
+  title: string;
+  icon_url: string | null;
+  icon_key: string | null;
+  link_url: string;
+  link_target: "_self" | "_blank";
+  alt_text: string | null;
+  notes: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface HomepageBlock {
   id: string;
   block_key: string;
