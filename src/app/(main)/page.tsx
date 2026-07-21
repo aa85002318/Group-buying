@@ -354,7 +354,7 @@ export default function HomePage() {
 
       {groupBuyBlock.visible ? (
         <section className="space-y-3">
-          <SectionHeader title={groupBuyBlock.title} href="/group-buy" accentClass="bg-groupBuy" />
+          <SectionHeader title={groupBuyBlock.title} href="/group-buy" accentClass="bg-brand-primary" />
           <HomeSectionFrame
             loading={eventsLoad.loading || cmsLoad.loading}
             error={eventsLoad.error}
@@ -377,7 +377,7 @@ export default function HomePage() {
                         <span className="text-xs text-foreground-secondary">限時團購</span>
                       </span>
                       {price != null && (
-                        <span className="shrink-0 font-semibold text-groupBuy">
+                        <span className="shrink-0 font-semibold text-brand-primary">
                           {formatCurrency(Number(price))}
                         </span>
                       )}
@@ -518,27 +518,27 @@ export default function HomePage() {
       ) : null}
 
       {storeBlock.visible ? (
-        <section className="rounded-[18px] border border-border-soft bg-caramel-soft/60 p-4 md:p-5">
-          <h2 className="text-xl font-semibold text-caramel">{storeBlock.title}</h2>
+        <section className="rounded-[20px] border border-border bg-member-gradient p-4 md:p-5">
+          <h2 className="text-xl font-semibold text-brand-caramel">{storeBlock.title}</h2>
           <p className="mt-1 text-sm text-foreground-secondary">
             {storeBlock.subtitle || "查詢商品擺放位置、聯絡客服、查看門市資訊。"}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/store-map"
-              className="inline-flex min-h-11 items-center rounded-button bg-surface px-4 text-sm font-semibold text-caramel shadow-card"
+              className="inline-flex min-h-11 items-center rounded-button bg-brand-primary px-4 text-sm font-semibold text-white shadow-soft"
             >
               門市地圖
             </Link>
             <Link
               href="/support"
-              className="inline-flex min-h-11 items-center rounded-button bg-surface px-4 text-sm font-semibold text-caramel shadow-card"
+              className="inline-flex min-h-11 items-center rounded-button border border-border bg-surface px-4 text-sm font-semibold text-brand-caramel shadow-soft"
             >
               門市客服
             </Link>
             <Link
               href={APP_ROUTES.stores ?? "/stores"}
-              className="inline-flex min-h-11 items-center rounded-button bg-surface px-4 text-sm font-semibold text-caramel shadow-card"
+              className="inline-flex min-h-11 items-center rounded-button border border-border bg-surface px-4 text-sm font-semibold text-brand-caramel shadow-soft"
             >
               門市資訊
             </Link>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   type HotSearchKeyword,
@@ -11,7 +12,6 @@ import type { PopularCategoryItem } from "@/components/home/PopularCategories";
 type HotSearchChipsProps = {
   title?: string;
   keywords: HotSearchKeyword[];
-  /** Fallback when CMS/defaults empty — show popular categories as chips */
   categoryFallback?: PopularCategoryItem[];
   loading?: boolean;
   className?: string;
@@ -27,10 +27,16 @@ export function HotSearchChips({
   if (loading) {
     return (
       <section className={cn("space-y-2", className)} aria-busy>
-        <h2 className="text-sm font-semibold text-caramel">{title}</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-brand-caramel">
+          <Flame className="h-4 w-4 text-brand-primary" aria-hidden />
+          {title}
+        </h2>
         <div className="flex gap-2 overflow-hidden">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-9 w-20 shrink-0 animate-pulse rounded-full bg-muted" />
+            <div
+              key={i}
+              className="h-9 w-20 shrink-0 animate-pulse rounded-full bg-skeleton-shimmer bg-[length:200%_100%]"
+            />
           ))}
         </div>
       </section>
@@ -54,7 +60,10 @@ export function HotSearchChips({
 
   return (
     <section className={cn("space-y-2", className)} aria-label={title}>
-      <h2 className="text-sm font-semibold text-caramel">{title}</h2>
+      <h2 className="flex items-center gap-1.5 text-sm font-semibold text-brand-caramel">
+        <Flame className="h-4 w-4 text-brand-primary" aria-hidden />
+        {title}
+      </h2>
       <div className="h-scroll max-h-[5.5rem] overflow-y-hidden md:mx-0 md:overflow-visible md:px-0">
         <ul className="flex w-max max-w-none flex-nowrap gap-2 md:flex-wrap">
           {chips.map((chip) => (
@@ -62,9 +71,9 @@ export function HotSearchChips({
               <Link
                 href={chip.href}
                 className={cn(
-                  "inline-flex items-center rounded-full border border-border-soft bg-surface px-3 py-2 text-sm font-medium text-caramel shadow-sm transition",
-                  "hover:border-primary hover:bg-primary-soft",
-                  "active:border-primary active:bg-primary-soft"
+                  "inline-flex items-center rounded-full border border-border bg-surface px-3 py-2 text-sm font-medium text-brand-caramel transition",
+                  "hover:border-brand-yellow hover:bg-surface-yellow",
+                  "active:border-brand-primary active:bg-surface-coral active:text-brand-primary"
                 )}
               >
                 {chip.label}

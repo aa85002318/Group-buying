@@ -16,12 +16,10 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 export function NewsCard({ item }: { item: NewsItem }) {
   const toneClass = item.important
-    ? "bg-error-soft text-error"
-    : item.category === "system"
-      ? "bg-info-soft text-info"
-      : item.category === "closure"
-        ? "bg-warning-soft text-warning"
-        : "bg-primary-soft text-primary";
+    ? "bg-surface-coral text-brand-primary"
+    : item.category === "campaign" || item.category === "promo"
+      ? "bg-surface-peach text-brand-caramel"
+      : "bg-surface-yellow text-brand-caramel";
 
   return (
     <Link
@@ -36,7 +34,7 @@ export function NewsCard({ item }: { item: NewsItem }) {
         {item.pinned && <StatusBadge tone="info" label="置頂" />}
         {item.important && <StatusBadge tone="error" label="重要" />}
       </div>
-      <h3 className="mt-2 text-base font-bold text-foreground">{item.title}</h3>
+      <h3 className="mt-2 text-base font-bold text-brand-caramel">{item.title}</h3>
       <p className="mt-1 line-clamp-2 text-sm text-foreground-secondary">{item.summary}</p>
       <p className="mt-3 text-xs text-foreground-secondary">{item.publishedAt}</p>
     </Link>

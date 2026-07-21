@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export function AIEntryCard({
   title,
@@ -12,17 +11,18 @@ export function AIEntryCard({
   href: string;
 }) {
   return (
-    <div className="card-surface flex flex-col gap-3 bg-primary-soft p-5">
-      <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-surface text-primary shadow-sm">
+    <Link
+      href={href}
+      className="flex flex-col gap-3 rounded-[20px] border border-border bg-ai-gradient p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift"
+    >
+      <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-white shadow-brand">
         <Sparkles className="h-5 w-5" aria-hidden />
       </span>
       <div>
-        <h3 className="font-black text-foreground">{title}</h3>
+        <h3 className="font-bold text-brand-caramel">{title}</h3>
         <p className="mt-1 text-sm text-foreground-secondary">{description}</p>
       </div>
-      <Link href={href}>
-        <Button className="w-full">開始使用</Button>
-      </Link>
-    </div>
+      <span className="text-sm font-bold text-brand-primary">開始使用 →</span>
+    </Link>
   );
 }

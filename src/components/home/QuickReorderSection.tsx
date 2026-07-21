@@ -52,8 +52,8 @@ function ReorderCard({
   };
 
   return (
-    <article className="flex w-[168px] shrink-0 flex-col overflow-hidden rounded-[18px] border border-border-soft bg-surface shadow-card md:w-auto">
-      <div className="relative aspect-square bg-surface-soft">
+    <article className="flex w-[168px] shrink-0 flex-col overflow-hidden rounded-[20px] border border-border bg-surface shadow-soft md:w-auto">
+      <div className="relative aspect-square bg-surface-peach">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt="" className="h-full w-full object-cover" />
@@ -62,26 +62,29 @@ function ReorderCard({
             暫無圖片
           </div>
         )}
+        <span className="absolute left-2 top-2 rounded-full bg-surface-yellow px-2 py-0.5 text-[10px] font-bold text-brand-caramel">
+          再次購買
+        </span>
       </div>
       <div className="flex flex-1 flex-col gap-2 p-3">
-        <p className="line-clamp-2 text-sm font-semibold text-foreground">{name}</p>
+        <p className="line-clamp-2 text-sm font-semibold text-brand-caramel">{name}</p>
         {unit ? <p className="text-xs text-foreground-secondary">{unit}</p> : null}
-        <p className="text-sm font-bold text-caramel">{formatCurrency(price)}</p>
+        <p className="text-sm font-bold text-brand-primary">{formatCurrency(price)}</p>
         <div className="mt-auto space-y-2">
-          <div className="flex items-center justify-between rounded-button border border-border-soft bg-surface-soft px-1">
+          <div className="flex items-center justify-between rounded-button border border-border bg-surface-peach px-1">
             <button
               type="button"
               aria-label="減少數量"
-              className="flex h-9 w-9 items-center justify-center text-caramel"
+              className="flex h-9 w-9 items-center justify-center text-brand-caramel"
               onClick={() => setQty((q) => Math.max(1, q - 1))}
             >
               <Minus className="h-4 w-4" />
             </button>
-            <span className="min-w-[1.5rem] text-center text-sm font-bold">{qty}</span>
+            <span className="min-w-[1.5rem] text-center text-sm font-bold text-brand-caramel">{qty}</span>
             <button
               type="button"
               aria-label="增加數量"
-              className="flex h-9 w-9 items-center justify-center text-caramel"
+              className="flex h-9 w-9 items-center justify-center text-brand-caramel"
               onClick={() => setQty((q) => Math.min(99, q + 1))}
             >
               <Plus className="h-4 w-4" />
@@ -91,7 +94,7 @@ function ReorderCard({
             type="button"
             disabled={busy}
             onClick={add}
-            className="flex h-10 w-full items-center justify-center gap-1.5 rounded-button bg-primary text-sm font-bold text-white disabled:opacity-60"
+            className="flex h-10 w-full items-center justify-center gap-1.5 rounded-button bg-brand-primary text-sm font-bold text-white transition hover:bg-primary-hover disabled:opacity-60"
           >
             <ShoppingCart className="h-4 w-4" />
             加入購物車
@@ -154,7 +157,7 @@ export function QuickReorderSection({
       }));
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-3 rounded-[20px] bg-section p-3 md:p-4">
       <div>
         <SectionHeader title={title} href="/products" linkLabel="逛更多" />
         <p className="-mt-2 text-sm text-foreground-secondary">{subtitle}</p>

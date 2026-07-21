@@ -33,7 +33,7 @@ function BrowseCard({ item }: { item: BrowseHistoryItem }) {
   const remain = item.type === "group_buy" ? remainingLabel(item.endAt) : null;
 
   return (
-    <article className="relative flex w-[148px] shrink-0 flex-col overflow-hidden rounded-[18px] border border-border-soft bg-surface shadow-card md:w-auto">
+    <article className="relative flex w-[148px] shrink-0 flex-col overflow-hidden rounded-[20px] border border-border bg-surface shadow-soft md:w-auto">
       <Link href={item.href} className="block">
         <div className="relative aspect-square bg-surface-soft">
           {item.imageUrl ? (
@@ -44,7 +44,14 @@ function BrowseCard({ item }: { item: BrowseHistoryItem }) {
               暫無圖片
             </div>
           )}
-          <span className="absolute left-2 top-2 rounded-full bg-surface/95 px-2 py-0.5 text-[11px] font-bold text-caramel shadow-sm">
+          <span
+            className={cn(
+              "absolute left-2 top-2 rounded-full px-2 py-0.5 text-[11px] font-bold shadow-sm",
+              item.type === "product" && "bg-surface-coral text-brand-primary",
+              item.type === "recipe" && "bg-surface-yellow text-brand-caramel",
+              item.type === "group_buy" && "bg-surface-peach text-brand-caramel"
+            )}
+          >
             {BROWSE_TYPE_LABEL[item.type]}
           </span>
         </div>
@@ -53,7 +60,7 @@ function BrowseCard({ item }: { item: BrowseHistoryItem }) {
           {item.type === "product" && item.price != null ? (
             <p className="text-sm font-bold text-caramel">{formatCurrency(Number(item.price))}</p>
           ) : null}
-          {remain ? <p className="text-xs font-medium text-groupBuy">{remain}</p> : null}
+          {remain ? <p className="text-xs font-medium text-brand-primary">{remain}</p> : null}
         </div>
       </Link>
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-border-soft px-2 py-2">
@@ -93,7 +100,7 @@ export function RecentBrowseSection({
   const shown = items.slice(0, limit);
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-3 rounded-[20px] bg-background py-1">
       <div>
         <SectionHeader title="最近瀏覽" href={moreHref} linkLabel="查看更多" />
         <p className="-mt-2 text-sm text-foreground-secondary">繼續看看你感興趣的商品</p>

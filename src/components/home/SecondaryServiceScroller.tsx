@@ -14,34 +14,42 @@ const SECONDARY: Array<{
   description: string;
   icon: LucideIcon;
   iconClass: string;
+  well: string;
+  cardClass?: string;
 }> = [
   {
     href: "/ai-tools",
     title: "AI 烘焙助手",
     description: "不知道怎麼選？問問我",
     icon: Sparkles,
-    iconClass: "text-primary",
+    iconClass: "text-brand-primary",
+    well: "bg-surface",
+    cardClass: "bg-ai-gradient",
   },
   {
     href: "/store-map",
     title: "門市地圖",
     description: "快速找到商品位置",
     icon: MapPin,
-    iconClass: "text-caramel",
+    iconClass: "text-brand-primary",
+    well: "bg-surface",
+    cardClass: "bg-store-gradient",
   },
   {
     href: "/news",
     title: "最新資訊",
     description: "新品與活動公告",
     icon: Newspaper,
-    iconClass: "text-primary",
+    iconClass: "text-brand-primary",
+    well: "bg-surface-yellow",
   },
   {
     href: "/support",
     title: "門市客服",
     description: "訂單與配送問題",
     icon: Headphones,
-    iconClass: "text-caramel",
+    iconClass: "text-brand-caramel",
+    well: "bg-surface-peach",
   },
 ];
 
@@ -57,20 +65,25 @@ export function SecondaryServiceScroller() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex h-[76px] w-[158px] shrink-0 items-center gap-2.5 rounded-2xl border border-border-soft bg-surface px-3 shadow-card transition",
-                "active:bg-peach-soft md:h-auto md:min-h-[84px] md:w-auto md:hover:-translate-y-0.5 md:hover:bg-peach-soft md:hover:shadow-lift"
+                "flex h-[76px] w-[158px] shrink-0 items-center gap-2.5 rounded-[20px] border border-border bg-surface px-3 shadow-soft transition",
+                "hover:border-brand-peach hover:bg-peach-light active:bg-surface-peach",
+                "md:h-auto md:min-h-[84px] md:w-auto md:hover:-translate-y-0.5 md:hover:shadow-lift",
+                item.cardClass
               )}
             >
               <span
                 className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cream-light",
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
+                  item.well,
                   item.iconClass
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden />
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-caramel">{item.title}</span>
+                <span className="block truncate text-sm font-semibold text-brand-caramel">
+                  {item.title}
+                </span>
                 <span className="mt-0.5 block line-clamp-1 text-xs text-foreground-secondary">
                   {item.description}
                 </span>

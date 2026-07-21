@@ -23,14 +23,13 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-border-soft bg-surface"
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-divider bg-surface"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div className="mx-auto grid h-[60px] min-h-[56px] grid-cols-5 items-stretch px-0.5 sm:px-1">
         {CONSUMER_BOTTOM_NAV.map((item) => {
           const active = item.match(pathname);
           const Icon = ICONS[item.href as keyof typeof ICONS] ?? Home;
-          const isGroup = item.accent === "groupBuy";
 
           return (
             <Link
@@ -43,11 +42,7 @@ export function MobileBottomNav() {
               <Icon
                 className={cn(
                   "h-5 w-5 shrink-0",
-                  active
-                    ? isGroup
-                      ? "text-groupBuy"
-                      : "text-primary"
-                    : "text-caramel"
+                  active ? "text-brand-primary" : "text-brand-caramel"
                 )}
                 aria-hidden
               />
@@ -55,10 +50,8 @@ export function MobileBottomNav() {
                 className={cn(
                   "max-w-full truncate",
                   active
-                    ? isGroup
-                      ? "font-bold text-groupBuy"
-                      : "font-bold text-primary"
-                    : "font-medium text-caramel/70"
+                    ? "font-bold text-brand-primary"
+                    : "font-medium text-foreground-secondary"
                 )}
               >
                 {item.label}

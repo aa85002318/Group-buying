@@ -33,24 +33,32 @@ export function PopularCategories({
 }: PopularCategoriesProps) {
   return (
     <section aria-label={title}>
-      <h2 className="mb-3 text-xl font-semibold tracking-tight text-caramel">{title}</h2>
+      <h2 className="mb-3 text-xl font-semibold tracking-tight text-brand-caramel">{title}</h2>
       <div className="h-scroll md:mx-0 md:overflow-visible md:px-0">
         <ul className="flex w-max gap-3 md:grid md:w-full md:grid-cols-6 md:gap-3">
-          {items.map((item) => {
+          {items.map((item, index) => {
             const active = activeId === item.id;
+            const wells = [
+              "bg-surface-yellow",
+              "bg-surface-peach",
+              "bg-surface-coral",
+              "bg-section",
+            ];
+            const well = wells[index % wells.length];
             return (
               <li key={item.id} className="w-[76px] shrink-0 md:w-auto">
                 <Link
                   href={item.href}
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-2xl p-1 transition",
-                    active && "bg-primary-soft"
+                    active && "bg-surface-coral"
                   )}
                 >
                   <span
                     className={cn(
-                      "relative flex aspect-square h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border bg-surface shadow-card md:h-16 md:w-16",
-                      active ? "border-primary" : "border-border-soft"
+                      "relative flex aspect-square h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border bg-surface shadow-soft md:h-16 md:w-16",
+                      active ? "border-brand-primary" : "border-border",
+                      !item.imageUrl && well
                     )}
                   >
                     {item.imageUrl ? (
@@ -63,7 +71,7 @@ export function PopularCategories({
                         unoptimized
                       />
                     ) : (
-                      <span className="bg-peach-soft px-2 text-center text-[11px] font-bold leading-tight text-caramel">
+                      <span className="px-2 text-center text-[11px] font-bold leading-tight text-brand-caramel">
                         {item.name.slice(0, 2)}
                       </span>
                     )}
@@ -71,7 +79,7 @@ export function PopularCategories({
                   <span
                     className={cn(
                       "line-clamp-2 text-center text-[13px] font-medium leading-tight",
-                      active ? "text-primary" : "text-caramel"
+                      active ? "text-brand-primary" : "text-brand-caramel"
                     )}
                   >
                     {item.name}

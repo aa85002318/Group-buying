@@ -28,12 +28,12 @@ interface ProductCardProps {
 }
 
 const BADGE_CLASS: Record<ProductBadge, string> = {
-  new: "bg-primary text-white",
-  hot: "bg-error text-white",
-  groupBuy: "bg-groupBuy text-white",
-  preorder: "bg-warning text-foreground",
+  new: "bg-surface-yellow text-brand-caramel",
+  hot: "bg-brand-primary text-white",
+  groupBuy: "bg-brand-primary text-white",
+  preorder: "bg-surface-yellow text-brand-caramel",
   instock: "bg-success text-white",
-  soldout: "bg-disabled text-white",
+  soldout: "bg-disabled-soft text-disabled",
 };
 
 const BADGE_LABEL: Record<ProductBadge, string> = {
@@ -68,10 +68,9 @@ export function ProductCard({
   showQuickAdd = true,
 }: ProductCardProps) {
   const link = href ?? `/products/${id}`;
-  const groupBuy = Boolean(isGroupBuy || groupBuyLabel || badge === "groupBuy");
   const resolvedBadge: ProductBadge | undefined =
     badge ??
-    (groupBuyLabel ? "groupBuy" : undefined) ??
+    (isGroupBuy || groupBuyLabel ? "groupBuy" : undefined) ??
     (sticker ? STICKER_TO_BADGE[sticker] : undefined);
   const { addItem } = useCart();
   const [adding, setAdding] = useState(false);
@@ -96,8 +95,8 @@ export function ProductCard({
   };
 
   return (
-    <article className="group flex min-w-0 flex-col overflow-hidden rounded-card border border-border-soft bg-surface shadow-card">
-      <Link href={link} className="relative block aspect-square overflow-hidden bg-surface-soft">
+    <article className="group flex min-w-0 flex-col overflow-hidden rounded-[20px] border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
+      <Link href={link} className="relative block aspect-square overflow-hidden bg-surface-peach">
         <div className="absolute right-2 top-2 z-10">
           <FavoriteButton productId={id} size="sm" />
         </div>
@@ -139,7 +138,7 @@ export function ProductCard({
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-1">
           <div className="min-w-0">
-            <p className="font-semibold text-price">{formatCurrency(price)}</p>
+            <p className="font-semibold text-brand-primary">{formatCurrency(price)}</p>
             {original_price && original_price > price && (
               <p className="text-xs text-foreground-muted line-through">
                 {formatCurrency(original_price)}
@@ -154,7 +153,7 @@ export function ProductCard({
               aria-label="將商品加入購物車"
               className={cn(
                 "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white transition active:scale-95 disabled:opacity-50",
-                groupBuy ? "bg-groupBuy hover:bg-groupBuy-hover" : "bg-primary hover:bg-primary-hover"
+                "bg-brand-primary hover:bg-primary-hover"
               )}
             >
               <Plus className="h-5 w-5" aria-hidden />

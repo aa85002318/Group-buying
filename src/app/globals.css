@@ -10,9 +10,9 @@
     --brand-primary: var(--primary);
     --brand-dark: var(--primary-hover);
     --sale-red: var(--price);
-    --accent-orange: var(--group-buy);
+    --accent-orange: var(--primary);
     --coupon-yellow: var(--warning);
-    --reward-purple: var(--info);
+    --reward-purple: var(--caramel);
     --fresh-green: var(--success);
     --frozen-blue: var(--info);
     --page-background: var(--background);
@@ -34,7 +34,7 @@
     --nav-inactive: var(--text-secondary);
     --nav-icon: var(--caramel);
     --brand-red: var(--primary);
-    --brand-orange: var(--group-buy);
+    --brand-orange: var(--primary);
     --header-content-gap: 0px;
   }
 
@@ -106,27 +106,27 @@
 
 @layer components {
   .section-title {
-    @apply text-xl font-semibold tracking-tight text-foreground;
+    @apply text-xl font-semibold tracking-tight text-brand-caramel;
   }
 
   .btn-brand {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-card transition duration-250 ease-brand hover:bg-primary-hover active:bg-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-brand-primary px-5 py-2.5 text-sm font-bold text-white shadow-card transition duration-250 ease-brand hover:bg-primary-hover active:bg-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-disabled-soft disabled:text-disabled disabled:opacity-100;
   }
 
   .btn-group-buy {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-groupBuy px-5 py-2.5 text-sm font-bold text-white shadow-card transition duration-250 ease-brand hover:bg-groupBuy-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-groupBuy/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-brand-primary px-5 py-2.5 text-sm font-bold text-white shadow-card transition duration-250 ease-brand hover:bg-primary-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button border-2 border-primary bg-surface px-5 py-2.5 text-sm font-bold text-primary transition duration-250 ease-brand hover:bg-primary-soft active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button border border-border bg-surface px-5 py-2.5 text-sm font-bold text-brand-caramel transition duration-250 ease-brand hover:bg-peach-light active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
   }
 
   .btn-ghost {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-transparent px-4 py-2.5 text-sm font-semibold text-caramel transition hover:bg-caramel-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-transparent px-4 py-2.5 text-sm font-semibold text-brand-caramel transition hover:bg-surface-yellow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30;
   }
 
   .card-surface {
-    @apply rounded-card border border-border-soft bg-surface shadow-card transition duration-250 ease-brand;
+    @apply rounded-[20px] border border-border bg-surface shadow-soft transition duration-250 ease-brand;
   }
 
   .card-lift {

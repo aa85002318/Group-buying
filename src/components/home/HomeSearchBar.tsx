@@ -35,7 +35,7 @@ export function HomeSearchBar({
       className={cn("relative w-full", className)}
     >
       <Search
-        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-caramel"
+        className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-secondary"
         aria-hidden
       />
       <label htmlFor="app-home-search" className="sr-only">
@@ -47,11 +47,11 @@ export function HomeSearchBar({
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={placeholder}
-        className="h-[50px] w-full rounded-2xl border border-border-soft bg-cream-light py-2 pl-10 pr-12 text-sm text-foreground outline-none transition placeholder:text-foreground-muted focus:border-primary focus:shadow-brand-ring"
+        className="h-[50px] w-full rounded-2xl border border-border bg-surface py-2 pl-10 pr-12 text-sm text-brand-caramel outline-none transition placeholder:text-foreground-muted focus:border-brand-primary focus:shadow-brand-ring"
       />
       <button
         type="button"
-        className="absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-caramel transition hover:bg-peach-soft hover:text-primary"
+        className="absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-brand-caramel transition hover:bg-surface-coral hover:text-brand-primary"
         aria-label="掃描條碼（即將推出）"
         disabled
       >

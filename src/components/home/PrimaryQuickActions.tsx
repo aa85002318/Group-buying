@@ -20,29 +20,29 @@ const PRIMARY_ACTIONS: Array<{
     href: APP_ROUTES.shop,
     label: "烘焙材料",
     icon: Package,
-    well: "bg-primary-soft",
-    iconClass: "text-primary",
+    well: "bg-surface-peach",
+    iconClass: "text-brand-primary",
   },
   {
     href: APP_ROUTES.recipes,
     label: "食譜影音",
     icon: ChefHat,
-    well: "bg-butter-soft",
-    iconClass: "text-caramel",
+    well: "bg-surface-yellow",
+    iconClass: "text-brand-caramel",
   },
   {
     href: "/group-buy",
     label: "團購專區",
     icon: Users,
-    well: "bg-groupBuy-soft",
-    iconClass: "text-groupBuy",
+    well: "bg-surface-coral",
+    iconClass: "text-brand-primary",
   },
   {
     href: APP_ROUTES.member,
     label: "我的會員",
     icon: BadgeCheck,
-    well: "bg-caramel-soft",
-    iconClass: "text-caramel",
+    well: "bg-surface-peach",
+    iconClass: "text-brand-caramel",
   },
 ];
 
@@ -58,7 +58,7 @@ export function PrimaryQuickActions() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-2xl px-1 py-2 transition active:bg-peach-soft"
+                className="flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-2xl px-1 py-2 transition hover:bg-peach-light active:bg-surface-peach"
               >
                 <span
                   className={cn(
@@ -94,7 +94,7 @@ export function PrimaryQuickActions() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="group flex min-h-[88px] items-center gap-3 rounded-[18px] border border-border-soft bg-surface p-4 shadow-card transition duration-250 hover:-translate-y-0.5 hover:shadow-lift"
+                className="group flex min-h-[88px] items-center gap-3 rounded-[20px] border border-border bg-surface p-4 shadow-soft transition duration-250 hover:-translate-y-0.5 hover:border-brand-peach hover:bg-peach-light hover:shadow-lift"
               >
                 <span
                   className={cn(

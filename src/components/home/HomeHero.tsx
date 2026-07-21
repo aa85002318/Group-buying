@@ -48,13 +48,13 @@ function DefaultHero() {
           <div className="mt-3 flex flex-wrap items-center gap-3 md:mt-5">
             <Link
               href={APP_ROUTES.shop}
-              className="inline-flex h-11 min-h-touch items-center justify-center rounded-button bg-primary px-5 text-sm font-bold text-white shadow-card transition hover:bg-primary-hover active:scale-[0.98]"
+              className="inline-flex h-11 min-h-touch items-center justify-center rounded-button bg-brand-primary px-5 text-sm font-bold text-white shadow-card transition hover:bg-primary-hover active:scale-[0.98]"
             >
               逛烘焙材料
             </Link>
             <Link
               href={APP_ROUTES.recipes}
-              className="text-sm font-semibold text-caramel underline-offset-4 transition hover:text-primary hover:underline"
+              className="inline-flex h-11 min-h-touch items-center justify-center rounded-button border border-border bg-surface px-5 text-sm font-semibold text-brand-caramel transition hover:bg-peach-light"
             >
               看看最新食譜 →
             </Link>
@@ -73,8 +73,8 @@ function DefaultHero() {
             <span className="absolute bottom-8 right-10 h-8 w-12 rounded-md bg-butter shadow-card md:bottom-14 md:right-16 md:h-10 md:w-14" />
             <span className="absolute right-4 top-8 h-20 w-1.5 rotate-12 rounded-full bg-caramel/25 md:right-10 md:top-12 md:h-28" />
             <span className="absolute right-2 top-6 h-4 w-4 rounded-full border-2 border-caramel/30 md:right-8 md:top-10 md:h-5 md:w-5" />
-            <span className="absolute bottom-16 right-2 h-7 w-5 rotate-[-20deg] rounded-full bg-[#F5E6C8] shadow-card md:bottom-24 md:right-6 md:h-9 md:w-7" />
-            <div className="relative z-10 mb-2 drop-shadow-[0_8px_24px_rgba(139,87,42,0.18)] md:mb-0">
+            <span className="absolute bottom-16 right-2 h-7 w-5 rotate-[-20deg] rounded-full bg-cream-deep shadow-card md:bottom-24 md:right-6 md:h-9 md:w-7" />
+            <div className="relative z-10 mb-2 shadow-floating md:mb-0">
               <Image
                 src="/branding/chimeidiy-app-icon.png"
                 alt=""
