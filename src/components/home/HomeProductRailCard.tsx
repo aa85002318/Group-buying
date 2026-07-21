@@ -22,9 +22,9 @@ type HomeProductRailCardProps = {
 };
 
 const BADGE: Record<HomeProductRailBadge, { label: string; className: string }> = {
-  new: { label: "新品", className: "bg-brand-yellow text-brand-caramel" },
-  hot: { label: "熱銷", className: "bg-surface-coral text-brand-primary" },
-  sale: { label: "折扣", className: "bg-surface-yellow text-brand-caramel" },
+  new: { label: "新品", className: "bg-[var(--yellow)] text-brand-caramel" },
+  hot: { label: "熱銷", className: "bg-primary-soft text-primary-hover" },
+  sale: { label: "折扣", className: "bg-[var(--yellow-soft)] text-brand-caramel" },
 };
 
 /** Compact commerce card used by home product rails. */
@@ -60,12 +60,12 @@ export function HomeProductRailCard({
     <article
       className={cn(
         "flex w-[148px] min-w-0 shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface",
-        "shadow-[0_4px_12px_rgba(138,90,52,0.05)]",
+        "shadow-soft",
         "min-[375px]:w-[158px] sm:w-[164px] md:w-auto",
         className
       )}
     >
-      <Link href={href} className="relative block aspect-square bg-surface-soft">
+      <Link href={href} className="home-product-image-bg relative block aspect-square">
         {badge ? (
           <span
             className={cn(
@@ -104,7 +104,7 @@ export function HomeProductRailCard({
         </Link>
         <div className="mt-auto flex items-end justify-between gap-1 pt-1.5">
           <div className="min-w-0">
-            <p className="whitespace-nowrap text-sm font-bold text-brand-primary">
+            <p className="whitespace-nowrap text-sm font-bold text-price">
               {formatCurrency(price)}
             </p>
             {originalPrice != null && originalPrice > price ? (

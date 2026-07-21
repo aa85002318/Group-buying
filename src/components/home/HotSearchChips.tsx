@@ -35,7 +35,7 @@ export function HotSearchChips({
   return (
     <section
       aria-label={title}
-      className={cn("flex h-10 items-center gap-2 overflow-hidden", className)}
+      className={cn("flex h-10 min-h-[40px] items-center gap-2 overflow-hidden", className)}
     >
       <h2 className="flex shrink-0 items-center gap-1 text-xs font-semibold text-brand-caramel">
         <Flame className="h-3.5 w-3.5 text-brand-primary" aria-hidden />
@@ -47,11 +47,7 @@ export function HotSearchChips({
             <li key={k.id} className="shrink-0">
               <Link
                 href={hotSearchHref(k.label)}
-                className={cn(
-                  "inline-flex h-7 items-center whitespace-nowrap rounded-full border border-border bg-surface px-2.5 text-xs font-medium text-brand-caramel",
-                  "transition duration-200 hover:border-brand-yellow hover:bg-surface-yellow",
-                  "active:border-brand-primary active:bg-surface-coral active:text-brand-primary"
-                )}
+                className="home-hot-chip inline-flex h-7 items-center whitespace-nowrap rounded-full px-2.5 text-xs font-medium"
               >
                 #{k.label}
               </Link>

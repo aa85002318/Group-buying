@@ -148,7 +148,7 @@ export function HomeHero({ className }: { className?: string }) {
                     (e.currentTarget as HTMLImageElement).style.display = "none";
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFF7CF]/95 via-[#FFF2E7]/70 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FFF1BE]/95 via-[#FFD7A8]/70 to-transparent" />
               </>
             ) : null}
             <div className="relative z-10 flex h-full w-full items-center justify-between gap-2 px-4 py-4 md:px-6 lg:px-8">
@@ -190,7 +190,7 @@ export function HomeHero({ className }: { className?: string }) {
                   onClick={() => setIndex(i)}
                   className={cn(
                     "h-1.5 rounded-full transition",
-                    i === index ? "w-4 bg-brand-primary" : "w-1.5 bg-[#E6D6C7]"
+                    i === index ? "w-4 bg-brand-primary" : "w-1.5 bg-[#F1D5BD]"
                   )}
                 />
               ))}

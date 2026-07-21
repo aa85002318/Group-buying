@@ -24,57 +24,57 @@ const PRIMARY_ACTIONS: Array<{
     href: APP_ROUTES.shop,
     label: "烘焙材料",
     icon: Package,
-    well: "bg-surface-peach",
+    well: "bg-[var(--qa-material-bg)]",
     iconClass: "text-brand-primary",
   },
   {
     href: "/group-buy",
     label: "團購",
     icon: Users,
-    well: "bg-surface-coral",
-    iconClass: "text-brand-primary",
+    well: "bg-[var(--qa-groupbuy-bg)]",
+    iconClass: "text-primary-hover",
   },
   {
     href: APP_ROUTES.recipes,
     label: "食譜影音",
     icon: ChefHat,
-    well: "bg-surface-yellow",
-    iconClass: "text-brand-caramel",
+    well: "bg-[var(--qa-recipe-bg)]",
+    iconClass: "text-[var(--qa-icon-brown)]",
   },
   {
     href: APP_ROUTES.member,
     label: "會員中心",
     icon: BadgeCheck,
-    well: "bg-surface-peach",
-    iconClass: "text-brand-caramel",
+    well: "bg-[var(--qa-member-bg)]",
+    iconClass: "text-[var(--qa-icon-brown-dark)]",
   },
   {
     href: APP_ROUTES.aiTools,
     label: "AI 助手",
     icon: Sparkles,
-    well: "bg-surface-coral",
-    iconClass: "text-brand-caramel",
+    well: "bg-[var(--qa-ai-bg)]",
+    iconClass: "text-[var(--qa-icon-orange)]",
   },
   {
     href: APP_ROUTES.storeMap,
     label: "門市地圖",
     icon: MapPin,
-    well: "bg-surface-yellow",
+    well: "bg-[var(--qa-store-bg)]",
     iconClass: "text-brand-primary",
   },
   {
     href: "/shop?promo=1",
     label: "優惠活動",
     icon: Percent,
-    well: "bg-surface-coral",
-    iconClass: "text-brand-primary",
+    well: "bg-[var(--qa-promo-bg)]",
+    iconClass: "text-primary-hover",
   },
   {
     href: APP_ROUTES.news,
     label: "最新消息",
     icon: Newspaper,
-    well: "bg-surface-yellow",
-    iconClass: "text-brand-caramel",
+    well: "bg-[var(--qa-news-bg)]",
+    iconClass: "text-[var(--qa-icon-brown)]",
   },
 ];
 
@@ -90,9 +90,9 @@ export function PrimaryQuickActions() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex min-w-0 h-[88px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-border-soft bg-surface px-1 shadow-[0_4px_14px_rgba(138,90,52,.05)]",
+                  "home-quick-action flex min-w-0 h-[88px] flex-col items-center justify-center gap-1.5 rounded-2xl border bg-surface px-1 shadow-soft",
                   "min-[375px]:h-[92px] sm:h-[96px]",
-                  "transition duration-[180ms] hover:-translate-y-0.5 active:scale-[0.98]"
+                  "active:scale-[0.98]"
                 )}
               >
                 <span

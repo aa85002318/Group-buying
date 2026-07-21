@@ -31,9 +31,9 @@ export function HomeSearchBar({
 
   return (
     <form onSubmit={submit} role="search" className={cn("w-full", className)}>
-      <div className="relative flex h-[50px] items-center rounded-[16px] border border-border bg-surface md:h-[52px]">
+      <div className="home-search-box relative flex h-[50px] items-center rounded-[16px] border bg-surface md:h-[52px]">
         <Search
-          className="pointer-events-none absolute left-3.5 h-4.5 w-4.5 text-foreground-secondary md:h-5 md:w-5"
+          className="pointer-events-none absolute left-3.5 h-4.5 w-4.5 text-[var(--header-icon)] md:h-5 md:w-5"
           aria-hidden
         />
         <label htmlFor="app-home-search" className="sr-only">
@@ -45,7 +45,7 @@ export function HomeSearchBar({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={placeholder}
-          className="h-full w-full rounded-[16px] bg-transparent py-2 pl-11 pr-[62px] text-sm text-brand-caramel outline-none placeholder:text-foreground-muted focus:border-brand-primary focus:shadow-[0_0_0_3px_var(--focus-ring)] md:pr-[5.5rem]"
+          className="home-search-input h-full w-full rounded-[16px] bg-transparent py-2 pl-11 pr-[62px] text-sm outline-none md:pr-[5.5rem]"
         />
         <button
           type="submit"

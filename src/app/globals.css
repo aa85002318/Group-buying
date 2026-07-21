@@ -132,7 +132,7 @@
   }
 
   .card-lift {
-    @apply card-surface transition-[transform,box-shadow] duration-[180ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(138,90,52,0.09)];
+    @apply card-surface transition-[transform,box-shadow] duration-[180ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(107,63,36,0.10)];
   }
 
   .home-skeleton {
@@ -141,38 +141,46 @@
     animation: skeleton-shimmer 1.2s ease-in-out infinite;
   }
 
-  .home-content-area {
-    background: var(--home-content-background, #ffffff);
-    border-radius: 24px 24px 0 0;
-    padding-top: 20px;
-    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-  }
+  /* ── 首頁兩段式背景 ───────────────────────────────────────── */
 
+  /* 頁面根容器：頂部奶油色 */
   .home-page {
     min-height: 100%;
-    background: var(--home-page-background);
+    background: #fff9ea;
   }
 
+  /* 頂部區（Header 下方 ~ Hero 底部）：奶油色背景 */
   .home-top-area {
-    background: var(--home-page-background);
+    background: #fff9ea;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
 
-  .home-page-bleed {
-    margin-left: calc(-1 * max(1rem, env(safe-area-inset-left, 0px)));
-    margin-right: calc(-1 * max(1rem, env(safe-area-inset-right, 0px)));
+  /* Hero 下方全部中段：嚴格純白 */
+  .home-content-area {
+    background: #ffffff;
+    padding-top: 20px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
 
+  /* 內容最大寬度對齊 */
   .home-page-inner {
     width: 100%;
     margin-inline: auto;
     max-width: 1200px;
-    padding-left: 12px;
-    padding-right: 12px;
   }
 
+  /* 橫向卷軸 rail */
   .home-scroll {
     display: flex;
     gap: 12px;
+    /* 負 margin 讓 rail 出血至頁面邊緣，scroll 不會溢出 */
+    margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+    margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     scroll-snap-type: x proximity;
@@ -186,6 +194,61 @@
   .home-scroll > * {
     scroll-snap-align: start;
     flex: 0 0 auto;
+  }
+
+  /* ── 首頁搜尋列 ── */
+  .home-search-box {
+    border-color: var(--search-border);
+  }
+
+  .home-search-box:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  .home-search-input {
+    color: var(--text-primary);
+  }
+
+  .home-search-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* ── 熱門搜尋 chips ── */
+  .home-hot-chip {
+    background: #ffffff;
+    border: 1px solid var(--search-border);
+    color: var(--chip-text);
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+  }
+
+  .home-hot-chip:hover {
+    background: var(--yellow-soft);
+    border-color: var(--yellow);
+  }
+
+  .home-hot-chip:active {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  /* ── 八大入口 hover ── */
+  .home-quick-action {
+    border-color: var(--border);
+    color: var(--text-primary);
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .home-quick-action:hover {
+    transform: translateY(-2px);
+    border-color: var(--peach);
+    box-shadow: 0 6px 18px rgba(107, 63, 36, 0.1);
+  }
+
+  /* ── 商品卡圖片區 ── */
+  .home-product-image-bg {
+    background: var(--surface-image);
   }
 
   .input-field {
@@ -247,22 +310,18 @@
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
   }
 
-  @media (min-width: 375px) {
-    .home-page-inner {
-      padding-left: 16px;
-      padding-right: 16px;
-    }
-  }
-
   @media (min-width: 768px) {
-    .home-page-bleed {
-      margin-left: calc(-1 * max(1.5rem, env(safe-area-inset-left, 0px)));
-      margin-right: calc(-1 * max(1.5rem, env(safe-area-inset-right, 0px)));
+    .home-top-area,
+    .home-content-area {
+      padding-left: max(24px, env(safe-area-inset-left, 0px));
+      padding-right: max(24px, env(safe-area-inset-right, 0px));
     }
 
-    .home-page-inner {
-      padding-left: 24px;
-      padding-right: 24px;
+    .home-scroll {
+      margin-left: calc(-1 * max(24px, env(safe-area-inset-left, 0px)));
+      margin-right: calc(-1 * max(24px, env(safe-area-inset-right, 0px)));
+      padding-left: max(24px, env(safe-area-inset-left, 0px));
+      padding-right: max(24px, env(safe-area-inset-right, 0px));
     }
 
     .app-main-pad {

@@ -24,7 +24,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-divider bg-surface"
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-[var(--header-border)] bg-surface"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div className="mx-auto grid h-20 grid-cols-5 items-stretch px-0.5">
@@ -45,7 +45,7 @@ export function MobileBottomNav() {
                   "h-6 w-6 shrink-0 transition duration-200",
                   active
                     ? "scale-105 text-brand-primary"
-                    : "text-brand-caramel"
+                    : "text-[var(--nav-inactive)]"
                 )}
                 aria-hidden
               />
@@ -54,7 +54,7 @@ export function MobileBottomNav() {
                   "max-w-full truncate text-xs leading-none",
                   active
                     ? "font-medium text-brand-primary"
-                    : "font-medium text-foreground-secondary"
+                    : "font-medium text-[var(--nav-inactive)]"
                 )}
               >
                 {item.label}

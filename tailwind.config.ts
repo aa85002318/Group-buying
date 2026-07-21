@@ -53,6 +53,10 @@ const config: Config = {
           light: "var(--primary-light)",
           dark: rgb("--primary-hover-rgb"),
         },
+        orange: {
+          DEFAULT: rgb("--orange-rgb"),
+          soft: "var(--orange-soft)",
+        },
         caramel: {
           DEFAULT: rgb("--caramel-rgb"),
           hover: rgb("--caramel-hover-rgb"),
@@ -132,7 +136,7 @@ const config: Config = {
           caramel: rgb("--caramel-rgb"),
           yellow: "var(--secondary-yellow)",
           red: rgb("--primary-rgb"),
-          orange: rgb("--primary-rgb"),
+          orange: rgb("--orange-rgb"),
           mint: rgb("--success-rgb"),
           blue: rgb("--info-rgb"),
           ink: rgb("--text-primary-rgb"),
@@ -168,8 +172,8 @@ const config: Config = {
         countdown: rgb("--error-rgb"),
         nav: {
           active: rgb("--primary-rgb"),
-          inactive: rgb("--text-secondary-rgb"),
-          icon: rgb("--caramel-rgb"),
+          inactive: rgb("--nav-inactive-rgb"),
+          icon: rgb("--header-icon-rgb"),
         },
         coffee: rgb("--text-primary-rgb"),
         muted: {

@@ -28,7 +28,7 @@ function CartButton() {
   return (
     <Link
       href={APP_ROUTES.cart}
-      className="relative inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
+      className="relative inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-[var(--header-icon)] transition duration-200 hover:bg-[var(--yellow-soft)] hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
       aria-label={`購物車${cartCount > 0 ? `，${cartCount} 件商品` : ""}`}
     >
       <ShoppingCart className="h-6 w-6" aria-hidden />
@@ -45,7 +45,7 @@ function MemberButton() {
   return (
     <Link
       href={APP_ROUTES.member}
-      className="inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
+      className="inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-[var(--header-icon)] transition duration-200 hover:bg-[var(--yellow-soft)] hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
       aria-label="我的會員"
     >
       <User className="h-6 w-6" aria-hidden />
@@ -57,7 +57,7 @@ function NotifyButton() {
   return (
     <Link
       href={APP_ROUTES.memberNotifications}
-      className="relative inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
+      className="relative inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-[var(--header-icon)] transition duration-200 hover:bg-[var(--yellow-soft)] hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
       aria-label="通知中心"
     >
       <Bell className="h-6 w-6" aria-hidden />
@@ -72,7 +72,7 @@ function BackButton({ href }: { href?: string }) {
     <button
       type="button"
       onClick={() => (href ? router.push(href) : router.back())}
-      className="inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
+      className="inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-[var(--header-icon)] transition duration-200 hover:bg-[var(--yellow-soft)] hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
       aria-label="返回"
     >
       <ArrowLeft className="h-5 w-5" aria-hidden />
@@ -101,7 +101,8 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full shrink-0 border-b border-divider bg-surface",
+        "sticky top-0 z-50 w-full shrink-0 border-b bg-surface",
+        "border-[var(--header-border)]",
         className
       )}
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
