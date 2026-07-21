@@ -9,6 +9,7 @@ import { APP_ROUTES } from "@/lib/site-links";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { ChimeidiyLogo } from "@/components/branding/ChimeidiyLogo";
 import { AppHamburgerMenu } from "@/components/layout/AppHamburgerMenu";
+import { BakingCatalogSideMenu } from "@/components/baking/BakingCatalogSideMenu";
 import { ConsumerHubNav } from "@/components/consumer/ConsumerHubNav";
 
 export type AppHeaderVariant = "home" | "standard" | "detail" | "search";
@@ -85,6 +86,10 @@ function resolveVariant(pathname: string, variant?: AppHeaderVariant): AppHeader
   return pathname === "/" ? "home" : "standard";
 }
 
+function isBakingMaterialsPath(pathname: string): boolean {
+  return pathname === "/baking-materials" || pathname.startsWith("/baking-materials/");
+}
+
 /** Sticky white header 64px — Logo left, notify / cart / member right (no full-bleed red) */
 export function AppHeader({
   variant,
@@ -95,6 +100,10 @@ export function AppHeader({
 }: AppHeaderProps) {
   const pathname = usePathname();
   const resolved = resolveVariant(pathname, variant);
+  const bakingMaterials = isBakingMaterialsPath(pathname);
+  const headerTitle = bakingMaterials
+    ? title ?? "烘焙材料"
+    : title ?? "";
 
   if (isMinimalChromePath(pathname)) return null;
 
@@ -138,19 +147,19 @@ export function AppHeader({
           </>
         ) : (
           <>
-            <BackButton href={backHref} />
+            <BackButton href={backHref ?? (bakingMaterials ? "/" : undefined)} />
             <div className="min-w-0 flex-1 px-2 text-center">
-              <h1 className="truncate text-base font-bold text-brand-caramel">{title ?? ""}</h1>
+              <h1 className="truncate text-base font-bold text-brand-caramel">{headerTitle}</h1>
             </div>
             <div className="flex shrink-0 items-center justify-end gap-0.5">
-              <AppHamburgerMenu />
+              {bakingMaterials ? <BakingCatalogSideMenu /> : <AppHamburgerMenu />}
               {showCart ? <CartButton /> : null}
             </div>
           </>
         )}
       </div>
-      {/* 首頁不顯示桌機第二層選單，避免與示意圖衝突 */}
-      {resolved !== "home" ? (
+      {/* 首頁與烘焙材料頁不顯示桌機第二層選單 */}
+      {resolved !== "home" && !bakingMaterials ? (
         <div className="mx-auto hidden w-full max-w-[1280px] md:block">
           <ConsumerHubNav />
         </div>

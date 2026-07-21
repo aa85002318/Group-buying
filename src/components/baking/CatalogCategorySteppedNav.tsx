@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,17 +11,23 @@ type CatalogCategorySteppedNavProps = {
   categories: BakingCategory[];
   activeSlug?: string;
   className?: string;
+  /** 點分類連結時回呼（關閉 drawer） */
+  onNavigate?: () => void;
+  /** 隱藏標題（外層已有區塊標題時） */
+  hideTitle?: boolean;
 };
 
 /**
  * 前台烘焙材料階梯式側面分類選單
- * 大分類 → 中分類 → 小分類，點擊進入下一層或前往分類頁
+ * 大分類 → 中分類 → 小分類
  */
 export function CatalogCategorySteppedNav({
   tree,
   categories,
   activeSlug,
   className,
+  onNavigate,
+  hideTitle = false,
 }: CatalogCategorySteppedNavProps) {
   const byId = useMemo(() => {
     const map = new Map<string, BakingCategoryTreeNode>();
@@ -40,7 +46,7 @@ export function CatalogCategorySteppedNav({
     [categories, activeSlug]
   );
 
-  const initialStack = useMemo(() => {
+  const derivedStack = useMemo(() => {
     if (!active) return [] as BakingCategoryTreeNode[];
     const chain: BakingCategoryTreeNode[] = [];
     let cur: BakingCategory | null | undefined = active;
@@ -52,7 +58,6 @@ export function CatalogCategorySteppedNav({
       if (node) chain.unshift(node);
       cur = parent;
     }
-    // 若目前是有子分類的節點，堆疊含自身以便顯示其子層
     const self = byId.get(active.id);
     if (self && self.children.length > 0) {
       chain.push(self);
@@ -60,42 +65,29 @@ export function CatalogCategorySteppedNav({
     return chain;
   }, [active, categories, byId]);
 
-  const [stackOverride, setStackOverride] = useState<BakingCategoryTreeNode[] | null>(null);
-  const stack = stackOverride ?? initialStack;
+  const [stack, setStack] = useState<BakingCategoryTreeNode[]>(derivedStack);
 
-  // 當 URL 分類變更時，重置手動堆疊
-  const stackKey = activeSlug ?? "";
-  const [prevKey, setPrevKey] = useState(stackKey);
-  if (prevKey !== stackKey) {
-    setPrevKey(stackKey);
-    if (stackOverride !== null) setStackOverride(null);
-  }
+  useEffect(() => {
+    setStack(derivedStack);
+  }, [derivedStack]);
 
   const currentNodes: BakingCategoryTreeNode[] =
     stack.length === 0 ? tree : stack[stack.length - 1]?.children ?? [];
 
   const goInto = (node: BakingCategoryTreeNode) => {
     if (node.children.length === 0) return;
-    setStackOverride([...stack, node]);
-  };
-
-  const goBack = () => {
-    setStackOverride(stack.slice(0, -1));
-  };
-
-  const goToIndex = (index: number) => {
-    setStackOverride(stack.slice(0, index));
+    setStack((prev) => [...prev, node]);
   };
 
   return (
     <div className={cn("space-y-3", className)}>
-      <h3 className="text-sm font-semibold text-[#6B3F24]">分類</h3>
+      {!hideTitle && <h3 className="text-sm font-semibold text-[#6B3F24]">分類</h3>}
 
       <div className="flex items-center gap-1 text-xs text-[#8C644A]">
         {stack.length > 0 && (
           <button
             type="button"
-            onClick={goBack}
+            onClick={() => setStack((prev) => prev.slice(0, -1))}
             className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md hover:bg-[#FFF9EA]"
             aria-label="返回上一層"
           >
@@ -105,7 +97,7 @@ export function CatalogCategorySteppedNav({
         <nav className="flex min-w-0 flex-wrap items-center gap-1">
           <button
             type="button"
-            onClick={() => setStackOverride([])}
+            onClick={() => setStack([])}
             className={cn(
               "rounded px-1 py-0.5",
               stack.length === 0 ? "font-semibold text-[#FF5A5F]" : "hover:text-[#FF5A5F]"
@@ -118,7 +110,7 @@ export function CatalogCategorySteppedNav({
               <span>›</span>
               <button
                 type="button"
-                onClick={() => goToIndex(i + 1)}
+                onClick={() => setStack((prev) => prev.slice(0, i + 1))}
                 className={cn(
                   "max-w-[6.5rem] truncate rounded px-1 py-0.5",
                   i === stack.length - 1
@@ -141,6 +133,7 @@ export function CatalogCategorySteppedNav({
                 ? `/baking-materials/${stack[stack.length - 1].slug}`
                 : "/baking-materials"
             }
+            onClick={onNavigate}
             className={cn(
               "block rounded-md px-2 py-1.5 text-sm transition",
               (!activeSlug && stack.length === 0) ||
@@ -166,6 +159,7 @@ export function CatalogCategorySteppedNav({
               >
                 <Link
                   href={`/baking-materials/${node.slug}`}
+                  onClick={onNavigate}
                   className={cn(
                     "min-w-0 flex-1 truncate px-2 py-1.5 text-sm transition",
                     isActive

@@ -123,15 +123,6 @@ export function BakingMaterialsClient({ categorySlug }: BakingMaterialsClientPro
     [meta.categories, categorySlug]
   );
 
-  const level1Categories = useMemo(
-    () =>
-      meta.categories
-        .filter((c) => c.level === 1)
-        .sort((a, c) => a.sort_order - c.sort_order)
-        .slice(0, 8),
-    [meta.categories]
-  );
-
   const pushFilters = useCallback(
     (next: Partial<BakingProductFilters>, options?: { append?: boolean }) => {
       const merged: BakingProductFilters = {
@@ -373,38 +364,6 @@ export function BakingMaterialsClient({ categorySlug }: BakingMaterialsClientPro
             </div>
           </form>
         </header>
-
-        {level1Categories.length > 0 && (
-          <section aria-label="熱門分類" className="mb-4">
-            <div className="baking-catalog-chips flex gap-2 overflow-x-auto pb-1">
-              <Link
-                href="/baking-materials"
-                className={cn(
-                  "inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-sm font-medium transition",
-                  !categorySlug
-                    ? "border-[#FF5A5F] bg-[#FF5A5F] text-white"
-                    : "border-[#F2D8BF] bg-white text-[#6B3F24]"
-                )}
-              >
-                全部
-              </Link>
-              {level1Categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/baking-materials/${cat.slug}`}
-                  className={cn(
-                    "inline-flex shrink-0 items-center rounded-full border px-3 py-1.5 text-sm font-medium transition",
-                    categorySlug === cat.slug
-                      ? "border-[#FF5A5F] bg-[#FF5A5F] text-white"
-                      : "border-[#F2D8BF] bg-white text-[#6B3F24]"
-                  )}
-                >
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
 
         <div className="flex gap-6 md:items-start">
           <aside className="hidden w-[220px] shrink-0 md:block lg:w-[260px]">{sidebarFilters}</aside>
