@@ -86,8 +86,13 @@ export default function AdminBannersPage() {
   };
 
   const save = async () => {
+    const isHero = form.placement === "home_hero";
     if (!form.title.trim()) {
-      alert("請填寫標題");
+      alert(isHero ? "請填寫管理用名稱（僅後台辨識，不顯示於前台）" : "請填寫標題");
+      return;
+    }
+    if (isHero && !form.image_url.trim()) {
+      alert("請上傳 Banner 圖片（建議 1400×700 px）");
       return;
     }
     setSaving(true);
@@ -157,7 +162,7 @@ export default function AdminBannersPage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="Banner 管理"
-        description="首頁 Hero／商城／團購等版位；連結僅允許內部路徑或合法 https"
+        description="首頁 Hero：上傳 1400×700 圖片並設定連結，整張 Banner 可點擊；其他版位依需求設定"
         actions={<Button onClick={openCreate}>新增 Banner</Button>}
       />
 
@@ -166,8 +171,15 @@ export default function AdminBannersPage() {
           <p className="text-sm font-medium text-coffee">
             {editingId ? "編輯 Banner" : "新增 Banner"}
           </p>
+          {form.placement === "home_hero" ? (
+            <p className="rounded-lg bg-surface-soft px-3 py-2 text-xs leading-relaxed text-foreground-secondary">
+              首頁 Hero 僅顯示圖片，不顯示標題／按鈕文字。請上傳建議尺寸{" "}
+              <strong className="text-brand-caramel">1400×700 px</strong>{" "}
+              的 Banner，並設定連結讓客人點擊整張圖片跳轉。
+            </p>
+          ) : null}
           <AdminImageUpload
-            label="桌機圖"
+            label={form.placement === "home_hero" ? "Banner 圖片（建議 1400×700 px）" : "桌機圖"}
             images={form.image_url ? [form.image_url] : []}
             onChange={(images) => setForm({ ...form, image_url: images[0] ?? "" })}
             uploadFolder="banners"
@@ -175,7 +187,7 @@ export default function AdminBannersPage() {
             multiple={false}
           />
           <AdminImageUpload
-            label="手機圖（選填）"
+            label="手機圖（選填，未設定則使用桌機圖）"
             images={form.mobile_image_url ? [form.mobile_image_url] : []}
             onChange={(images) => setForm({ ...form, mobile_image_url: images[0] ?? "" })}
             uploadFolder="banners"
@@ -183,10 +195,22 @@ export default function AdminBannersPage() {
             multiple={false}
           />
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input placeholder="標題" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <Input placeholder="副標" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
-            <Input placeholder="按鈕文字" value={form.button_text} onChange={(e) => setForm({ ...form, button_text: e.target.value })} />
-            <Input placeholder="連結（/shop 或 https://…）" value={form.link_url} onChange={(e) => setForm({ ...form, link_url: e.target.value })} />
+            <Input
+              placeholder={form.placement === "home_hero" ? "管理用名稱（僅後台）" : "標題"}
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+            />
+            {form.placement !== "home_hero" ? (
+              <>
+                <Input placeholder="副標" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
+                <Input placeholder="按鈕文字" value={form.button_text} onChange={(e) => setForm({ ...form, button_text: e.target.value })} />
+              </>
+            ) : null}
+            <Input
+              placeholder="連結（/shop 或 https://…，整張 Banner 可點擊）"
+              value={form.link_url}
+              onChange={(e) => setForm({ ...form, link_url: e.target.value })}
+            />
             <select className="input-field" value={form.placement} onChange={(e) => setForm({ ...form, placement: e.target.value })}>
               {PLACEMENTS.map((p) => (
                 <option key={p.value} value={p.value}>{p.label}</option>

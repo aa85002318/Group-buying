@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { APP_ROUTES } from "@/lib/site-links";
 import { cn } from "@/lib/utils";
 import { externalLinkProps, isSafeLinkUrl } from "@/lib/cms/safeHtml";
@@ -10,52 +9,92 @@ import type { CmsBanner } from "@/lib/types/database";
 
 type Slide = {
   id: string;
-  title: string;
-  subtitle: string;
-  cta: string;
-  href: string;
-  image?: string | null;
+  /** 僅供 aria-label / alt，不在 Banner 上顯示 */
+  label: string;
+  href: string | null;
+  image: string | null;
+  mobileImage: string | null;
 };
 
-const DEFAULT_SLIDES: Slide[] = [
-  {
-    id: "default-1",
-    title: "今天想烤什麼？",
-    subtitle: "烘焙材料、食譜與團購一次找到",
-    cta: "逛材料",
-    href: APP_ROUTES.shop,
-  },
-  {
-    id: "default-2",
-    title: "一分鐘教你做",
-    subtitle: "跟著影音輕鬆完成第一盤甜點",
-    cta: "看食譜",
-    href: APP_ROUTES.recipes,
-  },
-  {
-    id: "default-3",
-    title: "限時團購開跑",
-    subtitle: "精選原料即將收單",
-    cta: "去跟團",
-    href: "/group-buy",
-  },
-];
+function mapBanner(b: CmsBanner, i: number): Slide {
+  const href =
+    b.link_url && isSafeLinkUrl(b.link_url) ? b.link_url : null;
+  return {
+    id: b.id ?? `cms-${i}`,
+    label: b.title || `Banner ${i + 1}`,
+    href,
+    image: b.image_url,
+    mobileImage: b.mobile_image_url ?? null,
+  };
+}
 
-function BakingDecor() {
+function BannerImage({ slide }: { slide: Slide }) {
+  const desktop = slide.image;
+  const mobile = slide.mobileImage || slide.image;
+
+  if (!desktop && !mobile) {
+    return (
+      <div className="flex aspect-[2/1] w-full items-center justify-center bg-surface-soft text-sm text-foreground-secondary">
+        請於後台上傳 Banner 圖片（建議 1400×700 px）
+      </div>
+    );
+  }
+
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <span className="absolute -right-4 -top-6 h-24 w-24 rounded-full bg-peach/50 md:h-36 md:w-36" />
-      <span className="absolute bottom-3 right-[28%] h-14 w-14 rounded-full bg-butter/60 md:h-20 md:w-20" />
-      <span className="absolute bottom-6 right-6 h-6 w-10 rounded-md bg-butter md:h-8 md:w-12" />
-      <span className="absolute bottom-12 right-14 h-5 w-4 rounded-full border border-border bg-surface md:h-7 md:w-5" />
-      <span className="absolute right-5 top-8 h-12 w-1 rotate-12 rounded-full bg-caramel/20 md:h-16 md:w-1.5" />
-    </div>
+    <picture className="block h-full w-full">
+      {slide.mobileImage ? (
+        <source media="(max-width: 767px)" srcSet={slide.mobileImage} />
+      ) : null}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={desktop || mobile || ""}
+        alt={slide.label}
+        className="h-full w-full object-cover"
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).style.display = "none";
+        }}
+      />
+    </picture>
   );
 }
 
-/** 橫向 Banner：手機高 210–240，比例約 1.7–1.9:1，不可超過 280 */
+function SlideFrame({
+  slide,
+  className,
+}: {
+  slide: Slide;
+  className?: string;
+}) {
+  const frame = (
+    <div
+      className={cn(
+        "relative aspect-[2/1] w-full overflow-hidden rounded-[20px] border border-border bg-surface-soft",
+        className
+      )}
+    >
+      <BannerImage slide={slide} />
+    </div>
+  );
+
+  if (slide.href) {
+    return (
+      <Link
+        href={slide.href}
+        {...externalLinkProps(slide.href)}
+        className="block transition duration-200 hover:opacity-[0.97] active:scale-[0.995]"
+        aria-label={slide.label}
+      >
+        {frame}
+      </Link>
+    );
+  }
+
+  return frame;
+}
+
+/** 1400×700 比例 Banner：純圖片、可點連結，無 IP / 文字 overlay */
 export function HomeHero({ className }: { className?: string }) {
-  const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [index, setIndex] = useState(0);
   const [ready, setReady] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -69,17 +108,7 @@ export function HomeHero({ className }: { className?: string }) {
         if (cancelled) return;
         const list = (d.banners ?? []) as CmsBanner[];
         if (list.length) {
-          setSlides(
-            list.map((b, i) => ({
-              id: b.id ?? `cms-${i}`,
-              title: b.title,
-              subtitle: b.subtitle || "CHIMEIDIY 烘焙生活平台",
-              cta: b.button_text || "了解更多",
-              href:
-                b.link_url && isSafeLinkUrl(b.link_url) ? b.link_url : APP_ROUTES.shop,
-              image: b.image_url,
-            }))
-          );
+          setSlides(list.map(mapBanner));
         }
       })
       .catch(() => {})
@@ -106,20 +135,19 @@ export function HomeHero({ className }: { className?: string }) {
     [slides.length]
   );
 
-  const slide = slides[index] ?? slides[0];
-  const linkExtra = externalLinkProps(slide.href);
+  const slide = slides[index];
 
   return (
     <section
       aria-label="主視覺"
-      className={cn("relative", className)}
+      className={cn("home-hero relative mx-auto w-full max-w-[1400px]", className)}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={(e) => {
         touchX.current = e.touches[0]?.clientX ?? null;
       }}
       onTouchEnd={(e) => {
-        if (touchX.current == null) return;
+        if (touchX.current == null || slides.length <= 1) return;
         const dx = (e.changedTouches[0]?.clientX ?? 0) - touchX.current;
         touchX.current = null;
         if (Math.abs(dx) < 40) return;
@@ -127,59 +155,10 @@ export function HomeHero({ className }: { className?: string }) {
       }}
     >
       {!ready ? (
-        <div className="home-skeleton aspect-[1.8/1] w-full rounded-[20px] min-h-[210px] max-h-[240px] md:min-h-[280px] md:max-h-[320px] lg:min-h-[360px] lg:max-h-[400px]" />
-      ) : (
+        <div className="home-skeleton aspect-[2/1] w-full rounded-[20px]" />
+      ) : slide ? (
         <>
-          <div
-            className={cn(
-              "relative flex aspect-[1.8/1] w-full overflow-hidden rounded-[20px] border border-border bg-hero-gradient",
-              "min-h-[210px] max-h-[240px] md:min-h-[280px] md:max-h-[320px] lg:min-h-[360px] lg:max-h-[400px]"
-            )}
-          >
-            <BakingDecor />
-            {slide.image ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={slide.image}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover opacity-85"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFF1BE]/95 via-[#FFD7A8]/70 to-transparent" />
-              </>
-            ) : null}
-            <div className="relative z-10 flex h-full w-full items-center justify-between gap-2 px-4 py-4 md:px-6 lg:px-8">
-              <div className="max-w-[56%] min-w-0 shrink-0 lg:max-w-[48%]">
-                <h2 className="line-clamp-2 text-[22px] font-bold leading-tight text-brand-caramel md:text-[30px] lg:text-[36px]">
-                  {slide.title}
-                </h2>
-                <p className="mt-1.5 line-clamp-2 text-xs leading-snug text-foreground-secondary md:text-sm lg:text-base">
-                  {slide.subtitle}
-                </p>
-                <Link
-                  href={slide.href}
-                  {...linkExtra}
-                  className="mt-3 inline-flex h-10 min-h-[40px] items-center whitespace-nowrap rounded-2xl bg-brand-primary px-4 text-sm font-bold text-white transition duration-200 hover:bg-primary-hover md:h-11 md:px-5"
-                >
-                  {slide.cta}
-                </Link>
-              </div>
-              <div className="flex h-full max-w-[42%] min-w-0 flex-1 items-end justify-end pb-1 lg:max-w-[40%]">
-                <Image
-                  src="/branding/chimeidiy-app-icon.png"
-                  alt=""
-                  width={120}
-                  height={120}
-                  className="h-[108px] w-[108px] object-contain drop-shadow-md md:h-[148px] md:w-[148px] lg:h-[188px] lg:w-[188px]"
-                  priority
-                  unoptimized
-                />
-              </div>
-            </div>
-          </div>
+          <SlideFrame slide={slide} />
           {slides.length > 1 ? (
             <div className="mt-2 flex justify-center gap-1.5">
               {slides.map((s, i) => (
@@ -197,6 +176,16 @@ export function HomeHero({ className }: { className?: string }) {
             </div>
           ) : null}
         </>
+      ) : (
+        <SlideFrame
+          slide={{
+            id: "empty",
+            label: "Banner",
+            href: APP_ROUTES.shop,
+            image: null,
+            mobileImage: null,
+          }}
+        />
       )}
     </section>
   );

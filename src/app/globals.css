@@ -152,8 +152,6 @@
   /* 頂部區（Header 下方 ~ Hero 底部）：奶油色背景 */
   .home-top-area {
     background: #fff9ea;
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
 
   /* Hero 下方全部中段：嚴格純白 */
@@ -161,15 +159,15 @@
     background: #ffffff;
     padding-top: 20px;
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
 
-  /* 內容最大寬度對齊 */
+  /* 內容最大寬度置中（1400px = Banner 設計寬） */
   .home-page-inner {
     width: 100%;
+    max-width: 1400px;
     margin-inline: auto;
-    max-width: 1200px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
   }
 
   /* 橫向卷軸 rail */
@@ -311,8 +309,7 @@
   }
 
   @media (min-width: 768px) {
-    .home-top-area,
-    .home-content-area {
+    .home-page-inner {
       padding-left: max(24px, env(safe-area-inset-left, 0px));
       padding-right: max(24px, env(safe-area-inset-right, 0px));
     }

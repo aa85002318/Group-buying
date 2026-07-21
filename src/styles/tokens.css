@@ -297,8 +297,8 @@
   --color-muted: var(--surface-soft);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   :root {
-    --app-max-width: 1200px;
+    --app-max-width: 1400px;
   }
 }

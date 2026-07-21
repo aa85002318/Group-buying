@@ -265,21 +265,23 @@ export default function HomePage() {
   return (
     <div className="home-page page-enter w-full max-w-full overflow-x-clip">
       {/* 頂部奶油色區：搜尋 + 熱門搜尋 + Hero */}
-      <section className="home-top-area space-y-3 pb-4 pt-3 sm:space-y-4">
-        <HomeSearchBar />
-        {hotSearchBlock.visible ? (
-          <HotSearchChips
-            title={hotSearchBlock.title || "熱門搜尋"}
-            keywords={hotKeywords}
-            loading={cmsLoad.loading}
-          />
-        ) : null}
-        {heroBlock.visible ? <HomeHero /> : null}
+      <section className="home-top-area pb-4 pt-3 sm:pt-4">
+        <div className="home-page-inner space-y-3 sm:space-y-4">
+          <HomeSearchBar />
+          {hotSearchBlock.visible ? (
+            <HotSearchChips
+              title={hotSearchBlock.title || "熱門搜尋"}
+              keywords={hotKeywords}
+              loading={cmsLoad.loading}
+            />
+          ) : null}
+          {heroBlock.visible ? <HomeHero /> : null}
+        </div>
       </section>
 
       {/* 中段純白區：Hero 底部到 Footer */}
       <HomeContentArea>
-        <div className="space-y-6 min-[375px]:space-y-7 md:space-y-8">
+        <div className="home-page-inner space-y-6 min-[375px]:space-y-7 md:space-y-8">
           <PrimaryQuickActions />
           <FeatureDuoCards />
 
