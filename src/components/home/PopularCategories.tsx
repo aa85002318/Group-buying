@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 
 export type PopularCategoryItem = {
   id: string;
@@ -70,16 +71,16 @@ export function PopularCategories({
   return (
     <section aria-label={title} className="space-y-3">
       <h2 className="text-lg font-semibold tracking-tight text-brand-caramel">{title}</h2>
-      <div className="flex gap-3 overflow-x-auto pb-0.5 scrollbar-none">
+      <HorizontalScroller className="gap-3 md:grid md:grid-cols-4 md:gap-4 md:overflow-visible lg:grid-cols-8">
         {items.map((item) => (
           <Link
             key={item.id}
             href={item.href}
-            className="flex w-[64px] shrink-0 flex-col items-center gap-1.5"
+            className="flex w-[58px] shrink-0 flex-col items-center gap-1.5 min-[375px]:w-[64px] sm:w-[72px] md:w-auto"
           >
             <span
               className={cn(
-                "relative flex h-[64px] w-[64px] items-center justify-center overflow-hidden rounded-full border border-border-soft bg-surface-soft"
+                "relative flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full border border-border-soft bg-surface-soft min-[375px]:h-[64px] min-[375px]:w-[64px] sm:h-[72px] sm:w-[72px] md:h-auto md:w-full md:aspect-square md:rounded-[18px]"
               )}
             >
               {item.imageUrl ? (
@@ -102,7 +103,7 @@ export function PopularCategories({
             </span>
           </Link>
         ))}
-      </div>
+      </HorizontalScroller>
     </section>
   );
 }

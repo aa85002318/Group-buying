@@ -44,11 +44,11 @@ const DEFAULT_SLIDES: Slide[] = [
 function BakingDecor() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <span className="absolute -right-4 -top-6 h-28 w-28 rounded-full bg-peach/50" />
-      <span className="absolute bottom-3 right-[28%] h-14 w-14 rounded-full bg-butter/60" />
-      <span className="absolute bottom-6 right-6 h-6 w-10 rounded-md bg-butter" />
-      <span className="absolute bottom-12 right-14 h-5 w-4 rounded-full border border-border bg-surface" />
-      <span className="absolute right-5 top-8 h-12 w-1 rotate-12 rounded-full bg-caramel/20" />
+      <span className="absolute -right-4 -top-6 h-24 w-24 rounded-full bg-peach/50 md:h-36 md:w-36" />
+      <span className="absolute bottom-3 right-[28%] h-14 w-14 rounded-full bg-butter/60 md:h-20 md:w-20" />
+      <span className="absolute bottom-6 right-6 h-6 w-10 rounded-md bg-butter md:h-8 md:w-12" />
+      <span className="absolute bottom-12 right-14 h-5 w-4 rounded-full border border-border bg-surface md:h-7 md:w-5" />
+      <span className="absolute right-5 top-8 h-12 w-1 rotate-12 rounded-full bg-caramel/20 md:h-16 md:w-1.5" />
     </div>
   );
 }
@@ -127,13 +127,13 @@ export function HomeHero({ className }: { className?: string }) {
       }}
     >
       {!ready ? (
-        <div className="home-skeleton h-[220px] w-full rounded-[20px]" />
+        <div className="home-skeleton aspect-[1.8/1] w-full rounded-[20px] min-h-[210px] max-h-[240px] md:min-h-[280px] md:max-h-[320px] lg:min-h-[360px] lg:max-h-[400px]" />
       ) : (
         <>
           <div
             className={cn(
-              "relative flex h-[220px] w-full overflow-hidden rounded-[20px] border border-border bg-hero-gradient",
-              "max-h-[240px]"
+              "relative flex aspect-[1.8/1] w-full overflow-hidden rounded-[20px] border border-border bg-hero-gradient",
+              "min-h-[210px] max-h-[240px] md:min-h-[280px] md:max-h-[320px] lg:min-h-[360px] lg:max-h-[400px]"
             )}
           >
             <BakingDecor />
@@ -151,29 +151,29 @@ export function HomeHero({ className }: { className?: string }) {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#FFF7CF]/95 via-[#FFF2E7]/70 to-transparent" />
               </>
             ) : null}
-            <div className="relative z-10 flex h-full w-full items-center justify-between gap-2 px-4 py-4">
-              <div className="max-w-[58%] shrink-0">
-                <h2 className="line-clamp-2 text-[22px] font-bold leading-tight text-brand-caramel">
+            <div className="relative z-10 flex h-full w-full items-center justify-between gap-2 px-4 py-4 md:px-6 lg:px-8">
+              <div className="max-w-[56%] min-w-0 shrink-0 lg:max-w-[48%]">
+                <h2 className="line-clamp-2 text-[22px] font-bold leading-tight text-brand-caramel md:text-[30px] lg:text-[36px]">
                   {slide.title}
                 </h2>
-                <p className="mt-1.5 line-clamp-2 text-xs leading-snug text-foreground-secondary">
+                <p className="mt-1.5 line-clamp-2 text-xs leading-snug text-foreground-secondary md:text-sm lg:text-base">
                   {slide.subtitle}
                 </p>
                 <Link
                   href={slide.href}
                   {...linkExtra}
-                  className="mt-3 inline-flex h-10 items-center rounded-2xl bg-brand-primary px-4 text-sm font-bold text-white transition duration-200 hover:bg-primary-hover"
+                  className="mt-3 inline-flex h-10 min-h-[40px] items-center whitespace-nowrap rounded-2xl bg-brand-primary px-4 text-sm font-bold text-white transition duration-200 hover:bg-primary-hover md:h-11 md:px-5"
                 >
                   {slide.cta}
                 </Link>
               </div>
-              <div className="flex h-full max-w-[40%] flex-1 items-end justify-end pb-1">
+              <div className="flex h-full max-w-[42%] min-w-0 flex-1 items-end justify-end pb-1 lg:max-w-[40%]">
                 <Image
                   src="/branding/chimeidiy-app-icon.png"
                   alt=""
                   width={120}
                   height={120}
-                  className="h-[112px] w-[112px] object-contain drop-shadow-md"
+                  className="h-[108px] w-[108px] object-contain drop-shadow-md md:h-[148px] md:w-[148px] lg:h-[188px] lg:w-[188px]"
                   priority
                   unoptimized
                 />

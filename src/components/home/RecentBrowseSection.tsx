@@ -10,12 +10,13 @@ import {
 } from "@/lib/home/browse-history";
 import { APP_ROUTES } from "@/lib/site-links";
 import { formatCurrency, cn } from "@/lib/utils";
+import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 
 function BrowseCard({ item }: { item: BrowseHistoryItem }) {
   return (
     <Link
       href={item.href}
-      className="flex w-[132px] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface"
+      className="flex w-[128px] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface min-[375px]:w-[136px] sm:w-[144px] md:w-auto"
     >
       <div className="relative aspect-square bg-surface-soft">
         {item.imageUrl ? (
@@ -116,11 +117,11 @@ export function RecentBrowseSection({
           emptyActionLabel="去逛逛"
           skeletonCount={3}
         >
-          <div className="flex gap-2.5 overflow-x-auto pb-0.5 scrollbar-none">
+          <HorizontalScroller className="md:grid md:grid-cols-4 md:gap-4 md:overflow-visible lg:grid-cols-5">
             {shown.map((item) => (
               <BrowseCard key={`${item.type}-${item.id}`} item={item} />
             ))}
-          </div>
+          </HorizontalScroller>
         </HomeSectionFrame>
       )}
     </section>

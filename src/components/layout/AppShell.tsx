@@ -7,11 +7,11 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh w-full overflow-x-hidden bg-cream">
-      <div className="app-shell relative mx-auto flex min-h-dvh w-full flex-col overflow-x-hidden bg-background md:shadow-lift">
+    <div className="min-h-dvh w-full overflow-x-clip bg-cream">
+      <div className="app-shell relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip bg-background md:shadow-lift">
         <AppHeader />
         <main
-          className="app-main-pad page-enter min-w-0 flex-1 overflow-x-hidden"
+          className="app-main-pad page-enter min-w-0 flex-1 overflow-x-clip"
           style={{
             paddingBottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px))",
           }}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 
 const PROMOS = [
   {
@@ -44,13 +45,13 @@ export function PromoBannerStrip({ className }: { className?: string }) {
   return (
     <section aria-label="本週優惠" className={cn("space-y-3", className)}>
       <h2 className="text-lg font-semibold text-brand-caramel">本週優惠</h2>
-      <div className="flex gap-2.5 overflow-x-auto scrollbar-none">
+      <HorizontalScroller className="gap-2.5 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible xl:grid-cols-4">
         {PROMOS.map((p) => (
           <Link
             key={p.href}
             href={p.href}
             className={cn(
-              "relative flex h-[118px] w-[min(86vw,300px)] shrink-0 items-center overflow-hidden rounded-[18px] border border-border-soft px-4 py-3",
+              "relative flex h-[118px] w-[272px] shrink-0 items-center overflow-hidden rounded-[18px] border border-border-soft px-4 py-3 min-[375px]:w-[292px] sm:h-[124px] sm:w-[300px] md:w-auto",
               TONE[p.tone]
             )}
           >
@@ -85,7 +86,7 @@ export function PromoBannerStrip({ className }: { className?: string }) {
             />
           </Link>
         ))}
-      </div>
+      </HorizontalScroller>
     </section>
   );
 }

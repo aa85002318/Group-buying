@@ -11,7 +11,7 @@ type HomeSearchBarProps = {
   className?: string;
 };
 
-/** 獨立一列搜尋：高 50–52、圓角 16、右側珊瑚紅按鈕 48–54 */
+/** Standalone search row under the sticky header. */
 export function HomeSearchBar({
   placeholder = "搜尋商品、食譜、品牌...",
   className,
@@ -31,9 +31,9 @@ export function HomeSearchBar({
 
   return (
     <form onSubmit={submit} role="search" className={cn("w-full", className)}>
-      <div className="relative flex h-[52px] items-center rounded-2xl border border-border bg-surface">
+      <div className="relative flex h-[50px] items-center rounded-[16px] border border-border bg-surface md:h-[52px]">
         <Search
-          className="pointer-events-none absolute left-3.5 h-5 w-5 text-foreground-secondary"
+          className="pointer-events-none absolute left-3.5 h-4.5 w-4.5 text-foreground-secondary md:h-5 md:w-5"
           aria-hidden
         />
         <label htmlFor="app-home-search" className="sr-only">
@@ -45,14 +45,15 @@ export function HomeSearchBar({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={placeholder}
-          className="h-full w-full rounded-2xl bg-transparent py-2 pl-11 pr-[58px] text-sm text-brand-caramel outline-none placeholder:text-foreground-muted focus:shadow-[0_0_0_3px_var(--focus-ring)]"
+          className="h-full w-full rounded-[16px] bg-transparent py-2 pl-11 pr-[62px] text-sm text-brand-caramel outline-none placeholder:text-foreground-muted focus:border-brand-primary focus:shadow-[0_0_0_3px_var(--focus-ring)] md:pr-[5.5rem]"
         />
         <button
           type="submit"
           aria-label="搜尋"
-          className="absolute right-1.5 top-1/2 flex h-[48px] w-[48px] -translate-y-1/2 items-center justify-center rounded-[14px] bg-brand-primary text-white transition duration-200 hover:bg-primary-hover"
+          className="absolute right-1.5 top-1/2 flex h-10 w-12 -translate-y-1/2 items-center justify-center rounded-[12px] bg-brand-primary text-white transition duration-200 hover:bg-primary-hover min-[375px]:w-[52px] md:h-10 md:w-auto md:min-w-[72px] md:px-3"
         >
           <Search className="h-5 w-5" aria-hidden />
+          <span className="hidden md:inline md:text-sm md:font-bold">搜尋</span>
         </button>
       </div>
     </form>

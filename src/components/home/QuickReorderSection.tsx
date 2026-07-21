@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, ShoppingCart } from "lucide-react";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
+import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 import { useCart } from "@/hooks/useCart";
 import type { ReorderCandidate } from "@/lib/home/reorder";
 import { formatCurrency } from "@/lib/utils";
@@ -35,7 +36,7 @@ function ReorderCard({
   };
 
   return (
-    <article className="flex w-[132px] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface">
+    <article className="flex w-[120px] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface min-[375px]:w-[132px] sm:w-[140px] md:w-auto">
       <div className="relative aspect-square bg-surface-soft">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -111,7 +112,7 @@ export function QuickReorderSection({
         emptyActionLabel="去逛逛"
         skeletonCount={3}
       >
-        <div className="flex gap-2.5 overflow-x-auto scrollbar-none">
+        <HorizontalScroller className="md:grid md:grid-cols-4 md:gap-4 md:overflow-visible lg:grid-cols-6">
           {candidates.map((c) => (
             <ReorderCard
               key={c.productId}
@@ -121,7 +122,7 @@ export function QuickReorderSection({
               imageUrl={c.imageUrl}
             />
           ))}
-        </div>
+        </HorizontalScroller>
       </HomeSectionFrame>
     </section>
   );

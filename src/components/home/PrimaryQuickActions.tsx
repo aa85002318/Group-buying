@@ -78,11 +78,11 @@ const PRIMARY_ACTIONS: Array<{
   },
 ];
 
-/** 示意圖 4×2：高 82–96、Icon 52–56、無長說明 */
+/** Eight quick actions: 4x2 on phone, 8 columns on desktop. */
 export function PrimaryQuickActions() {
   return (
     <section aria-label="快捷入口">
-      <ul className="grid grid-cols-4 gap-x-2.5 gap-y-3">
+      <ul className="grid grid-cols-4 gap-x-2.5 gap-y-3 lg:grid-cols-8">
         {PRIMARY_ACTIONS.map((item) => {
           const Icon = item.icon;
           return (
@@ -90,20 +90,21 @@ export function PrimaryQuickActions() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex h-[90px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-border-soft bg-surface px-1",
+                  "flex min-w-0 h-[88px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-border-soft bg-surface px-1 shadow-[0_4px_14px_rgba(138,90,52,.05)]",
+                  "min-[375px]:h-[92px] sm:h-[96px]",
                   "transition duration-[180ms] hover:-translate-y-0.5 active:scale-[0.98]"
                 )}
               >
                 <span
                   className={cn(
-                    "flex h-[52px] w-[52px] items-center justify-center rounded-2xl",
+                    "flex h-12 w-12 items-center justify-center rounded-2xl min-[375px]:h-[52px] min-[375px]:w-[52px]",
                     item.well,
                     item.iconClass
                   )}
                 >
-                  <Icon className="h-6 w-6" aria-hidden />
+                  <Icon className="h-5 w-5 min-[375px]:h-6 min-[375px]:w-6" aria-hidden />
                 </span>
-                <span className="line-clamp-2 max-w-full text-center text-[12px] font-semibold leading-tight text-brand-caramel">
+                <span className="line-clamp-2 max-w-full text-center text-[11px] font-semibold leading-tight text-brand-caramel min-[375px]:text-[12px] sm:text-[13px]">
                   {item.label}
                 </span>
               </Link>

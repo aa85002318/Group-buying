@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { HomeProductRailCard } from "@/components/home/HomeProductRailCard";
+import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 import type { Product } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 import { HomeEmptyState } from "@/components/home/HomeEmptyState";
@@ -45,7 +46,7 @@ export function HorizontalProductRail({
       {loading ? (
         <div className="flex gap-2.5 overflow-hidden" aria-busy>
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="home-skeleton h-[240px] w-[158px] shrink-0 rounded-[16px]" />
+            <div key={i} className="home-skeleton h-[240px] w-[150px] shrink-0 rounded-[16px] min-[375px]:w-[158px]" />
           ))}
         </div>
       ) : error ? (
@@ -65,7 +66,7 @@ export function HorizontalProductRail({
           actionLabel="逛全部商品"
         />
       ) : (
-        <div className="flex gap-2.5 overflow-x-auto scrollbar-none">
+        <HorizontalScroller className="md:grid md:grid-cols-3 md:gap-4 md:overflow-visible lg:grid-cols-4 xl:grid-cols-5">
           {products.map((p) => (
             <HomeProductRailCard
               key={p.id}
@@ -78,7 +79,7 @@ export function HorizontalProductRail({
               badge={badge}
             />
           ))}
-        </div>
+        </HorizontalScroller>
       )}
     </section>
   );

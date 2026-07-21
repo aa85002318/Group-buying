@@ -27,7 +27,7 @@ const BADGE: Record<HomeProductRailBadge, { label: string; className: string }> 
   sale: { label: "折扣", className: "bg-surface-yellow text-brand-caramel" },
 };
 
-/** 手機首頁橫滑商品卡：寬 150–170px，一次約 2.2–2.5 張 */
+/** Compact commerce card used by home product rails. */
 export function HomeProductRailCard({
   id,
   name,
@@ -59,8 +59,9 @@ export function HomeProductRailCard({
   return (
     <article
       className={cn(
-        "flex w-[158px] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface",
+        "flex w-[148px] min-w-0 shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface",
         "shadow-[0_4px_12px_rgba(138,90,52,0.05)]",
+        "min-[375px]:w-[158px] sm:w-[164px] md:w-auto",
         className
       )}
     >
@@ -84,7 +85,7 @@ export function HomeProductRailCard({
             alt=""
             fill
             className="object-contain p-2"
-            sizes="158px"
+            sizes="(max-width: 374px) 148px, (max-width: 767px) 158px, 220px"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-foreground-muted">
@@ -103,7 +104,9 @@ export function HomeProductRailCard({
         </Link>
         <div className="mt-auto flex items-end justify-between gap-1 pt-1.5">
           <div className="min-w-0">
-            <p className="text-sm font-bold text-brand-primary">{formatCurrency(price)}</p>
+            <p className="whitespace-nowrap text-sm font-bold text-brand-primary">
+              {formatCurrency(price)}
+            </p>
             {originalPrice != null && originalPrice > price ? (
               <p className="text-[10px] text-foreground-muted line-through">
                 {formatCurrency(originalPrice)}

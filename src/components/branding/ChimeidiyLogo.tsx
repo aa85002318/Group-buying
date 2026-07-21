@@ -11,7 +11,7 @@ const VARIANTS = {
     width: 420,
     height: 120,
     className:
-      "h-8 w-auto max-h-8 max-w-[132px] object-contain bg-transparent sm:max-w-[132px]",
+      "h-auto w-[108px] object-contain bg-transparent min-[375px]:w-[118px] sm:w-[132px] md:w-[148px] xl:w-[176px]",
   },
   compact: {
     src: "/branding/chimeidiy-logo-compact.png",

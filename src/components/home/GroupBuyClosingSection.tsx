@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
+import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 import type { Product } from "@/lib/types/database";
 
 type GbEvent = {
@@ -63,7 +64,7 @@ export function GroupBuyClosingSection({
         emptyActionLabel="查看團購"
         skeletonCount={2}
       >
-        <div className="flex gap-3 overflow-x-auto scrollbar-none">
+        <HorizontalScroller className="gap-3 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible">
           {events.map((e) => {
             const gp = e.group_buy_products?.find((x) => x.products);
             const product = gp?.products;
@@ -79,9 +80,9 @@ export function GroupBuyClosingSection({
               <Link
                 key={e.id}
                 href={`/group-buy/${e.id}`}
-                className="flex w-[min(78vw,280px)] shrink-0 overflow-hidden rounded-[18px] border border-border-soft bg-surface"
+                className="flex w-[260px] shrink-0 overflow-hidden rounded-[18px] border border-border-soft bg-surface min-[375px]:w-[280px] sm:w-[300px] md:w-auto"
               >
-                <div className="relative w-[108px] shrink-0 bg-surface-soft">
+                <div className="relative w-[108px] shrink-0 bg-surface-soft min-[375px]:w-[116px]">
                   {image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={image} alt="" className="h-full w-full object-cover" />
@@ -130,7 +131,7 @@ export function GroupBuyClosingSection({
               </Link>
             );
           })}
-        </div>
+        </HorizontalScroller>
       </HomeSectionFrame>
     </section>
   );

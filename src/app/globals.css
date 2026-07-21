@@ -45,7 +45,7 @@
   }
 
   html {
-    @apply overflow-x-hidden;
+    overflow-x: clip;
     width: 100%;
     max-width: 100%;
     /* Prevent iOS rubber-band revealing sideways scroll */
@@ -53,11 +53,12 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased overflow-x-hidden;
+    @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
     width: 100%;
     max-width: 100%;
     min-height: 100dvh;
+    overflow-x: clip;
     overscroll-behavior-x: none;
     /* Avoid 100vw scrollbar overflow on some browsers */
     overflow-wrap: anywhere;
@@ -67,7 +68,8 @@
   video,
   canvas,
   svg {
-    @apply max-w-full h-auto;
+    display: block;
+    max-width: 100%;
   }
 
   /* Tables / pre that could force page width */
@@ -140,10 +142,50 @@
   }
 
   .home-content-area {
-    background: var(--content-background, #ffffff);
+    background: var(--home-content-background, #ffffff);
     border-radius: 24px 24px 0 0;
-    padding-top: 18px;
-    padding-bottom: 8px;
+    padding-top: 20px;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .home-page {
+    min-height: 100%;
+    background: var(--home-page-background);
+  }
+
+  .home-top-area {
+    background: var(--home-page-background);
+  }
+
+  .home-page-bleed {
+    margin-left: calc(-1 * max(1rem, env(safe-area-inset-left, 0px)));
+    margin-right: calc(-1 * max(1rem, env(safe-area-inset-right, 0px)));
+  }
+
+  .home-page-inner {
+    width: 100%;
+    margin-inline: auto;
+    max-width: 1200px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .home-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .home-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-scroll > * {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
   }
 
   .input-field {
@@ -196,7 +238,7 @@
     max-width: min(100%, var(--app-max-width));
     min-height: 100dvh;
     margin-inline: auto;
-    overflow-x: hidden;
+    overflow-x: clip;
     background: var(--background);
   }
 
@@ -205,7 +247,24 @@
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
   }
 
+  @media (min-width: 375px) {
+    .home-page-inner {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+  }
+
   @media (min-width: 768px) {
+    .home-page-bleed {
+      margin-left: calc(-1 * max(1.5rem, env(safe-area-inset-left, 0px)));
+      margin-right: calc(-1 * max(1.5rem, env(safe-area-inset-right, 0px)));
+    }
+
+    .home-page-inner {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
     .app-main-pad {
       padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
       padding-right: max(1.5rem, env(safe-area-inset-right, 0px));

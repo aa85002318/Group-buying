@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** 示意圖：Hero 下方白底圓角中段 */
+/** Full-width white content area under the cream hero band. */
 export function HomeContentArea({
   children,
   className,
@@ -9,15 +9,6 @@ export function HomeContentArea({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "bg-surface pt-[18px]",
-        "rounded-t-[24px]",
-        "space-y-7",
-        className
-      )}
-    >
-      {children}
-    </div>
+    <section className={cn("home-content-area", className)}>{children}</section>
   );
 }
