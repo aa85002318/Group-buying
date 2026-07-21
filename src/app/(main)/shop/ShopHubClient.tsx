@@ -9,17 +9,18 @@ import {
 } from "@/components/home/NewProductsSection";
 import { getNewThisWeekProducts } from "@/lib/home";
 import { mockProducts } from "@/lib/mock-data";
+import { APP_ROUTES } from "@/lib/site-links";
 import type { Product } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 const CHIPS = [
-  { label: "全部", href: "/products" },
-  { label: "烘焙原料", href: "/products?search=粉" },
-  { label: "器具", href: "/products?search=模" },
-  { label: "包裝", href: "/products?search=包裝" },
-  { label: "冷凍冷藏", href: "/products?search=奶油" },
-  { label: "巧克力", href: "/products?search=巧克力" },
-  { label: "乳製品", href: "/products?search=乳" },
+  { label: "全部", href: APP_ROUTES.bakingMaterials },
+  { label: "麵粉", href: "/baking-materials/flour" },
+  { label: "器具", href: "/baking-materials/tools" },
+  { label: "包裝", href: "/baking-materials/packaging" },
+  { label: "冷凍冷藏", href: "/baking-materials/frozen-goods" },
+  { label: "巧克力", href: "/baking-materials/chocolate" },
+  { label: "乳製品", href: "/baking-materials/dairy" },
 ];
 
 export function ShopHubClient() {
@@ -72,23 +73,27 @@ export function ShopHubClient() {
       <section className="overflow-hidden rounded-hero border border-border bg-peach-soft p-5">
         <p className="text-xs font-semibold text-caramel">商城活動</p>
         <h2 className="mt-1 text-lg font-bold text-foreground">今日精選烘焙材料</h2>
-        <p className="mt-1 text-sm text-foreground-secondary">保留完整商品列表與結帳流程</p>
+        <p className="mt-1 text-sm text-foreground-secondary">依分類瀏覽、篩選品牌與價格</p>
         <Link
-          href="/products"
+          href={APP_ROUTES.bakingMaterials}
           className="mt-3 inline-flex h-11 items-center rounded-button bg-primary px-4 text-sm font-bold text-white"
         >
-          瀏覽全部商品
+          瀏覽烘焙材料
         </Link>
       </section>
 
-      <NewProductsSection products={newest} href="/products?sort=newest" title="推薦新品" />
-      <PopularProductsSection products={popular} href="/products" title="人氣商品" />
+      <NewProductsSection
+        products={newest}
+        href={`${APP_ROUTES.bakingMaterials}?sort=newest`}
+        title="推薦新品"
+      />
+      <PopularProductsSection products={popular} href={APP_ROUTES.bakingMaterials} title="人氣商品" />
 
       <Link
-        href="/products"
+        href={APP_ROUTES.bakingMaterials}
         className="flex min-h-12 items-center justify-center rounded-card border border-border bg-surface text-sm font-bold text-primary shadow-card"
       >
-        進入完整商品列表
+        進入烘焙材料目錄
       </Link>
     </div>
   );

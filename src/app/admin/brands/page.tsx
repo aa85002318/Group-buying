@@ -14,11 +14,13 @@ type Brand = {
   name: string;
   slug: string | null;
   logo_url: string | null;
+  country: string | null;
+  sort_order: number;
   is_active: boolean;
   product_count: number;
 };
 
-const emptyForm = { name: "", slug: "", logo_url: "", is_active: true };
+const emptyForm = { name: "", slug: "", logo_url: "", country: "", sort_order: 0, is_active: true };
 
 export default function AdminBrandsPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -53,6 +55,8 @@ export default function AdminBrandsPage() {
       name: brand.name,
       slug: brand.slug ?? "",
       logo_url: brand.logo_url ?? "",
+      country: brand.country ?? "",
+      sort_order: brand.sort_order ?? 0,
       is_active: brand.is_active,
     });
   };
@@ -113,6 +117,13 @@ export default function AdminBrandsPage() {
             <Input placeholder="品牌名稱 *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <Input placeholder="網址代碼（slug）" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
             <Input placeholder="Logo 圖片網址" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} className="sm:col-span-2" />
+            <Input placeholder="國家/地區（選填）" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+            <Input
+              type="number"
+              placeholder="排序（數字越小越前）"
+              value={form.sort_order}
+              onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) || 0 })}
+            />
           </div>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
@@ -145,6 +156,8 @@ export default function AdminBrandsPage() {
           },
           { key: "name", header: "品牌名稱", render: (b) => <span className="font-medium text-foreground">{b.name}</span> },
           { key: "slug", header: "Slug", render: (b) => b.slug ?? "—" },
+          { key: "country", header: "國家", render: (b) => b.country ?? "—" },
+          { key: "sort_order", header: "排序", render: (b) => b.sort_order ?? 0 },
           { key: "product_count", header: "商品數", render: (b) => b.product_count },
           {
             key: "status",

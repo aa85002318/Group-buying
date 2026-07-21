@@ -222,7 +222,10 @@ export const CONSUMER_BOTTOM_NAV = [
     href: "/shop",
     label: "商城",
     match: (p: string) =>
-      p.startsWith("/shop") || p.startsWith("/products") || p.startsWith("/categories"),
+      p.startsWith("/shop") ||
+      p.startsWith("/products") ||
+      p.startsWith("/categories") ||
+      p.startsWith("/baking-materials"),
     accent: "primary" as const,
   },
   {

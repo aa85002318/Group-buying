@@ -2,11 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminShell } from "@/components/admin/AdminShell";
 import { APP_ROUTES } from "@/lib/site-links";
 import { BRAND_NAME, BRAND_SUBTITLE } from "@/lib/env";
+import type { AdminNavGroup, AdminNavItem } from "@/lib/admin/permissions";
+
+function isNavItemActive(pathname: string, href: string): boolean {
+  return pathname === href || (href !== "/admin" && pathname.startsWith(href));
+}
+
+function groupContainsActivePath(group: AdminNavGroup, pathname: string): boolean {
+  return group.items.some((item) => isNavItemActive(pathname, item.href));
+}
 
 function NavLink({
   href,
@@ -21,7 +31,7 @@ function NavLink({
   onNavigate?: () => void;
   className?: string;
 }) {
-  const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
+  const active = isNavItemActive(pathname, href);
   return (
     <Link
       href={href}
@@ -37,33 +47,158 @@ function NavLink({
   );
 }
 
+function NavGroupSection({
+  group,
+  pathname,
+  expanded,
+  onToggle,
+  onNavigate,
+}: {
+  group: AdminNavGroup;
+  pathname: string;
+  expanded: boolean;
+  onToggle: () => void;
+  onNavigate?: () => void;
+}) {
+  if (group.id === "dashboard" && group.items.length === 1) {
+    const item = group.items[0];
+    return (
+      <NavLink
+        href={item.href}
+        label={item.label}
+        pathname={pathname}
+        onNavigate={onNavigate}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-0.5">
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={onToggle}
+        className={cn(
+          "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+          groupContainsActivePath(group, pathname)
+            ? "text-primary"
+            : "text-foreground hover:bg-muted"
+        )}
+      >
+        <span>{group.label}</span>
+        <ChevronDown
+          className={cn("h-4 w-4 shrink-0 transition-transform", expanded && "rotate-180")}
+        />
+      </button>
+      {expanded && (
+        <div className="ml-2 space-y-0.5 border-l border-border pl-2">
+          {group.items.map((item: AdminNavItem) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              label={item.label}
+              pathname={pathname}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function useExpandedGroups(navGroups: AdminNavGroup[], pathname: string) {
+  const activeGroupIds = useMemo(
+    () => navGroups.filter((g) => groupContainsActivePath(g, pathname)).map((g) => g.id),
+    [navGroups, pathname]
+  );
+
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(activeGroupIds));
+
+  useEffect(() => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      for (const id of activeGroupIds) next.add(id);
+      return next;
+    });
+  }, [activeGroupIds]);
+
+  const toggle = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  return { expanded, toggle };
+}
+
+function SidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <div className="space-y-2 border-t border-border p-3 text-xs">
+      <Link
+        href={APP_ROUTES.staffPickupScan}
+        className="block text-primary hover:underline"
+        onClick={onNavigate}
+      >
+        門市掃碼取貨
+      </Link>
+      <Link
+        href={APP_ROUTES.home}
+        className="block text-muted-foreground hover:text-primary"
+        onClick={onNavigate}
+      >
+        ← 返回前台
+      </Link>
+    </div>
+  );
+}
+
+function GroupedNav({
+  pathname,
+  onNavigate,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const { navGroups } = useAdminShell();
+  const { expanded, toggle } = useExpandedGroups(navGroups, pathname);
+
+  return (
+    <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      {navGroups.map((group) => (
+        <NavGroupSection
+          key={group.id}
+          group={group}
+          pathname={pathname}
+          expanded={expanded.has(group.id)}
+          onToggle={() => toggle(group.id)}
+          onNavigate={onNavigate}
+        />
+      ))}
+    </nav>
+  );
+}
+
 /** Desktop left sidebar */
 export function AdminDesktopSidebar() {
   const pathname = usePathname();
-  const { nav } = useAdminShell();
 
   return (
     <aside className="hidden w-60 shrink-0 border-r border-border bg-card lg:block">
       <div className="sticky top-0 flex h-screen flex-col">
-        <div className="border-b border-border px-4 py-4">
+        <div className="shrink-0 border-b border-border px-4 py-4">
           <Link href={APP_ROUTES.admin} className="text-lg font-bold text-primary">
             管理後台
           </Link>
-          <p className="mt-1 text-xs text-muted-foreground">{BRAND_NAME} · {BRAND_SUBTITLE}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {BRAND_NAME} · {BRAND_SUBTITLE}
+          </p>
         </div>
-        <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
-          {nav.map(({ href, label }) => (
-            <NavLink key={href} href={href} label={label} pathname={pathname} />
-          ))}
-        </nav>
-        <div className="space-y-2 border-t border-border p-3 text-xs">
-          <Link href={APP_ROUTES.staffPickupScan} className="block text-primary hover:underline">
-            門市掃碼取貨
-          </Link>
-          <Link href={APP_ROUTES.home} className="block text-muted-foreground hover:text-primary">
-            ← 返回前台
-          </Link>
-        </div>
+        <GroupedNav pathname={pathname} />
+        <SidebarFooter />
       </div>
     </aside>
   );
@@ -72,7 +207,7 @@ export function AdminDesktopSidebar() {
 /** Mobile slide-over navigation */
 export function AdminMobileDrawer() {
   const pathname = usePathname();
-  const { nav, mobileNavOpen, setMobileNavOpen } = useAdminShell();
+  const { mobileNavOpen, setMobileNavOpen } = useAdminShell();
 
   if (!mobileNavOpen) return null;
 
@@ -87,7 +222,7 @@ export function AdminMobileDrawer() {
         onClick={close}
       />
       <aside className="absolute left-0 top-0 flex h-full w-[min(100%,280px)] flex-col bg-card shadow-xl">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
           <div>
             <p className="font-bold text-primary">管理後台</p>
             <p className="text-xs text-muted-foreground">功能選單</p>
@@ -101,19 +236,8 @@ export function AdminMobileDrawer() {
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
-          {nav.map(({ href, label }) => (
-            <NavLink key={href} href={href} label={label} pathname={pathname} onNavigate={close} />
-          ))}
-        </nav>
-        <div className="space-y-2 border-t border-border p-3 text-xs">
-          <Link href={APP_ROUTES.staffPickupScan} className="block text-primary hover:underline" onClick={close}>
-            門市掃碼取貨
-          </Link>
-          <Link href={APP_ROUTES.home} className="block text-muted-foreground hover:text-primary" onClick={close}>
-            ← 返回前台
-          </Link>
-        </div>
+        <GroupedNav pathname={pathname} onNavigate={close} />
+        <SidebarFooter onNavigate={close} />
       </aside>
     </div>
   );

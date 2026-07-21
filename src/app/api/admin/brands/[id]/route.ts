@@ -14,6 +14,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.name !== undefined) updates.name = body.name.trim();
   if (body.slug !== undefined) updates.slug = body.slug?.trim() || null;
   if (body.logo_url !== undefined) updates.logo_url = body.logo_url?.trim() || null;
+  if (body.country !== undefined) updates.country = body.country?.trim() || null;
+  if (body.sort_order !== undefined) updates.sort_order = Number(body.sort_order) || 0;
   if (body.is_active !== undefined) updates.is_active = Boolean(body.is_active);
 
   if (!isSupabaseConfigured()) {

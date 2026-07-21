@@ -120,8 +120,15 @@ export interface ProductCategory {
   is_active?: boolean;
   icon_emoji?: string | null;
   icon_url?: string | null;
+  icon_key?: string | null;
   parent_id?: string | null;
   banner_url?: string | null;
+  catalog_root_id?: string | null;
+  level?: number | null;
+  path?: string | null;
+  description?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
   created_at: string;
   updated_at: string;
 }

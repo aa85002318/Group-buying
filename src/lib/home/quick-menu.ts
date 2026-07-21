@@ -46,7 +46,7 @@ export const DEFAULT_HOME_QUICK_MENU_ITEMS: HomeQuickMenuItem[] = [
     title: "烘焙材料",
     icon_url: null,
     icon_key: "package",
-    link_url: APP_ROUTES.shop,
+    link_url: APP_ROUTES.bakingMaterials,
     link_target: "_self",
     alt_text: "烘焙材料",
     sort_order: 10,

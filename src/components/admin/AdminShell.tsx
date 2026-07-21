@@ -1,13 +1,19 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { navForRole, type AdminNavItem } from "@/lib/admin/permissions";
+import {
+  navForRole,
+  navGroupsForRole,
+  type AdminNavGroup,
+  type AdminNavItem,
+} from "@/lib/admin/permissions";
 
 type AdminProfile = { full_name?: string; role?: string } | null;
 
 type AdminShellContextValue = {
   profile: AdminProfile;
   nav: AdminNavItem[];
+  navGroups: AdminNavGroup[];
   mobileNavOpen: boolean;
   setMobileNavOpen: (open: boolean) => void;
 };
@@ -23,6 +29,7 @@ export function useAdminShell() {
 export function AdminShell({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AdminProfile>(null);
   const [nav, setNav] = useState<AdminNavItem[]>(navForRole("admin"));
+  const [navGroups, setNavGroups] = useState<AdminNavGroup[]>(navGroupsForRole("admin"));
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
@@ -31,7 +38,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
       .then((d) => {
         if (d.profile) {
           setProfile(d.profile);
-          if (d.profile.role) setNav(navForRole(d.profile.role));
+          if (d.profile.role) {
+            setNav(navForRole(d.profile.role));
+            setNavGroups(navGroupsForRole(d.profile.role));
+          }
         }
       })
       .catch(() => {});
@@ -45,7 +55,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [mobileNavOpen]);
 
   return (
-    <AdminShellContext.Provider value={{ profile, nav, mobileNavOpen, setMobileNavOpen }}>
+    <AdminShellContext.Provider value={{ profile, nav, navGroups, mobileNavOpen, setMobileNavOpen }}>
       {children}
     </AdminShellContext.Provider>
   );

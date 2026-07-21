@@ -19,7 +19,8 @@ export async function GET() {
   const admin = createAdminClient();
   const { data, error: fetchError } = await admin
     .from("brands")
-    .select("id, name, slug, logo_url, is_active, created_at")
+    .select("id, name, slug, logo_url, country, sort_order, is_active, created_at")
+    .order("sort_order", { ascending: true })
     .order("name");
 
   if (fetchError) return NextResponse.json({ brands: [] });
@@ -50,6 +51,8 @@ export async function POST(request: Request) {
     name: body.name.trim(),
     slug: body.slug?.trim() || null,
     logo_url: body.logo_url?.trim() || null,
+    country: body.country?.trim() || null,
+    sort_order: Number(body.sort_order) || 0,
     is_active: body.is_active !== false,
   };
 

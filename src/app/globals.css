@@ -406,3 +406,41 @@
 .animate-live {
   animation: live-pulse 1.6s ease-out infinite;
 }
+
+/* Baking materials catalog */
+.baking-catalog-root {
+  overflow-x: clip;
+}
+
+.baking-catalog-chips {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.baking-catalog-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.baking-catalog-grid {
+  min-width: 0;
+}
+
+@media (max-width: 374px) {
+  .baking-catalog-inner {
+    padding-inline: 12px;
+  }
+
+  .baking-catalog-grid {
+    gap: 10px;
+  }
+}
+
+@media (min-width: 375px) and (max-width: 767px) {
+  .baking-catalog-inner {
+    padding-inline: 16px;
+  }
+
+  .baking-catalog-grid {
+    gap: 12px;
+  }
+}

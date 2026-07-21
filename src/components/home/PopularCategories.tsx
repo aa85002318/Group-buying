@@ -13,47 +13,47 @@ export type PopularCategoryItem = {
 };
 
 const DEFAULT_CATEGORIES: PopularCategoryItem[] = [
-  { id: "flour", name: "麵粉", href: "/products?search=麵粉", imageUrl: "/categories/food.png" },
+  { id: "flour", name: "麵粉", href: "/baking-materials/flour", imageUrl: "/categories/food.png" },
   {
     id: "choco",
     name: "巧克力",
-    href: "/products?search=巧克力",
+    href: "/baking-materials/chocolate",
     imageUrl: "/categories/fresh.png",
   },
   {
     id: "dairy",
     name: "乳製品",
-    href: "/products?search=乳製品",
+    href: "/baking-materials/dairy",
     imageUrl: "/categories/kitchen.png",
   },
   {
     id: "tools",
     name: "器具",
-    href: "/products?search=器具",
+    href: "/baking-materials/tools",
     imageUrl: "/categories/seasonal.png",
   },
   {
     id: "pack",
     name: "包裝",
-    href: "/products?search=包裝",
+    href: "/baking-materials/packaging",
     imageUrl: "/categories/cleaning.png",
   },
   {
     id: "frozen",
     name: "冷凍",
-    href: "/products?search=冷凍",
+    href: "/baking-materials/frozen-goods",
     imageUrl: "/categories/frozen.png",
   },
   {
     id: "chill",
     name: "冷藏",
-    href: "/products?search=冷藏",
+    href: "/baking-materials/chilled-goods",
     imageUrl: "/categories/fresh.png",
   },
   {
     id: "mix",
     name: "預拌粉",
-    href: "/products?search=預拌粉",
+    href: "/baking-materials/premix",
     imageUrl: "/categories/food.png",
   },
 ];
