@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export function SectionHeader({
@@ -8,7 +9,7 @@ export function SectionHeader({
   accentClass = "bg-primary",
   className,
 }: {
-  title: string;
+  title: ReactNode;
   href?: string;
   linkLabel?: string;
   accentClass?: string;

@@ -28,9 +28,9 @@ interface ProductCardProps {
 }
 
 const BADGE_CLASS: Record<ProductBadge, string> = {
-  new: "bg-surface-yellow text-brand-caramel",
-  hot: "bg-brand-primary text-white",
-  groupBuy: "bg-brand-primary text-white",
+  new: "bg-brand-yellow text-brand-caramel",
+  hot: "bg-surface-coral text-brand-primary",
+  groupBuy: "bg-surface-coral text-brand-primary",
   preorder: "bg-surface-yellow text-brand-caramel",
   instock: "bg-success text-white",
   soldout: "bg-disabled-soft text-disabled",
@@ -96,7 +96,7 @@ export function ProductCard({
 
   return (
     <article className="group flex min-w-0 flex-col overflow-hidden rounded-[20px] border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
-      <Link href={link} className="relative block aspect-square overflow-hidden bg-surface-peach">
+      <Link href={link} className="relative block aspect-square overflow-hidden bg-surface-soft">
         <div className="absolute right-2 top-2 z-10">
           <FavoriteButton productId={id} size="sm" />
         </div>

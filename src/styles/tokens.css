@@ -33,14 +33,16 @@
   /* —— Cream background —— */
   --background: #ffffec;
   --background-rgb: 255 255 236;
-  --background-soft: #fffdf6;
-  --background-soft-rgb: 255 253 246;
-  --color-section: #fffdf6;
+  --page-background: #ffffec;
+  --content-background: #ffffff;
+  --background-soft: #fffdf8;
+  --background-soft-rgb: 255 253 248;
+  --color-section: #fffdf8;
 
   --surface: #ffffff;
   --surface-rgb: 255 255 255;
   --card: #ffffff;
-  --card-hover: #fff9f1;
+  --card-hover: #fffdf8;
 
   --border: #f0ddc8;
   --border-rgb: 240 221 200;
@@ -71,12 +73,17 @@
   /* —— Cream aliases —— */
   --cream: #ffffec;
   --cream-rgb: 255 255 236;
-  --cream-light: #fffdf6;
+  --cream-light: #fffdf8;
   --cream-dark: #fff7dd;
   --cream-white: #ffffec;
-  --cream-soft: #fffdf6;
-  --cream-soft-rgb: 255 253 246;
+  --cream-soft: #fffdf8;
+  --cream-soft-rgb: 255 253 248;
   --cream-deep: #fff7dd;
+
+  /* —— Yellow aliases —— */
+  --yellow: #ffd35c;
+  --yellow-rgb: 255 211 92;
+  --yellow-soft: #fff7cf;
 
   /* —— Caramel text —— */
   --caramel-neutral: #ffd6b3;
@@ -110,11 +117,11 @@
   --group-buy-subtle: #fff8f1;
 
   /* —— Surface layers —— */
-  --surface-soft: #fffdf6;
-  --surface-soft-rgb: 255 253 246;
+  --surface-soft: #fffdf8;
+  --surface-soft-rgb: 255 253 248;
   --surface-warm: #fff2e7;
   --surface-warm-rgb: 255 242 231;
-  --surface-hover: #fff9f1;
+  --surface-hover: #fffdf8;
   --surface-peach: #fff2e7;
   --surface-yellow: #fff7cf;
   --surface-coral: #fff0ef;
@@ -127,8 +134,8 @@
   --text-inverse: #ffffff;
 
   /* —— Border —— */
-  --border-soft: #f5e8d9;
-  --border-soft-rgb: 245 232 217;
+  --border-soft: #f2e7d8;
+  --border-soft-rgb: 242 231 216;
   --border-strong: #e8d0b8;
   --border-strong-rgb: 232 208 184;
 
@@ -151,6 +158,7 @@
 
   /* —— Overlay / focus —— */
   --overlay: rgba(138, 90, 52, 0.4);
+  --focus-ring: rgba(255, 107, 107, 0.16);
   --ring-primary: rgba(255, 107, 107, 0.16);
   --ring-group-buy: rgba(255, 107, 107, 0.16);
   --color-focus-ring: rgba(255, 107, 107, 0.16);
@@ -181,16 +189,20 @@
   --gradient-promo: linear-gradient(120deg, #ff6b6b 0%, #ff8585 60%, #ffb4a2 100%);
   --gradient-hero: linear-gradient(135deg, #fff7cf 0%, #fff2e7 52%, #ffd6b3 100%);
   --gradient-ai: linear-gradient(135deg, #fff2e7 0%, #ffffff 100%);
-  --gradient-store: linear-gradient(135deg, #ffffff 0%, #fff7cf 100%);
+  --gradient-store: linear-gradient(135deg, #fff7cf 0%, #ffffff 100%);
   --gradient-member: linear-gradient(135deg, #fff2e7 0%, #fff7cf 100%);
   --gradient-mint: linear-gradient(135deg, var(--success) 0%, #8fd496 100%);
-  --gradient-skeleton: linear-gradient(90deg, #fff2e7 25%, #fffdf6 50%, #fff2e7 75%);
+  --gradient-skeleton: linear-gradient(90deg, #fff2e7 25%, #fffdf8 50%, #fff2e7 75%);
+  --gradient-promo-peach: linear-gradient(120deg, #fff2e7 0%, #ffffff 100%);
+  --gradient-promo-yellow: linear-gradient(120deg, #fff7cf 0%, #ffffff 100%);
 
   /* —— Motion —— */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --duration-fast: 150ms;
-  --duration-base: 250ms;
+  --duration-fast: 180ms;
+  --duration-base: 200ms;
   --duration-slow: 400ms;
+  --duration-card: 180ms;
+  --duration-button: 200ms;
 
   /* —— Layout —— */
   --header-height: 4rem;
@@ -214,7 +226,7 @@
   --color-peach-soft: #fff2e7;
   --color-peach-light: #fff8f1;
   --color-cream: #ffffec;
-  --color-cream-soft: #fffdf6;
+  --color-cream-soft: #fffdf8;
   --color-cream-deep: #fff7dd;
   --color-yellow: #ffd35c;
   --color-yellow-hover: #f7c744;

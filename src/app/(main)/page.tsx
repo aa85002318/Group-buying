@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Play } from "lucide-react";
 import { HomeSearchBar } from "@/components/home/HomeSearchBar";
 import { HomeHero } from "@/components/home/HomeHero";
+import { HomeContentArea } from "@/components/home/HomeContentArea";
 import { PrimaryQuickActions } from "@/components/home/PrimaryQuickActions";
 import { FeatureDuoCards } from "@/components/home/FeatureDuoCards";
 import { PopularCategories } from "@/components/home/PopularCategories";
@@ -14,6 +16,7 @@ import { HorizontalProductRail } from "@/components/home/HorizontalProductRail";
 import { GroupBuyClosingSection } from "@/components/home/GroupBuyClosingSection";
 import { PromoBannerStrip } from "@/components/home/PromoBannerStrip";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
+import { HomeFooter } from "@/components/home/HomeFooter";
 import { RecipeCard } from "@/components/consumer/RecipeCard";
 import { NewsCard } from "@/components/consumer/NewsCard";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
@@ -25,7 +28,6 @@ import { buildReorderCandidates } from "@/lib/home/reorder";
 import { mockProducts } from "@/lib/mock-data";
 import type { RecipeSummary, NewsItem } from "@/lib/consumer-hub";
 import type { HomepageBlock, Order, Product, Video } from "@/lib/types/database";
-import { APP_ROUTES } from "@/lib/site-links";
 import { isSupabaseConfigured } from "@/lib/config";
 
 type GbEvent = {
@@ -239,210 +241,216 @@ export default function HomePage() {
     });
   }, [ordersLoad.data, productsLoad.data, reorderBlock.displayCount]);
 
-  const suggestProducts = useMemo(() => forYou.slice(0, 6), [forYou]);
-  const reorderMode = reorderCandidates.length > 0 ? "reorder" : "suggest";
+  const showReorder =
+    isMember &&
+    reorderBlock.visible &&
+    (ordersLoad.loading || ordersLoad.error != null || reorderCandidates.length > 0);
 
   return (
-    <div className="page-enter mx-auto max-w-[1280px] space-y-6 overflow-x-hidden pb-4 pt-3 md:space-y-8 md:pb-6 md:pt-4">
-      {/* 2. Search */}
-      <HomeSearchBar />
+    <div className="page-enter mx-auto max-w-[1200px] overflow-x-hidden">
+      {/* Cream band: Search + Hot search + Hero */}
+      <div className="space-y-4 bg-background pb-4 pt-3 md:space-y-5 md:pb-5 md:pt-4">
+        <HomeSearchBar />
 
-      {/* 3. Hot search */}
-      {hotSearchBlock.visible ? (
-        <HotSearchChips
-          title={hotSearchBlock.title}
-          keywords={hotKeywords}
-          loading={cmsLoad.loading}
-        />
-      ) : null}
+        {hotSearchBlock.visible ? (
+          <HotSearchChips
+            title={hotSearchBlock.title}
+            keywords={hotKeywords}
+            loading={cmsLoad.loading}
+          />
+        ) : null}
 
-      {/* 4. Hero */}
-      {heroBlock.visible ? <HomeHero /> : null}
+        {heroBlock.visible ? <HomeHero /> : null}
+      </div>
 
-      {/* 5. Eight quick actions */}
-      <PrimaryQuickActions />
+      {/* White mid content */}
+      <HomeContentArea>
+        <PrimaryQuickActions />
 
-      {/* 6. AI + Store map */}
-      <FeatureDuoCards />
+        <FeatureDuoCards />
 
-      {/* 7. Recent browse — always show; guest empty state */}
-      {recentBlock.visible ? (
-        <RecentBrowseSection
-          items={isMember || authState === "guest" ? browseItems : []}
-          limit={recentBlock.displayCount}
-          onRetry={() => setBrowseTick((t) => t + 1)}
-          showGuestEmpty={authState === "guest"}
-        />
-      ) : null}
+        {recentBlock.visible ? (
+          <RecentBrowseSection
+            items={isMember ? browseItems : []}
+            limit={recentBlock.displayCount}
+            onRetry={() => setBrowseTick((t) => t + 1)}
+            showGuestEmpty={authState === "guest"}
+          />
+        ) : null}
 
-      {/* 8. Quick reorder — members only */}
-      {isMember && reorderBlock.visible ? (
-        <QuickReorderSection
-          mode={reorderMode}
-          candidates={reorderCandidates}
-          suggestProducts={suggestProducts}
-          loading={ordersLoad.loading || productsLoad.loading}
-          error={ordersLoad.error}
-          onRetry={ordersLoad.reload}
-        />
-      ) : null}
+        {showReorder ? (
+          <QuickReorderSection
+            candidates={reorderCandidates}
+            loading={ordersLoad.loading || productsLoad.loading}
+            error={ordersLoad.error}
+            onRetry={ordersLoad.reload}
+          />
+        ) : null}
 
-      {/* 9. Categories */}
-      <PopularCategories />
+        <PopularCategories />
 
-      {/* 10–11 + weekly + for you */}
-      {newBlock.visible ? (
+        {newBlock.visible ? (
+          <HorizontalProductRail
+            title={newBlock.title || "今日新品"}
+            href="/products?sort=newest"
+            products={newest}
+            badge="new"
+            loading={productsLoad.loading}
+            error={productsLoad.error}
+            onRetry={productsLoad.reload}
+          />
+        ) : null}
+
+        {hotBlock.visible ? (
+          <HorizontalProductRail
+            title={hotBlock.title || "熱門商品"}
+            href="/products"
+            products={popular}
+            badge="hot"
+            loading={productsLoad.loading}
+            error={productsLoad.error}
+            onRetry={productsLoad.reload}
+          />
+        ) : null}
+
         <HorizontalProductRail
-          title={newBlock.title || "今日新品"}
-          href="/products?sort=newest"
-          products={newest}
-          badge="new"
-          loading={productsLoad.loading}
-        />
-      ) : null}
-
-      {hotBlock.visible ? (
-        <HorizontalProductRail
-          title={hotBlock.title || "熱門商品"}
+          title="本週熱銷"
           href="/products"
-          products={popular}
+          products={weeklyHot}
           badge="hot"
           loading={productsLoad.loading}
         />
-      ) : null}
 
-      <HorizontalProductRail
-        title="本週熱銷"
-        href="/products"
-        products={weeklyHot}
-        badge="hot"
-        loading={productsLoad.loading}
-      />
-
-      <HorizontalProductRail
-        title="猜你喜歡"
-        href="/products"
-        products={forYou}
-        loading={productsLoad.loading}
-      />
-
-      {/* 12. Group buy closing */}
-      {groupBuyBlock.visible ? (
-        <GroupBuyClosingSection
-          title={groupBuyBlock.title || "即將收單"}
-          events={closing}
-          loading={eventsLoad.loading}
-          error={eventsLoad.error}
-          onRetry={eventsLoad.reload}
+        <HorizontalProductRail
+          title="猜你喜歡"
+          href="/products"
+          products={forYou}
+          loading={productsLoad.loading}
         />
-      ) : null}
 
-      {/* 13. Promo banners */}
-      <PromoBannerStrip />
+        {groupBuyBlock.visible ? (
+          <GroupBuyClosingSection
+            title={groupBuyBlock.title || "即將收單"}
+            events={closing}
+            loading={eventsLoad.loading}
+            error={eventsLoad.error}
+            onRetry={eventsLoad.reload}
+          />
+        ) : null}
 
-      {/* 14. Recipes */}
-      {recipesBlock.visible ? (
-        <section className="space-y-3">
-          <SectionHeader title={recipesBlock.title || "最新食譜"} href="/recipes" />
-          <p className="-mt-2 text-sm text-foreground-secondary">一分鐘教你做</p>
-          <HomeSectionFrame
-            loading={recipesLoad.loading}
-            error={recipesLoad.error}
-            onRetry={recipesLoad.reload}
-            empty={!recipesLoad.loading && !recipesLoad.error && recipes.length === 0}
-            emptyText="尚無食譜"
-          >
-            <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none md:grid md:grid-cols-4 md:overflow-visible">
-              {recipes.map((r) => (
-                <div key={r.id} className="w-[42%] shrink-0 md:w-auto">
-                  <RecipeCard recipe={r} />
-                </div>
-              ))}
-            </div>
-          </HomeSectionFrame>
-        </section>
-      ) : null}
+        <PromoBannerStrip />
 
-      {/* 15. Videos */}
-      {videosBlock.visible ? (
-        <section className="space-y-3">
-          <SectionHeader title={videosBlock.title || "熱門影音"} href="/videos" />
-          <p className="-mt-2 text-sm text-foreground-secondary">老師推薦</p>
-          <HomeSectionFrame
-            loading={videosLoad.loading}
-            error={videosLoad.error}
-            onRetry={videosLoad.reload}
-            empty={!videosLoad.loading && !videosLoad.error && videos.length === 0}
-            emptyText="尚無影音"
-          >
-            <ul className="flex gap-3 overflow-x-auto pb-1 scrollbar-none sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-4">
-              {videos.map((v) => (
-                <li key={v.id} className="w-[70%] shrink-0 sm:w-auto">
-                  <Link
-                    href={`/videos/${v.slug || v.id}`}
-                    className="card-lift block overflow-hidden border-border bg-surface"
-                  >
-                    <div className="relative aspect-video bg-surface-peach">
-                      {v.thumbnail_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={v.thumbnail_url}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : null}
-                      <span className="absolute bottom-2 right-2 rounded-full bg-brand-primary px-2.5 py-1 text-[11px] font-bold text-white">
-                        播放
-                      </span>
-                    </div>
-                    <p className="line-clamp-2 p-3 text-sm font-bold text-brand-caramel">
-                      {v.title}
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </HomeSectionFrame>
-        </section>
-      ) : null}
+        {recipesBlock.visible ? (
+          <section className="space-y-3">
+            <SectionHeader title={recipesBlock.title || "最新食譜"} href="/recipes" />
+            <p className="-mt-2 text-sm text-foreground-secondary">
+              一分鐘教你做 · 老師推薦
+            </p>
+            <HomeSectionFrame
+              loading={recipesLoad.loading}
+              error={recipesLoad.error}
+              onRetry={recipesLoad.reload}
+              empty={!recipesLoad.loading && !recipesLoad.error && recipes.length === 0}
+              emptyTitle="尚無食譜"
+              emptyText="新食譜上架後會出現在這裡，先去食譜區逛逛吧。"
+              emptyActionHref="/recipes"
+              emptyActionLabel="看全部食譜"
+            >
+              <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none md:grid md:grid-cols-3 lg:grid-cols-4 md:overflow-visible">
+                {recipes.map((r) => (
+                  <div key={r.id} className="w-[42%] shrink-0 md:w-auto">
+                    <RecipeCard recipe={r} />
+                  </div>
+                ))}
+              </div>
+            </HomeSectionFrame>
+          </section>
+        ) : null}
 
-      {/* 16. News */}
-      {newsBlock.visible ? (
-        <section className="space-y-3">
-          <SectionHeader title={newsBlock.title || "最新消息"} href="/news" />
-          <HomeSectionFrame
-            loading={newsLoad.loading}
-            error={newsLoad.error}
-            onRetry={newsLoad.reload}
-            empty={!newsLoad.loading && !newsLoad.error && news.length === 0}
-            emptyText="尚無最新資訊"
-          >
-            <div className="space-y-3">
-              {news.map((n) => (
-                <NewsCard key={n.id} item={n} />
-              ))}
-            </div>
-          </HomeSectionFrame>
-        </section>
-      ) : null}
+        {videosBlock.visible ? (
+          <section className="space-y-3">
+            <SectionHeader title={videosBlock.title || "最新影音"} href="/videos" />
+            <p className="-mt-2 text-sm text-foreground-secondary">
+              一分鐘教你做 · 熱門影音
+            </p>
+            <HomeSectionFrame
+              loading={videosLoad.loading}
+              error={videosLoad.error}
+              onRetry={videosLoad.reload}
+              empty={!videosLoad.loading && !videosLoad.error && videos.length === 0}
+              emptyTitle="尚無影音"
+              emptyText="新影音上架後會出現在這裡。"
+              emptyActionHref="/videos"
+              emptyActionLabel="看全部影音"
+            >
+              <ul className="flex gap-3 overflow-x-auto pb-1 scrollbar-none sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 xl:grid-cols-4">
+                {videos.map((v) => (
+                  <li key={v.id} className="w-[70%] shrink-0 sm:w-auto">
+                    <Link
+                      href={`/videos/${v.slug || v.id}`}
+                      className="card-lift block overflow-hidden border-border-soft bg-surface"
+                    >
+                      <div className="relative aspect-video bg-surface-soft">
+                        {v.thumbnail_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={v.thumbnail_url}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : null}
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-white shadow-soft">
+                            <Play className="h-5 w-5 fill-current" aria-hidden />
+                          </span>
+                        </span>
+                        {v.duration_seconds ? (
+                          <span className="absolute bottom-2 right-2 rounded-md bg-[rgba(138,90,52,0.82)] px-2 py-0.5 text-[11px] font-bold text-white">
+                            {Math.floor(v.duration_seconds / 60)}:
+                            {String(v.duration_seconds % 60).padStart(2, "0")}
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="space-y-1.5 p-3">
+                        <span className="inline-flex rounded-full bg-surface-yellow px-2 py-0.5 text-[11px] font-bold text-brand-caramel">
+                          影音
+                        </span>
+                        <p className="line-clamp-2 text-sm font-bold text-brand-caramel">
+                          {v.title}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </HomeSectionFrame>
+          </section>
+        ) : null}
 
-      {/* 17. Footer */}
-      <footer className="border-t border-border-soft pt-4 text-center text-xs text-foreground-muted">
-        <p className="font-semibold text-brand-caramel">CHIMEIDIY 烘焙生活平台</p>
-        <p className="mt-1">
-          <Link href="/terms" className="underline-offset-2 hover:underline">
-            服務條款
-          </Link>
-          {" · "}
-          <Link href="/privacy" className="underline-offset-2 hover:underline">
-            隱私權政策
-          </Link>
-          {" · "}
-          <Link href={APP_ROUTES.support} className="underline-offset-2 hover:underline">
-            客服中心
-          </Link>
-        </p>
-      </footer>
+        {newsBlock.visible ? (
+          <section className="space-y-3">
+            <SectionHeader title={newsBlock.title || "最新消息"} href="/news" />
+            <HomeSectionFrame
+              loading={newsLoad.loading}
+              error={newsLoad.error}
+              onRetry={newsLoad.reload}
+              empty={!newsLoad.loading && !newsLoad.error && news.length === 0}
+              emptyTitle="尚無最新資訊"
+              emptyText="新品、公告、課程與直播消息會顯示在這裡。"
+              emptyActionHref="/news"
+              emptyActionLabel="看全部消息"
+            >
+              <div className="space-y-3">
+                {news.map((n) => (
+                  <NewsCard key={n.id} item={n} />
+                ))}
+              </div>
+            </HomeSectionFrame>
+          </section>
+        ) : null}
+      </HomeContentArea>
+
+      <HomeFooter />
     </div>
   );
 }

@@ -1,19 +1,22 @@
 "use client";
 
 import { AppErrorState } from "@/components/ui/AppErrorState";
+import { HomeEmptyState } from "@/components/home/HomeEmptyState";
 import { cn } from "@/lib/utils";
 
 type HomeSectionFrameProps = {
   title?: string;
-  href?: string;
-  accentClass?: string;
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
   empty?: boolean;
+  emptyTitle?: string;
   emptyText?: string;
+  emptyActionHref?: string;
+  emptyActionLabel?: string;
   children: React.ReactNode;
   className?: string;
+  skeletonCount?: number;
 };
 
 /** Independent home section with loading / error / empty — failure must not blank the page. */
@@ -23,19 +26,24 @@ export function HomeSectionFrame({
   error,
   onRetry,
   empty,
-  emptyText = "目前沒有內容",
+  emptyTitle = "目前沒有內容",
+  emptyText = "稍後再來看看，或先逛逛其他精選區塊。",
+  emptyActionHref,
+  emptyActionLabel,
   children,
   className,
+  skeletonCount = 4,
 }: HomeSectionFrameProps) {
   return (
     <section className={cn("space-y-3", className)}>
-      {title ? (
-        <h2 className="sr-only">{title}</h2>
-      ) : null}
+      {title ? <h2 className="sr-only">{title}</h2> : null}
       {loading ? (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4" aria-busy>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="aspect-[4/3] animate-pulse rounded-[18px] bg-muted" />
+        <div className="flex gap-3 overflow-hidden" aria-busy>
+          {Array.from({ length: skeletonCount }).map((_, i) => (
+            <div
+              key={i}
+              className="home-skeleton aspect-[4/3] w-[42%] shrink-0 rounded-[18px] sm:w-[28%] md:w-auto md:flex-1"
+            />
           ))}
         </div>
       ) : error ? (
@@ -43,12 +51,16 @@ export function HomeSectionFrame({
           title="此區塊暫時無法載入"
           description={error}
           onRetry={onRetry}
-          className="py-6"
+          className="rounded-[18px] border border-border-soft bg-surface-soft py-6"
         />
       ) : empty ? (
-        <div className="rounded-[18px] border border-dashed border-border-soft bg-surface-soft p-4 text-center text-sm text-foreground-secondary">
-          {emptyText}
-        </div>
+        <HomeEmptyState
+          compact
+          title={emptyTitle}
+          description={emptyText}
+          actionHref={emptyActionHref}
+          actionLabel={emptyActionLabel}
+        />
       ) : (
         children
       )}

@@ -101,7 +101,7 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full shrink-0 border-b border-border-soft bg-surface",
+        "sticky top-0 z-50 w-full shrink-0 border-b border-divider bg-surface",
         className
       )}
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}

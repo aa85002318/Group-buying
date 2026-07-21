@@ -130,7 +130,30 @@
   }
 
   .card-lift {
-    @apply card-surface hover:-translate-y-1 hover:shadow-lift;
+    @apply card-surface transition-[transform,box-shadow] duration-[180ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(138,90,52,0.09)];
+  }
+
+  .home-skeleton {
+    background-image: var(--gradient-skeleton);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.2s ease-in-out infinite;
+  }
+
+  .home-content-area {
+    background: var(--content-background);
+    border-radius: 24px 24px 0 0;
+    padding-top: 20px;
+    padding-bottom: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .home-content-area {
+      max-width: 1200px;
+      margin-inline: auto;
+      border-radius: 24px;
+      padding: 24px 24px 32px;
+      box-shadow: var(--shadow-soft);
+    }
   }
 
   .input-field {
@@ -224,6 +247,30 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .home-skeleton,
+  .animate-ribbon,
+  .animate-live,
+  .card-lift {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .card-lift:hover {
+    transform: none !important;
   }
 }
 

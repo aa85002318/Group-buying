@@ -24,7 +24,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-border-soft bg-surface"
+      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-divider bg-surface"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div className="mx-auto grid h-20 grid-cols-5 items-stretch px-0.5">
@@ -38,12 +38,14 @@ export function MobileBottomNav() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               aria-label={item.label}
-              className="relative flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-1 px-0.5 transition active:scale-[0.98]"
+              className="relative flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-1 px-0.5 transition duration-200 active:scale-[0.98]"
             >
               <Icon
                 className={cn(
                   "h-6 w-6 shrink-0 transition duration-200",
-                  active ? "scale-105 text-brand-primary" : "text-brand-caramel"
+                  active
+                    ? "scale-105 text-brand-primary"
+                    : "text-brand-caramel"
                 )}
                 aria-hidden
               />
@@ -51,12 +53,18 @@ export function MobileBottomNav() {
                 className={cn(
                   "max-w-full truncate text-xs leading-none",
                   active
-                    ? "font-bold text-brand-primary"
-                    : "font-medium text-brand-caramel"
+                    ? "font-medium text-brand-primary"
+                    : "font-medium text-foreground-secondary"
                 )}
               >
                 {item.label}
               </span>
+              {active ? (
+                <span
+                  className="absolute bottom-1.5 h-1.5 w-1.5 rounded-full bg-brand-primary"
+                  aria-hidden
+                />
+              ) : null}
             </Link>
           );
         })}

@@ -1,16 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
 import { useCart } from "@/hooks/useCart";
 import type { ReorderCandidate } from "@/lib/home/reorder";
 import { formatCurrency, cn } from "@/lib/utils";
-import type { Product } from "@/lib/types/database";
-
-type Mode = "reorder" | "suggest";
 
 function ReorderCard({
   productId,
@@ -52,8 +48,8 @@ function ReorderCard({
   };
 
   return (
-    <article className="flex w-[168px] shrink-0 flex-col overflow-hidden rounded-[20px] border border-border bg-surface shadow-soft md:w-auto">
-      <div className="relative aspect-square bg-surface-peach">
+    <article className="card-lift flex w-[168px] shrink-0 flex-col overflow-hidden rounded-[18px] border border-border-soft bg-surface md:w-auto">
+      <div className="relative aspect-square bg-surface-soft">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt="" className="h-full w-full object-cover" />
@@ -71,7 +67,7 @@ function ReorderCard({
         {unit ? <p className="text-xs text-foreground-secondary">{unit}</p> : null}
         <p className="text-sm font-bold text-brand-primary">{formatCurrency(price)}</p>
         <div className="mt-auto space-y-2">
-          <div className="flex items-center justify-between rounded-button border border-border bg-surface-peach px-1">
+          <div className="flex items-center justify-between rounded-button bg-surface-peach px-1">
             <button
               type="button"
               aria-label="減少數量"
@@ -80,7 +76,9 @@ function ReorderCard({
             >
               <Minus className="h-4 w-4" />
             </button>
-            <span className="min-w-[1.5rem] text-center text-sm font-bold text-brand-caramel">{qty}</span>
+            <span className="min-w-[1.5rem] text-center text-sm font-bold text-brand-caramel">
+              {qty}
+            </span>
             <button
               type="button"
               aria-label="增加數量"
@@ -94,7 +92,7 @@ function ReorderCard({
             type="button"
             disabled={busy}
             onClick={add}
-            className="flex h-10 w-full items-center justify-center gap-1.5 rounded-button bg-brand-primary text-sm font-bold text-white transition hover:bg-primary-hover disabled:opacity-60"
+            className="flex h-10 w-full items-center justify-center gap-1.5 rounded-button bg-brand-primary text-sm font-bold text-white transition duration-200 hover:bg-primary-hover disabled:opacity-60"
           >
             <ShoppingCart className="h-4 w-4" />
             加入購物車
@@ -116,58 +114,45 @@ function ReorderCard({
 }
 
 type QuickReorderSectionProps = {
-  mode: Mode;
   candidates: ReorderCandidate[];
-  suggestProducts: Product[];
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
 };
 
+/** 快速回購 — 僅會員且有 App 訂單候選時顯示（由 page 控制掛載） */
 export function QuickReorderSection({
-  mode,
   candidates,
-  suggestProducts,
   loading,
   error,
   onRetry,
 }: QuickReorderSectionProps) {
-  const isReorder = mode === "reorder" && candidates.length > 0;
-  const title = isReorder ? "再次購買" : "猜你喜歡";
-  const subtitle = isReorder
-    ? "常買商品，一鍵快速加入購物車。"
-    : "還沒有購買紀錄？從熱門與新品開始挑。";
-
-  const cards = isReorder
-    ? candidates.map((c) => ({
-        key: c.productId,
-        productId: c.productId,
-        name: c.name,
-        price: c.price,
-        imageUrl: c.imageUrl,
-        unit: c.unit,
-      }))
-    : suggestProducts.slice(0, 6).map((p) => ({
-        key: p.id,
-        productId: p.id,
-        name: p.name,
-        price: Number(p.price),
-        imageUrl: p.image_url,
-        unit: p.unit ?? p.subtitle ?? null,
-      }));
-
   return (
-    <section className="space-y-3 rounded-[20px] bg-section p-3 md:p-4">
+    <section className="space-y-3 bg-surface">
       <div>
-        <SectionHeader title={title} href="/products" linkLabel="逛更多" />
-        <p className="-mt-2 text-sm text-foreground-secondary">{subtitle}</p>
+        <SectionHeader
+          title={
+            <span className="inline-flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-brand-primary" aria-hidden />
+              再次購買
+            </span>
+          }
+          href="/orders"
+          linkLabel="訂單紀錄"
+        />
+        <p className="-mt-2 text-sm text-foreground-secondary">
+          常買商品，一鍵加入購物車
+        </p>
       </div>
       <HomeSectionFrame
         loading={loading}
         error={error}
         onRetry={onRetry}
-        empty={!loading && !error && cards.length === 0}
-        emptyText="還沒有購買紀錄。立即開始第一筆訂單！"
+        empty={!loading && !error && candidates.length === 0}
+        emptyTitle="還沒有可回購的商品"
+        emptyText="完成第一筆 App 訂單後，常買商品會出現在這裡。"
+        emptyActionHref="/products"
+        emptyActionLabel="去逛逛商品"
       >
         <div
           className={cn(
@@ -175,9 +160,9 @@ export function QuickReorderSection({
             "md:grid md:grid-cols-3 lg:grid-cols-6 md:overflow-visible"
           )}
         >
-          {cards.map((c) => (
+          {candidates.map((c) => (
             <ReorderCard
-              key={c.key}
+              key={c.productId}
               productId={c.productId}
               name={c.name}
               price={c.price}
@@ -186,13 +171,6 @@ export function QuickReorderSection({
             />
           ))}
         </div>
-        {!isReorder && cards.length === 0 ? (
-          <p className="text-center">
-            <Link href="/products" className="text-sm font-semibold text-primary">
-              立即開始第一筆訂單
-            </Link>
-          </p>
-        ) : null}
       </HomeSectionFrame>
     </section>
   );

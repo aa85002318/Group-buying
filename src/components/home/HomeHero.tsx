@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -44,43 +44,51 @@ const DEFAULT_SLIDES: Slide[] = [
 function BakingDecor() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <span className="absolute -right-6 -top-8 h-36 w-36 rounded-full bg-peach/60 blur-[1px]" />
-      <span className="absolute bottom-2 right-1/4 h-20 w-20 rounded-full bg-butter/70" />
+      <span className="absolute -right-6 -top-8 h-36 w-36 rounded-full bg-peach/55 blur-[1px]" />
+      <span className="absolute bottom-2 right-1/4 h-20 w-20 rounded-full bg-butter/65" />
       <span className="absolute left-[42%] top-4 h-10 w-10 rounded-full bg-surface-coral" />
+      {/* 奶油 */}
       <span className="absolute bottom-8 right-8 h-8 w-12 rounded-md bg-butter shadow-soft" />
-      <span className="absolute bottom-16 right-16 h-6 w-6 rounded-full bg-surface border border-border" />
-      <span className="absolute right-6 top-10 h-16 w-1.5 rotate-12 rounded-full bg-caramel/20" />
+      {/* 雞蛋 */}
+      <span className="absolute bottom-16 right-16 h-7 w-5 rounded-full bg-surface border border-border shadow-soft" />
+      {/* 打蛋器 */}
+      <span className="absolute right-6 top-10 h-16 w-1.5 rotate-12 rounded-full bg-caramel/25" />
+      {/* 小麥 */}
+      <span className="absolute right-20 top-6 h-3 w-10 rotate-[-20deg] rounded-full bg-brand-yellow/80" />
+      <span className="absolute right-24 top-10 h-3 w-8 rotate-12 rounded-full bg-brand-yellow/60" />
     </div>
   );
 }
 
-function HeroSlide({ slide }: { slide: Slide }) {
+function HeroSlide({ slide, imageError }: { slide: Slide; imageError?: boolean }) {
   const linkExtra = externalLinkProps(slide.href);
+  const showImage = slide.image && !imageError;
+
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-[22px] border border-border bg-hero-gradient shadow-soft",
-        "min-h-[220px] max-h-[260px] md:min-h-[240px]"
+        "relative overflow-hidden rounded-[24px] border border-border bg-hero-gradient shadow-soft",
+        "min-h-[220px] max-h-[260px] md:min-h-[280px] md:max-h-[320px] lg:min-h-[360px] lg:max-h-[420px]"
       )}
     >
       <BakingDecor />
-      {slide.image ? (
+      {showImage ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={slide.image}
+            src={slide.image!}
             alt=""
             className="absolute inset-0 h-full w-full object-cover opacity-90"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-cream/95 via-cream/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FFF7CF]/95 via-[#FFF2E7]/75 to-transparent" />
         </>
       ) : null}
-      <div className="relative z-10 flex h-full min-h-[220px] flex-col justify-center gap-2 p-5 md:flex-row md:items-center md:justify-between md:px-8">
-        <div className="max-w-[58%] md:max-w-[48%]">
+      <div className="relative z-10 flex h-full min-h-[220px] flex-col justify-center gap-2 p-4 sm:p-5 md:min-h-[280px] md:flex-row md:items-center md:justify-between md:px-8 lg:min-h-[360px]">
+        <div className="max-w-[62%] md:max-w-[48%]">
           <p className="text-[11px] font-semibold tracking-wide text-brand-caramel/80">
             CHIMEIDIY 烘焙生活平台
           </p>
-          <h2 className="mt-1 text-[26px] font-bold leading-tight tracking-tight text-brand-caramel md:text-[36px]">
+          <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-brand-caramel sm:text-[26px] md:text-[36px]">
             {slide.title}
           </h2>
           <p className="mt-2 max-w-[18rem] text-sm leading-snug text-foreground-secondary md:text-base">
@@ -90,7 +98,7 @@ function HeroSlide({ slide }: { slide: Slide }) {
             <Link
               href={slide.href}
               {...linkExtra}
-              className="inline-flex h-11 min-h-touch items-center justify-center rounded-button bg-brand-primary px-5 text-sm font-bold text-white shadow-soft transition duration-200 hover:bg-primary-hover"
+              className="inline-flex h-11 min-h-touch items-center justify-center rounded-2xl bg-brand-primary px-5 text-sm font-bold text-white shadow-soft transition duration-200 hover:bg-primary-hover"
             >
               {slide.cta}
             </Link>
@@ -112,11 +120,15 @@ function HeroSlide({ slide }: { slide: Slide }) {
   );
 }
 
-/** Hero with soft carousel — CMS banners when available, else brand defaults */
+/** Hero carousel — warm baking scene, swipe / autoplay / pause / keyboard */
 export function HomeHero({ className }: { className?: string }) {
   const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
   const [index, setIndex] = useState(0);
   const [ready, setReady] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
+  const touchX = useRef<number | null>(null);
+  const regionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -149,33 +161,90 @@ export function HomeHero({ className }: { className?: string }) {
   }, []);
 
   useEffect(() => {
-    if (slides.length <= 1) return;
+    if (slides.length <= 1 || paused) return;
     const t = window.setInterval(() => {
       setIndex((i) => (i + 1) % slides.length);
     }, 5000);
     return () => window.clearInterval(t);
-  }, [slides.length]);
+  }, [slides.length, paused]);
+
+  const go = useCallback(
+    (delta: number) => {
+      setIndex((i) => (i + delta + slides.length) % slides.length);
+    },
+    [slides.length]
+  );
+
+  useEffect(() => {
+    const el = regionRef.current;
+    if (!el) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        go(-1);
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        go(1);
+      }
+    };
+    el.addEventListener("keydown", onKey);
+    return () => el.removeEventListener("keydown", onKey);
+  }, [go]);
 
   const current = slides[index] ?? slides[0];
 
   return (
-    <section aria-label="主視覺" className={cn("relative", className)}>
+    <section
+      ref={regionRef}
+      aria-label="主視覺"
+      tabIndex={0}
+      className={cn("relative outline-none", className)}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={(e) => {
+        touchX.current = e.touches[0]?.clientX ?? null;
+      }}
+      onTouchEnd={(e) => {
+        if (touchX.current == null) return;
+        const dx = (e.changedTouches[0]?.clientX ?? 0) - touchX.current;
+        touchX.current = null;
+        if (Math.abs(dx) < 40) return;
+        go(dx < 0 ? 1 : -1);
+      }}
+    >
       {!ready ? (
-        <div className="min-h-[220px] animate-pulse rounded-[22px] bg-surface-peach md:min-h-[240px]" />
+        <div className="home-skeleton min-h-[220px] rounded-[24px] md:min-h-[280px] lg:min-h-[360px]" />
       ) : (
         <>
-          <HeroSlide slide={current} />
+          <HeroSlide
+            slide={current}
+            imageError={!!imgErrors[current.id]}
+          />
+          {/* preload error tracking via hidden imgs */}
+          {current.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={current.image}
+              alt=""
+              className="hidden"
+              onError={() =>
+                setImgErrors((prev) => ({ ...prev, [current.id]: true }))
+              }
+            />
+          ) : null}
           {slides.length > 1 ? (
-            <div className="mt-2 flex justify-center gap-1.5">
+            <div className="mt-2.5 flex justify-center gap-1.5">
               {slides.map((s, i) => (
                 <button
                   key={s.id}
                   type="button"
                   aria-label={`第 ${i + 1} 則 Banner`}
+                  aria-current={i === index ? "true" : undefined}
                   onClick={() => setIndex(i)}
                   className={cn(
-                    "h-1.5 rounded-full transition",
-                    i === index ? "w-5 bg-brand-primary" : "w-1.5 bg-border"
+                    "h-1.5 rounded-full transition duration-200",
+                    i === index ? "w-5 bg-brand-primary" : "w-1.5 bg-[#E6D6C7]"
                   )}
                 />
               ))}

@@ -53,14 +53,14 @@ const PRIMARY_ACTIONS: Array<{
     label: "AI助手",
     icon: Sparkles,
     well: "bg-surface-coral",
-    iconClass: "text-brand-primary",
+    iconClass: "text-brand-caramel",
   },
   {
     href: APP_ROUTES.storeMap,
     label: "門市地圖",
     icon: MapPin,
     well: "bg-surface-yellow",
-    iconClass: "text-brand-caramel",
+    iconClass: "text-brand-primary",
   },
   {
     href: "/shop?promo=1",
@@ -73,23 +73,40 @@ const PRIMARY_ACTIONS: Array<{
     href: APP_ROUTES.news,
     label: "最新消息",
     icon: Newspaper,
-    well: "bg-surface-peach",
+    well: "bg-surface-yellow",
     iconClass: "text-brand-caramel",
   },
 ];
 
-/** 八大快捷入口 — 4×2 grid */
-export function PrimaryQuickActions() {
+/** 八大快捷入口 — 4×2（桌機可 8 欄） */
+export function PrimaryQuickActions({ loading }: { loading?: boolean }) {
+  if (loading) {
+    return (
+      <section aria-busy aria-label="快捷入口">
+        <ul className="grid grid-cols-4 gap-2 sm:gap-3 lg:grid-cols-8">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <li key={i} className="home-skeleton h-[104px] rounded-[18px]" />
+          ))}
+        </ul>
+      </section>
+    );
+  }
+
   return (
     <section aria-label="快捷入口">
-      <ul className="grid grid-cols-4 gap-2 sm:gap-3">
+      <ul className="grid grid-cols-4 gap-2 sm:gap-3 lg:grid-cols-8">
         {PRIMARY_ACTIONS.map((item) => {
           const Icon = item.icon;
           return (
             <li key={item.href + item.label}>
               <Link
                 href={item.href}
-                className="group flex flex-col items-center gap-1.5 rounded-[18px] border border-border bg-surface p-2 shadow-soft transition duration-200 hover:-translate-y-0.5 hover:border-brand-peach hover:shadow-lift active:scale-[0.98]"
+                className={cn(
+                  "group flex flex-col items-center gap-1.5 rounded-[18px] border border-border-soft bg-surface p-2",
+                  "shadow-[0_4px_12px_rgba(138,90,52,0.04)] transition duration-[180ms] ease-out",
+                  "hover:-translate-y-0.5 hover:border-peach hover:bg-surface-soft",
+                  "active:scale-[0.98]"
+                )}
               >
                 <span
                   className={cn(
@@ -100,7 +117,7 @@ export function PrimaryQuickActions() {
                 >
                   <Icon className="h-6 w-6" aria-hidden />
                 </span>
-                <span className="max-w-full truncate text-center text-[12px] font-semibold text-brand-caramel sm:text-[13px]">
+                <span className="line-clamp-2 max-w-full text-center text-[12px] font-semibold leading-tight text-brand-caramel sm:text-[13px]">
                   {item.label}
                 </span>
               </Link>
