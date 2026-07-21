@@ -70,20 +70,21 @@ export async function POST(request: Request) {
     catalogRootId = (await getCatalogRootId(admin, "baking-materials")) ?? null;
   }
 
-  let level = 1;
-  let path = body.name;
   if (body.parent_id) {
     const { data: parent } = await admin
       .from("product_categories")
-      .select("level, path, catalog_root_id")
+      .select("id, level, path, catalog_root_id")
       .eq("id", body.parent_id)
       .maybeSingle();
-    if (parent) {
-      level = (parent.level ?? 1) + 1;
-      path = parent.path ? `${parent.path} > ${body.name}` : body.name;
-      if (!catalogRootId && parent.catalog_root_id) {
-        catalogRootId = parent.catalog_root_id as string;
-      }
+    if (!parent) {
+      return NextResponse.json({ error: "上層分類不存在" }, { status: 400 });
+    }
+    const nextLevel = (parent.level ?? 1) + 1;
+    if (nextLevel > 4) {
+      return NextResponse.json({ error: "分類層級最多四層（大／中／小／細）" }, { status: 400 });
+    }
+    if (!catalogRootId && parent.catalog_root_id) {
+      catalogRootId = parent.catalog_root_id as string;
     }
   }
 
@@ -94,6 +95,7 @@ export async function POST(request: Request) {
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9\u4e00-\u9fff-]/g, "");
 
+  // level / path 由 DB trigger sync_category_path 依 parent_id + slug 自動計算
   const { data, error: insertError } = await admin
     .from("product_categories")
     .insert({
@@ -102,8 +104,6 @@ export async function POST(request: Request) {
       sort_order: body.sort_order ?? 99,
       parent_id: body.parent_id ?? null,
       catalog_root_id: catalogRootId,
-      level,
-      path,
       is_active: body.is_active !== false,
       icon_emoji: body.icon_emoji ?? null,
       icon_url: body.icon_url ?? null,

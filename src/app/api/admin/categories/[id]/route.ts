@@ -36,6 +36,36 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const admin = createAdminClient();
   const { data: old } = await admin.from("product_categories").select("*").eq("id", id).single();
+  if (!old) return NextResponse.json({ error: "分類不存在" }, { status: 404 });
+
+  if (updates.parent_id !== undefined) {
+    const parentId = updates.parent_id as string | null;
+    if (parentId === id) {
+      return NextResponse.json({ error: "上層分類不可選擇自己" }, { status: 400 });
+    }
+    if (parentId) {
+      // 防止把分類移到自己的子孫底下（循環）
+      const { data: descendants } = await admin
+        .from("product_categories")
+        .select("id, path")
+        .like("path", `${old.path ?? `/${old.slug}/`}%`);
+      if ((descendants ?? []).some((d) => d.id === parentId)) {
+        return NextResponse.json({ error: "不可將分類移動到自己的子分類底下" }, { status: 400 });
+      }
+      const { data: parent } = await admin
+        .from("product_categories")
+        .select("level")
+        .eq("id", parentId)
+        .maybeSingle();
+      if (!parent) {
+        return NextResponse.json({ error: "上層分類不存在" }, { status: 400 });
+      }
+      if ((parent.level ?? 1) + 1 > 4) {
+        return NextResponse.json({ error: "分類層級最多四層（大／中／小／細）" }, { status: 400 });
+      }
+    }
+  }
+
   const { data, error: updateError } = await admin
     .from("product_categories")
     .update(updates)
