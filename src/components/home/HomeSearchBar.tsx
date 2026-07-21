@@ -11,6 +11,7 @@ type HomeSearchBarProps = {
   className?: string;
 };
 
+/** 獨立一列搜尋：高 50–52、圓角 16、右側珊瑚紅按鈕 48–54 */
 export function HomeSearchBar({
   placeholder = "搜尋商品、食譜、品牌...",
   className,
@@ -29,42 +30,31 @@ export function HomeSearchBar({
   };
 
   return (
-    <form
-      onSubmit={submit}
-      role="search"
-      className={cn("relative w-full", className)}
-    >
-      <Search
-        className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground-secondary"
-        aria-hidden
-      />
-      <label htmlFor="app-home-search" className="sr-only">
-        搜尋
-      </label>
-      <input
-        id="app-home-search"
-        type="search"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder={placeholder}
-        className={cn(
-          "h-[52px] w-full rounded-[18px] border border-border bg-surface py-2 pl-11 pr-14 text-sm text-brand-caramel outline-none transition duration-200",
-          "placeholder:text-foreground-muted",
-          "focus:border-brand-primary focus:shadow-[0_0_0_3px_var(--focus-ring)]",
-          "sm:pr-[5.5rem]"
-        )}
-      />
-      <button
-        type="submit"
-        aria-label="搜尋"
-        className={cn(
-          "absolute right-1.5 top-1/2 inline-flex h-10 min-h-[40px] -translate-y-1/2 items-center justify-center gap-1.5 rounded-[14px] bg-brand-primary px-3 text-sm font-bold text-white transition duration-200",
-          "hover:bg-primary-hover active:bg-primary-active"
-        )}
-      >
-        <Search className="h-4 w-4 sm:hidden" aria-hidden />
-        <span className="hidden sm:inline">搜尋</span>
-      </button>
+    <form onSubmit={submit} role="search" className={cn("w-full", className)}>
+      <div className="relative flex h-[52px] items-center rounded-2xl border border-border bg-surface">
+        <Search
+          className="pointer-events-none absolute left-3.5 h-5 w-5 text-foreground-secondary"
+          aria-hidden
+        />
+        <label htmlFor="app-home-search" className="sr-only">
+          搜尋
+        </label>
+        <input
+          id="app-home-search"
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={placeholder}
+          className="h-full w-full rounded-2xl bg-transparent py-2 pl-11 pr-[58px] text-sm text-brand-caramel outline-none placeholder:text-foreground-muted focus:shadow-[0_0_0_3px_var(--focus-ring)]"
+        />
+        <button
+          type="submit"
+          aria-label="搜尋"
+          className="absolute right-1.5 top-1/2 flex h-[48px] w-[48px] -translate-y-1/2 items-center justify-center rounded-[14px] bg-brand-primary text-white transition duration-200 hover:bg-primary-hover"
+        >
+          <Search className="h-5 w-5" aria-hidden />
+        </button>
+      </div>
     </form>
   );
 }

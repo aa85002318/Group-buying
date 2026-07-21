@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** White mid-page content shell — cream page outside, white content inside */
+/** 示意圖：Hero 下方白底圓角中段 */
 export function HomeContentArea({
   children,
   className,
@@ -9,7 +9,14 @@ export function HomeContentArea({
   className?: string;
 }) {
   return (
-    <div className={cn("home-content-area space-y-6 md:space-y-8", className)}>
+    <div
+      className={cn(
+        "bg-surface pt-[18px]",
+        "rounded-t-[24px]",
+        "space-y-7",
+        className
+      )}
+    >
       {children}
     </div>
   );

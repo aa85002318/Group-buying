@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Play } from "lucide-react";
+import { Clock3, Heart, Play } from "lucide-react";
 import { HomeSearchBar } from "@/components/home/HomeSearchBar";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomeContentArea } from "@/components/home/HomeContentArea";
@@ -17,8 +17,6 @@ import { GroupBuyClosingSection } from "@/components/home/GroupBuyClosingSection
 import { PromoBannerStrip } from "@/components/home/PromoBannerStrip";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
 import { HomeFooter } from "@/components/home/HomeFooter";
-import { RecipeCard } from "@/components/consumer/RecipeCard";
-import { NewsCard } from "@/components/consumer/NewsCard";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { getNewThisWeekProducts } from "@/lib/home";
 import { resolveHomeBlock } from "@/lib/home/blocks";
@@ -29,12 +27,14 @@ import { mockProducts } from "@/lib/mock-data";
 import type { RecipeSummary, NewsItem } from "@/lib/consumer-hub";
 import type { HomepageBlock, Order, Product, Video } from "@/lib/types/database";
 import { isSupabaseConfigured } from "@/lib/config";
+import { cn } from "@/lib/utils";
 
 type GbEvent = {
   id: string;
   title: string;
   end_at?: string | null;
   status?: string;
+  cover_image?: string | null;
   group_buy_products?: Array<{
     special_price?: number | null;
     stock?: number | null;
@@ -89,6 +89,26 @@ function useIndependentLoad<T>(
     error,
     reload: () => setTick((t) => t + 1),
   };
+}
+
+function newsBadge(category: string) {
+  if (category === "live") return "bg-brand-primary text-white";
+  if (category === "new") return "bg-surface-yellow text-brand-caramel";
+  if (category === "course") return "bg-surface-peach text-brand-caramel";
+  return "bg-surface-coral text-brand-primary";
+}
+
+function newsLabel(category: string) {
+  const map: Record<string, string> = {
+    new: "新品",
+    store: "公告",
+    system: "公告",
+    course: "課程",
+    live: "直播",
+    campaign: "活動",
+    promo: "優惠",
+  };
+  return map[category] ?? "消息";
 }
 
 export default function HomePage() {
@@ -187,25 +207,20 @@ export default function HomePage() {
     [hotSearchBlock.config]
   );
 
-  const newest = useMemo(
-    () => getNewThisWeekProducts(productsLoad.data).slice(0, newBlock.displayCount),
-    [productsLoad.data, newBlock.displayCount]
-  );
+  const newest = useMemo(() => {
+    const fromWeek = getNewThisWeekProducts(productsLoad.data);
+    const source =
+      fromWeek.length > 0
+        ? fromWeek
+        : [...productsLoad.data].sort((a, b) =>
+            String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))
+          );
+    return source.slice(0, newBlock.displayCount);
+  }, [productsLoad.data, newBlock.displayCount]);
   const popular = useMemo(
     () => productsLoad.data.slice(0, hotBlock.displayCount),
     [productsLoad.data, hotBlock.displayCount]
   );
-  const weeklyHot = useMemo(
-    () => productsLoad.data.slice(0, 8),
-    [productsLoad.data]
-  );
-  const forYou = useMemo(() => {
-    const hot = productsLoad.data.slice(2, 10);
-    const neu = getNewThisWeekProducts(productsLoad.data).slice(0, 6);
-    const map = new Map<string, Product>();
-    [...hot, ...neu].forEach((p) => map.set(p.id, p));
-    return Array.from(map.values()).slice(0, 8);
-  }, [productsLoad.data]);
 
   const closing = useMemo(
     () =>
@@ -247,26 +262,23 @@ export default function HomePage() {
     (ordersLoad.loading || ordersLoad.error != null || reorderCandidates.length > 0);
 
   return (
-    <div className="page-enter mx-auto max-w-[1200px] overflow-x-hidden">
-      {/* Cream band: Search + Hot search + Hero */}
-      <div className="space-y-4 bg-background pb-4 pt-3 md:space-y-5 md:pb-5 md:pt-4">
+    <div className="page-enter w-full max-w-full overflow-x-hidden">
+      {/* 奶油白：Search + 熱門搜尋 + Hero */}
+      <div className="space-y-3 bg-background pb-4 pt-3">
         <HomeSearchBar />
-
         {hotSearchBlock.visible ? (
           <HotSearchChips
-            title={hotSearchBlock.title}
+            title={hotSearchBlock.title || "熱門搜尋"}
             keywords={hotKeywords}
             loading={cmsLoad.loading}
           />
         ) : null}
-
         {heroBlock.visible ? <HomeHero /> : null}
       </div>
 
-      {/* White mid content */}
+      {/* 白底中段：示意圖順序嚴格 */}
       <HomeContentArea>
         <PrimaryQuickActions />
-
         <FeatureDuoCards />
 
         {recentBlock.visible ? (
@@ -313,21 +325,6 @@ export default function HomePage() {
           />
         ) : null}
 
-        <HorizontalProductRail
-          title="本週熱銷"
-          href="/products"
-          products={weeklyHot}
-          badge="hot"
-          loading={productsLoad.loading}
-        />
-
-        <HorizontalProductRail
-          title="猜你喜歡"
-          href="/products"
-          products={forYou}
-          loading={productsLoad.loading}
-        />
-
         {groupBuyBlock.visible ? (
           <GroupBuyClosingSection
             title={groupBuyBlock.title || "即將收單"}
@@ -342,25 +339,56 @@ export default function HomePage() {
 
         {recipesBlock.visible ? (
           <section className="space-y-3">
-            <SectionHeader title={recipesBlock.title || "最新食譜"} href="/recipes" />
-            <p className="-mt-2 text-sm text-foreground-secondary">
-              一分鐘教你做 · 老師推薦
-            </p>
+            <SectionHeader
+              title={recipesBlock.title || "最新食譜"}
+              href="/recipes"
+              className="!mb-0"
+            />
+            <p className="text-xs text-foreground-secondary">一分鐘教你做 · 老師推薦</p>
             <HomeSectionFrame
               loading={recipesLoad.loading}
               error={recipesLoad.error}
               onRetry={recipesLoad.reload}
               empty={!recipesLoad.loading && !recipesLoad.error && recipes.length === 0}
               emptyTitle="尚無食譜"
-              emptyText="新食譜上架後會出現在這裡，先去食譜區逛逛吧。"
+              emptyText="新食譜上架後會出現在這裡"
               emptyActionHref="/recipes"
               emptyActionLabel="看全部食譜"
+              skeletonCount={3}
             >
-              <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none md:grid md:grid-cols-3 lg:grid-cols-4 md:overflow-visible">
+              <div className="flex gap-2.5 overflow-x-auto scrollbar-none">
                 {recipes.map((r) => (
-                  <div key={r.id} className="w-[42%] shrink-0 md:w-auto">
-                    <RecipeCard recipe={r} />
-                  </div>
+                  <Link
+                    key={r.id}
+                    href={r.href}
+                    className="flex w-[158px] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface"
+                  >
+                    <div className="relative aspect-[4/3] bg-surface-soft">
+                      {r.coverImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={r.coverImage}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : null}
+                      <span className="absolute left-2 top-2 rounded-full bg-surface-yellow px-2 py-0.5 text-[10px] font-bold text-brand-caramel">
+                        {r.category}
+                      </span>
+                      <span className="absolute right-2 top-2 text-brand-primary">
+                        <Heart className="h-4 w-4" aria-hidden />
+                      </span>
+                    </div>
+                    <div className="space-y-1 p-2.5">
+                      <p className="line-clamp-2 text-[13px] font-bold text-brand-caramel">
+                        {r.title}
+                      </p>
+                      <p className="inline-flex items-center gap-1 text-[11px] text-foreground-secondary">
+                        <Clock3 className="h-3 w-3 text-brand-yellow" aria-hidden />
+                        {r.durationMinutes} 分
+                      </p>
+                    </div>
+                  </Link>
                 ))}
               </div>
             </HomeSectionFrame>
@@ -369,56 +397,119 @@ export default function HomePage() {
 
         {videosBlock.visible ? (
           <section className="space-y-3">
-            <SectionHeader title={videosBlock.title || "最新影音"} href="/videos" />
-            <p className="-mt-2 text-sm text-foreground-secondary">
-              一分鐘教你做 · 熱門影音
-            </p>
+            <SectionHeader
+              title={videosBlock.title || "最新影音"}
+              href="/videos"
+              className="!mb-0"
+            />
+            <p className="text-xs text-foreground-secondary">一分鐘教你做 · 熱門影音</p>
             <HomeSectionFrame
               loading={videosLoad.loading}
               error={videosLoad.error}
               onRetry={videosLoad.reload}
               empty={!videosLoad.loading && !videosLoad.error && videos.length === 0}
               emptyTitle="尚無影音"
-              emptyText="新影音上架後會出現在這裡。"
+              emptyText="新影音上架後會出現在這裡"
               emptyActionHref="/videos"
               emptyActionLabel="看全部影音"
+              skeletonCount={3}
             >
-              <ul className="flex gap-3 overflow-x-auto pb-1 scrollbar-none sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 xl:grid-cols-4">
+              <div className="flex gap-2.5 overflow-x-auto scrollbar-none">
                 {videos.map((v) => (
-                  <li key={v.id} className="w-[70%] shrink-0 sm:w-auto">
+                  <Link
+                    key={v.id}
+                    href={`/videos/${v.slug || v.id}`}
+                    className="flex w-[min(72vw,220px)] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface"
+                  >
+                    <div className="relative aspect-video bg-surface-soft">
+                      {v.thumbnail_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={v.thumbnail_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : null}
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary text-white">
+                          <Play className="h-4 w-4 fill-current" aria-hidden />
+                        </span>
+                      </span>
+                      {v.duration_seconds ? (
+                        <span className="absolute bottom-2 right-2 rounded bg-[rgba(138,90,52,0.82)] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          {Math.floor(v.duration_seconds / 60)}:
+                          {String(v.duration_seconds % 60).padStart(2, "0")}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="space-y-1 p-2.5">
+                      <span className="inline-flex rounded-full bg-surface-yellow px-2 py-0.5 text-[10px] font-bold text-brand-caramel">
+                        影音
+                      </span>
+                      <p className="line-clamp-2 text-[13px] font-bold text-brand-caramel">
+                        {v.title}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </HomeSectionFrame>
+          </section>
+        ) : null}
+
+        {newsBlock.visible ? (
+          <section className="space-y-3">
+            <SectionHeader
+              title={newsBlock.title || "最新消息"}
+              href="/news"
+              className="!mb-0"
+            />
+            <HomeSectionFrame
+              loading={newsLoad.loading}
+              error={newsLoad.error}
+              onRetry={newsLoad.reload}
+              empty={!newsLoad.loading && !newsLoad.error && news.length === 0}
+              emptyTitle="尚無最新資訊"
+              emptyText="新品、公告、課程與直播會顯示在這裡"
+              emptyActionHref="/news"
+              emptyActionLabel="看全部消息"
+              skeletonCount={2}
+            >
+              <ul className="space-y-2.5">
+                {news.map((n) => (
+                  <li key={n.id}>
                     <Link
-                      href={`/videos/${v.slug || v.id}`}
-                      className="card-lift block overflow-hidden border-border-soft bg-surface"
+                      href={n.href}
+                      className="flex gap-3 overflow-hidden rounded-[16px] border border-border-soft bg-surface p-3"
                     >
-                      <div className="relative aspect-video bg-surface-soft">
-                        {v.thumbnail_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={v.thumbnail_url}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                        <span className="absolute inset-0 flex items-center justify-center">
-                          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-white shadow-soft">
-                            <Play className="h-5 w-5 fill-current" aria-hidden />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-[10px] font-bold",
+                              newsBadge(n.category)
+                            )}
+                          >
+                            {newsLabel(n.category)}
+                          </span>
+                          <span className="text-[11px] text-foreground-secondary">
+                            {n.publishedAt}
                           </span>
                         </span>
-                        {v.duration_seconds ? (
-                          <span className="absolute bottom-2 right-2 rounded-md bg-[rgba(138,90,52,0.82)] px-2 py-0.5 text-[11px] font-bold text-white">
-                            {Math.floor(v.duration_seconds / 60)}:
-                            {String(v.duration_seconds % 60).padStart(2, "0")}
-                          </span>
-                        ) : null}
-                      </div>
-                      <div className="space-y-1.5 p-3">
-                        <span className="inline-flex rounded-full bg-surface-yellow px-2 py-0.5 text-[11px] font-bold text-brand-caramel">
-                          影音
-                        </span>
-                        <p className="line-clamp-2 text-sm font-bold text-brand-caramel">
-                          {v.title}
+                        <p className="mt-1.5 line-clamp-2 text-[13px] font-bold text-brand-caramel">
+                          {n.title}
                         </p>
-                      </div>
+                      </span>
+                      {n.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={n.imageUrl}
+                          alt=""
+                          className="h-16 w-16 shrink-0 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <span className="h-16 w-16 shrink-0 rounded-xl bg-surface-soft" />
+                      )}
                     </Link>
                   </li>
                 ))}
@@ -426,31 +517,9 @@ export default function HomePage() {
             </HomeSectionFrame>
           </section>
         ) : null}
-
-        {newsBlock.visible ? (
-          <section className="space-y-3">
-            <SectionHeader title={newsBlock.title || "最新消息"} href="/news" />
-            <HomeSectionFrame
-              loading={newsLoad.loading}
-              error={newsLoad.error}
-              onRetry={newsLoad.reload}
-              empty={!newsLoad.loading && !newsLoad.error && news.length === 0}
-              emptyTitle="尚無最新資訊"
-              emptyText="新品、公告、課程與直播消息會顯示在這裡。"
-              emptyActionHref="/news"
-              emptyActionLabel="看全部消息"
-            >
-              <div className="space-y-3">
-                {news.map((n) => (
-                  <NewsCard key={n.id} item={n} />
-                ))}
-              </div>
-            </HomeSectionFrame>
-          </section>
-        ) : null}
       </HomeContentArea>
 
-      <HomeFooter />
+      <HomeFooter className="mt-2" />
     </div>
   );
 }

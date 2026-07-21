@@ -1,112 +1,69 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { Plus, ShoppingCart } from "lucide-react";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
 import { useCart } from "@/hooks/useCart";
 import type { ReorderCandidate } from "@/lib/home/reorder";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 
 function ReorderCard({
   productId,
   name,
   price,
   imageUrl,
-  unit,
 }: {
   productId: string;
   name: string;
   price: number;
   imageUrl?: string | null;
-  unit?: string | null;
 }) {
-  const { addItem, items, updateQuantity } = useCart();
-  const [qty, setQty] = useState(1);
+  const { addItem } = useCart();
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const inCart = items.find((i) => i.productId === productId && !i.groupBuyProductId);
 
   const add = async () => {
+    if (busy) return;
     setBusy(true);
-    setMsg(null);
     try {
-      await addItem({
-        productId,
-        name,
-        price,
-        imageUrl,
-        quantity: qty,
-      });
-      setMsg("已加入購物車");
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : "加入失敗");
+      await addItem({ productId, name, price, imageUrl, quantity: 1 });
+    } catch {
+      /* ignore */
     } finally {
       setBusy(false);
-      setTimeout(() => setMsg(null), 2000);
     }
   };
 
   return (
-    <article className="card-lift flex w-[168px] shrink-0 flex-col overflow-hidden rounded-[18px] border border-border-soft bg-surface md:w-auto">
+    <article className="flex w-[132px] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface">
       <div className="relative aspect-square bg-surface-soft">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt="" className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-foreground-muted">
+          <div className="flex h-full items-center justify-center text-[10px] text-foreground-muted">
             暫無圖片
           </div>
         )}
-        <span className="absolute left-2 top-2 rounded-full bg-surface-yellow px-2 py-0.5 text-[10px] font-bold text-brand-caramel">
-          再次購買
+        <span className="absolute left-1.5 top-1.5 rounded-full bg-surface-yellow px-1.5 py-0.5 text-[10px] font-bold text-brand-caramel">
+          再買
         </span>
       </div>
-      <div className="flex flex-1 flex-col gap-2 p-3">
-        <p className="line-clamp-2 text-sm font-semibold text-brand-caramel">{name}</p>
-        {unit ? <p className="text-xs text-foreground-secondary">{unit}</p> : null}
-        <p className="text-sm font-bold text-brand-primary">{formatCurrency(price)}</p>
-        <div className="mt-auto space-y-2">
-          <div className="flex items-center justify-between rounded-button bg-surface-peach px-1">
-            <button
-              type="button"
-              aria-label="減少數量"
-              className="flex h-9 w-9 items-center justify-center text-brand-caramel"
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-            <span className="min-w-[1.5rem] text-center text-sm font-bold text-brand-caramel">
-              {qty}
-            </span>
-            <button
-              type="button"
-              aria-label="增加數量"
-              className="flex h-9 w-9 items-center justify-center text-brand-caramel"
-              onClick={() => setQty((q) => Math.min(99, q + 1))}
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
+      <div className="flex flex-1 flex-col gap-1 p-2">
+        <p className="line-clamp-2 min-h-[2rem] text-[12px] font-semibold leading-snug text-brand-caramel">
+          {name}
+        </p>
+        <div className="mt-auto flex items-center justify-between gap-1">
+          <p className="text-[12px] font-bold text-brand-primary">{formatCurrency(price)}</p>
           <button
             type="button"
             disabled={busy}
             onClick={add}
-            className="flex h-10 w-full items-center justify-center gap-1.5 rounded-button bg-brand-primary text-sm font-bold text-white transition duration-200 hover:bg-primary-hover disabled:opacity-60"
+            aria-label="加入購物車"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary text-white disabled:opacity-50"
           >
-            <ShoppingCart className="h-4 w-4" />
-            加入購物車
+            <Plus className="h-4 w-4" aria-hidden />
           </button>
-          {inCart ? (
-            <button
-              type="button"
-              className="text-xs font-medium text-foreground-secondary underline-offset-2 hover:underline"
-              onClick={() => updateQuantity(productId, inCart.quantity + 1)}
-            >
-              購物車已有 {inCart.quantity} 件
-            </button>
-          ) : null}
-          {msg ? <p className="text-center text-xs text-foreground-secondary">{msg}</p> : null}
         </div>
       </div>
     </article>
@@ -120,7 +77,7 @@ type QuickReorderSectionProps = {
   onRetry?: () => void;
 };
 
-/** 快速回購 — 僅會員且有 App 訂單候選時顯示（由 page 控制掛載） */
+/** 精簡回購卡：一次約 3.2 張；僅會員且有資料時由 page 掛載 */
 export function QuickReorderSection({
   candidates,
   loading,
@@ -128,21 +85,20 @@ export function QuickReorderSection({
   onRetry,
 }: QuickReorderSectionProps) {
   return (
-    <section className="space-y-3 bg-surface">
+    <section className="space-y-3">
       <div>
         <SectionHeader
           title={
-            <span className="inline-flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-brand-primary" aria-hidden />
+            <span className="inline-flex items-center gap-1.5">
+              <ShoppingCart className="h-4 w-4 text-brand-primary" aria-hidden />
               再次購買
             </span>
           }
           href="/orders"
-          linkLabel="訂單紀錄"
+          linkLabel="更多"
+          className="!mb-0"
         />
-        <p className="-mt-2 text-sm text-foreground-secondary">
-          常買商品，一鍵加入購物車
-        </p>
+        <p className="mt-1 text-xs text-foreground-secondary">常買商品，一鍵加入購物車</p>
       </div>
       <HomeSectionFrame
         loading={loading}
@@ -150,16 +106,12 @@ export function QuickReorderSection({
         onRetry={onRetry}
         empty={!loading && !error && candidates.length === 0}
         emptyTitle="還沒有可回購的商品"
-        emptyText="完成第一筆 App 訂單後，常買商品會出現在這裡。"
+        emptyText="完成 App 訂單後會出現在這裡"
         emptyActionHref="/products"
-        emptyActionLabel="去逛逛商品"
+        emptyActionLabel="去逛逛"
+        skeletonCount={3}
       >
-        <div
-          className={cn(
-            "flex gap-3 overflow-x-auto pb-1 scrollbar-none",
-            "md:grid md:grid-cols-3 lg:grid-cols-6 md:overflow-visible"
-          )}
-        >
+        <div className="flex gap-2.5 overflow-x-auto scrollbar-none">
           {candidates.map((c) => (
             <ReorderCard
               key={c.productId}
@@ -167,7 +119,6 @@ export function QuickReorderSection({
               name={c.name}
               price={c.price}
               imageUrl={c.imageUrl}
-              unit={c.unit}
             />
           ))}
         </div>

@@ -21,21 +21,21 @@ const DEFAULT_SLIDES: Slide[] = [
   {
     id: "default-1",
     title: "今天想烤什麼？",
-    subtitle: "烘焙材料、食譜教學與限時團購一次找到",
-    cta: "逛烘焙材料",
+    subtitle: "烘焙材料、食譜與團購一次找到",
+    cta: "逛材料",
     href: APP_ROUTES.shop,
   },
   {
     id: "default-2",
     title: "一分鐘教你做",
-    subtitle: "跟著影音與食譜，輕鬆完成第一盤甜點",
+    subtitle: "跟著影音輕鬆完成第一盤甜點",
     cta: "看食譜",
     href: APP_ROUTES.recipes,
   },
   {
     id: "default-3",
     title: "限時團購開跑",
-    subtitle: "精選原料即將收單，別錯過好價錢",
+    subtitle: "精選原料即將收單",
     cta: "去跟團",
     href: "/group-buy",
   },
@@ -44,91 +44,22 @@ const DEFAULT_SLIDES: Slide[] = [
 function BakingDecor() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <span className="absolute -right-6 -top-8 h-36 w-36 rounded-full bg-peach/55 blur-[1px]" />
-      <span className="absolute bottom-2 right-1/4 h-20 w-20 rounded-full bg-butter/65" />
-      <span className="absolute left-[42%] top-4 h-10 w-10 rounded-full bg-surface-coral" />
-      {/* 奶油 */}
-      <span className="absolute bottom-8 right-8 h-8 w-12 rounded-md bg-butter shadow-soft" />
-      {/* 雞蛋 */}
-      <span className="absolute bottom-16 right-16 h-7 w-5 rounded-full bg-surface border border-border shadow-soft" />
-      {/* 打蛋器 */}
-      <span className="absolute right-6 top-10 h-16 w-1.5 rotate-12 rounded-full bg-caramel/25" />
-      {/* 小麥 */}
-      <span className="absolute right-20 top-6 h-3 w-10 rotate-[-20deg] rounded-full bg-brand-yellow/80" />
-      <span className="absolute right-24 top-10 h-3 w-8 rotate-12 rounded-full bg-brand-yellow/60" />
+      <span className="absolute -right-4 -top-6 h-28 w-28 rounded-full bg-peach/50" />
+      <span className="absolute bottom-3 right-[28%] h-14 w-14 rounded-full bg-butter/60" />
+      <span className="absolute bottom-6 right-6 h-6 w-10 rounded-md bg-butter" />
+      <span className="absolute bottom-12 right-14 h-5 w-4 rounded-full border border-border bg-surface" />
+      <span className="absolute right-5 top-8 h-12 w-1 rotate-12 rounded-full bg-caramel/20" />
     </div>
   );
 }
 
-function HeroSlide({ slide, imageError }: { slide: Slide; imageError?: boolean }) {
-  const linkExtra = externalLinkProps(slide.href);
-  const showImage = slide.image && !imageError;
-
-  return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-[24px] border border-border bg-hero-gradient shadow-soft",
-        "min-h-[220px] max-h-[260px] md:min-h-[280px] md:max-h-[320px] lg:min-h-[360px] lg:max-h-[420px]"
-      )}
-    >
-      <BakingDecor />
-      {showImage ? (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={slide.image!}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-90"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FFF7CF]/95 via-[#FFF2E7]/75 to-transparent" />
-        </>
-      ) : null}
-      <div className="relative z-10 flex h-full min-h-[220px] flex-col justify-center gap-2 p-4 sm:p-5 md:min-h-[280px] md:flex-row md:items-center md:justify-between md:px-8 lg:min-h-[360px]">
-        <div className="max-w-[62%] md:max-w-[48%]">
-          <p className="text-[11px] font-semibold tracking-wide text-brand-caramel/80">
-            CHIMEIDIY 烘焙生活平台
-          </p>
-          <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-brand-caramel sm:text-[26px] md:text-[36px]">
-            {slide.title}
-          </h2>
-          <p className="mt-2 max-w-[18rem] text-sm leading-snug text-foreground-secondary md:text-base">
-            {slide.subtitle}
-          </p>
-          <div className="mt-4">
-            <Link
-              href={slide.href}
-              {...linkExtra}
-              className="inline-flex h-11 min-h-touch items-center justify-center rounded-2xl bg-brand-primary px-5 text-sm font-bold text-white shadow-soft transition duration-200 hover:bg-primary-hover"
-            >
-              {slide.cta}
-            </Link>
-          </div>
-        </div>
-        <div className="pointer-events-none absolute bottom-2 right-2 flex h-[55%] w-[42%] items-end justify-end md:relative md:h-auto md:w-[40%] md:items-center md:justify-center">
-          <Image
-            src="/branding/chimeidiy-app-icon.png"
-            alt=""
-            width={140}
-            height={140}
-            className="h-[96px] w-[96px] object-contain drop-shadow-md md:h-[140px] md:w-[140px]"
-            priority
-            unoptimized
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** Hero carousel — warm baking scene, swipe / autoplay / pause / keyboard */
+/** 橫向 Banner：手機高 210–240，比例約 1.7–1.9:1，不可超過 280 */
 export function HomeHero({ className }: { className?: string }) {
   const [slides, setSlides] = useState<Slide[]>(DEFAULT_SLIDES);
   const [index, setIndex] = useState(0);
   const [ready, setReady] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const touchX = useRef<number | null>(null);
-  const regionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -175,31 +106,13 @@ export function HomeHero({ className }: { className?: string }) {
     [slides.length]
   );
 
-  useEffect(() => {
-    const el = regionRef.current;
-    if (!el) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        go(-1);
-      }
-      if (e.key === "ArrowRight") {
-        e.preventDefault();
-        go(1);
-      }
-    };
-    el.addEventListener("keydown", onKey);
-    return () => el.removeEventListener("keydown", onKey);
-  }, [go]);
-
-  const current = slides[index] ?? slides[0];
+  const slide = slides[index] ?? slides[0];
+  const linkExtra = externalLinkProps(slide.href);
 
   return (
     <section
-      ref={regionRef}
       aria-label="主視覺"
-      tabIndex={0}
-      className={cn("relative outline-none", className)}
+      className={cn("relative", className)}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={(e) => {
@@ -214,37 +127,70 @@ export function HomeHero({ className }: { className?: string }) {
       }}
     >
       {!ready ? (
-        <div className="home-skeleton min-h-[220px] rounded-[24px] md:min-h-[280px] lg:min-h-[360px]" />
+        <div className="home-skeleton h-[220px] w-full rounded-[20px]" />
       ) : (
         <>
-          <HeroSlide
-            slide={current}
-            imageError={!!imgErrors[current.id]}
-          />
-          {/* preload error tracking via hidden imgs */}
-          {current.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={current.image}
-              alt=""
-              className="hidden"
-              onError={() =>
-                setImgErrors((prev) => ({ ...prev, [current.id]: true }))
-              }
-            />
-          ) : null}
+          <div
+            className={cn(
+              "relative flex h-[220px] w-full overflow-hidden rounded-[20px] border border-border bg-hero-gradient",
+              "max-h-[240px]"
+            )}
+          >
+            <BakingDecor />
+            {slide.image ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={slide.image}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover opacity-85"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FFF7CF]/95 via-[#FFF2E7]/70 to-transparent" />
+              </>
+            ) : null}
+            <div className="relative z-10 flex h-full w-full items-center justify-between gap-2 px-4 py-4">
+              <div className="max-w-[58%] shrink-0">
+                <h2 className="line-clamp-2 text-[22px] font-bold leading-tight text-brand-caramel">
+                  {slide.title}
+                </h2>
+                <p className="mt-1.5 line-clamp-2 text-xs leading-snug text-foreground-secondary">
+                  {slide.subtitle}
+                </p>
+                <Link
+                  href={slide.href}
+                  {...linkExtra}
+                  className="mt-3 inline-flex h-10 items-center rounded-2xl bg-brand-primary px-4 text-sm font-bold text-white transition duration-200 hover:bg-primary-hover"
+                >
+                  {slide.cta}
+                </Link>
+              </div>
+              <div className="flex h-full max-w-[40%] flex-1 items-end justify-end pb-1">
+                <Image
+                  src="/branding/chimeidiy-app-icon.png"
+                  alt=""
+                  width={120}
+                  height={120}
+                  className="h-[112px] w-[112px] object-contain drop-shadow-md"
+                  priority
+                  unoptimized
+                />
+              </div>
+            </div>
+          </div>
           {slides.length > 1 ? (
-            <div className="mt-2.5 flex justify-center gap-1.5">
+            <div className="mt-2 flex justify-center gap-1.5">
               {slides.map((s, i) => (
                 <button
                   key={s.id}
                   type="button"
-                  aria-label={`第 ${i + 1} 則 Banner`}
-                  aria-current={i === index ? "true" : undefined}
+                  aria-label={`第 ${i + 1} 則`}
                   onClick={() => setIndex(i)}
                   className={cn(
-                    "h-1.5 rounded-full transition duration-200",
-                    i === index ? "w-5 bg-brand-primary" : "w-1.5 bg-[#E6D6C7]"
+                    "h-1.5 rounded-full transition",
+                    i === index ? "w-4 bg-brand-primary" : "w-1.5 bg-[#E6D6C7]"
                   )}
                 />
               ))}

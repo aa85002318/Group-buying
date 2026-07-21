@@ -28,10 +28,10 @@ function CartButton() {
   return (
     <Link
       href={APP_ROUTES.cart}
-      className="relative inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:scale-105 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
+      className="relative inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
       aria-label={`購物車${cartCount > 0 ? `，${cartCount} 件商品` : ""}`}
     >
-      <ShoppingCart className="h-5 w-5" aria-hidden />
+      <ShoppingCart className="h-6 w-6" aria-hidden />
       {cartCount > 0 && (
         <span className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand-primary px-1 text-[10px] font-bold leading-none text-white">
           {cartCount > 99 ? "99+" : cartCount}
@@ -45,10 +45,10 @@ function MemberButton() {
   return (
     <Link
       href={APP_ROUTES.member}
-      className="inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:scale-105 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
+      className="inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
       aria-label="我的會員"
     >
-      <User className="h-5 w-5" aria-hidden />
+      <User className="h-6 w-6" aria-hidden />
     </Link>
   );
 }
@@ -57,10 +57,10 @@ function NotifyButton() {
   return (
     <Link
       href={APP_ROUTES.memberNotifications}
-      className="relative inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:scale-105 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
+      className="relative inline-flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-xl text-brand-caramel transition duration-200 hover:bg-surface-yellow hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 active:scale-95"
       aria-label="通知中心"
     >
-      <Bell className="h-5 w-5" aria-hidden />
+      <Bell className="h-6 w-6" aria-hidden />
     </Link>
   );
 }
@@ -106,8 +106,7 @@ export function AppHeader({
       )}
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      <div
-        className="mx-auto flex h-16 w-full max-w-[var(--app-max-width)] items-center gap-1 px-4"
+      <div className="mx-auto flex h-16 w-full max-w-[var(--app-max-width)] items-center gap-1 px-4"
         style={{
           paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
           paddingRight: "max(1rem, env(safe-area-inset-right, 0px))",
@@ -149,9 +148,12 @@ export function AppHeader({
           </>
         )}
       </div>
-      <div className="mx-auto hidden w-full max-w-[1280px] md:block">
-        <ConsumerHubNav />
-      </div>
+      {/* 首頁不顯示桌機第二層選單，避免與示意圖衝突 */}
+      {resolved !== "home" ? (
+        <div className="mx-auto hidden w-full max-w-[1280px] md:block">
+          <ConsumerHubNav />
+        </div>
+      ) : null}
     </header>
   );
 }
