@@ -1,9 +1,20 @@
 -- Consumer Hub 2.0 Batch 8: role helpers + RLS hardening notes
 -- Safe to re-run. Does not create POS tables.
--- Assign content_editor / customer_service via profiles.role (text; no enum migration).
+--
+-- IMPORTANT: profiles.role is enum user_role. New values must be added first.
+-- If SQL Editor runs this as one transaction, functions use role::text so
+-- CREATE FUNCTION does not require the new enum literals in the same txn.
+-- Prefer running the ALTER TYPE statements alone first, then the rest.
 
--- App routes gate content_editor / customer_service via middleware + requireContentAdmin / requireOpsAdmin.
--- Existing policies that call is_admin() remain admin-only (intentional for sensitive writes).
+-- ---------------------------------------------------------------------------
+-- Extend user_role enum (run these first if a previous attempt failed)
+-- ---------------------------------------------------------------------------
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'content_editor';
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'customer_service';
+
+-- App routes gate content_editor / customer_service via middleware +
+-- requireContentAdmin / requireOpsAdmin.
+-- Existing policies that call is_admin() remain admin-only (intentional).
 
 CREATE OR REPLACE FUNCTION public.is_content_editor()
 RETURNS BOOLEAN
@@ -15,7 +26,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles
     WHERE id = auth.uid()
-      AND role IN ('admin', 'content_editor')
+      AND role::text IN ('admin', 'content_editor')
   );
 $$;
 
@@ -29,7 +40,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles
     WHERE id = auth.uid()
-      AND role IN ('admin', 'customer_service', 'store_staff')
+      AND role::text IN ('admin', 'customer_service', 'store_staff')
   );
 $$;
 

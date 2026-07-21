@@ -106,6 +106,33 @@ export default function AdminHomePage() {
                   placeholder="顯示數量"
                 />
               </div>
+              {block.block_key === "hot_search" ? (
+                <div className="mt-3">
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    熱門關鍵字（每行一個；存入 config.keywords）
+                  </label>
+                  <textarea
+                    className="min-h-[88px] w-full rounded-xl border border-border bg-white px-3 py-2 text-sm"
+                    defaultValue={
+                      Array.isArray(block.config?.keywords)
+                        ? (block.config.keywords as Array<string | { label?: string }>)
+                            .map((k) => (typeof k === "string" ? k : k.label ?? ""))
+                            .filter(Boolean)
+                            .join("\n")
+                        : "麵粉\n奶油\n杜拜巧克力\n中秋禮盒\n蛋塔\n鮮奶油\n預拌粉\n可頌\n吐司\n餅乾"
+                    }
+                    onBlur={(e) => {
+                      const keywords = e.target.value
+                        .split("\n")
+                        .map((s) => s.trim().replace(/^#/, ""))
+                        .filter(Boolean);
+                      patch(block.id, {
+                        config: { ...(block.config ?? {}), keywords },
+                      });
+                    }}
+                  />
+                </div>
+              ) : null}
               <p className="mt-2 text-xs text-muted-foreground">
                 狀態：{block.is_visible ? "顯示中" : "已隱藏"} · 排序 {block.sort_order} · 來源{" "}
                 {block.source_mode === "manual" ? "手動" : "自動"}

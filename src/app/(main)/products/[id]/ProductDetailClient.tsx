@@ -11,6 +11,7 @@ import { useCart } from "@/hooks/useCart";
 import { getMockProductById } from "@/lib/mock-data";
 import { RecommendedProducts } from "@/components/products/RecommendedProducts";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
+import { recordBrowse } from "@/lib/home/browse-history";
 import type { Product } from "@/lib/types/database";
 
 export default function ProductDetailClient({ id }: { id: string }) {
@@ -40,14 +41,31 @@ export default function ProductDetailClient({ id }: { id: string }) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ product_id: d.product.id }),
           }).catch(() => {});
+          recordBrowse({
+            type: "product",
+            id: d.product.id,
+            title: d.product.name,
+            imageUrl: d.product.image_url,
+            href: `/products/${d.product.id}`,
+            price: d.product.price,
+          });
         } else {
           setNotFound(true);
         }
       })
       .catch(() => {
         const fallback = getMockProductById(id);
-        if (fallback) setProduct(fallback);
-        else setNotFound(true);
+        if (fallback) {
+          setProduct(fallback);
+          recordBrowse({
+            type: "product",
+            id: fallback.id,
+            title: fallback.name,
+            imageUrl: fallback.image_url,
+            href: `/products/${fallback.id}`,
+            price: fallback.price,
+          });
+        } else setNotFound(true);
       })
       .finally(() => setLoading(false));
 

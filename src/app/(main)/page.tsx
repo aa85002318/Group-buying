@@ -8,6 +8,9 @@ import { HomeHero } from "@/components/home/HomeHero";
 import { PrimaryQuickActions } from "@/components/home/PrimaryQuickActions";
 import { SecondaryServiceScroller } from "@/components/home/SecondaryServiceScroller";
 import { PopularCategories } from "@/components/home/PopularCategories";
+import { HotSearchChips } from "@/components/home/HotSearchChips";
+import { RecentBrowseSection } from "@/components/home/RecentBrowseSection";
+import { QuickReorderSection } from "@/components/home/QuickReorderSection";
 import {
   NewProductsSection,
   PopularProductsSection,
@@ -19,9 +22,12 @@ import { AIEntryCard } from "@/components/consumer/AIEntryCard";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { getNewThisWeekProducts } from "@/lib/home";
 import { resolveHomeBlock } from "@/lib/home/blocks";
+import { resolveHotSearchKeywords } from "@/lib/home/hot-search";
+import { readBrowseHistory, type BrowseHistoryItem } from "@/lib/home/browse-history";
+import { buildReorderCandidates } from "@/lib/home/reorder";
 import { mockProducts } from "@/lib/mock-data";
 import type { RecipeSummary, NewsItem } from "@/lib/consumer-hub";
-import type { HomepageBlock, Product, Video } from "@/lib/types/database";
+import type { HomepageBlock, Order, Product, Video } from "@/lib/types/database";
 import { formatCurrency } from "@/lib/utils";
 import { APP_ROUTES } from "@/lib/site-links";
 import { isSupabaseConfigured } from "@/lib/config";
@@ -45,14 +51,20 @@ type LoadState<T> = {
 
 function useIndependentLoad<T>(
   initial: T,
-  loader: () => Promise<T>
+  loader: () => Promise<T>,
+  enabled = true
 ): LoadState<T> & { reload: () => void } {
   const [data, setData] = useState<T>(initial);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      setError(null);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -70,7 +82,7 @@ function useIndependentLoad<T>(
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- tick drives reload; loader identity ignored
-  }, [tick]);
+  }, [tick, enabled]);
 
   return {
     data,
@@ -125,6 +137,8 @@ export default function HomePage() {
 
   const [authState, setAuthState] = useState<"loading" | "guest" | "member">("loading");
   const [unread, setUnread] = useState(0);
+  const [browseItems, setBrowseItems] = useState<BrowseHistoryItem[]>([]);
+  const [browseTick, setBrowseTick] = useState(0);
 
   const loadMemberBits = useCallback(() => {
     if (!isSupabaseConfigured()) {
@@ -156,7 +170,25 @@ export default function HomePage() {
     loadMemberBits();
   }, [loadMemberBits]);
 
+  useEffect(() => {
+    setBrowseItems(readBrowseHistory());
+  }, [browseTick]);
+
+  const isMember = authState === "member";
+
+  const ordersLoad = useIndependentLoad<Order[]>(
+    [],
+    async () => {
+      const r = await fetch("/api/orders");
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? "訂單載入失敗");
+      return d.orders ?? [];
+    },
+    isMember
+  );
+
   const blocks = cmsLoad.data;
+  const hotSearchBlock = resolveHomeBlock(blocks, "hot_search");
   const newBlock = resolveHomeBlock(blocks, "new_products");
   const hotBlock = resolveHomeBlock(blocks, "hot_products");
   const recipesBlock = resolveHomeBlock(blocks, "recipes");
@@ -168,6 +200,13 @@ export default function HomePage() {
   const storeBlock = resolveHomeBlock(blocks, "store_info");
   const primaryBlock = resolveHomeBlock(blocks, "primary_services");
   const heroBlock = resolveHomeBlock(blocks, "hero_banner");
+  const reorderBlock = resolveHomeBlock(blocks, "quick_reorder");
+  const recentBlock = resolveHomeBlock(blocks, "recent_browse");
+
+  const hotKeywords = useMemo(
+    () => resolveHotSearchKeywords(hotSearchBlock.config),
+    [hotSearchBlock.config]
+  );
 
   const newest = useMemo(
     () => getNewThisWeekProducts(productsLoad.data).slice(0, newBlock.displayCount),
@@ -197,12 +236,36 @@ export default function HomePage() {
     [newsLoad.data, newsBlock.displayCount]
   );
 
+  const reorderCandidates = useMemo(() => {
+    const ranked = buildReorderCandidates(ordersLoad.data, reorderBlock.displayCount);
+    return ranked.map((c) => {
+      const p = productsLoad.data.find((x) => x.id === c.productId);
+      return {
+        ...c,
+        imageUrl: c.imageUrl ?? p?.image_url ?? null,
+        unit: c.unit ?? p?.unit ?? p?.subtitle ?? null,
+        price: c.price || Number(p?.price ?? 0),
+        name: c.name || p?.name || "商品",
+      };
+    });
+  }, [ordersLoad.data, productsLoad.data, reorderBlock.displayCount]);
+
+  const suggestProducts = useMemo(() => {
+    const hot = productsLoad.data.slice(0, 4);
+    const neu = getNewThisWeekProducts(productsLoad.data).slice(0, 4);
+    const map = new Map<string, Product>();
+    [...hot, ...neu].forEach((p) => map.set(p.id, p));
+    return Array.from(map.values()).slice(0, 6);
+  }, [productsLoad.data]);
+
+  const reorderMode = reorderCandidates.length > 0 ? "reorder" : "suggest";
+
   return (
     <div className="mx-auto max-w-[1280px] space-y-6 overflow-x-hidden pb-[calc(var(--bottom-nav-height)+1.5rem)] pt-3 md:space-y-8 md:pb-6 md:pt-4">
       <div className="space-y-4 md:space-y-5">
         <div className="flex items-start justify-between gap-3">
           <HomeWelcome />
-          {authState === "member" && unread > 0 ? (
+          {isMember && unread > 0 ? (
             <Link
               href={APP_ROUTES.memberNotifications}
               className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-white shadow-card"
@@ -211,8 +274,31 @@ export default function HomePage() {
             </Link>
           ) : null}
         </div>
+
         <HomeSearchBar />
+
+        {hotSearchBlock.visible ? (
+          <HotSearchChips
+            title={hotSearchBlock.title}
+            keywords={hotKeywords}
+            loading={cmsLoad.loading}
+            categoryFallback={
+              hotKeywords.length === 0
+                ? [
+                    { id: "flour", name: "麵粉與預拌粉", href: "/products?search=麵粉" },
+                    { id: "choco", name: "巧克力", href: "/products?search=巧克力" },
+                    { id: "dairy", name: "乳製品", href: "/products?search=奶油" },
+                    { id: "tools", name: "烘焙器具", href: "/products?search=模" },
+                    { id: "pack", name: "包裝材料", href: "/products?search=包裝" },
+                    { id: "frozen", name: "冷凍冷藏", href: "/products?search=冷凍" },
+                  ]
+                : []
+            }
+          />
+        ) : null}
+
         {heroBlock.visible ? <HomeHero /> : null}
+
         {primaryBlock.visible ? (
           <>
             <PrimaryQuickActions />
@@ -222,6 +308,35 @@ export default function HomePage() {
       </div>
 
       <PopularCategories />
+
+      {isMember && reorderBlock.visible ? (
+        <QuickReorderSection
+          mode={reorderMode}
+          candidates={reorderCandidates}
+          suggestProducts={suggestProducts}
+          loading={ordersLoad.loading || productsLoad.loading}
+          error={ordersLoad.error}
+          onRetry={ordersLoad.reload}
+        />
+      ) : null}
+
+      {hotBlock.visible ? (
+        <HomeSectionFrame
+          loading={productsLoad.loading || cmsLoad.loading}
+          error={productsLoad.error}
+          onRetry={productsLoad.reload}
+        >
+          <PopularProductsSection products={popular} href="/products" title={hotBlock.title} />
+        </HomeSectionFrame>
+      ) : null}
+
+      {isMember && recentBlock.visible ? (
+        <RecentBrowseSection
+          items={browseItems}
+          limit={recentBlock.displayCount}
+          onRetry={() => setBrowseTick((t) => t + 1)}
+        />
+      ) : null}
 
       {newBlock.visible ? (
         <HomeSectionFrame
@@ -235,71 +350,6 @@ export default function HomePage() {
             title={newBlock.title}
           />
         </HomeSectionFrame>
-      ) : null}
-
-      {hotBlock.visible ? (
-        <HomeSectionFrame
-          loading={productsLoad.loading || cmsLoad.loading}
-          error={productsLoad.error}
-          onRetry={productsLoad.reload}
-        >
-          <PopularProductsSection products={popular} href="/products" title={hotBlock.title} />
-        </HomeSectionFrame>
-      ) : null}
-
-      {recipesBlock.visible ? (
-        <section className="space-y-3">
-          <SectionHeader title={recipesBlock.title} href="/recipes" />
-          <HomeSectionFrame
-            loading={recipesLoad.loading || cmsLoad.loading}
-            error={recipesLoad.error}
-            onRetry={recipesLoad.reload}
-            empty={!recipesLoad.loading && !recipesLoad.error && recipes.length === 0}
-            emptyText="尚無食譜，稍後再來看看"
-          >
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-              {recipes.map((r) => (
-                <RecipeCard key={r.id} recipe={r} />
-              ))}
-            </div>
-          </HomeSectionFrame>
-        </section>
-      ) : null}
-
-      {videosBlock.visible ? (
-        <section className="space-y-3">
-          <SectionHeader title={videosBlock.title} href="/videos" />
-          <HomeSectionFrame
-            loading={videosLoad.loading || cmsLoad.loading}
-            error={videosLoad.error}
-            onRetry={videosLoad.reload}
-            empty={!videosLoad.loading && !videosLoad.error && videos.length === 0}
-            emptyText="尚無影音"
-          >
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {videos.map((v) => (
-                <li key={v.id}>
-                  <Link
-                    href={`/videos/${v.slug || v.id}`}
-                    className="card-lift block overflow-hidden border-border-soft bg-surface"
-                  >
-                    <div className="aspect-video bg-surface-soft">
-                      {v.thumbnail_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={v.thumbnail_url}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : null}
-                    </div>
-                    <p className="line-clamp-2 p-3 text-sm font-bold text-foreground">{v.title}</p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </HomeSectionFrame>
-        </section>
       ) : null}
 
       {groupBuyBlock.visible ? (
@@ -324,7 +374,7 @@ export default function HomePage() {
                     >
                       <span className="min-w-0">
                         <span className="block truncate font-semibold text-foreground">{e.title}</span>
-                        <span className="text-xs text-foreground-secondary">團購專區</span>
+                        <span className="text-xs text-foreground-secondary">限時團購</span>
                       </span>
                       {price != null && (
                         <span className="shrink-0 font-semibold text-groupBuy">
@@ -340,13 +390,72 @@ export default function HomePage() {
         </section>
       ) : null}
 
+      {(recipesBlock.visible || videosBlock.visible) && (
+        <section className="space-y-6">
+          {recipesBlock.visible ? (
+            <div className="space-y-3">
+              <SectionHeader title={recipesBlock.title} href="/recipes" />
+              <HomeSectionFrame
+                loading={recipesLoad.loading || cmsLoad.loading}
+                error={recipesLoad.error}
+                onRetry={recipesLoad.reload}
+                empty={!recipesLoad.loading && !recipesLoad.error && recipes.length === 0}
+                emptyText="尚無食譜，稍後再來看看"
+              >
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+                  {recipes.map((r) => (
+                    <RecipeCard key={r.id} recipe={r} />
+                  ))}
+                </div>
+              </HomeSectionFrame>
+            </div>
+          ) : null}
+
+          {videosBlock.visible ? (
+            <div className="space-y-3">
+              <SectionHeader title={videosBlock.title} href="/videos" />
+              <HomeSectionFrame
+                loading={videosLoad.loading || cmsLoad.loading}
+                error={videosLoad.error}
+                onRetry={videosLoad.reload}
+                empty={!videosLoad.loading && !videosLoad.error && videos.length === 0}
+                emptyText="尚無影音"
+              >
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {videos.map((v) => (
+                    <li key={v.id}>
+                      <Link
+                        href={`/videos/${v.slug || v.id}`}
+                        className="card-lift block overflow-hidden border-border-soft bg-surface"
+                      >
+                        <div className="aspect-video bg-surface-soft">
+                          {v.thumbnail_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={v.thumbnail_url}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : null}
+                        </div>
+                        <p className="line-clamp-2 p-3 text-sm font-bold text-foreground">{v.title}</p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </HomeSectionFrame>
+            </div>
+          ) : null}
+        </section>
+      )}
+
       {benefitsBlock.visible ? (
         <section className="space-y-3">
           <SectionHeader
             title={benefitsBlock.title}
             href={APP_ROUTES.memberBenefits ?? "/member/benefits"}
           />
-          {authState === "member" ? (
+          {isMember ? (
             <div className="rounded-[18px] border border-border-soft bg-butter-soft/70 p-4 text-sm text-foreground-secondary">
               前往{" "}
               <Link

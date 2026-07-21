@@ -6,6 +6,7 @@ import { IngredientList } from "@/components/recipes/IngredientList";
 import { RecipeStepList } from "@/components/recipes/RecipeStepList";
 import { VideoEmbed } from "@/components/videos/VideoEmbed";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
+import { recordBrowse } from "@/lib/home/browse-history";
 import type { Recipe } from "@/lib/types/database";
 import { formatDate } from "@/lib/utils";
 
@@ -32,6 +33,15 @@ export function RecipeDetailClient({ slug }: { slug: string }) {
         if (!r.ok) throw new Error(d.error ?? "載入失敗");
         setRecipe(d.recipe);
         setRelated(d.related_recipes ?? []);
+        if (d.recipe) {
+          recordBrowse({
+            type: "recipe",
+            id: d.recipe.id,
+            title: d.recipe.title,
+            imageUrl: d.recipe.cover_image,
+            href: `/recipes/${d.recipe.slug || d.recipe.id}`,
+          });
+        }
       })
       .catch((e) => setError(e instanceof Error ? e.message : "載入失敗"))
       .finally(() => setLoading(false));

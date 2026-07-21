@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/products/ProductCard";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { getMockGroupBuyEventsWithProducts } from "@/lib/mock-data";
+import { recordBrowse } from "@/lib/home/browse-history";
 import type { GroupBuyEvent, Product } from "@/lib/types/database";
 
 type GroupBuyEventDetail = GroupBuyEvent & {
@@ -23,10 +24,32 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
   useEffect(() => {
     fetch(`/api/group-buy-events/${params.id}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => setEvent(d.event))
+      .then((d) => {
+        setEvent(d.event);
+        if (d.event) {
+          recordBrowse({
+            type: "group_buy",
+            id: d.event.id,
+            title: d.event.title,
+            imageUrl: d.event.banner_url,
+            href: `/group-buy/${d.event.id}`,
+            endAt: d.event.end_at,
+          });
+        }
+      })
       .catch(() => {
         const fallback = getMockGroupBuyEventsWithProducts().find((e) => e.id === params.id);
         setEvent(fallback ?? null);
+        if (fallback) {
+          recordBrowse({
+            type: "group_buy",
+            id: fallback.id,
+            title: fallback.title,
+            imageUrl: fallback.banner_url,
+            href: `/group-buy/${fallback.id}`,
+            endAt: fallback.end_at,
+          });
+        }
       })
       .finally(() => setLoading(false));
   }, [params.id]);

@@ -11,7 +11,10 @@ export type HomeBlockKey =
   | "news"
   | "member_benefits"
   | "ai_tools"
-  | "store_info";
+  | "store_info"
+  | "hot_search"
+  | "quick_reorder"
+  | "recent_browse";
 
 const DEFAULTS: Record<
   HomeBlockKey,
@@ -28,12 +31,21 @@ const DEFAULTS: Record<
   member_benefits: { title: "會員福利", displayCount: 1, visible: true },
   ai_tools: { title: "AI 烘焙助手", displayCount: 2, visible: true },
   store_info: { title: "門市服務", displayCount: 1, visible: true },
+  hot_search: { title: "熱門搜尋", displayCount: 10, visible: true },
+  quick_reorder: { title: "再次購買", displayCount: 6, visible: true },
+  recent_browse: { title: "最近瀏覽", displayCount: 5, visible: true },
 };
 
 export function resolveHomeBlock(
   blocks: HomepageBlock[] | null | undefined,
   key: HomeBlockKey
-): { visible: boolean; title: string; subtitle: string | null; displayCount: number } {
+): {
+  visible: boolean;
+  title: string;
+  subtitle: string | null;
+  displayCount: number;
+  config: Record<string, unknown> | null;
+} {
   const fallback = DEFAULTS[key];
   const found = blocks?.find((b) => b.block_key === key);
   if (!found) {
@@ -42,6 +54,7 @@ export function resolveHomeBlock(
       title: fallback.title,
       subtitle: null,
       displayCount: fallback.displayCount,
+      config: null,
     };
   }
   return {
@@ -49,5 +62,6 @@ export function resolveHomeBlock(
     title: found.title || fallback.title,
     subtitle: found.subtitle ?? null,
     displayCount: Math.max(1, Number(found.display_count ?? fallback.displayCount) || fallback.displayCount),
+    config: (found.config as Record<string, unknown> | null) ?? null,
   };
 }
