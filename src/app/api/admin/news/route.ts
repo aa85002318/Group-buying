@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { MOCK_NEWS_CATEGORIES, MOCK_NEWS_POSTS } from "@/lib/mock/news";
@@ -8,7 +8,7 @@ import { isSafeLinkUrl, sanitizeCmsHtml } from "@/lib/cms/safeHtml";
 import { sanitizeAuditPayload } from "@/lib/services/auditService";
 
 export async function GET() {
-  const { error } = await requireAdmin();
+  const { error } = await requireContentAdmin();
   if (error) return error;
 
   if (!isSupabaseConfigured()) {
@@ -32,7 +32,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error, auth } = await requireAdmin();
+  const { error, auth } = await requireContentAdmin();
   if (error) return error;
 
   const body = await request.json();

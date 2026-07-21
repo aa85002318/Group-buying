@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getMockNewsBySlug, MOCK_NEWS_POSTS } from "@/lib/mock/news";
@@ -10,7 +10,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error } = await requireAdmin();
+  const { error } = await requireContentAdmin();
   if (error) return error;
   const { id } = await params;
 
@@ -34,7 +34,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, auth } = await requireAdmin();
+  const { error, auth } = await requireContentAdmin();
   if (error) return error;
   const { id } = await params;
   const body = await request.json();
@@ -111,7 +111,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, auth } = await requireAdmin();
+  const { error, auth } = await requireContentAdmin();
   if (error) return error;
   const { id } = await params;
 

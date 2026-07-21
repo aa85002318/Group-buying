@@ -54,11 +54,8 @@ export async function GET(request: Request) {
 
   const [bannersRes, blocks, announcements] = await Promise.all([
     admin.from("cms_banners").select("*").eq("is_active", true).order("sort_order", { ascending: true }),
-    supabase
-      .from("homepage_blocks")
-      .select("*")
-      .eq("is_visible", true)
-      .order("sort_order", { ascending: true }),
+    // Return all blocks (incl. hidden) so the home page can honor is_visible / display_count
+    supabase.from("homepage_blocks").select("*").order("sort_order", { ascending: true }),
     supabase
       .from("store_announcements")
       .select("*")

@@ -19,11 +19,21 @@ type DashboardData = {
     todayGrossProfit: number;
     todayAvgOrder: number;
     todayReturns: number;
+    todayMallOrders?: number;
+    todayGroupBuyOrders?: number;
     yesterdaySales: number;
     weekSales: number;
     monthSales: number;
+    pendingPayment?: number;
+    paymentPendingConfirm?: number;
+    readyPickup?: number;
     lowStockProducts: number;
     closingSoonProducts: Array<{ id: string; name: string }>;
+    publishedRecipes?: number;
+    publishedVideos?: number;
+    publishedNews?: number;
+    scheduledNotifications?: number;
+    activeBenefits?: number;
   };
   charts: {
     revenueTrend: Array<{ label: string; value: number }>;
@@ -46,12 +56,18 @@ export default function AdminDashboardPage() {
   const [period, setPeriod] = useState<Period>("today");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch("/api/admin/dashboard")
-      .then((r) => r.json())
-      .then((d) => setData(d))
-      .catch(() => {})
+      .then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error ?? "載入失敗");
+        setData(d);
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : "載入失敗"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -61,11 +77,16 @@ export default function AdminDashboardPage() {
   const periodSales = (() => {
     if (!stats) return 0;
     switch (period) {
-      case "today": return stats.todaySales;
-      case "yesterday": return stats.yesterdaySales;
-      case "week": return stats.weekSales;
-      case "month": return stats.monthSales;
-      default: return stats.monthSales;
+      case "today":
+        return stats.todaySales;
+      case "yesterday":
+        return stats.yesterdaySales;
+      case "week":
+        return stats.weekSales;
+      case "month":
+        return stats.monthSales;
+      default:
+        return stats.monthSales;
     }
   })();
 
@@ -73,7 +94,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="儀表板"
-        description="App 訂單與營運總覽（不含門市 POS 營業額或現場交易）"
+        description="App 訂單與內容營運總覽（不含門市 POS 營業額或現場交易）"
       />
 
       <div className="flex flex-wrap gap-2">
@@ -95,12 +116,28 @@ export default function AdminDashboardPage() {
 
       {loading ? (
         <p className="text-foreground-secondary">載入中…</p>
+      ) : error ? (
+        <div className="rounded-[20px] border border-border bg-white p-5 text-sm text-red-600">
+          {error}
+          <button
+            type="button"
+            className="ml-3 font-semibold text-primary underline"
+            onClick={() => window.location.reload()}
+          >
+            重試
+          </button>
+        </div>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {[
               { label: "App 訂單營業額", value: formatCurrency(periodSales) },
               { label: "今日 App 訂單數", value: stats?.todayOrders ?? 0 },
+              { label: "今日商城訂單", value: stats?.todayMallOrders ?? 0 },
+              { label: "今日團購訂單", value: stats?.todayGroupBuyOrders ?? 0 },
+              { label: "待處理付款", value: stats?.pendingPayment ?? 0, href: "/admin/orders" },
+              { label: "待確認付款", value: stats?.paymentPendingConfirm ?? 0, href: "/admin/payments" },
+              { label: "待取貨", value: stats?.readyPickup ?? 0, href: "/admin/pickup" },
               { label: "今日 App 毛利", value: formatCurrency(stats?.todayGrossProfit ?? 0) },
               { label: "今日 App 客單價", value: formatCurrency(stats?.todayAvgOrder ?? 0) },
               { label: "今日退貨（App）", value: stats?.todayReturns ?? 0 },
@@ -111,14 +148,46 @@ export default function AdminDashboardPage() {
                 className="rounded-[20px] border border-border bg-white p-5 shadow-card"
               >
                 <p className="text-sm text-foreground-secondary">{item.label}</p>
-                <p className="mt-1 text-2xl font-black text-foreground">{item.value}</p>
+                {"href" in item && item.href ? (
+                  <Link href={item.href} className="mt-1 block text-2xl font-black text-primary hover:underline">
+                    {item.value}
+                  </Link>
+                ) : (
+                  <p className="mt-1 text-2xl font-black text-foreground">{item.value}</p>
+                )}
               </div>
             ))}
           </div>
 
+          <section className="space-y-3">
+            <h2 className="font-bold text-foreground">內容與會員營運</h2>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              {[
+                { label: "已發布食譜", value: stats?.publishedRecipes ?? 0, href: "/admin/recipes" },
+                { label: "已發布影音", value: stats?.publishedVideos ?? 0, href: "/admin/videos" },
+                { label: "已發布最新資訊", value: stats?.publishedNews ?? 0, href: "/admin/news" },
+                {
+                  label: "未發送排程通知",
+                  value: stats?.scheduledNotifications ?? 0,
+                  href: "/admin/notifications",
+                },
+                { label: "進行中福利", value: stats?.activeBenefits ?? 0, href: "/admin/benefits" },
+              ].map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="rounded-[20px] border border-border bg-white p-5 shadow-card transition hover:border-primary/40"
+                >
+                  <p className="text-sm text-foreground-secondary">{item.label}</p>
+                  <p className="mt-1 text-2xl font-black text-foreground">{item.value}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+
           <div className="grid gap-6 lg:grid-cols-2">
             <section className="rounded-[20px] border border-border bg-white p-5 shadow-card">
-              <h2 className="mb-4 font-bold text-foreground">營業額趨勢</h2>
+              <h2 className="mb-4 font-bold text-foreground">App 營業額趨勢</h2>
               <AdminLineChart data={charts?.revenueTrend ?? []} />
             </section>
             <section className="rounded-[20px] border border-border bg-white p-5 shadow-card">
@@ -152,7 +221,10 @@ export default function AdminDashboardPage() {
                 <ul className="space-y-2">
                   {stats?.closingSoonProducts.map((p) => (
                     <li key={p.id}>
-                      <Link href={`/admin/products/${p.id}/edit`} className="text-sm font-semibold text-primary hover:underline">
+                      <Link
+                        href={`/admin/products/${p.id}/edit`}
+                        className="text-sm font-semibold text-primary hover:underline"
+                      >
                         {p.name}
                       </Link>
                     </li>
@@ -165,10 +237,24 @@ export default function AdminDashboardPage() {
           <div className="rounded-[20px] border border-border bg-white p-5">
             <h2 className="mb-3 font-bold text-foreground">快速操作</h2>
             <div className="flex flex-wrap gap-3 text-sm">
-              <Link href="/admin/products/new" className="font-semibold text-primary hover:underline">→ 新增商品</Link>
-              <Link href="/admin/products/import" className="font-semibold text-primary hover:underline">→ 批次匯入</Link>
-              <Link href="/admin/inventory" className="font-semibold text-primary hover:underline">→ 庫存報表</Link>
-              <Link href="/admin/reports" className="font-semibold text-primary hover:underline">→ 銷售報表</Link>
+              <Link href="/admin/orders" className="font-semibold text-primary hover:underline">
+                → App 訂單
+              </Link>
+              <Link href="/admin/recipes" className="font-semibold text-primary hover:underline">
+                → 食譜
+              </Link>
+              <Link href="/admin/notifications" className="font-semibold text-primary hover:underline">
+                → 通知管理
+              </Link>
+              <Link href="/admin/home" className="font-semibold text-primary hover:underline">
+                → 首頁管理
+              </Link>
+              <Link href="/admin/products/new" className="font-semibold text-primary hover:underline">
+                → 新增商品
+              </Link>
+              <Link href="/admin/inventory" className="font-semibold text-primary hover:underline">
+                → 庫存報表
+              </Link>
             </div>
           </div>
         </>

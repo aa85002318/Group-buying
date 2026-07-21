@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockArticles } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error } = await requireAdmin();
+  const { error } = await requireContentAdmin();
   if (error) return error;
 
   const { id } = await params;
@@ -28,7 +28,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error: authError, auth } = await requireAdmin();
+  const { error: authError, auth } = await requireContentAdmin();
   if (authError) return authError;
 
   const { id } = await params;
@@ -56,7 +56,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error: authError, auth } = await requireAdmin();
+  const { error: authError, auth } = await requireContentAdmin();
   if (authError) return authError;
 
   const { id } = await params;

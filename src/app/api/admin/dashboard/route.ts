@@ -52,7 +52,7 @@ async function aggregateOrders(
 ) {
   let query = admin
     .from("orders")
-    .select("total_amount, status, created_at")
+    .select("total_amount, status, created_at, channel, group_buy_event_id")
     .gte("created_at", from);
 
   if (to) query = query.lt("created_at", to);
@@ -62,12 +62,16 @@ async function aggregateOrders(
   const paid = orders.filter((o) =>
     ["payment_confirmed", "preparing", "ready_for_pickup", "completed"].includes(o.status)
   );
+  const isGroupBuy = (o: { channel?: string | null; group_buy_event_id?: string | null }) =>
+    o.channel === "group_buy" || Boolean(o.group_buy_event_id);
 
   return {
     orderCount: orders.length,
     revenue: paid.reduce((s, o) => s + Number(o.total_amount), 0),
     avgOrderValue: paid.length ? paid.reduce((s, o) => s + Number(o.total_amount), 0) / paid.length : 0,
     returns: orders.filter((o) => o.status === "refunded").length,
+    mallOrders: orders.filter((o) => !isGroupBuy(o)).length,
+    groupBuyOrders: orders.filter((o) => isGroupBuy(o)).length,
   };
 }
 
@@ -103,6 +107,8 @@ export async function GET() {
           ? todayOrders.reduce((s, o) => s + o.total_amount, 0) / todayOrders.length
           : 0,
         todayReturns: 0,
+        todayMallOrders: todayOrders.filter((o) => !o.group_buy_event_id).length,
+        todayGroupBuyOrders: todayOrders.filter((o) => Boolean(o.group_buy_event_id)).length,
         yesterdaySales: 0,
         weekSales: orders.filter((o) => o.created_at >= weekStart).reduce((s, o) => s + o.total_amount, 0),
         monthSales: orders.filter((o) => o.created_at >= monthStart).reduce((s, o) => s + o.total_amount, 0),
@@ -112,6 +118,11 @@ export async function GET() {
         newMembers: 1,
         lowStockProducts: mockProducts.filter((p) => p.stock <= 5).length,
         closingSoonProducts: mockProducts.filter((p) => p.is_group_buy).slice(0, 5),
+        publishedRecipes: 2,
+        publishedVideos: mockVideos.length,
+        publishedNews: 1,
+        scheduledNotifications: 0,
+        activeBenefits: 1,
       },
       charts: {
         revenueTrend,
@@ -160,6 +171,11 @@ export async function GET() {
     cityRes,
     videoViewsRes,
     livestreamViewsRes,
+    publishedRecipesRes,
+    publishedVideosRes,
+    publishedNewsRes,
+    scheduledNotificationsRes,
+    activeBenefitsRes,
   ] = await Promise.all([
     aggregateOrders(admin, today),
     aggregateOrders(admin, yesterday, yesterdayEnd),
@@ -178,6 +194,14 @@ export async function GET() {
     admin.from("customer_statistics").select("city"),
     admin.from("videos").select("view_count"),
     admin.from("livestreams").select("view_count"),
+    admin.from("recipes").select("id", { count: "exact", head: true }).eq("status", "published"),
+    admin.from("videos").select("id", { count: "exact", head: true }).eq("status", "published"),
+    admin.from("news_posts").select("id", { count: "exact", head: true }).eq("status", "published"),
+    admin
+      .from("notification_campaigns")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "scheduled"),
+    admin.from("member_benefits").select("id", { count: "exact", head: true }).eq("status", "active"),
   ]);
 
   const trendMap = new Map<string, number>();
@@ -230,6 +254,8 @@ export async function GET() {
       todayGrossProfit: todayAgg.revenue * 0.3,
       todayAvgOrder: todayAgg.avgOrderValue,
       todayReturns: todayAgg.returns,
+      todayMallOrders: todayAgg.mallOrders,
+      todayGroupBuyOrders: todayAgg.groupBuyOrders,
       yesterdaySales: yesterdayAgg.revenue,
       weekSales: weekAgg.revenue,
       monthSales: monthAgg.revenue,
@@ -239,6 +265,11 @@ export async function GET() {
       newMembers: newMembersRes.count ?? 0,
       lowStockProducts: lowStockRes.count ?? 0,
       closingSoonProducts: closingSoonRes.data ?? [],
+      publishedRecipes: publishedRecipesRes.count ?? 0,
+      publishedVideos: publishedVideosRes.count ?? 0,
+      publishedNews: publishedNewsRes.count ?? 0,
+      scheduledNotifications: scheduledNotificationsRes.count ?? 0,
+      activeBenefits: activeBenefitsRes.count ?? 0,
     },
     charts: {
       revenueTrend: Array.from(trendMap.entries()).map(([label, value]) => ({ label, value })),

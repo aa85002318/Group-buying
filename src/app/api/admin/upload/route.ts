@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -8,7 +8,12 @@ const ALLOWED_BUCKETS = ["product-images"] as const;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 export async function POST(request: Request) {
-  const { error: authError } = await requireAdmin();
+  const { error: authError } = await requireRole([
+    "admin",
+    "content_editor",
+    "customer_service",
+    "store_staff",
+  ]);
   if (authError) return authError;
 
   if (!isSupabaseConfigured()) {

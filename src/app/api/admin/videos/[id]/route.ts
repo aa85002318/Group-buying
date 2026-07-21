@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, auth } = await requireAdmin();
+  const { error, auth } = await requireContentAdmin();
   if (error) return error;
 
   const { id } = await params;
@@ -29,7 +29,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, auth } = await requireAdmin();
+  const { error, auth } = await requireContentAdmin();
   if (error) return error;
 
   const { id } = await params;

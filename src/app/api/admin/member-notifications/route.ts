@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireOpsAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createMemberNotification } from "@/lib/services/memberNotificationService";
 
 /** Admin broadcast in-app notifications (not push) */
 export async function POST(request: Request) {
-  const { error, auth } = await requireAdmin();
+  const { error, auth } = await requireOpsAdmin();
   if (error) return error;
 
   const body = await request.json();

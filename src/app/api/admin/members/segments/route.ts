@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireOpsAdmin } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockProfile } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -17,7 +17,7 @@ function calcAgeGroup(birthday: string | null) {
 const GENDER_LABELS: Record<string, string> = { male: "男性", female: "女性", unknown: "未知" };
 
 export async function GET(request: Request) {
-  const { error } = await requireAdmin();
+  const { error } = await requireOpsAdmin();
   if (error) return error;
 
   const { searchParams } = new URL(request.url);

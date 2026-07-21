@@ -4,7 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { mockProfile, mockAdminProfile, MOCK_USER_ID } from "@/lib/mock-data";
 
-export type UserRole = "member" | "admin" | "store_staff" | "group_leader" | "promoter" | "livestream_host";
+export type UserRole =
+  | "member"
+  | "admin"
+  | "store_staff"
+  | "content_editor"
+  | "customer_service"
+  | "group_leader"
+  | "promoter"
+  | "livestream_host";
 
 function getMockAuth() {
   return {
@@ -86,11 +94,27 @@ export async function requireAdmin() {
   return result;
 }
 
+/** Admin or content editor — recipes / news / banners / FAQ / home CMS */
+export async function requireContentAdmin() {
+  if (!isSupabaseConfigured()) {
+    return { error: null, auth: getMockAdminAuth() };
+  }
+  return requireRole(["admin", "content_editor"]);
+}
+
+/** Admin, customer service, or store staff — App orders / members view */
+export async function requireOpsAdmin() {
+  if (!isSupabaseConfigured()) {
+    return { error: null, auth: getMockAdminAuth() };
+  }
+  return requireRole(["admin", "customer_service", "store_staff"]);
+}
+
 export async function requireStaffOrAdmin() {
   if (!isSupabaseConfigured()) {
     return { error: null, auth: getMockAdminAuth() };
   }
-  return requireRole(["admin", "store_staff"]);
+  return requireRole(["admin", "store_staff", "customer_service"]);
 }
 
 export async function requireRole(roles: UserRole | UserRole[]) {

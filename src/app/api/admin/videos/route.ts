@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockVideos } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
-  const { error } = await requireAdmin();
+  const { error } = await requireContentAdmin();
   if (error) return error;
 
   if (!isSupabaseConfigured()) {
@@ -23,7 +23,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error, auth } = await requireAdmin();
+  const { error, auth } = await requireContentAdmin();
   if (error) return error;
 
   const body = await request.json();

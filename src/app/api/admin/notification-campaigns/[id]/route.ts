@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireOpsAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSafeLinkUrl, stripHtmlToText } from "@/lib/cms/safeHtml";
@@ -10,7 +10,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error } = await requireAdmin();
+  const { error } = await requireOpsAdmin();
   if (error) return error;
   const { id } = await params;
   if (!isSupabaseConfigured()) return NextResponse.json({ campaign: null });
@@ -30,7 +30,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error, auth } = await requireAdmin();
+  const { error, auth } = await requireOpsAdmin();
   if (error) return error;
   const { id } = await params;
   const body = await request.json();

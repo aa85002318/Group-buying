@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireOpsAdmin } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockAdminProfile, mockOrders, mockOrderItems, mockProfile } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,7 +15,7 @@ function calcAgeGroup(birthday: string | null) {
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error } = await requireAdmin();
+  const { error } = await requireOpsAdmin();
   if (error) return error;
 
   const { id } = await params;

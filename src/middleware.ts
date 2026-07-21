@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { isSupabaseConfigured } from "@/lib/config";
+import {
+  ADMIN_ROLES,
+  isContentEditorAllowedPath,
+  isCustomerServiceAllowedPath,
+  isStoreStaffAllowedPath,
+} from "@/lib/admin/permissions";
 
 export async function middleware(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -84,26 +90,20 @@ export async function middleware(request: NextRequest) {
       .single();
 
     const role = profile?.role;
-    if (profileError || !role || !["admin", "store_staff"].includes(role)) {
+    if (profileError || !role || !(ADMIN_ROLES as readonly string[]).includes(role)) {
       const loginUrl = new URL("/auth/login", request.url);
       loginUrl.searchParams.set("error", "admin_required");
       return NextResponse.redirect(loginUrl);
     }
 
-    if (role === "store_staff") {
-      const allowedStaffAdminPaths = [
-        "/admin",
-        "/admin/orders",
-        "/admin/payments",
-        "/admin/pickup",
-        "/admin/payment-records",
-      ];
-      const allowed = allowedStaffAdminPaths.some(
-        (p) => path === p || (p !== "/admin" && path.startsWith(`${p}/`))
-      );
-      if (!allowed) {
-        return NextResponse.redirect(new URL("/admin", request.url));
-      }
+    if (role === "store_staff" && !isStoreStaffAllowedPath(path)) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    if (role === "content_editor" && !isContentEditorAllowedPath(path)) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    if (role === "customer_service" && !isCustomerServiceAllowedPath(path)) {
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
   }
 

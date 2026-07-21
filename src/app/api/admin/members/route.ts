@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireOpsAdmin } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockProfile } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -21,7 +21,7 @@ const mockMembers = [
  * 不含 POS／門市消費、不回傳完整發票載具號碼。
  */
 export async function GET(request: Request) {
-  const { error } = await requireAdmin();
+  const { error } = await requireOpsAdmin();
   if (error) return error;
 
   const { searchParams } = new URL(request.url);

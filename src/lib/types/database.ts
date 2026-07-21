@@ -2,6 +2,8 @@ export type UserRole =
   | "member"
   | "admin"
   | "store_staff"
+  | "content_editor"
+  | "customer_service"
   | "group_leader"
   | "promoter"
   | "livestream_host";
