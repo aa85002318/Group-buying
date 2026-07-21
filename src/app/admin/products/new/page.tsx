@@ -30,7 +30,7 @@ export default function AdminProductNewPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/categories").then((r) => r.json()),
+      fetch("/api/admin/categories?catalog=baking-materials").then((r) => r.json()),
       fetch("/api/stores").then((r) => r.json()),
       fetch("/api/admin/brands").then((r) => r.json()),
       fetch("/api/admin/suppliers").then((r) => r.json()),

@@ -28,6 +28,7 @@ import {
   AdminSelect,
   AdminTextarea,
 } from "@/components/admin/v2/AdminCard";
+import { CategorySteppedSidebar } from "@/components/admin/CategorySteppedSidebar";
 import {
   calcGrossMarginAmount,
   calcGrossMarginRate,
@@ -240,13 +241,6 @@ export function AdminProductEditor({
   const marginAmount = calcGrossMarginAmount(form.price, form.cost_price);
   const marginRate = calcGrossMarginRate(form.price, form.cost_price);
 
-  const toggleCategory = (id: string) => {
-    const ids = form.category_ids.includes(id)
-      ? form.category_ids.filter((c) => c !== id)
-      : [...form.category_ids, id];
-    patch({ category_ids: ids });
-  };
-
   return (
     <div className="space-y-5">
       {productId && onAutoSave && (
@@ -258,7 +252,15 @@ export function AdminProductEditor({
       )}
 
       <AdminCard title="基本資料" description="商品名稱、分類與上架狀態" icon={<Package className="h-5 w-5" />}>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)]">
+          <CategorySteppedSidebar
+            categories={categories}
+            selectedIds={form.category_ids}
+            onChange={(category_ids) => patch({ category_ids })}
+            className="lg:sticky lg:top-4 lg:max-h-[min(70vh,640px)]"
+          />
+
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
           <AdminField label="商品名稱" required className="md:col-span-2">
             <AdminInput value={form.name} onChange={(e) => patch({ name: e.target.value })} placeholder="請輸入商品名稱" />
           </AdminField>
@@ -267,24 +269,6 @@ export function AdminProductEditor({
           </AdminField>
           <AdminField label="商品 SKU" hint="可修改，留空將自動產生">
             <AdminInput value={form.sku} onChange={(e) => patch({ sku: e.target.value })} />
-          </AdminField>
-          <AdminField label="商品分類" required className="md:col-span-2">
-            <div className="flex flex-wrap gap-2">
-              {categories.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => toggleCategory(c.id)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    form.category_ids.includes(c.id)
-                      ? "bg-primary text-white"
-                      : "bg-[#F1F5F9] text-foreground-secondary hover:bg-primary-soft hover:text-primary"
-                  }`}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
           </AdminField>
           <AdminField label="品牌">
             <AdminSelect value={form.brand_id} onChange={(e) => patch({ brand_id: e.target.value })}>
@@ -337,6 +321,7 @@ export function AdminProductEditor({
               </AdminField>
             </div>
           )}
+          </div>
         </div>
       </AdminCard>
 

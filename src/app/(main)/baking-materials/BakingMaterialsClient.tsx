@@ -10,8 +10,9 @@ import {
 } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { ProductCard, type ProductBadge } from "@/components/products/ProductCard";
+import { CatalogCategorySteppedNav } from "@/components/baking/CatalogCategorySteppedNav";
 import type {
   BakingBrand,
   BakingCategory,
@@ -96,57 +97,6 @@ function productBadge(product: BakingListProduct): ProductBadge | undefined {
   if (product.badges.includes("熱門")) return "hot";
   if (product.stock_status === "in_stock") return "instock";
   return undefined;
-}
-
-function CategoryTreeItem({
-  node,
-  activeSlug,
-  depth = 0,
-}: {
-  node: BakingCategoryTreeNode;
-  activeSlug?: string;
-  depth?: number;
-}) {
-  const [open, setOpen] = useState(depth === 0 || node.slug === activeSlug);
-  const hasChildren = node.children.length > 0;
-  const isActive = node.slug === activeSlug;
-
-  return (
-    <li>
-      <div className="flex items-center gap-1" style={{ paddingLeft: depth * 12 }}>
-        {hasChildren ? (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[#8C644A] hover:bg-[#FFF9EA]"
-            aria-label={open ? "收合分類" : "展開分類"}
-          >
-            <ChevronDown className={cn("h-4 w-4 transition", open && "rotate-180")} />
-          </button>
-        ) : (
-          <span className="inline-block h-7 w-7 shrink-0" />
-        )}
-        <Link
-          href={`/baking-materials/${node.slug}`}
-          className={cn(
-            "min-w-0 flex-1 rounded-md px-2 py-1.5 text-sm transition",
-            isActive
-              ? "bg-[#FFF9EA] font-semibold text-[#FF5A5F]"
-              : "text-[#6B3F24] hover:bg-[#FFF9EA]"
-          )}
-        >
-          {node.name}
-        </Link>
-      </div>
-      {hasChildren && open && (
-        <ul className="mt-0.5 space-y-0.5">
-          {node.children.map((child) => (
-            <CategoryTreeItem key={child.id} node={child} activeSlug={activeSlug} depth={depth + 1} />
-          ))}
-        </ul>
-      )}
-    </li>
-  );
 }
 
 export function BakingMaterialsClient({ categorySlug }: BakingMaterialsClientProps) {
@@ -291,27 +241,11 @@ export function BakingMaterialsClient({ categorySlug }: BakingMaterialsClientPro
 
   const sidebarFilters = (
     <div className="space-y-6">
-      <div>
-        <h3 className="mb-2 text-sm font-semibold text-[#6B3F24]">分類</h3>
-        <ul className="space-y-0.5">
-          <li>
-            <Link
-              href="/baking-materials"
-              className={cn(
-                "block rounded-md px-2 py-1.5 text-sm transition",
-                !categorySlug
-                  ? "bg-[#FFF9EA] font-semibold text-[#FF5A5F]"
-                  : "text-[#6B3F24] hover:bg-[#FFF9EA]"
-              )}
-            >
-              全部商品
-            </Link>
-          </li>
-          {meta.tree.map((node) => (
-            <CategoryTreeItem key={node.id} node={node} activeSlug={categorySlug} />
-          ))}
-        </ul>
-      </div>
+      <CatalogCategorySteppedNav
+        tree={meta.tree}
+        categories={meta.categories}
+        activeSlug={categorySlug}
+      />
 
       <div>
         <h3 className="mb-2 text-sm font-semibold text-[#6B3F24]">品牌</h3>
