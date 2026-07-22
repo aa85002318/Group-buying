@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,7 @@ function toLocalInput(iso: string | null | undefined) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export default function AdminBannersPage() {
+function AdminBannersClient() {
   const searchParams = useSearchParams();
   const placementFilter = searchParams.get("placement") ?? "";
   const [banners, setBanners] = useState<CmsBanner[]>([]);
@@ -321,5 +321,19 @@ export default function AdminBannersPage() {
         emptyText="尚無 Banner"
       />
     </div>
+  );
+}
+
+export default function AdminBannersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-4 p-4">
+          <p className="text-sm text-muted-foreground">載入 Banner 管理…</p>
+        </div>
+      }
+    >
+      <AdminBannersClient />
+    </Suspense>
   );
 }
