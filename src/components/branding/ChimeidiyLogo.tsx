@@ -15,9 +15,16 @@ const VARIANTS = {
   },
   compact: {
     src: "/branding/chimeidiy-logo-compact.png",
-    width: 40,
-    height: 40,
+    width: 80,
+    height: 80,
     className: "h-10 w-10 max-h-10 object-contain bg-transparent",
+  },
+  /** 收縮側選單頂部 — 小天使 IP（透明底） */
+  sideMenu: {
+    src: "/branding/chimeidiy-ip-angel.png",
+    width: 96,
+    height: 96,
+    className: "h-12 w-12 max-h-12 object-contain bg-transparent",
   },
   splash: {
     src: "/branding/chimeidiy-app-header-logo-v3.png",

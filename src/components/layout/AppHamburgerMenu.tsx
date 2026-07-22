@@ -44,7 +44,7 @@ export function AppHamburgerMenu({ className }: { className?: string }) {
               className="absolute bottom-3 left-3 top-3 flex w-[min(360px,calc(100vw-24px))] flex-col overflow-hidden rounded-[24px] bg-surface shadow-lift"
             >
               <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
-                <ChimeidiyLogo variant="compact" href="/" />
+                <ChimeidiyLogo variant="sideMenu" href="/" />
                 <button
                   type="button"
                   onClick={() => setOpen(false)}

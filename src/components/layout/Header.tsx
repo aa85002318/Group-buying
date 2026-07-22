@@ -265,9 +265,12 @@ function CategoryMenu({
             style={{ width: "min(360px, calc(100vw - 24px))" }}
           >
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5">
-              <div>
-                <p className="text-base font-black text-foreground">CHIMEIDIY 購物選單</p>
-                <p className="text-[11px] font-medium text-foreground-secondary">快速找到今天最值得買的商品</p>
+              <div className="flex min-w-0 items-center gap-3">
+                <Logo size="sm" markOnly href="/" className="!h-12 !w-12" />
+                <div className="min-w-0">
+                  <p className="text-base font-black text-foreground">CHIMEIDIY 購物選單</p>
+                  <p className="text-[11px] font-medium text-foreground-secondary">快速找到今天最值得買的商品</p>
+                </div>
               </div>
               <button
                 type="button"

@@ -99,14 +99,17 @@ export function BakingCatalogSideMenu({ className }: { className?: string }) {
             />
             <div className="absolute bottom-3 left-3 top-3 flex w-[min(360px,calc(100vw-24px))] flex-col overflow-hidden rounded-[24px] bg-surface shadow-lift">
               <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-brand-caramel">商品分類</p>
-                  <p className="text-[11px] text-foreground-secondary">階梯選單 · 服務入口</p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <ChimeidiyLogo variant="sideMenu" href="/" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-brand-caramel">商品分類</p>
+                    <p className="text-[11px] text-foreground-secondary">階梯選單 · 服務入口</p>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={close}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-caramel hover:bg-caramel-soft"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-caramel hover:bg-caramel-soft"
                   aria-label="關閉"
                 >
                   <X className="h-5 w-5" aria-hidden />
@@ -115,9 +118,6 @@ export function BakingCatalogSideMenu({ className }: { className?: string }) {
 
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
                 <div className="border-b border-border px-4 py-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <ChimeidiyLogo variant="compact" href="/" />
-                  </div>
                   {loading && categories.length === 0 ? (
                     <p className="py-6 text-center text-sm text-foreground-secondary">
                       載入分類中…
