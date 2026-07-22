@@ -136,6 +136,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/banners", label: "Banner 管理", roles: ["admin", "content_editor"] },
       { href: "/admin/home", label: "首頁管理", roles: ["admin", "content_editor"] },
       { href: "/admin/home/quick-menu", label: "首頁快捷選單", roles: ["admin", "content_editor"] },
+      {
+        href: "/admin/home/feature-duo",
+        label: "首頁雙卡（AI／直播）",
+        roles: ["admin", "content_editor"],
+      },
       { href: "/admin/cms", label: "統一 CMS", roles: ["admin", "content_editor"] },
       { href: "/admin/faqs", label: "FAQ", roles: ["admin", "content_editor", "customer_service"] },
       { href: "/admin/videos", label: "影音", roles: ["admin", "content_editor"] },
