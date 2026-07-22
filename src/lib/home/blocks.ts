@@ -3,11 +3,14 @@ import type { HomepageBlock } from "@/lib/types/database";
 export type HomeBlockKey =
   | "hero_banner"
   | "primary_services"
+  | "quick_menu"
+  | "popular_categories"
   | "new_products"
   | "hot_products"
   | "recipes"
   | "videos"
   | "group_buy_closing"
+  | "weekly_promo"
   | "news"
   | "member_benefits"
   | "ai_tools"
@@ -22,11 +25,14 @@ const DEFAULTS: Record<
 > = {
   hero_banner: { title: "Hero Banner", displayCount: 1, visible: true },
   primary_services: { title: "四大快捷入口", displayCount: 4, visible: true },
+  quick_menu: { title: "快捷入口", displayCount: 8, visible: true },
+  popular_categories: { title: "熱門分類", displayCount: 8, visible: true },
   new_products: { title: "今日新品", displayCount: 8, visible: true },
-  hot_products: { title: "本週熱門", displayCount: 8, visible: true },
-  recipes: { title: "一分鐘教你做", displayCount: 4, visible: true },
-  videos: { title: "熱門影音", displayCount: 4, visible: true },
-  group_buy_closing: { title: "即將收單", displayCount: 4, visible: true },
+  hot_products: { title: "熱門商品", displayCount: 8, visible: true },
+  recipes: { title: "最新食譜", displayCount: 4, visible: true },
+  videos: { title: "影音", displayCount: 4, visible: true },
+  group_buy_closing: { title: "即將收單團購", displayCount: 4, visible: true },
+  weekly_promo: { title: "本週優惠", displayCount: 4, visible: true },
   news: { title: "最新資訊", displayCount: 3, visible: true },
   member_benefits: { title: "會員福利", displayCount: 1, visible: true },
   ai_tools: { title: "AI 烘焙助手", displayCount: 2, visible: true },

@@ -21,6 +21,7 @@ export default function AdminArticleNewPage() {
     category_id: "",
     status: "draft" as "draft" | "published",
     sort_order: "0",
+    is_featured: false,
   });
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function AdminArticleNewPage() {
           cover_image: form.cover_image || null,
           category_id: form.category_id || null,
           sort_order: Number(form.sort_order),
+          is_featured: form.is_featured,
         }),
       });
       const data = await res.json();
@@ -92,6 +94,14 @@ export default function AdminArticleNewPage() {
             value={form.sort_order}
             onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
           />
+          <label className="flex items-center gap-2 text-sm text-coffee sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={form.is_featured}
+              onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
+            />
+            置頂顯示於首頁「最新資訊」
+          </label>
         </div>
 
         <div>

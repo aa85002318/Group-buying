@@ -23,6 +23,7 @@ export async function GET(request: Request) {
   let query = admin
     .from("articles")
     .select("*, product_categories(name, slug)")
+    .order("is_featured", { ascending: false })
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
       category_id: body.category_id ?? null,
       status: body.status ?? "draft",
       sort_order: body.sort_order ?? 0,
+      is_featured: Boolean(body.is_featured),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -67,6 +69,7 @@ export async function POST(request: Request) {
       category_id: body.category_id || null,
       status: body.status ?? "draft",
       sort_order: body.sort_order ?? 0,
+      is_featured: Boolean(body.is_featured),
     })
     .select()
     .single();

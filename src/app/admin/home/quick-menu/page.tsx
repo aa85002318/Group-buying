@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   ChevronDown,
   ChevronUp,
@@ -208,7 +209,20 @@ export default function AdminHomeQuickMenuPage() {
       <AdminPageHeader
         title="首頁快捷選單管理"
         description="管理首頁 Banner 下方的橫向快捷選單。圖示建議 96×96 px，PNG／JPG／WEBP／SVG，最大 2MB。"
-        actions={<Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />新增項目</Button>}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={openCreate}>
+              <Plus className="mr-1 h-4 w-4" />
+              新增項目
+            </Button>
+            <Link
+              href="/admin/home"
+              className="inline-flex h-10 items-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-caramel"
+            >
+              返回首頁管理
+            </Link>
+          </div>
+        }
       />
 
       {showForm && (

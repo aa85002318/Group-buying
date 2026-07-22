@@ -7,7 +7,6 @@ import { HomeSearchBar } from "@/components/home/HomeSearchBar";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HomeContentArea } from "@/components/home/HomeContentArea";
 import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
-import { FeatureDuoCards } from "@/components/home/FeatureDuoCards";
 import { PopularCategories } from "@/components/home/PopularCategories";
 import { HotSearchChips } from "@/components/home/HotSearchChips";
 import { RecentBrowseSection } from "@/components/home/RecentBrowseSection";
@@ -22,13 +21,13 @@ import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { getNewThisWeekProducts } from "@/lib/home";
 import { resolveHomeBlock } from "@/lib/home/blocks";
 import { resolveHotSearchKeywords } from "@/lib/home/hot-search";
+import { parsePopularCategories } from "@/lib/home/admin-sections";
 import { readBrowseHistory, type BrowseHistoryItem } from "@/lib/home/browse-history";
 import { buildReorderCandidates } from "@/lib/home/reorder";
 import { mockProducts } from "@/lib/mock-data";
-import type { RecipeSummary, NewsItem } from "@/lib/consumer-hub";
-import type { HomepageBlock, Order, Product, Video } from "@/lib/types/database";
+import type { RecipeSummary } from "@/lib/consumer-hub";
+import type { Article, HomepageBlock, Order, Product, Video } from "@/lib/types/database";
 import { isSupabaseConfigured } from "@/lib/config";
-import { cn } from "@/lib/utils";
 
 type GbEvent = {
   id: string;
@@ -92,24 +91,11 @@ function useIndependentLoad<T>(
   };
 }
 
-function newsBadge(category: string) {
-  if (category === "live") return "bg-brand-primary text-white";
-  if (category === "new") return "bg-surface-yellow text-brand-caramel";
-  if (category === "course") return "bg-surface-peach text-brand-caramel";
-  return "bg-surface-coral text-brand-primary";
-}
-
-function newsLabel(category: string) {
-  const map: Record<string, string> = {
-    new: "新品",
-    store: "公告",
-    system: "公告",
-    course: "課程",
-    live: "直播",
-    campaign: "活動",
-    promo: "優惠",
-  };
-  return map[category] ?? "消息";
+function formatArticleDate(iso: string | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 export default function HomePage() {
@@ -148,11 +134,11 @@ export default function HomePage() {
     return d.videos ?? [];
   });
 
-  const newsLoad = useIndependentLoad<NewsItem[]>([], async () => {
-    const r = await fetch("/api/news");
+  const articlesLoad = useIndependentLoad<Article[]>([], async () => {
+    const r = await fetch("/api/articles");
     const d = await r.json();
-    if (!r.ok) throw new Error(d.error ?? "最新資訊載入失敗");
-    return d.news ?? [];
+    if (!r.ok) throw new Error(d.error ?? "文章載入失敗");
+    return d.articles ?? [];
   });
 
   const [authState, setAuthState] = useState<"loading" | "guest" | "member">("loading");
@@ -202,11 +188,19 @@ export default function HomePage() {
   const heroBlock = resolveHomeBlock(blocks, "hero_banner");
   const reorderBlock = resolveHomeBlock(blocks, "quick_reorder");
   const recentBlock = resolveHomeBlock(blocks, "recent_browse");
+  const quickMenuBlock = resolveHomeBlock(blocks, "quick_menu");
+  const categoriesBlock = resolveHomeBlock(blocks, "popular_categories");
+  const weeklyPromoBlock = resolveHomeBlock(blocks, "weekly_promo");
 
   const hotKeywords = useMemo(
     () => resolveHotSearchKeywords(hotSearchBlock.config),
     [hotSearchBlock.config]
   );
+
+  const categoryItems = useMemo(() => {
+    const fromCms = parsePopularCategories(categoriesBlock.config);
+    return fromCms.length > 0 ? fromCms : undefined;
+  }, [categoriesBlock.config]);
 
   const newest = useMemo(() => {
     const fromWeek = getNewThisWeekProducts(productsLoad.data);
@@ -218,10 +212,19 @@ export default function HomePage() {
           );
     return source.slice(0, newBlock.displayCount);
   }, [productsLoad.data, newBlock.displayCount]);
-  const popular = useMemo(
-    () => productsLoad.data.slice(0, hotBlock.displayCount),
-    [productsLoad.data, hotBlock.displayCount]
-  );
+
+  const popular = useMemo(() => {
+    const found = blocks?.find((b) => b.block_key === "hot_products");
+    const manualIds = found?.manual_ids ?? [];
+    if (found?.source_mode === "manual" && manualIds.length > 0) {
+      const byId = new Map(productsLoad.data.map((p) => [p.id, p]));
+      return manualIds
+        .map((id) => byId.get(id))
+        .filter(Boolean)
+        .slice(0, hotBlock.displayCount) as Product[];
+    }
+    return productsLoad.data.slice(0, hotBlock.displayCount);
+  }, [productsLoad.data, hotBlock.displayCount, blocks]);
 
   const closing = useMemo(
     () =>
@@ -238,10 +241,15 @@ export default function HomePage() {
     () => videosLoad.data.slice(0, videosBlock.displayCount),
     [videosLoad.data, videosBlock.displayCount]
   );
-  const news = useMemo(
-    () => newsLoad.data.slice(0, newsBlock.displayCount),
-    [newsLoad.data, newsBlock.displayCount]
-  );
+  const articles = useMemo(() => {
+    const list = [...articlesLoad.data].sort((a, b) => {
+      const af = Number(Boolean((a as Article & { is_featured?: boolean }).is_featured));
+      const bf = Number(Boolean((b as Article & { is_featured?: boolean }).is_featured));
+      if (bf !== af) return bf - af;
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
+    return list.slice(0, newsBlock.displayCount);
+  }, [articlesLoad.data, newsBlock.displayCount]);
 
   const reorderCandidates = useMemo(() => {
     const ranked = buildReorderCandidates(ordersLoad.data, reorderBlock.displayCount);
@@ -282,8 +290,7 @@ export default function HomePage() {
       {/* 中段純白區：Hero 底部到 Footer */}
       <HomeContentArea>
         <div className="home-page-inner space-y-6 min-[375px]:space-y-7 md:space-y-8">
-          <HomeQuickMenuCarousel />
-          <FeatureDuoCards />
+          {quickMenuBlock.visible ? <HomeQuickMenuCarousel /> : null}
 
           {recentBlock.visible ? (
             <RecentBrowseSection
@@ -303,7 +310,12 @@ export default function HomePage() {
             />
           ) : null}
 
-          <PopularCategories />
+          {categoriesBlock.visible ? (
+            <PopularCategories
+              items={categoryItems}
+              title={categoriesBlock.title || "熱門分類"}
+            />
+          ) : null}
 
           {newBlock.visible ? (
             <HorizontalProductRail
@@ -339,7 +351,12 @@ export default function HomePage() {
             />
           ) : null}
 
-          <PromoBannerStrip />
+          {weeklyPromoBlock.visible ? (
+            <PromoBannerStrip
+              title={weeklyPromoBlock.title || "本週優惠"}
+              limit={weeklyPromoBlock.displayCount}
+            />
+          ) : null}
 
           {recipesBlock.visible ? (
             <section className="space-y-3">
@@ -464,59 +481,63 @@ export default function HomePage() {
           {newsBlock.visible ? (
             <section className="space-y-3">
               <SectionHeader
-                title={newsBlock.title || "最新消息"}
-                href="/news"
+                title={newsBlock.title || "最新資訊"}
+                href="/articles"
                 className="!mb-0"
               />
               <HomeSectionFrame
-                loading={newsLoad.loading}
-                error={newsLoad.error}
-                onRetry={newsLoad.reload}
-                empty={!newsLoad.loading && !newsLoad.error && news.length === 0}
+                loading={articlesLoad.loading}
+                error={articlesLoad.error}
+                onRetry={articlesLoad.reload}
+                empty={!articlesLoad.loading && !articlesLoad.error && articles.length === 0}
                 emptyTitle="尚無最新資訊"
-                emptyText="新品、公告、課程與直播會顯示在這裡"
-                emptyActionHref="/news"
-                emptyActionLabel="看全部消息"
+                emptyText="新文章發布後會顯示在這裡"
+                emptyActionHref="/articles"
+                emptyActionLabel="看全部文章"
                 skeletonCount={2}
               >
                 <ul className="space-y-2.5 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 xl:grid-cols-3">
-                  {news.map((n) => (
-                    <li key={n.id} className="min-w-0">
-                      <Link
-                        href={n.href}
-                        className="flex gap-3 overflow-hidden rounded-[16px] border border-border-soft bg-surface p-3"
-                      >
-                        <span className="min-w-0 flex-1">
-                          <span className="flex flex-wrap items-center gap-2">
-                            <span
-                              className={cn(
-                                "rounded-full px-2 py-0.5 text-[10px] font-bold",
-                                newsBadge(n.category)
+                  {articles.map((a) => {
+                    const featured = Boolean((a as Article & { is_featured?: boolean }).is_featured);
+                    return (
+                      <li key={a.id} className="min-w-0">
+                        <Link
+                          href={`/articles/${a.slug || a.id}`}
+                          className="flex gap-3 overflow-hidden rounded-[16px] border border-border-soft bg-surface p-3"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="flex flex-wrap items-center gap-2">
+                              {featured ? (
+                                <span className="rounded-full bg-brand-primary px-2 py-0.5 text-[10px] font-bold text-white">
+                                  置頂
+                                </span>
+                              ) : (
+                                <span className="rounded-full bg-surface-coral px-2 py-0.5 text-[10px] font-bold text-brand-primary">
+                                  文章
+                                </span>
                               )}
-                            >
-                              {newsLabel(n.category)}
+                              <span className="text-[11px] text-foreground-secondary">
+                                {formatArticleDate(a.created_at)}
+                              </span>
                             </span>
-                            <span className="text-[11px] text-foreground-secondary">
-                              {n.publishedAt}
-                            </span>
+                            <p className="mt-1.5 line-clamp-2 text-[13px] font-bold text-brand-caramel">
+                              {a.title}
+                            </p>
                           </span>
-                          <p className="mt-1.5 line-clamp-2 text-[13px] font-bold text-brand-caramel">
-                            {n.title}
-                          </p>
-                        </span>
-                        {n.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={n.imageUrl}
-                            alt=""
-                            className="h-16 w-16 shrink-0 rounded-xl object-cover"
-                          />
-                        ) : (
-                          <span className="h-16 w-16 shrink-0 rounded-xl bg-surface-soft" />
-                        )}
-                      </Link>
-                    </li>
-                  ))}
+                          {a.cover_image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={a.cover_image}
+                              alt=""
+                              className="h-16 w-16 shrink-0 rounded-xl object-cover"
+                            />
+                          ) : (
+                            <span className="h-16 w-16 shrink-0 rounded-xl bg-surface-soft" />
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </HomeSectionFrame>
             </section>

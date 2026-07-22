@@ -146,6 +146,7 @@ export interface Article {
   category_id: string | null;
   status: ArticleStatus;
   sort_order: number;
+  is_featured?: boolean;
   created_at: string;
   updated_at: string;
   product_categories?: ProductCategory;

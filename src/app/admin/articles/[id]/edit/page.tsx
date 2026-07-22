@@ -22,6 +22,7 @@ export default function AdminArticleEditPage({ params }: { params: { id: string 
     category_id: "",
     status: "draft" as "draft" | "published",
     sort_order: "0",
+    is_featured: false,
   });
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function AdminArticleEditPage({ params }: { params: { id: string 
             category_id: a.category_id ?? "",
             status: a.status,
             sort_order: String(a.sort_order),
+            is_featured: Boolean(a.is_featured),
           });
         }
         setCategories(catRes.categories ?? []);
@@ -58,6 +60,7 @@ export default function AdminArticleEditPage({ params }: { params: { id: string 
           cover_image: form.cover_image || null,
           category_id: form.category_id || null,
           sort_order: Number(form.sort_order),
+          is_featured: form.is_featured,
         }),
       });
       router.push("/admin/articles");
@@ -109,6 +112,14 @@ export default function AdminArticleEditPage({ params }: { params: { id: string 
             value={form.sort_order}
             onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
           />
+          <label className="flex items-center gap-2 text-sm text-coffee sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={form.is_featured}
+              onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
+            />
+            置頂顯示於首頁「最新資訊」
+          </label>
         </div>
 
         <div>
