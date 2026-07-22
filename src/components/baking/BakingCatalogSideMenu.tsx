@@ -99,13 +99,7 @@ export function BakingCatalogSideMenu({ className }: { className?: string }) {
             />
             <div className="absolute bottom-3 left-3 top-3 flex w-[min(360px,calc(100vw-24px))] flex-col overflow-hidden rounded-[24px] bg-surface shadow-lift">
               <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <ChimeidiyLogo variant="sideMenu" href="/" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-brand-caramel">商品分類</p>
-                    <p className="text-[11px] text-foreground-secondary">階梯選單 · 服務入口</p>
-                  </div>
-                </div>
+                <ChimeidiyLogo variant="sideMenu" href="/" />
                 <button
                   type="button"
                   onClick={close}

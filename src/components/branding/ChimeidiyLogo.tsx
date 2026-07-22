@@ -19,12 +19,13 @@ const VARIANTS = {
     height: 80,
     className: "h-10 w-10 max-h-10 object-contain bg-transparent",
   },
-  /** 收縮側選單頂部 — 小天使 IP（透明底） */
+  /** 側選單頂部 — 完整品牌 logo（小天使 + 字標，透明底） */
   sideMenu: {
-    src: "/branding/chimeidiy-ip-angel.png",
-    width: 96,
-    height: 96,
-    className: "h-12 w-12 max-h-12 object-contain bg-transparent",
+    src: "/branding/chimeidiy-app-header-logo-v2.png",
+    width: 947,
+    height: 299,
+    className:
+      "h-auto w-[min(220px,calc(100vw-120px))] max-h-[52px] object-contain bg-transparent",
   },
   splash: {
     src: "/branding/chimeidiy-app-header-logo-v3.png",
