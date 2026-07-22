@@ -215,24 +215,25 @@ export const CONSUMER_SECONDARY_NAV = [
   { href: "/store-map", label: "門市地圖" },
 ] as const;
 
-/** Mobile bottom nav — 方案二：首頁／商城／團購／食譜／我的（同高、無凸起） */
+/** Mobile bottom nav — 首頁／團購／烘焙圈（中央凸出）／食譜／我的 */
 export const CONSUMER_BOTTOM_NAV = [
   { href: "/", label: "首頁", match: (p: string) => p === "/", accent: "primary" as const },
-  {
-    href: "/shop",
-    label: "商城",
-    match: (p: string) =>
-      p.startsWith("/shop") ||
-      p.startsWith("/products") ||
-      p.startsWith("/categories") ||
-      p.startsWith("/baking-materials"),
-    accent: "primary" as const,
-  },
   {
     href: "/group-buy",
     label: "團購",
     match: (p: string) => p.startsWith("/group-buy"),
     accent: "primary" as const,
+  },
+  {
+    href: "/baking-materials",
+    label: "烘焙圈",
+    match: (p: string) =>
+      p.startsWith("/baking-materials") ||
+      p.startsWith("/shop") ||
+      p.startsWith("/products") ||
+      p.startsWith("/categories"),
+    accent: "primary" as const,
+    featured: true as const,
   },
   {
     href: "/recipes",
