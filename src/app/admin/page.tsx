@@ -247,7 +247,7 @@ export default function AdminDashboardPage() {
                 → 通知管理
               </Link>
               <Link href="/admin/home" className="font-semibold text-primary hover:underline">
-                → 首頁管理
+                → 首頁／CMS 管理
               </Link>
               <Link href="/admin/products/new" className="font-semibold text-primary hover:underline">
                 → 新增商品

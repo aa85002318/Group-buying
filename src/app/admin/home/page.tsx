@@ -48,15 +48,21 @@ export default function AdminHomeHubPage() {
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [productSearch, setProductSearch] = useState("");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [cmsPages, setCmsPages] = useState<
+    Array<{ id: string; slug: string; title: string; is_published: boolean }>
+  >([]);
+  const [pageForm, setPageForm] = useState({ slug: "", title: "", content: "" });
+  const [pageSaving, setPageSaving] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetch("/api/admin/cms?type=blocks")
+    fetch("/api/admin/cms")
       .then(async (r) => {
         const d = await r.json();
         if (!r.ok) throw new Error(d.error ?? "載入失敗");
         setBlocks(d.blocks ?? []);
+        setCmsPages(d.pages ?? []);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "載入失敗"))
       .finally(() => setLoading(false));
@@ -100,6 +106,48 @@ export default function AdminHomeHubPage() {
     }
   };
 
+  const createCmsPage = async () => {
+    if (!pageForm.slug.trim() || !pageForm.title.trim()) {
+      alert("請填寫 slug 與標題");
+      return;
+    }
+    setPageSaving(true);
+    try {
+      const res = await fetch("/api/admin/cms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "page",
+          slug: pageForm.slug.trim(),
+          title: pageForm.title.trim(),
+          content: pageForm.content.trim() || null,
+          is_published: false,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "新增失敗");
+      setPageForm({ slug: "", title: "", content: "" });
+      await load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "新增失敗");
+    } finally {
+      setPageSaving(false);
+    }
+  };
+
+  const toggleCmsPage = async (page: { id: string; is_published: boolean }) => {
+    await fetch("/api/admin/cms", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        kind: "page",
+        id: page.id,
+        is_published: !page.is_published,
+      }),
+    });
+    load();
+  };
+
   const moveSection = async (block: HomepageBlock, dir: -1 | 1) => {
     const ordered = HOME_ADMIN_SECTIONS.map((s) => findBlock(blocks, s.blockKey)).filter(
       Boolean
@@ -122,12 +170,12 @@ export default function AdminHomeHubPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="首頁管理"
-        description="統一管理首頁各區塊：顯示／隱藏、標題、數量，以及各區塊內容設定。"
+        title="首頁／CMS 管理"
+        description="整合原「首頁管理」與「統一 CMS」：首頁區塊設定、Banner／快捷入口連結，以及靜態 CMS 頁面。"
       />
 
       <div className="rounded-xl border border-border bg-white p-4 text-sm text-muted-foreground shadow-card">
-        <p className="font-semibold text-coffee">已整合的管理入口</p>
+        <p className="font-semibold text-coffee">相關內容管理</p>
         <ul className="mt-2 grid gap-1 sm:grid-cols-2">
           <li>
             <Link className="text-primary underline" href="/admin/banners">
@@ -156,40 +204,100 @@ export default function AdminHomeHubPage() {
         </ul>
       </div>
 
-      {loading ? (
-        <p className="text-sm text-muted-foreground">載入中…</p>
-      ) : error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          {error}
-          <button type="button" className="ml-2 underline" onClick={load}>
-            重試
-          </button>
+      <section className="space-y-3">
+        <h2 className="text-base font-bold text-coffee">首頁區塊</h2>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">載入中…</p>
+        ) : error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            {error}
+            <button type="button" className="ml-2 underline" onClick={load}>
+              重試
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {HOME_ADMIN_SECTIONS.map((section, index) => {
+              const block = findBlock(blocks, section.blockKey);
+              const open = expanded === section.id;
+              return (
+                <SectionCard
+                  key={section.id}
+                  section={section}
+                  block={block}
+                  index={index}
+                  open={open}
+                  saving={savingId === block?.id}
+                  onToggle={() => setExpanded(open ? null : section.id)}
+                  onPatch={patch}
+                  onMove={moveSection}
+                  products={filteredProducts}
+                  productSearch={productSearch}
+                  onProductSearch={setProductSearch}
+                  allProducts={products}
+                />
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-3 rounded-xl border border-border bg-white p-4 shadow-card">
+        <div>
+          <h2 className="text-base font-bold text-coffee">CMS 靜態頁面</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            原「統一 CMS」頁面管理：建立草稿頁（slug／標題），可發布或改回草稿。
+          </p>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {HOME_ADMIN_SECTIONS.map((section, index) => {
-            const block = findBlock(blocks, section.blockKey);
-            const open = expanded === section.id;
-            return (
-              <SectionCard
-                key={section.id}
-                section={section}
-                block={block}
-                index={index}
-                open={open}
-                saving={savingId === block?.id}
-                onToggle={() => setExpanded(open ? null : section.id)}
-                onPatch={patch}
-                onMove={moveSection}
-                products={filteredProducts}
-                productSearch={productSearch}
-                onProductSearch={setProductSearch}
-                allProducts={products}
-              />
-            );
-          })}
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Input
+            placeholder="slug（例如 about）"
+            value={pageForm.slug}
+            onChange={(e) => setPageForm({ ...pageForm, slug: e.target.value })}
+          />
+          <Input
+            placeholder="標題"
+            value={pageForm.title}
+            onChange={(e) => setPageForm({ ...pageForm, title: e.target.value })}
+          />
+          <Button onClick={() => void createCmsPage()} disabled={pageSaving}>
+            {pageSaving ? "新增中…" : "新增草稿"}
+          </Button>
         </div>
-      )}
+        <Input
+          placeholder="內容（選填，可之後再編）"
+          value={pageForm.content}
+          onChange={(e) => setPageForm({ ...pageForm, content: e.target.value })}
+        />
+        <ul className="space-y-2">
+          {cmsPages.map((p) => (
+            <li
+              key={p.id}
+              className="flex flex-wrap items-center gap-2 rounded-xl border border-border-soft px-4 py-3 text-sm"
+            >
+              <span className="min-w-0 flex-1 font-medium text-coffee">
+                /{p.slug} — {p.title}
+              </span>
+              <span
+                className={cn(
+                  "rounded-full px-2.5 py-0.5 text-[11px] font-bold",
+                  p.is_published
+                    ? "bg-success-soft text-success"
+                    : "bg-disabled-soft text-disabled"
+                )}
+              >
+                {p.is_published ? "已發布" : "草稿"}
+              </span>
+              <Button size="sm" variant="secondary" onClick={() => void toggleCmsPage(p)}>
+                {p.is_published ? "改草稿" : "發布"}
+              </Button>
+            </li>
+          ))}
+          {!loading && cmsPages.length === 0 ? (
+            <li className="text-sm text-muted-foreground">尚無 CMS 頁面</li>
+          ) : null}
+        </ul>
+      </section>
     </div>
   );
 }
