@@ -3,6 +3,7 @@ import type { Product } from "@/lib/types/database";
 export type AdminProductFormState = {
   name: string;
   category_id: string;
+  product_scope: "baking" | "chime_select";
   images: string[];
   original_price: string;
   price: string;
@@ -23,6 +24,7 @@ export type AdminProductFormState = {
 export const emptyProductForm = (): AdminProductFormState => ({
   name: "",
   category_id: "",
+  product_scope: "baking",
   images: [],
   original_price: "",
   price: "",
@@ -56,6 +58,7 @@ export function productToForm(
   return {
     name: p.name,
     category_id: p.category_id ?? "",
+    product_scope: p.product_scope ?? "baking",
     images,
     original_price: p.original_price != null ? String(p.original_price) : "",
     price: String(p.price),
@@ -85,6 +88,7 @@ export function formToPayload(form: AdminProductFormState) {
   return {
     name: form.name.trim(),
     category_id: form.category_id || null,
+    product_scope: form.product_scope,
     images: form.images,
     image_url: form.images[0] ?? null,
     original_price: form.original_price ? Number(form.original_price) : null,

@@ -38,6 +38,44 @@ export function getNewThisWeekProducts(products: Product[]): Product[] {
   return products.filter((p) => isCreatedThisWeek(p.created_at));
 }
 
+/** Products created within the last `days` (default 7). */
+export function getRecentProducts(products: Product[], days = 7): Product[] {
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  return products
+    .filter((p) => new Date(p.created_at).getTime() >= cutoff)
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+}
+
+export function filterProductsByScope(
+  products: Product[],
+  scope: "baking" | "chime_select"
+): Product[] {
+  return products.filter((p) => (p.product_scope ?? "baking") === scope);
+}
+
+/** Manual IDs first; optionally fill from auto list up to limit (mixed mode). */
+export function pickHomeProducts(options: {
+  products: Product[];
+  manualIds?: string[];
+  autoList?: Product[];
+  mode?: "auto" | "manual" | "mixed";
+  limit: number;
+}): Product[] {
+  const {
+    products,
+    manualIds = [],
+    autoList,
+    mode = "auto",
+    limit,
+  } = options;
+  const byId = new Map(products.map((p) => [p.id, p]));
+  const manual = manualIds.map((id) => byId.get(id)).filter(Boolean) as Product[];
+  if (mode === "manual") return manual.slice(0, limit);
+  const auto = (autoList ?? products).filter((p) => !manualIds.includes(p.id));
+  if (mode === "mixed") return [...manual, ...auto].slice(0, limit);
+  return auto.slice(0, limit);
+}
+
 /** 即將收單：優先使用商品 preorder_deadline（7 天內），否則回退團購 end_at */
 export function getClosingSoonProducts(
   products: Product[],

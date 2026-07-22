@@ -41,17 +41,24 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
+  const insertRow: Record<string, unknown> = {
+    title: body.title,
+    description: body.description,
+    stream_url: body.stream_url,
+    thumbnail_url: body.thumbnail_url,
+    host_user_id: body.host_user_id,
+    host_name: body.host_name ?? null,
+    theme_label: body.theme_label ?? null,
+    featured_on_home: Boolean(body.featured_on_home),
+    sort_order: Number(body.sort_order) || 0,
+    status: body.status ?? "scheduled",
+    scheduled_at: body.scheduled_at,
+  };
+  if (body.replay_url !== undefined) insertRow.replay_url = body.replay_url;
+
   const { data, error: insertError } = await admin
     .from("livestreams")
-    .insert({
-      title: body.title,
-      description: body.description,
-      stream_url: body.stream_url,
-      thumbnail_url: body.thumbnail_url,
-      host_user_id: body.host_user_id,
-      status: body.status ?? "scheduled",
-      scheduled_at: body.scheduled_at,
-    })
+    .insert(insertRow)
     .select()
     .single();
 

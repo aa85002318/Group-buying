@@ -88,6 +88,29 @@ export function AdminProductForm({
                 ))}
               </select>
             </div>
+            <div>
+              <FieldLabel>商品領域</FieldLabel>
+              <div className="flex flex-wrap gap-4 pt-1">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="product_scope"
+                    checked={form.product_scope === "baking"}
+                    onChange={() => onChange({ ...form, product_scope: "baking" })}
+                  />
+                  烘焙材料
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="product_scope"
+                    checked={form.product_scope === "chime_select"}
+                    onChange={() => onChange({ ...form, product_scope: "chime_select" })}
+                  />
+                  CHIME 精選
+                </label>
+              </div>
+            </div>
             <div className="flex flex-wrap items-end gap-4">
               <label className="flex items-center gap-2 text-sm">
                 <input

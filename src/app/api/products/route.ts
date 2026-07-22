@@ -12,9 +12,13 @@ export async function GET(request: Request) {
   const tag = searchParams.get("tag");
   // Additive: optional channel filter (website | group_buy | store_only)
   const channel = searchParams.get("channel");
+  const scope = searchParams.get("scope");
 
   if (!isSupabaseConfigured()) {
-    const products = filterProducts(mockProducts, { search, category, tag });
+    let products = filterProducts(mockProducts, { search, category, tag });
+    if (scope === "baking" || scope === "chime_select") {
+      products = products.filter((p) => (p.product_scope ?? "baking") === scope);
+    }
     return NextResponse.json({ products });
   }
 
@@ -39,6 +43,10 @@ export async function GET(request: Request) {
     query = query.eq("publish_group_buy", true);
   } else if (channel === "store_only") {
     query = query.eq("publish_store", true);
+  }
+
+  if (scope === "baking" || scope === "chime_select") {
+    query = query.eq("product_scope", scope);
   }
 
   const { data, error } = await query;

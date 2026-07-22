@@ -19,6 +19,10 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/faqs",
   "/admin/cms",
   "/admin/articles",
+  "/admin/livestreams",
+  "/admin/stores",
+  "/admin/challenges",
+  "/admin/themes",
 ] as const;
 
 export const CUSTOMER_SERVICE_ADMIN_PATHS = [
@@ -137,7 +141,9 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/home", label: "首頁／CMS 管理", roles: ["admin", "content_editor"] },
       { href: "/admin/faqs", label: "FAQ", roles: ["admin", "content_editor", "customer_service"] },
       { href: "/admin/videos", label: "影音", roles: ["admin", "content_editor"] },
-      { href: "/admin/livestreams", label: "直播", roles: ["admin"] },
+      { href: "/admin/livestreams", label: "直播", roles: ["admin", "content_editor"] },
+      { href: "/admin/challenges", label: "烘焙挑戰", roles: ["admin", "content_editor"] },
+      { href: "/admin/themes", label: "季節主題", roles: ["admin", "content_editor"] },
       { href: "/admin/side-menu", label: "側邊選單", roles: ["admin"] },
       { href: "/admin/courses", label: "課程", roles: ["admin"] },
     ],

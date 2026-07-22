@@ -58,7 +58,7 @@ export function GroupBuyClosingSection({
         error={error}
         onRetry={onRetry}
         empty={!loading && !error && events.length === 0}
-        emptyTitle="目前沒有即將收單的團購"
+        emptyTitle="目前沒有即將結單的團購"
         emptyText="新團購開跑時會出現在這裡"
         emptyActionHref="/group-buy"
         emptyActionLabel="查看團購"

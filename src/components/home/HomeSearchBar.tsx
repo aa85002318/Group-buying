@@ -13,7 +13,7 @@ type HomeSearchBarProps = {
 
 /** Standalone search row under the sticky header. */
 export function HomeSearchBar({
-  placeholder = "搜尋商品、食譜、品牌...",
+  placeholder = "搜尋商品、食譜、影音或 AI 問題",
   className,
 }: HomeSearchBarProps) {
   const router = useRouter();

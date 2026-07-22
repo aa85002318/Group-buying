@@ -46,6 +46,8 @@ function mapProductBody(body: Record<string, unknown>) {
     sort_order: body.sort_order,
     expected_arrival_date: body.expected_arrival_date,
     preorder_deadline: body.preorder_deadline,
+    product_scope:
+      body.product_scope === "chime_select" ? "chime_select" : body.product_scope === "baking" ? "baking" : undefined,
   };
 }
 

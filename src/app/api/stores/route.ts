@@ -11,7 +11,9 @@ export async function GET() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("stores")
-    .select("id, name, address, phone, notes, business_hours, map_url, line_url, image_url, pickup_available, sort_order, is_active, created_at, updated_at")
+    .select(
+      "id, name, address, phone, notes, business_hours, map_url, line_url, image_url, cover_image_url, navigation_url, services, daily_highlights, pickup_available, sort_order, is_active, created_at, updated_at"
+    )
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .order("name");

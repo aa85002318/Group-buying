@@ -21,6 +21,14 @@ export async function PATCH(
   if (typeof body.business_hours === "string") {
     updates.business_hours = body.business_hours.trim() || null;
   }
+  if (typeof body.cover_image_url === "string") {
+    updates.cover_image_url = body.cover_image_url.trim() || null;
+  }
+  if (typeof body.navigation_url === "string") {
+    updates.navigation_url = body.navigation_url.trim() || null;
+  }
+  if (body.services !== undefined) updates.services = body.services;
+  if (body.daily_highlights !== undefined) updates.daily_highlights = body.daily_highlights;
   if (typeof body.is_active === "boolean") updates.is_active = body.is_active;
 
   if (Object.keys(updates).length === 0) {

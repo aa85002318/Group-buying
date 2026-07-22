@@ -15,7 +15,9 @@ export async function GET() {
   const admin = createAdminClient();
   const { data, error: fetchError } = await admin
     .from("stores")
-    .select("id, name, address, phone, notes, business_hours, is_active, created_at, updated_at")
+    .select(
+      "id, name, address, phone, notes, business_hours, cover_image_url, navigation_url, services, daily_highlights, is_active, created_at, updated_at"
+    )
     .order("name");
 
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
@@ -40,6 +42,12 @@ export async function POST(request: Request) {
     notes: typeof body.notes === "string" ? body.notes.trim() || null : null,
     business_hours:
       typeof body.business_hours === "string" ? body.business_hours.trim() || null : null,
+    cover_image_url:
+      typeof body.cover_image_url === "string" ? body.cover_image_url.trim() || null : null,
+    navigation_url:
+      typeof body.navigation_url === "string" ? body.navigation_url.trim() || null : null,
+    services: body.services ?? [],
+    daily_highlights: body.daily_highlights ?? {},
     is_active: body.is_active !== false,
   };
 

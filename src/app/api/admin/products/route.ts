@@ -99,6 +99,8 @@ function mapProductRow(body: Record<string, unknown>) {
     publish_website: body.publish_website !== false,
     publish_group_buy: body.publish_group_buy !== false,
     publish_store: body.publish_store !== false,
+    product_scope:
+      body.product_scope === "chime_select" ? "chime_select" : "baking",
   };
 }
 

@@ -38,7 +38,7 @@ import {
   type AdminProductFormV2,
 } from "@/lib/admin/product-form-v2";
 import { formatCurrency } from "@/lib/utils";
-import type { ProductCategory, ProductStatus, Store } from "@/lib/types/database";
+import type { ProductCategory, ProductScope, ProductStatus, Store } from "@/lib/types/database";
 
 type Brand = { id: string; name: string };
 type Supplier = { id: string; name: string };
@@ -269,6 +269,16 @@ export function AdminProductEditor({
           </AdminField>
           <AdminField label="商品 SKU" hint="可修改，留空將自動產生">
             <AdminInput value={form.sku} onChange={(e) => patch({ sku: e.target.value })} />
+          </AdminField>
+          <AdminField label="商品領域" className="md:col-span-2">
+            <AdminRadioGroup<ProductScope>
+              value={form.product_scope}
+              onChange={(product_scope) => patch({ product_scope })}
+              options={[
+                { value: "baking", label: "烘焙材料" },
+                { value: "chime_select", label: "CHIME 精選" },
+              ]}
+            />
           </AdminField>
           <AdminField label="品牌">
             <AdminSelect value={form.brand_id} onChange={(e) => patch({ brand_id: e.target.value })}>

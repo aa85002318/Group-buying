@@ -234,8 +234,72 @@ export interface HomepageBlock {
   sort_order: number;
   display_count?: number;
   source_mode?: "auto" | "manual";
+  data_source?: string | null;
+  view_all_url?: string | null;
   manual_ids?: string[];
   config?: Record<string, unknown>;
+  updated_at: string;
+}
+
+export type ProductScope = "baking" | "chime_select";
+
+export interface HomeAiPrompt {
+  id: string;
+  label: string;
+  prompt: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HomeInspiration {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  image_url: string | null;
+  link_type: string | null;
+  target_url: string | null;
+  button_label: string | null;
+  sort_order: number;
+  is_active: boolean;
+  start_at: string | null;
+  end_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BakingChallenge {
+  id: string;
+  title: string;
+  slug: string;
+  cover_image_url: string | null;
+  description: string | null;
+  rules: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  status: "draft" | "published" | "archived";
+  participant_count: number;
+  featured_on_home: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SeasonalTheme {
+  id: string;
+  title: string;
+  slug: string;
+  cover_image_url: string | null;
+  mobile_cover_image_url: string | null;
+  description: string | null;
+  theme_color: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  status: "draft" | "published" | "archived";
+  featured_on_home: boolean;
+  sort_order: number;
+  created_at: string;
   updated_at: string;
 }
 
@@ -350,6 +414,7 @@ export interface Product {
   preorder_deadline?: string | null;
   created_at: string;
   updated_at: string;
+  product_scope?: ProductScope;
   product_categories?: ProductCategory;
   product_channels?: Array<{ channel: string; is_enabled: boolean }>;
 }
@@ -390,6 +455,12 @@ export interface Store {
   phone: string | null;
   notes?: string | null;
   business_hours?: string | null;
+  image_url?: string | null;
+  map_url?: string | null;
+  cover_image_url?: string | null;
+  navigation_url?: string | null;
+  services?: unknown;
+  daily_highlights?: unknown;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -680,7 +751,12 @@ export interface Livestream {
   stream_url: string | null;
   thumbnail_url: string | null;
   host_user_id: string | null;
-  status: "scheduled" | "live" | "ended";
+  host_name?: string | null;
+  theme_label?: string | null;
+  featured_on_home?: boolean;
+  sort_order?: number;
+  replay_url?: string | null;
+  status: "scheduled" | "live" | "ended" | "cancelled";
   view_count?: number;
   scheduled_at: string | null;
   started_at: string | null;

@@ -1,4 +1,4 @@
-import type { Product, ProductStatus } from "@/lib/types/database";
+import type { Product, ProductScope, ProductStatus } from "@/lib/types/database";
 
 export type InventoryMode = "stock" | "preorder" | "both";
 
@@ -34,6 +34,7 @@ export type AdminProductFormV2 = {
   name: string;
   subtitle: string;
   sku: string;
+  product_scope: ProductScope;
   category_ids: string[];
   brand_id: string;
   supplier_id: string;
@@ -96,6 +97,7 @@ export const emptyProductFormV2 = (): AdminProductFormV2 => ({
   name: "",
   subtitle: "",
   sku: generateSku(),
+  product_scope: "baking",
   category_ids: [],
   brand_id: "",
   supplier_id: "",
@@ -194,6 +196,7 @@ type ExtendedProduct = Product & {
   seo_title?: string | null;
   seo_description?: string | null;
   seo_keywords?: string | null;
+  product_scope?: ProductScope;
   videos?: ProductVideo[];
   variants?: ProductVariant[];
   batches?: ProductBatch[];
@@ -207,6 +210,7 @@ export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
     name: p.name,
     subtitle: p.subtitle ?? "",
     sku: p.sku ?? generateSku(),
+    product_scope: p.product_scope ?? "baking",
     category_ids: p.category_ids?.length
       ? p.category_ids
       : p.category_id
@@ -277,6 +281,7 @@ export function formV2ToPayload(form: AdminProductFormV2) {
     name: form.name.trim(),
     subtitle: form.subtitle.trim() || null,
     sku: form.sku.trim() || null,
+    product_scope: form.product_scope,
     category_id: form.category_ids[0] ?? null,
     category_ids: form.category_ids,
     brand_id: form.brand_id || null,
