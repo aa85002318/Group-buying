@@ -707,6 +707,19 @@ export interface Recipe {
   related_video_id: string | null;
   sort_order: number;
   is_featured: boolean;
+  reading_mode_default?: "flip" | "full";
+  flip_mode_enabled?: boolean;
+  full_reading_enabled?: boolean;
+  is_smart_recipe?: boolean;
+  ingredient_scaling_enabled?: boolean;
+  discussion_enabled?: boolean;
+  submission_enabled?: boolean;
+  ai_enabled?: boolean;
+  product_recommendation_enabled?: boolean;
+  demo_key?: string | null;
+  is_demo?: boolean;
+  author_label?: string | null;
+  tags?: string[];
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
@@ -714,6 +727,10 @@ export interface Recipe {
   recipe_categories?: RecipeCategory | null;
   recipe_ingredients?: RecipeIngredient[];
   recipe_steps?: RecipeStep[];
+  recipe_tools?: RecipeTool[];
+  recipe_preparations?: RecipePreparation[];
+  recipe_media?: RecipeMedia[];
+  recipe_faq?: RecipeFaq[];
   videos?: Video | null;
 }
 
@@ -725,6 +742,10 @@ export interface RecipeIngredient {
   amount: string | null;
   unit: string | null;
   product_id: string | null;
+  is_required?: boolean;
+  substitution_notes?: string | null;
+  quantity_numeric?: number | null;
+  used_in_step_ids?: string[];
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -736,12 +757,353 @@ export interface RecipeStep {
   recipe_id: string;
   step_number: number;
   title: string | null;
+  /** Step body (spec alias: content) */
   description: string;
   image_url: string | null;
   note: string | null;
+  duration_seconds?: number | null;
+  temperature_value?: number | null;
+  temperature_unit?: string | null;
+  timer_enabled?: boolean;
+  chef_notes?: string | null;
+  safety_notes?: string | null;
+  common_failures?: unknown[];
+  recovery_actions?: unknown[];
+  prohibited_actions?: unknown[];
+  ai_enabled?: boolean;
+  ai_context?: string | null;
+  ai_keywords?: string[];
   sort_order: number;
   created_at: string;
   updated_at: string;
+  recipe_step_ai_prompts?: RecipeStepAiPrompt[];
+}
+
+export interface RecipeTool {
+  id: string;
+  recipe_id: string;
+  name: string;
+  notes: string | null;
+  product_id: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  products?: Product | null;
+}
+
+export interface RecipePreparation {
+  id: string;
+  recipe_id: string;
+  title: string | null;
+  content: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type RecipeMediaType = "image" | "video" | "keyframe";
+/** New writes: upload | storage | cdn. youtube/vimeo kept for legacy rows only. */
+export type RecipeMediaSourceType =
+  | "upload"
+  | "storage"
+  | "cdn"
+  | "youtube"
+  | "vimeo";
+
+export type RecipeMediaUploadStatus =
+  | "pending"
+  | "uploading"
+  | "processing"
+  | "completed"
+  | "failed";
+
+export type RecipeMediaProcessingStatus =
+  | "ready"
+  | "placeholder"
+  | "migration_required"
+  | "processing"
+  | "failed";
+
+export interface RecipeMedia {
+  id: string;
+  recipe_id: string;
+  step_id: string | null;
+  story_page_id?: string | null;
+  media_type: RecipeMediaType;
+  source_type: RecipeMediaSourceType;
+  url: string | null;
+  thumbnail_url: string | null;
+  subtitle_url: string | null;
+  subtitle_language?: string | null;
+  subtitle_label?: string | null;
+  aspect_ratio: string | null;
+  duration_seconds: number | null;
+  width?: number | null;
+  height?: number | null;
+  start_seconds?: number | null;
+  end_seconds?: number | null;
+  storage_bucket?: string | null;
+  storage_path?: string | null;
+  original_filename?: string | null;
+  mime_type?: string | null;
+  file_size_bytes?: number | null;
+  upload_status?: RecipeMediaUploadStatus;
+  processing_status?: RecipeMediaProcessingStatus;
+  upload_metadata?: Record<string, unknown>;
+  is_demo?: boolean;
+  seed_key?: string | null;
+  autoplay: boolean;
+  muted: boolean;
+  loop: boolean;
+  allow_slow_playback: boolean;
+  alt_text: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  recipe_video_markers?: RecipeVideoMarker[];
+}
+
+export interface RecipeStoryChapter {
+  id: string;
+  recipe_id: string;
+  title: string;
+  subtitle: string | null;
+  chapter_number: number | null;
+  cover_image: string | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  recipe_story_pages?: RecipeStoryPage[];
+}
+
+export interface RecipeStoryPage {
+  id: string;
+  recipe_id: string;
+  chapter_id: string | null;
+  step_id: string | null;
+  page_type: string;
+  layout_type: string;
+  title: string | null;
+  subtitle: string | null;
+  body: string | null;
+  eyebrow: string | null;
+  alignment: string | null;
+  content_config: Record<string, unknown>;
+  completion_config: Record<string, unknown>;
+  ai_context: string | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  recipe_story_page_media?: RecipeStoryPageMedia[];
+}
+
+export interface RecipeStoryPageMedia {
+  id: string;
+  story_page_id: string;
+  media_type: RecipeMediaType;
+  source_type: RecipeMediaSourceType;
+  url: string | null;
+  thumbnail_url: string | null;
+  subtitle_url: string | null;
+  caption: string | null;
+  alt_text: string | null;
+  duration_seconds: number | null;
+  focal_point_x: number | null;
+  focal_point_y: number | null;
+  source_media_id?: string | null;
+  storage_bucket?: string | null;
+  storage_path?: string | null;
+  original_filename?: string | null;
+  mime_type?: string | null;
+  file_size_bytes?: number | null;
+  start_seconds?: number | null;
+  end_seconds?: number | null;
+  upload_status?: RecipeMediaUploadStatus;
+  processing_status?: RecipeMediaProcessingStatus;
+  sort_order: number;
+  active: boolean;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecipeVideoMarker {
+  id: string;
+  media_id: string;
+  time_seconds: number;
+  title: string;
+  description: string | null;
+  ai_context: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecipeStepAiPrompt {
+  id: string;
+  step_id: string;
+  label: string;
+  prompt: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type RecipeRecommendationType =
+  | "ingredient"
+  | "substitute"
+  | "tool"
+  | "decoration"
+  | "packaging"
+  | "teacher_choice"
+  | "upgrade";
+
+export interface RecipeProductRecommendation {
+  id: string;
+  recipe_id: string;
+  step_id: string | null;
+  ingredient_id: string | null;
+  product_id: string;
+  recommendation_type: RecipeRecommendationType;
+  recommendation_reason: string | null;
+  priority: number;
+  manual_override: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  products?: Product | null;
+}
+
+export interface RecipeFaq {
+  id: string;
+  recipe_id: string;
+  question: string;
+  answer: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type RecipeDiscussionCategory =
+  | "general"
+  | "failure"
+  | "substitution"
+  | "oven"
+  | "storage"
+  | "product"
+  | "other";
+
+export type RecipeDiscussionStatus =
+  | "open"
+  | "answered"
+  | "resolved"
+  | "locked"
+  | "hidden";
+
+export interface RecipeDiscussion {
+  id: string;
+  recipe_id: string;
+  user_id: string | null;
+  category: RecipeDiscussionCategory;
+  title: string;
+  body: string;
+  step_id: string | null;
+  media_id: string | null;
+  media_time_seconds: number | null;
+  image_urls: string[];
+  status: RecipeDiscussionStatus;
+  like_count: number;
+  reply_count: number;
+  is_demo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecipeDiscussionReply {
+  id: string;
+  discussion_id: string;
+  user_id: string | null;
+  body: string;
+  image_urls: string[];
+  author_role: "member" | "teacher" | "official";
+  is_helpful: boolean;
+  is_best_answer: boolean;
+  like_count: number;
+  is_demo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type RecipeSubmissionSuccessStatus =
+  | "success"
+  | "partially_successful"
+  | "needs_improvement";
+
+export type RecipeSubmissionModerationStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "hidden";
+
+export interface RecipeSubmission {
+  id: string;
+  recipe_id: string;
+  user_id: string | null;
+  title: string | null;
+  note: string | null;
+  rating: number | null;
+  success_status: RecipeSubmissionSuccessStatus;
+  recipe_multiplier: number;
+  mold_size: string | null;
+  oven_settings: string | null;
+  substitutions: string | null;
+  made_on: string | null;
+  share_to_community: boolean;
+  community_post_id: string | null;
+  moderation_status: RecipeSubmissionModerationStatus;
+  is_teacher_pick: boolean;
+  is_demo: boolean;
+  created_at: string;
+  updated_at: string;
+  recipe_submission_images?: RecipeSubmissionImage[];
+}
+
+export interface RecipeSubmissionImage {
+  id: string;
+  submission_id: string;
+  image_url: string;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface RecipeAiConversation {
+  id: string;
+  recipe_id: string;
+  step_id: string | null;
+  user_id: string | null;
+  session_id: string | null;
+  current_media_id: string | null;
+  current_time_seconds: number | null;
+  current_marker_id: string | null;
+  recipe_multiplier: number;
+  resolved: boolean;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecipeAiMessage {
+  id: string;
+  conversation_id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
 }
 
 export interface Livestream {

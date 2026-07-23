@@ -42,6 +42,7 @@ export default function AdminRecipeNewPage() {
     storage_method: "",
     status: "draft",
     is_featured: false,
+    is_smart_recipe: true,
     seo_title: "",
     seo_description: "",
   });
@@ -93,7 +94,10 @@ export default function AdminRecipeNewPage() {
 
   return (
     <div className="space-y-4">
-      <AdminPageHeader title="新增食譜" description="儲存草稿或直接發布" />
+      <AdminPageHeader
+        title="新增食譜"
+        description="先建立草稿；儲存後會進入完整智慧食譜編輯器（翻頁、媒體、AI、審核等）"
+      />
 
       <div className="space-y-4 rounded-xl bg-white p-4 shadow-card">
         <AdminImageUpload
@@ -179,6 +183,14 @@ export default function AdminRecipeNewPage() {
               onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
             />
             設為精選
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.is_smart_recipe}
+              onChange={(e) => setForm({ ...form, is_smart_recipe: e.target.checked })}
+            />
+            智慧食譜
           </label>
         </div>
 
