@@ -71,7 +71,6 @@ export function RecipeSubmissionsPanel({
   const [rating, setRating] = useState(5);
   const [successStatus, setSuccessStatus] =
     useState<RecipeSubmissionSuccessStatus>("success");
-  const [multiplier, setMultiplier] = useState(1);
   const [moldSize, setMoldSize] = useState("");
   const [ovenSettings, setOvenSettings] = useState("");
   const [substitutions, setSubstitutions] = useState("");
@@ -172,7 +171,6 @@ export function RecipeSubmissionsPanel({
       setNote("");
       setRating(5);
       setSuccessStatus("success");
-      setMultiplier(1);
       setMoldSize("");
       setOvenSettings("");
       setSubstitutions("");
