@@ -13,7 +13,13 @@ import {
 } from "@/lib/recipes/storybook";
 import type { Recipe } from "@/lib/types/database";
 
-export function RecipeDetailClient({ slug }: { slug: string }) {
+type Props = {
+  slug: string;
+  /** Kindle-like: no site chrome (immersive route group). */
+  immersive?: boolean;
+};
+
+export function RecipeDetailClient({ slug, immersive = false }: Props) {
   const [payload, setPayload] = useState<SmartRecipePayload | null>(null);
   const [stories, setStories] = useState<StorybookPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,19 +73,29 @@ export function RecipeDetailClient({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="aspect-[16/9] animate-pulse rounded-[22px] bg-muted" />
-        <div className="h-8 w-2/3 animate-pulse rounded bg-muted" />
-        <div className="h-24 animate-pulse rounded-[18px] bg-muted" />
+      <div
+        className={
+          immersive
+            ? "flex min-h-[100dvh] items-center justify-center bg-[#1a100c]"
+            : "space-y-4"
+        }
+      >
+        <div
+          className={
+            immersive
+              ? "h-10 w-10 animate-pulse rounded-full bg-white/20"
+              : "aspect-[16/9] animate-pulse rounded-[22px] bg-muted"
+          }
+        />
       </div>
     );
   }
 
   if (error || !payload) {
     return (
-      <div className="space-y-3 py-10 text-center">
-        <p className="text-foreground-secondary">{error ?? "找不到食譜"}</p>
-        <Link href="/recipes" className="text-sm text-primary hover:underline">
+      <div className="space-y-3 py-10 text-center text-white">
+        <p className="text-white/70">{error ?? "找不到食譜"}</p>
+        <Link href="/recipes" className="text-sm text-[#FF5A5F] hover:underline">
           返回食譜列表
         </Link>
       </div>
@@ -87,8 +103,10 @@ export function RecipeDetailClient({ slug }: { slug: string }) {
   }
 
   if (stories && hasActiveStorybook(stories.chapters)) {
-    return <RecipeStorybookReader data={payload} stories={stories} />;
+    return (
+      <RecipeStorybookReader data={payload} stories={stories} immersive={immersive} />
+    );
   }
 
-  return <SmartRecipeReader data={payload} />;
+  return <SmartRecipeReader data={payload} immersive={immersive} />;
 }

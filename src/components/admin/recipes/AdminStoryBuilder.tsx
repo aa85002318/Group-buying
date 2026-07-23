@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import {
   STORY_LAYOUT_LABELS,
   STORY_PAGE_TYPE_LABELS,
+  STORY_PAGE_TYPES_V3,
   defaultsForStoryIntent,
   type RecipeStoryAlignment,
   type RecipeStoryLayoutType,
@@ -55,7 +56,12 @@ type Selection =
 
 type PreviewMode = "phone" | "desktop";
 
-const PAGE_TYPE_OPTIONS = Object.keys(STORY_PAGE_TYPE_LABELS) as RecipeStoryPageType[];
+const PAGE_TYPE_OPTIONS = [
+  ...STORY_PAGE_TYPES_V3,
+  ...(Object.keys(STORY_PAGE_TYPE_LABELS) as RecipeStoryPageType[]).filter(
+    (t) => !STORY_PAGE_TYPES_V3.includes(t) && t !== "scale"
+  ),
+];
 const LAYOUT_OPTIONS = Object.keys(STORY_LAYOUT_LABELS) as RecipeStoryLayoutType[];
 const ALIGNMENT_OPTIONS: { value: RecipeStoryAlignment; label: string }[] = [
   { value: "top_left", label: "左上" },
@@ -65,14 +71,16 @@ const ALIGNMENT_OPTIONS: { value: RecipeStoryAlignment; label: string }[] = [
 ];
 
 const WIZARD_INTENTS: { intent: string; label: string; hint: string }[] = [
-  { intent: "full_image", label: "全版圖片", hint: "全版視覺封面／章節圖" },
-  { intent: "image_text", label: "圖文介紹", hint: "圖文分割說明" },
-  { intent: "video", label: "教學影片", hint: "步驟／教學影片頁" },
-  { intent: "gallery", label: "多圖步驟", hint: "多圖分鏡步驟" },
-  { intent: "comparison", label: "狀態比較", hint: "正確／錯誤對照" },
-  { intent: "timer", label: "計時", hint: "倒數／計時任務" },
-  { intent: "checkpoint", label: "完成檢查", hint: "檢查清單確認" },
-  { intent: "ai", label: "AI 協助", hint: "步驟 AI 提示頁" },
+  { intent: "cover", label: "封面", hint: "全版封面頁" },
+  { intent: "toc", label: "目錄", hint: "食譜目錄跳頁" },
+  { intent: "full_image", label: "全版圖片", hint: "單張圖片頁" },
+  { intent: "video", label: "影片", hint: "影片為主角的教學頁" },
+  { intent: "image_text", label: "圖文", hint: "圖文內容頁" },
+  { intent: "step", label: "製作步驟", hint: "步驟頁（可附影片）" },
+  { intent: "challenge", label: "食譜挑戰", hint: "挑戰頁（需食譜開關）" },
+  { intent: "gallery", label: "成品分享", hint: "作品上傳／作品牆" },
+  { intent: "completion", label: "完成", hint: "完成頁" },
+  { intent: "recommendations", label: "推薦商品", hint: "商品推薦（需開關）" },
 ];
 
 const SPLIT_OPTIONS: { value: StorySplitDirection; label: string }[] = [
@@ -114,6 +122,7 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
   const [selection, setSelection] = useState<Selection>(null);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("phone");
   const [wizardChapterId, setWizardChapterId] = useState<string | null>(null);
+  const [listMode, setListMode] = useState<"pages" | "chapters">("pages");
   const [mediaUrlDraft, setMediaUrlDraft] = useState("");
   const [mediaTypeDraft, setMediaTypeDraft] = useState<"image" | "video" | "keyframe">("image");
   const [pickRecipeMedia, setPickRecipeMedia] = useState("");
@@ -205,6 +214,51 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
     return null;
   }, [chapters, selection]);
 
+  const flatPages = useMemo(() => {
+    const orderedChapters = [...chapters].sort((a, b) => a.sort_order - b.sort_order);
+    const rows: Array<{
+      page: PageWithMedia;
+      chapter: ChapterWithPages;
+      globalIndex: number;
+    }> = [];
+    let i = 0;
+    for (const ch of orderedChapters) {
+      const pages = [...(ch.recipe_story_pages ?? [])].sort(
+        (a, b) => a.sort_order - b.sort_order
+      );
+      for (const page of pages) {
+        rows.push({
+          page: {
+            ...page,
+            recipe_story_page_media: page.recipe_story_page_media ?? [],
+          },
+          chapter: ch,
+          globalIndex: i++,
+        });
+      }
+    }
+    return rows;
+  }, [chapters]);
+
+  const ensureChapterForNewPage = async (): Promise<string | null> => {
+    if (chapters.length > 0) {
+      const ordered = [...chapters].sort((a, b) => a.sort_order - b.sort_order);
+      return ordered[ordered.length - 1]?.id ?? null;
+    }
+    const data = await postAction({
+      action: "create_chapter",
+      title: "教材內容",
+      chapter_number: 1,
+      sort_order: 0,
+    });
+    return (data.chapter?.id as string) ?? null;
+  };
+
+  const openNewPageWizard = async () => {
+    const chapterId = await ensureChapterForNewPage();
+    if (chapterId) setWizardChapterId(chapterId);
+  };
+
   const addChapter = async () => {
     const sort_order = chapters.length;
     const data = await postAction({
@@ -295,6 +349,27 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
         chapter_id: chapter.id,
         sort_order: i,
       })),
+    });
+  };
+
+  /** Flat-list reorder: same chapter uses local move; cross-chapter reassigns chapter. */
+  const movePageGlobal = async (pageId: string, dir: -1 | 1) => {
+    const idx = flatPages.findIndex((r) => r.page.id === pageId);
+    const neighbor = flatPages[idx + dir];
+    if (idx < 0 || !neighbor) return;
+    const current = flatPages[idx];
+    if (current.chapter.id === neighbor.chapter.id) {
+      await movePage(pageId, dir);
+      return;
+    }
+    const targetPages = [...(neighbor.chapter.recipe_story_pages ?? [])].sort(
+      (a, b) => a.sort_order - b.sort_order
+    );
+    await postAction({
+      action: "update_page",
+      id: pageId,
+      chapter_id: neighbor.chapter.id,
+      sort_order: dir > 0 ? targetPages.length : 0,
     });
   };
 
@@ -413,12 +488,30 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
         <div>
           <h3 className="font-medium">圖文影音教學集</h3>
           <p className="text-sm text-muted-foreground">
-            左側結構樹 · 中央即時預覽 · 右側內容編輯（自動儲存至 stories API）
+            V3：一頁就是一頁。左側頁面列表 · 中央預覽 · 右側完整內容（類型／圖／影／文／Popup）
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => void loadStories()} disabled={busy}>
-          重新載入
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant={listMode === "pages" ? "default" : "outline"}
+            type="button"
+            onClick={() => setListMode("pages")}
+          >
+            頁面列表
+          </Button>
+          <Button
+            size="sm"
+            variant={listMode === "chapters" ? "default" : "outline"}
+            type="button"
+            onClick={() => setListMode("chapters")}
+          >
+            章節樹
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => void loadStories()} disabled={busy}>
+            重新載入
+          </Button>
+        </div>
       </div>
 
       {error ? (
@@ -428,8 +521,81 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
       ) : null}
 
       <div className="grid gap-3 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-        {/* Left: tree */}
+        {/* Left: flat pages (default) or chapter tree */}
         <aside className="space-y-2 rounded-lg border bg-white p-3">
+          {listMode === "pages" ? (
+            <>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium">頁面（閱讀順序）</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => void openNewPageWizard()}
+                >
+                  新增頁面
+                </Button>
+              </div>
+              {flatPages.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  尚無頁面。點「新增頁面」開始編輯教材。
+                </p>
+              ) : null}
+              <div className="max-h-[70vh] space-y-1 overflow-y-auto">
+                {flatPages.map((row, idx) => {
+                  const pageSelected =
+                    selection?.kind === "page" && selection.pageId === row.page.id;
+                  const typeLabel =
+                    STORY_PAGE_TYPE_LABELS[row.page.page_type as RecipeStoryPageType] ??
+                    row.page.page_type;
+                  return (
+                    <div
+                      key={row.page.id}
+                      className={`flex items-start gap-1 rounded-lg border px-2 py-1.5 ${
+                        pageSelected ? "border-primary bg-primary/5" : ""
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 text-left"
+                        onClick={() =>
+                          setSelection({ kind: "page", pageId: row.page.id })
+                        }
+                      >
+                        <span className="font-mono text-[10px] text-muted-foreground">
+                          {String(idx + 1).padStart(2, "0")} · {typeLabel}
+                        </span>
+                        <span className="block truncate text-sm font-medium">
+                          {row.page.title || "未命名頁面"}
+                        </span>
+                      </button>
+                      <div className="flex shrink-0 flex-col gap-0.5">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-1 text-xs"
+                          disabled={busy || idx === 0}
+                          onClick={() => void movePageGlobal(row.page.id, -1)}
+                        >
+                          ↑
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-1 text-xs"
+                          disabled={busy || idx === flatPages.length - 1}
+                          onClick={() => void movePageGlobal(row.page.id, 1)}
+                        >
+                          ↓
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <>
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium">章節／頁面</p>
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void addChapter()}>
@@ -560,6 +726,8 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
               );
             })}
           </div>
+            </>
+          )}
         </aside>
 
         {/* Center: preview */}
@@ -1125,6 +1293,11 @@ function PageEditor({
     completion.checklist ?? []
   );
   const [continueLabel, setContinueLabel] = useState(completion.continueLabel ?? "");
+  const [cautionEnabled, setCautionEnabled] = useState(Boolean(content.cautionEnabled));
+  const [cautionTitle, setCautionTitle] = useState(content.cautionTitle ?? "容易失敗");
+  const [cautionItemsText, setCautionItemsText] = useState(
+    (content.cautionItems ?? []).join("\n")
+  );
 
   useEffect(() => {
     setTitle(page.title ?? "");
@@ -1151,6 +1324,9 @@ function PageEditor({
     setComparisonOptions(c.comparisonOptions ?? []);
     setChecklist(done.checklist ?? []);
     setContinueLabel(done.continueLabel ?? "");
+    setCautionEnabled(Boolean(c.cautionEnabled));
+    setCautionTitle(c.cautionTitle ?? "容易失敗");
+    setCautionItemsText((c.cautionItems ?? []).join("\n"));
   }, [page]);
 
   const saveBasics = () => {
@@ -1180,6 +1356,12 @@ function PageEditor({
       endSeconds: endSeconds ? Number(endSeconds) : undefined,
       comparisonPrompt: comparisonPrompt.trim() || undefined,
       comparisonOptions,
+      cautionEnabled,
+      cautionTitle: cautionTitle.trim() || undefined,
+      cautionItems: cautionItemsText
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
     });
     await onUpdateCompletion({
       checklist,
@@ -1201,11 +1383,24 @@ function PageEditor({
         </div>
       </div>
 
-      <Field label="page_type">
+      <Field label="頁面類型">
         <select
           className="input-field"
           value={pageType}
-          onChange={(e) => setPageType(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value as RecipeStoryPageType;
+            setPageType(next);
+            const defaults = defaultsForStoryIntent(
+              next === "step_video" || next === "full_video"
+                ? "video"
+                : next === "image_text"
+                  ? "image_text"
+                  : next === "full_image"
+                    ? "full_image"
+                    : next
+            );
+            if (defaults.page_type === next) setLayoutType(defaults.layout_type);
+          }}
         >
           {PAGE_TYPE_OPTIONS.map((t) => (
             <option key={t} value={t}>
@@ -1215,7 +1410,7 @@ function PageEditor({
         </select>
       </Field>
 
-      <Field label="layout_type">
+      <Field label="版面 layout">
         <select
           className="input-field"
           value={layoutType}
@@ -1259,14 +1454,40 @@ function PageEditor({
           onChange={(e) => setBody(e.target.value)}
         />
       </Field>
-      <Field label="AI 脈絡 ai_context">
+      <div className="rounded-lg border border-dashed border-border p-3 space-y-2">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={cautionEnabled}
+            onChange={(e) => setCautionEnabled(e.target.checked)}
+          />
+          Popup：容易失敗／注意事項
+        </label>
+        {cautionEnabled ? (
+          <>
+            <Field label="Popup 標題">
+              <Input value={cautionTitle} onChange={(e) => setCautionTitle(e.target.value)} />
+            </Field>
+            <Field label="注意事項（一行一點）">
+              <textarea
+                className="input-field min-h-[72px]"
+                value={cautionItemsText}
+                onChange={(e) => setCautionItemsText(e.target.value)}
+                placeholder={"奶油不要融化\n不要攪拌過久"}
+              />
+            </Field>
+          </>
+        ) : null}
+      </div>
+      <Field label="提問脈絡（選填）">
         <textarea
           className="input-field min-h-[64px]"
           value={aiContext}
           onChange={(e) => setAiContext(e.target.value)}
+          placeholder="學生提問時給老師的頁面脈絡"
         />
       </Field>
-      <Field label="關聯步驟 step_id">
+      <Field label="關聯步驟">
         <select className="input-field" value={stepId} onChange={(e) => setStepId(e.target.value)}>
           <option value="">（無）</option>
           {steps.map((s, i) => (
@@ -1280,14 +1501,21 @@ function PageEditor({
         <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
         啟用
       </label>
-      <Button size="sm" disabled={busy} onClick={saveBasics}>
-        儲存基本欄位
+      <Button
+        size="sm"
+        disabled={busy}
+        onClick={async () => {
+          saveBasics();
+          await saveContentExtras();
+        }}
+      >
+        儲存此頁
       </Button>
 
       <hr className="border-dashed" />
-      <p className="text-sm font-medium">content_config</p>
+      <p className="text-sm font-medium">進階設定</p>
 
-      <Field label="圖文方向 splitDirection">
+      <Field label="圖文方向">
         <select
           className="input-field"
           value={splitDirection}

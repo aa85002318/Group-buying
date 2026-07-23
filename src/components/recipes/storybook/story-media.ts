@@ -61,9 +61,20 @@ export function pageMediaToRecipeMedia(
 }
 
 export function primaryMedia(
-  media: RecipeStoryPageMedia[] | undefined
+  media: RecipeStoryPageMedia[] | undefined,
+  prefer: "video" | "image" | "any" = "any"
 ): RecipeStoryPageMedia | null {
   if (!media?.length) return null;
+  if (prefer === "video") {
+    return media.find((m) => m.media_type === "video") ?? media[0] ?? null;
+  }
+  if (prefer === "image") {
+    return (
+      media.find((m) => m.media_type === "image" || m.media_type === "keyframe") ??
+      media[0] ??
+      null
+    );
+  }
   return media[0] ?? null;
 }
 

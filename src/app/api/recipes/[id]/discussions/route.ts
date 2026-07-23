@@ -104,13 +104,21 @@ export async function POST(request: Request, { params }: Params) {
   const admin = createAdminClient();
   const { data: recipe } = await admin
     .from("recipes")
-    .select("id, status, discussion_enabled")
+    .select("id, status, discussion_enabled, reader_settings")
     .eq("id", id)
     .eq("status", "published")
     .maybeSingle();
 
   if (!recipe) return NextResponse.json({ error: "食譜不存在" }, { status: 404 });
-  if (recipe.discussion_enabled === false) {
+
+  const askTeacher =
+    recipe.reader_settings &&
+    typeof recipe.reader_settings === "object" &&
+    (recipe.reader_settings as Record<string, unknown>).showAskTeacher !== false;
+
+  // V3「我要提問」可在討論板關閉時仍送出（綁定 story_page_id）
+  const isPageQuestion = Boolean(body.story_page_id);
+  if (recipe.discussion_enabled === false && !(isPageQuestion && askTeacher !== false)) {
     return NextResponse.json({ error: "此食譜未開放討論" }, { status: 403 });
   }
 
@@ -127,6 +135,7 @@ export async function POST(request: Request, { params }: Params) {
       title,
       body: discussionBody,
       step_id: body.step_id || null,
+      story_page_id: body.story_page_id || null,
       media_id: body.media_id || null,
       media_time_seconds:
         body.media_time_seconds != null ? Number(body.media_time_seconds) : null,

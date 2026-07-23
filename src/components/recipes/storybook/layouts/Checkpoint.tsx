@@ -26,7 +26,7 @@ export function Checkpoint({
   checkedIds,
   onToggle,
   continueLabel = "看起來沒問題，繼續",
-  mismatchLabel = "不太對，問 AI",
+  mismatchLabel = "不太對，我要提問",
   onContinue,
   onMismatchAi,
   className,

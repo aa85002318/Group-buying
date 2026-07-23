@@ -6,12 +6,13 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   return {
-    title: "食譜｜CHIMEIDIY",
-    description: `查看食譜 ${slug} — CHIMEIDIY 烘焙食譜與教學`,
+    title: "食譜教材｜CHIMEIDIY",
+    description: `CHIMEIDIY 翻頁教材 ${slug}`,
   };
 }
 
-export default async function RecipeDetailPage({ params }: Props) {
+/** Immersive Story Book — no site header/footer (Kindle-like). */
+export default async function RecipeStoryBookPage({ params }: Props) {
   const { slug } = await params;
-  return <RecipeDetailClient slug={slug} />;
+  return <RecipeDetailClient slug={slug} immersive />;
 }

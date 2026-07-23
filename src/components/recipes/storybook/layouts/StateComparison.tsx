@@ -103,7 +103,7 @@ export function StateComparison({
               className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#FF5A5F] px-4 text-sm font-semibold"
             >
               <Sparkles className="h-4 w-4" />
-              問 AI 怎麼辦
+              我要提問
             </button>
           ) : null}
         </div>

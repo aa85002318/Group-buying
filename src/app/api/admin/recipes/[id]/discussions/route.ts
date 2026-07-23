@@ -17,7 +17,9 @@ export async function GET(_request: Request, { params }: Params) {
   const admin = createAdminClient();
   const { data, error: fetchError } = await admin
     .from("recipe_discussions")
-    .select("*")
+    .select(
+      "*, profiles:user_id(id, full_name), recipe_steps:step_id(id, step_number, title), recipe_story_pages:story_page_id(id, title, page_type)"
+    )
     .eq("recipe_id", id)
     .order("created_at", { ascending: false });
 

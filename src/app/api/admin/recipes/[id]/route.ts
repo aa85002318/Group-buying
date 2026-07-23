@@ -132,6 +132,7 @@ export async function PATCH(
     "submission_enabled",
     "ai_enabled",
     "product_recommendation_enabled",
+    "reader_settings",
     "demo_key",
     "is_demo",
     "author_label",

@@ -3,6 +3,7 @@ import { requireAuth, requireContentAdmin } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { rateLimit } from "@/lib/security/rateLimit";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createMemberNotification } from "@/lib/services/memberNotificationService";
 
 type Params = { params: Promise<{ id: string; discussionId: string }> };
 
@@ -76,7 +77,7 @@ export async function POST(request: Request, { params }: Params) {
   const admin = createAdminClient();
   const { data: disc } = await admin
     .from("recipe_discussions")
-    .select("id, recipe_id, status, reply_count")
+    .select("id, recipe_id, status, reply_count, user_id, title")
     .eq("id", discussionId)
     .eq("recipe_id", id)
     .maybeSingle();
@@ -131,6 +132,29 @@ export async function POST(request: Request, { params }: Params) {
       .from("recipe_discussions")
       .update({ status: "resolved" })
       .eq("id", discussionId);
+  }
+
+  // Notify student when teacher / official replies
+  if (
+    authorRole !== "member" &&
+    disc.user_id &&
+    disc.user_id !== auth!.profile.id
+  ) {
+    const { data: recipeRow } = await admin
+      .from("recipes")
+      .select("slug, title")
+      .eq("id", id)
+      .maybeSingle();
+    const slug = recipeRow?.slug || id;
+    await createMemberNotification(admin, {
+      userId: disc.user_id,
+      notificationType: "system",
+      title: "老師回覆了你的提問",
+      message: `「${disc.title}」已有老師回覆，請回食譜教材查看。`,
+      summary: recipeRow?.title ?? null,
+      linkUrl: `/recipes/${slug}`,
+      referenceId: discussionId,
+    });
   }
 
   return NextResponse.json({ reply: data }, { status: 201 });

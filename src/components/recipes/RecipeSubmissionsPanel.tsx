@@ -76,7 +76,7 @@ export function RecipeSubmissionsPanel({
   const [ovenSettings, setOvenSettings] = useState("");
   const [substitutions, setSubstitutions] = useState("");
   const [madeOn, setMadeOn] = useState("");
-  const [shareToCommunity, setShareToCommunity] = useState(false);
+  const [sharePublic, setSharePublic] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -151,12 +151,12 @@ export function RecipeSubmissionsPanel({
           note: note.trim() || null,
           rating,
           success_status: successStatus,
-          recipe_multiplier: multiplier,
+          recipe_multiplier: 1,
           mold_size: moldSize.trim() || null,
           oven_settings: ovenSettings.trim() || null,
           substitutions: substitutions.trim() || null,
           made_on: madeOn || null,
-          share_to_community: shareToCommunity,
+          is_public: sharePublic,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -177,14 +177,14 @@ export function RecipeSubmissionsPanel({
       setOvenSettings("");
       setSubstitutions("");
       setMadeOn("");
-      setShareToCommunity(false);
+      setSharePublic(true);
       setShowForm(false);
 
-      let communityNote = "";
-      if (shareToCommunity && data.community && !data.community.ok) {
-        communityNote = "（社群同步稍後開放，作品仍已送審）";
-      }
-      setMsg((data.message || "已送出，審核通過後會公開顯示") + communityNote);
+      setMsg(
+        sharePublic
+          ? data.message || "已送出，審核通過後會公開顯示"
+          : "已儲存到我的作品（僅自己可見）"
+      );
       await load();
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "送出失敗");
@@ -333,18 +333,6 @@ export function RecipeSubmissionsPanel({
               </select>
             </label>
             <label className="block text-xs font-semibold text-[#6B3F24]">
-              配方倍率
-              <input
-                type="number"
-                min={0.25}
-                max={8}
-                step={0.25}
-                value={multiplier}
-                onChange={(e) => setMultiplier(Number(e.target.value) || 1)}
-                className="mt-1 w-full rounded-xl border border-[#F2D8BF] bg-white px-3 py-2.5 text-sm"
-              />
-            </label>
-            <label className="block text-xs font-semibold text-[#6B3F24]">
               製作日期
               <input
                 type="date"
@@ -374,37 +362,44 @@ export function RecipeSubmissionsPanel({
           </div>
 
           <label className="block text-xs font-semibold text-[#6B3F24]">
-            替代材料
+            留言
             <textarea
               value={substitutions}
               onChange={(e) => setSubstitutions(e.target.value)}
               rows={2}
-              placeholder="有換料嗎？寫一下心得"
+              placeholder="有換料或心得嗎？"
               className="mt-1 w-full rounded-xl border border-[#F2D8BF] bg-white px-3 py-2.5 text-sm"
             />
           </label>
 
-          <label className="flex items-start gap-2 text-sm text-[#6B3F24]">
-            <input
-              type="checkbox"
-              checked={shareToCommunity}
-              onChange={(e) => setShareToCommunity(e.target.checked)}
-              className="mt-1"
-            />
-            <span>
-              同步分享到烘焙圈社群
-              <span className="mt-0.5 block text-xs text-foreground-secondary">
-                社群寫入可能尚未開放；勾選後作品仍會送審。
-              </span>
-            </span>
-          </label>
+          <fieldset className="space-y-2 text-sm text-[#6B3F24]">
+            <legend className="text-xs font-semibold">公開</legend>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="share-public"
+                checked={sharePublic}
+                onChange={() => setSharePublic(true)}
+              />
+              是（作品牆，大家可留言／按讚／老師精選）
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="share-public"
+                checked={!sharePublic}
+                onChange={() => setSharePublic(false)}
+              />
+              否（只自己看）
+            </label>
+          </fieldset>
 
           <button
             type="submit"
             disabled={submitting}
             className="min-h-11 w-full rounded-2xl bg-[#FF5A5F] text-sm font-bold text-white disabled:opacity-50"
           >
-            {submitting ? "送出中…" : "送出作品"}
+            {submitting ? "送出中…" : "發布"}
           </button>
         </form>
       ) : null}

@@ -718,6 +718,8 @@ export interface Recipe {
   product_recommendation_enabled?: boolean;
   demo_key?: string | null;
   is_demo?: boolean;
+  /** Story Book V3 immersive reader flags */
+  reader_settings?: Record<string, unknown> | null;
   author_label?: string | null;
   tags?: string[];
   created_by: string | null;
@@ -1013,6 +1015,8 @@ export interface RecipeDiscussion {
   title: string;
   body: string;
   step_id: string | null;
+  /** Story Book page the question refers to (我要提問) */
+  story_page_id?: string | null;
   media_id: string | null;
   media_time_seconds: number | null;
   image_urls: string[];

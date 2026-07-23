@@ -67,7 +67,8 @@ export function buildFlipPages(data: SmartRecipePayload): FlipPage[] {
     pages.push({ id: "intro", kind: "intro", title: "成品介紹" });
   }
 
-  if (recipe.ingredient_scaling_enabled !== false && ingredients.length > 0) {
+  // V3: scaling page removed from course/textbook flow (opt-in legacy only)
+  if (recipe.ingredient_scaling_enabled === true && ingredients.length > 0) {
     pages.push({ id: "scale", kind: "scale", title: "配方倍率與份量" });
   }
 

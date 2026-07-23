@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { RecipeDiscussionPanel } from "@/components/recipes/RecipeDiscussionPanel";
 import { RecipeRecommendationsPanel } from "@/components/recipes/RecipeRecommendations";
 import { RecipeSubmissionsPanel } from "@/components/recipes/RecipeSubmissionsPanel";
@@ -24,6 +24,7 @@ import {
 } from "@/components/recipes/storybook/story-media";
 import type { SmartRecipePayload } from "@/lib/recipes/flip-pages";
 import type { RecipePlaybackContext } from "@/lib/recipes/media";
+import type { RecipeReaderSettings } from "@/lib/recipes/reader-settings";
 import type {
   RecipeStoryChapter,
   RecipeStoryPage,
@@ -68,6 +69,9 @@ export type StoryPageViewProps = {
   onStartFree?: () => void;
   onStartGuided?: () => void;
   stepIndexLabel?: string | null;
+  /** V3: hide recipe scaling UI */
+  hideScaling?: boolean;
+  readerSettings?: RecipeReaderSettings;
 };
 
 export function StoryPageView(props: StoryPageViewProps) {
@@ -75,9 +79,16 @@ export function StoryPageView(props: StoryPageViewProps) {
   const config = parseContentConfig(page);
   const completion = parseCompletionConfig(page);
   const media = page.recipe_story_page_media ?? [];
-  const primary = primaryMedia(media);
   const layout = page.layout_type || inferLayout(page.page_type);
   const pageType = page.page_type;
+  const preferVideo =
+    layout === "video_lead" ||
+    pageType === "step_video" ||
+    pageType === "full_video" ||
+    pageType === "step";
+  const primary = primaryMedia(media, preferVideo ? "video" : "any");
+  const hideScaling = props.hideScaling !== false;
+  const showAsk = props.readerSettings?.showAskTeacher !== false;
 
   if (pageType === "cover") {
     return (
@@ -115,6 +126,30 @@ export function StoryPageView(props: StoryPageViewProps) {
     );
   }
 
+  if (pageType === "challenge") {
+    const hours = config.challengeHours ?? 48;
+    const badge = config.challengeBadgeLabel || "完成徽章";
+    return (
+      <div className="flex min-h-[min(100dvh,820px)] w-full flex-col justify-center bg-[#FFF9EA] px-6 pb-28 pt-20 text-[#3D2914]">
+        <p className="text-xs font-semibold tracking-[0.16em] text-[#FF5A5F]">
+          CHALLENGE
+        </p>
+        <h2 className="mt-2 font-serif text-3xl font-bold">
+          {page.title || "食譜挑戰"}
+        </h2>
+        {page.subtitle ? (
+          <p className="mt-2 text-base text-[#6B3F24]/80">{page.subtitle}</p>
+        ) : null}
+        <div className="mt-8 space-y-4 rounded-3xl border border-[#F2D8BF] bg-white p-5">
+          <p className="text-lg font-bold">{hours} 小時內完成</p>
+          <p className="text-sm text-[#6B3F24]/80">
+            {page.body || `完成即可取得${badge}`}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (pageType === "discussion") {
     return (
       <EmbedShell title={page.title || "問題討論"} subtitle={page.subtitle}>
@@ -127,7 +162,7 @@ export function StoryPageView(props: StoryPageViewProps) {
     );
   }
 
-  if (pageType === "submissions") {
+  if (pageType === "submissions" || pageType === "gallery") {
     return (
       <EmbedShell title={page.title || "成品分享"} subtitle={page.subtitle}>
         <RecipeSubmissionsPanel recipeId={data.recipe.id} compact />
@@ -187,7 +222,6 @@ export function StoryPageView(props: StoryPageViewProps) {
     pageType === "tools" ||
     pageType === "preparation" ||
     pageType === "preparations" ||
-    pageType === "scale" ||
     layout === "list"
   ) {
     return (
@@ -199,11 +233,11 @@ export function StoryPageView(props: StoryPageViewProps) {
         ingredients={data.recipe.recipe_ingredients ?? []}
         tools={data.tools}
         preparations={data.preparations}
-        multiplier={props.multiplier}
-        onMultiplierChange={props.onMultiplierChange}
+        multiplier={1}
+        onMultiplierChange={() => {}}
         haveIds={props.haveIds}
         onToggleHave={props.onToggleHave}
-        scalingEnabled={data.recipe.ingredient_scaling_enabled !== false}
+        scalingEnabled={!hideScaling && data.recipe.ingredient_scaling_enabled !== false}
       />
     );
   }
@@ -220,17 +254,20 @@ export function StoryPageView(props: StoryPageViewProps) {
           props.onComparisonChoice(page.id, opt);
           props.onMarkComplete(page.id);
         }}
-        onAskAi={(opt) =>
-          props.onAskAi({
-            storyPageId: page.id,
-            chapterId: page.chapter_id,
-            stepId: page.step_id,
-            title: page.title,
-            body: page.body,
-            aiContext: page.ai_context || opt.aiPrompt || opt.outcome,
-            comparisonChoice: opt.label,
-            initialPrompt: opt.aiPrompt || `我選了「${opt.label}」，該怎麼辦？`,
-          })
+        onAskAi={
+          showAsk
+            ? (opt) =>
+                props.onAskAi({
+                  storyPageId: page.id,
+                  chapterId: page.chapter_id,
+                  stepId: page.step_id,
+                  title: page.title,
+                  body: page.body,
+                  aiContext: page.ai_context || opt.aiPrompt || opt.outcome,
+                  comparisonChoice: opt.label,
+                  initialPrompt: opt.aiPrompt || `我選了「${opt.label}」，該怎麼辦？`,
+                })
+            : undefined
         }
       />
     );
@@ -261,17 +298,20 @@ export function StoryPageView(props: StoryPageViewProps) {
         continueLabel={completion.continueLabel}
         mismatchLabel={completion.mismatchLabel}
         onContinue={() => props.onMarkComplete(page.id)}
-        onMismatchAi={() =>
-          props.onAskAi({
-            storyPageId: page.id,
-            chapterId: page.chapter_id,
-            stepId: page.step_id,
-            title: page.title,
-            body: page.body,
-            aiContext: page.ai_context || completion.mismatchAiPrompt,
-            initialPrompt:
-              completion.mismatchAiPrompt || "檢查點看起來不太對，該怎麼排查？",
-          })
+        onMismatchAi={
+          showAsk
+            ? () =>
+                props.onAskAi({
+                  storyPageId: page.id,
+                  chapterId: page.chapter_id,
+                  stepId: page.step_id,
+                  title: page.title,
+                  body: page.body,
+                  aiContext: page.ai_context || completion.mismatchAiPrompt,
+                  initialPrompt:
+                    completion.mismatchAiPrompt || "檢查點看起來不太對，該怎麼排查？",
+                })
+            : undefined
         }
       />
     );
@@ -296,7 +336,7 @@ export function StoryPageView(props: StoryPageViewProps) {
     );
   }
 
-  if (layout === "gallery" || pageType === "gallery") {
+  if (layout === "gallery" && pageType !== "gallery" && pageType !== "submissions") {
     const frames =
       config.frames?.map((f, i) => ({
         id: f.id || `frame-${i}`,
@@ -325,7 +365,8 @@ export function StoryPageView(props: StoryPageViewProps) {
   if (
     layout === "video_lead" ||
     pageType === "step_video" ||
-    pageType === "full_video"
+    pageType === "full_video" ||
+    (pageType === "step" && primary?.media_type === "video")
   ) {
     if (!primary) {
       return (
@@ -362,15 +403,18 @@ export function StoryPageView(props: StoryPageViewProps) {
         muted={props.muted}
         markers={markers}
         onPlaybackContext={props.onPlaybackContext}
-        onAskAi={() =>
-          props.onAskAi({
-            storyPageId: page.id,
-            chapterId: page.chapter_id,
-            stepId: page.step_id,
-            title: page.title,
-            body: page.body,
-            aiContext: page.ai_context,
-          })
+        onAskAi={
+          showAsk
+            ? () =>
+                props.onAskAi({
+                  storyPageId: page.id,
+                  chapterId: page.chapter_id,
+                  stepId: page.step_id,
+                  title: page.title,
+                  body: page.body,
+                  aiContext: page.ai_context,
+                })
+            : undefined
         }
       />
     );
@@ -388,8 +432,8 @@ export function StoryPageView(props: StoryPageViewProps) {
         alignment={page.alignment || "bottom_left"}
         overlayOpacity={config.overlayOpacity}
       >
-        {page.ai_context ? (
-          <AskAiChip
+        {showAsk && page.ai_context ? (
+          <AskTeacherChip
             onClick={() =>
               props.onAskAi({
                 storyPageId: page.id,
@@ -462,8 +506,8 @@ export function StoryPageView(props: StoryPageViewProps) {
       body={page.body}
       splitDirection={(config.splitDirection as StorySplitDirection) || "image_left"}
     >
-      {page.ai_context ? (
-        <AskAiChip
+      {showAsk && page.ai_context ? (
+        <AskTeacherChip
           onClick={() =>
             props.onAskAi({
               storyPageId: page.id,
@@ -502,7 +546,7 @@ function EmbedShell({
   );
 }
 
-function AskAiChip({ onClick }: { onClick: () => void }) {
+function AskTeacherChip({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
@@ -511,8 +555,8 @@ function AskAiChip({ onClick }: { onClick: () => void }) {
         "mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#FF5A5F] px-4 text-sm font-semibold text-white"
       )}
     >
-      <Sparkles className="h-4 w-4" />
-      問 AI
+      <HelpCircle className="h-4 w-4" />
+      我要提問
     </button>
   );
 }
@@ -525,6 +569,7 @@ function inferLayout(pageType: string): string {
       return "full_bleed";
     case "step_video":
     case "full_video":
+    case "step":
       return "video_lead";
     case "gallery":
       return "gallery";
@@ -538,7 +583,7 @@ function inferLayout(pageType: string): string {
     case "ingredients":
     case "tools":
     case "preparation":
-    case "scale":
+    case "toc":
       return "list";
     default:
       return "split_image_text";

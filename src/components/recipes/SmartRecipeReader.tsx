@@ -46,9 +46,11 @@ import { cn, formatDate } from "@/lib/utils";
 
 type SmartRecipeReaderProps = {
   data: SmartRecipePayload;
+  /** Kindle-like fullscreen when opened from immersive route */
+  immersive?: boolean;
 };
 
-export function SmartRecipeReader({ data }: SmartRecipeReaderProps) {
+export function SmartRecipeReader({ data, immersive = false }: SmartRecipeReaderProps) {
   const { recipe } = data;
   const flipEnabled = recipe.flip_mode_enabled !== false;
   const fullEnabled = recipe.full_reading_enabled !== false;
@@ -60,7 +62,9 @@ export function SmartRecipeReader({ data }: SmartRecipeReaderProps) {
         : "full";
 
   const pages = useMemo(() => buildFlipPages(data), [data]);
-  const [readingMode, setReadingMode] = useState<"flip" | "full">(defaultMode);
+  const [readingMode, setReadingMode] = useState<"flip" | "full">(
+    immersive ? "flip" : defaultMode
+  );
   const [pageIndex, setPageIndex] = useState(0);
   const [multiplier, setMultiplier] = useState(1);
   const [haveIds, setHaveIds] = useState<Set<string>>(new Set());
@@ -198,9 +202,23 @@ export function SmartRecipeReader({ data }: SmartRecipeReaderProps) {
     else go(pageIndex - 1);
   };
 
+  useEffect(() => {
+    if (!immersive) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [immersive]);
+
   if (readingMode === "full") {
     return (
-      <div className="mx-auto max-w-3xl space-y-6 pb-8">
+      <div
+        className={cn(
+          "mx-auto max-w-3xl space-y-6 pb-8",
+          immersive && "fixed inset-0 z-[100] overflow-y-auto bg-[#FFF9EA] px-4 pt-4"
+        )}
+      >
         <ReaderModeBar
           recipeTitle={recipe.title}
           readingMode={readingMode}
@@ -245,7 +263,8 @@ export function SmartRecipeReader({ data }: SmartRecipeReaderProps) {
     <div
       className={cn(
         "mx-auto flex max-w-3xl flex-col",
-        cookMode ? "min-h-[100dvh]" : "min-h-[70vh]"
+        cookMode ? "min-h-[100dvh]" : "min-h-[70vh]",
+        immersive && "fixed inset-0 z-[100] max-w-none overflow-hidden bg-[#FFF9EA]"
       )}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}

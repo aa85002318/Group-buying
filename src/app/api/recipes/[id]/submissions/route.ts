@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getAuthUser, requireAuth } from "@/lib/auth";
-import { shareSubmissionToCommunity } from "@/lib/community/shareSubmission";
 import { isSupabaseConfigured } from "@/lib/config";
 import { rateLimit } from "@/lib/security/rateLimit";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -122,7 +121,7 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "此食譜未開放成品分享" }, { status: 403 });
   }
 
-  const shareToCommunity = Boolean(body.share_to_community);
+  const sharePublic = Boolean(body.is_public ?? body.share_to_community);
 
   const { data, error } = await admin
     .from("recipe_submissions")
@@ -138,8 +137,8 @@ export async function POST(request: Request, { params }: Params) {
       oven_settings: body.oven_settings ? String(body.oven_settings) : null,
       substitutions: body.substitutions ? String(body.substitutions) : null,
       made_on: body.made_on || null,
-      share_to_community: shareToCommunity,
-      moderation_status: "pending",
+      share_to_community: sharePublic,
+      moderation_status: sharePublic ? "pending" : "hidden",
     })
     .select("*")
     .single();
@@ -154,24 +153,6 @@ export async function POST(request: Request, { params }: Params) {
     }))
   );
 
-  let community: Awaited<ReturnType<typeof shareSubmissionToCommunity>> | null = null;
-  if (shareToCommunity) {
-    community = await shareSubmissionToCommunity({
-      recipeId: id,
-      submissionId: data.id,
-      userId: auth!.profile.id,
-      title: data.title,
-      note: data.note,
-      imageUrls,
-    });
-    if (community.ok) {
-      await admin
-        .from("recipe_submissions")
-        .update({ community_post_id: community.communityPostId })
-        .eq("id", data.id);
-    }
-  }
-
   const { data: full } = await admin
     .from("recipe_submissions")
     .select("*, recipe_submission_images(*), profiles:user_id(id, full_name)")
@@ -181,8 +162,9 @@ export async function POST(request: Request, { params }: Params) {
   return NextResponse.json(
     {
       submission: full ?? data,
-      community,
-      message: "已送出，審核通過後會公開顯示",
+      message: sharePublic
+        ? "已送出，審核通過後會公開顯示"
+        : "已儲存到我的作品（僅自己可見）",
     },
     { status: 201 }
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RotateCcw, Sparkles, Turtle } from "lucide-react";
+import { HelpCircle, RotateCcw, Turtle } from "lucide-react";
 import { RecipeMediaPlayer } from "@/components/recipes/RecipeMediaPlayer";
 import type { RecipeMedia } from "@/lib/types/database";
 import type { RecipePlaybackContext } from "@/lib/recipes/media";
@@ -120,8 +120,8 @@ export function VideoLead({
             onClick={onAskAi}
             className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#FF5A5F] px-4 text-sm font-semibold text-white"
           >
-            <Sparkles className="h-4 w-4" />
-            問 AI
+            <HelpCircle className="h-4 w-4" />
+            我要提問
           </button>
         ) : null}
       </div>

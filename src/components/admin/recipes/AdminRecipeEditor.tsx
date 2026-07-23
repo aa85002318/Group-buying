@@ -9,6 +9,11 @@ import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminStoryBuilder } from "@/components/admin/recipes/AdminStoryBuilder";
 import { AdminRecipeVideoUpload } from "@/components/admin/recipes/AdminRecipeVideoUpload";
+import {
+  DEFAULT_READER_SETTINGS,
+  parseReaderSettings,
+  type RecipeReaderSettings,
+} from "@/lib/recipes/reader-settings";
 import type {
   Recipe,
   RecipeCategory,
@@ -40,7 +45,7 @@ const TABS = [
   { id: "ai", label: "AI 設定" },
   { id: "recommendations", label: "商品推薦" },
   { id: "faq", label: "常見問題" },
-  { id: "discussions", label: "問題討論" },
+  { id: "discussions", label: "學生提問" },
   { id: "submissions", label: "成品分享" },
   { id: "seo", label: "SEO 與發布" },
 ] as const;
@@ -241,12 +246,14 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     flip_mode_enabled: true,
     full_reading_enabled: true,
     is_smart_recipe: false,
-    ingredient_scaling_enabled: true,
+    ingredient_scaling_enabled: false,
     discussion_enabled: true,
     submission_enabled: true,
     ai_enabled: true,
     product_recommendation_enabled: true,
   });
+  const [readerSettings, setReaderSettings] =
+    useState<RecipeReaderSettings>(DEFAULT_READER_SETTINGS);
 
   const [ingredients, setIngredients] = useState<IngredientDraft[]>([]);
   const [steps, setSteps] = useState<StepDraft[]>([]);
@@ -261,7 +268,17 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     recommendation_reason: "",
     priority: "0",
   });
-  const [discussions, setDiscussions] = useState<RecipeDiscussion[]>([]);
+  const [discussions, setDiscussions] = useState<
+    Array<
+      RecipeDiscussion & {
+        recipe_story_pages?: { id: string; title: string | null; page_type: string } | null;
+        recipe_steps?: { id: string; step_number: number; title: string | null } | null;
+        profiles?: { id: string; full_name: string | null } | null;
+      }
+    >
+  >([]);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyingId, setReplyingId] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<RecipeSubmission[]>([]);
   const [aiStepId, setAiStepId] = useState("");
   const [aiPrompts, setAiPrompts] = useState<RecipeStepAiPrompt[]>([]);
@@ -300,12 +317,13 @@ export function AdminRecipeEditor({ recipeId }: Props) {
       flip_mode_enabled: r.flip_mode_enabled !== false,
       full_reading_enabled: r.full_reading_enabled !== false,
       is_smart_recipe: Boolean(r.is_smart_recipe),
-      ingredient_scaling_enabled: r.ingredient_scaling_enabled !== false,
+      ingredient_scaling_enabled: r.ingredient_scaling_enabled === true,
       discussion_enabled: r.discussion_enabled !== false,
       submission_enabled: r.submission_enabled !== false,
       ai_enabled: r.ai_enabled !== false,
       product_recommendation_enabled: r.product_recommendation_enabled !== false,
     });
+    setReaderSettings(parseReaderSettings(r.reader_settings));
 
     setIngredients(
       (r.recipe_ingredients ?? []).map((ing: RecipeIngredient) => ({
@@ -425,6 +443,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     submission_enabled: form.submission_enabled,
     ai_enabled: form.ai_enabled,
     product_recommendation_enabled: form.product_recommendation_enabled,
+    reader_settings: readerSettings,
   });
 
   const patchRecipe = async (extra: Record<string, unknown> = {}) => {
@@ -706,6 +725,33 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     }
   };
 
+  const replyAsTeacher = async (discussionId: string) => {
+    const body = (replyDrafts[discussionId] ?? "").trim();
+    if (!body) {
+      alert("請填寫回覆內容");
+      return;
+    }
+    setReplyingId(discussionId);
+    try {
+      const res = await fetch(
+        `/api/recipes/${recipeId}/discussions/${discussionId}/replies`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body, author_role: "teacher", is_best_answer: true }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "回覆失敗");
+      setReplyDrafts((prev) => ({ ...prev, [discussionId]: "" }));
+      await loadDiscussions();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "回覆失敗");
+    } finally {
+      setReplyingId(null);
+    }
+  };
+
   const updateSubmission = async (
     id: string,
     patch: {
@@ -960,10 +1006,13 @@ export function AdminRecipeEditor({ recipeId }: Props) {
                 onChange={(v) => setForm({ ...form, full_reading_enabled: v })}
               />
               <Toggle
-                label="材料縮放 ingredient_scaling_enabled"
+                label="材料縮放（已停用／僅舊版）ingredient_scaling_enabled"
                 checked={form.ingredient_scaling_enabled}
                 onChange={(v) => setForm({ ...form, ingredient_scaling_enabled: v })}
               />
+              <p className="-mt-2 text-xs text-muted-foreground">
+                V3 翻頁教材預設關閉倍率；教學定位不建議開啟。
+              </p>
               <Toggle
                 label="AI 協助 ai_enabled"
                 checked={form.ai_enabled}
@@ -984,6 +1033,32 @@ export function AdminRecipeEditor({ recipeId }: Props) {
                 checked={form.submission_enabled}
                 onChange={(v) => setForm({ ...form, submission_enabled: v })}
               />
+            </div>
+            <div className="rounded-xl border border-border p-4">
+              <p className="mb-3 text-sm font-semibold">Story Book 閱讀設定（V3）</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(
+                  [
+                    ["fullscreen", "滿版閱讀模式"],
+                    ["showToc", "顯示目錄"],
+                    ["showAskTeacher", "顯示提問功能"],
+                    ["showChallenge", "顯示食譜挑戰"],
+                    ["showGallery", "顯示作品分享"],
+                    ["showProducts", "顯示推薦商品"],
+                    ["showCautionPopup", "顯示老師提醒（Popup）"],
+                    ["showCompletionBadge", "顯示完成徽章"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <Toggle
+                    key={key}
+                    label={label}
+                    checked={Boolean(readerSettings[key])}
+                    onChange={(v) =>
+                      setReaderSettings((prev) => ({ ...prev, [key]: v }))
+                    }
+                  />
+                ))}
+              </div>
             </div>
             <div>
               <p className="mb-1 text-sm text-muted-foreground">預設閱讀模式</p>
@@ -1975,36 +2050,90 @@ export function AdminRecipeEditor({ recipeId }: Props) {
         {tab === "discussions" && (
           <section className="space-y-3">
             <div className="flex justify-between">
-              <h3 className="font-medium">問題討論審核</h3>
+              <div>
+                <h3 className="font-medium">學生提問（我要提問）</h3>
+                <p className="text-sm text-muted-foreground">
+                  依步驟／頁面回覆；回覆後會通知學生。
+                </p>
+              </div>
               <Button size="sm" variant="outline" type="button" onClick={() => loadDiscussions()}>
                 重新整理
               </Button>
             </div>
             {discussions.map((d) => (
-              <div key={d.id} className="space-y-2 rounded-lg border p-3">
-                <p className="font-medium">{d.title}</p>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{d.body}</p>
-                <p className="text-xs text-muted-foreground">
-                  {d.category} · {new Date(d.created_at).toLocaleString("zh-TW")}
-                </p>
-                <select
-                  className="input-field max-w-xs"
-                  value={d.status}
-                  onChange={(e) =>
-                    updateDiscussionStatus(d.id, e.target.value as RecipeDiscussionStatus)
-                  }
-                  disabled={saving}
-                >
-                  {(["open", "answered", "resolved", "locked", "hidden"] as const).map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+              <div key={d.id} className="space-y-3 rounded-lg border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium">{d.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {d.profiles?.full_name ? `${d.profiles.full_name} · ` : ""}
+                      {d.recipe_story_pages?.title
+                        ? `頁面「${d.recipe_story_pages.title}」 · `
+                        : d.story_page_id
+                          ? `頁面 ${d.story_page_id.slice(0, 8)}… · `
+                          : ""}
+                      {d.recipe_steps
+                        ? `Step ${d.recipe_steps.step_number}${d.recipe_steps.title ? ` ${d.recipe_steps.title}` : ""} · `
+                        : d.step_id
+                          ? `步驟 ${d.step_id.slice(0, 8)}… · `
+                          : ""}
+                      {d.category} · {new Date(d.created_at).toLocaleString("zh-TW")} ·{" "}
+                      {d.status}
+                      {d.reply_count ? ` · ${d.reply_count} 則回覆` : ""}
+                    </p>
+                  </div>
+                  <select
+                    className="input-field max-w-[140px]"
+                    value={d.status}
+                    onChange={(e) =>
+                      updateDiscussionStatus(d.id, e.target.value as RecipeDiscussionStatus)
+                    }
+                    disabled={saving}
+                  >
+                    {(["open", "answered", "resolved", "locked", "hidden"] as const).map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-sm whitespace-pre-wrap">{d.body}</p>
+                {Array.isArray(d.image_urls) && d.image_urls.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {d.image_urls.map((url) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={url}
+                        src={url}
+                        alt=""
+                        className="h-20 w-20 rounded-lg object-cover"
+                      />
+                    ))}
+                  </div>
+                ) : null}
+                <div className="space-y-2 rounded-lg bg-muted/40 p-3">
+                  <p className="text-xs font-semibold">老師回覆</p>
+                  <textarea
+                    className="input-field min-h-[80px]"
+                    placeholder="例如：可以，再攪拌 30 秒即可。"
+                    value={replyDrafts[d.id] ?? ""}
+                    onChange={(e) =>
+                      setReplyDrafts((prev) => ({ ...prev, [d.id]: e.target.value }))
+                    }
+                  />
+                  <Button
+                    size="sm"
+                    type="button"
+                    disabled={replyingId === d.id}
+                    onClick={() => void replyAsTeacher(d.id)}
+                  >
+                    {replyingId === d.id ? "送出中…" : "送出回覆並通知學生"}
+                  </Button>
+                </div>
               </div>
             ))}
             {!discussions.length && (
-              <p className="text-sm text-muted-foreground">尚無討論</p>
+              <p className="text-sm text-muted-foreground">尚無提問</p>
             )}
           </section>
         )}
