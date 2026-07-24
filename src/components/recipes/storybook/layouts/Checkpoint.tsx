@@ -36,7 +36,7 @@ export function Checkpoint({
   return (
     <div
       className={cn(
-        "flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#FFF9EA] px-5 pb-28 pt-16 sm:px-8",
+        "flex h-full min-h-0 w-full flex-col overflow-y-auto overscroll-contain bg-[#FFF9EA] px-5 py-3 sm:px-8",
         className
       )}
     >

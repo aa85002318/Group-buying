@@ -44,7 +44,7 @@ export function TimerLayout({
   return (
     <div
       className={cn(
-        "flex min-h-[min(100dvh,820px)] w-full flex-col items-center justify-center bg-[#1a100c] px-6 pb-28 pt-16 text-white",
+        "flex h-full min-h-0 w-full flex-col items-center justify-center bg-[#1a100c] px-6 py-3 text-white",
         className
       )}
     >

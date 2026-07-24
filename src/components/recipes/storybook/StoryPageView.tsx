@@ -72,10 +72,12 @@ export type StoryPageViewProps = {
   /** V3: hide recipe scaling UI */
   hideScaling?: boolean;
   readerSettings?: RecipeReaderSettings;
+  /** Flip book: fill parent frame, no 100dvh min-heights */
+  bookFit?: boolean;
 };
 
 export function StoryPageView(props: StoryPageViewProps) {
-  const { page, data } = props;
+  const { page, data, bookFit } = props;
   const config = parseContentConfig(page);
   const completion = parseCompletionConfig(page);
   const media = page.recipe_story_page_media ?? [];
@@ -89,6 +91,10 @@ export function StoryPageView(props: StoryPageViewProps) {
   const primary = primaryMedia(media, preferVideo ? "video" : "any");
   const hideScaling = props.hideScaling !== false;
   const showAsk = props.readerSettings?.showAskTeacher !== false;
+  const shell = bookFit
+    ? "flex h-full min-h-0 w-full flex-col overflow-hidden"
+    : "flex min-h-[min(100dvh,820px)] w-full flex-col";
+  const pad = bookFit ? "px-4 py-3 sm:px-6" : "px-5 pb-28 pt-16 sm:px-8";
 
   if (pageType === "cover") {
     return (
@@ -101,6 +107,7 @@ export function StoryPageView(props: StoryPageViewProps) {
         body={page.body}
         alignment={page.alignment || "bottom_left"}
         overlayOpacity={config.overlayOpacity}
+        bookFit={bookFit}
       >
         <div className="flex flex-wrap gap-3 pt-4">
           {props.onStartFree ? (
@@ -130,7 +137,14 @@ export function StoryPageView(props: StoryPageViewProps) {
     const hours = config.challengeHours ?? 48;
     const badge = config.challengeBadgeLabel || "完成徽章";
     return (
-      <div className="flex min-h-[min(100dvh,820px)] w-full flex-col justify-center bg-[#FFF9EA] px-6 pb-28 pt-20 text-[#3D2914]">
+      <div
+        className={cn(
+          shell,
+          pad,
+          "justify-center bg-[#FFF9EA] text-[#3D2914]",
+          bookFit && "overflow-y-auto overscroll-contain"
+        )}
+      >
         <p className="text-xs font-semibold tracking-[0.16em] text-[#FF5A5F]">
           CHALLENGE
         </p>
@@ -152,7 +166,7 @@ export function StoryPageView(props: StoryPageViewProps) {
 
   if (pageType === "discussion") {
     return (
-      <EmbedShell title={page.title || "問題討論"} subtitle={page.subtitle}>
+      <EmbedShell title={page.title || "問題討論"} subtitle={page.subtitle} bookFit={bookFit}>
         <RecipeDiscussionPanel
           recipeId={data.recipe.id}
           steps={data.recipe.recipe_steps ?? []}
@@ -164,7 +178,7 @@ export function StoryPageView(props: StoryPageViewProps) {
 
   if (pageType === "submissions" || pageType === "gallery") {
     return (
-      <EmbedShell title={page.title || "分享你的作品"} subtitle={page.subtitle}>
+      <EmbedShell title={page.title || "分享你的作品"} subtitle={page.subtitle} bookFit={bookFit}>
         <p className="mb-4 text-sm leading-relaxed text-[#6B3F24]/80">
           {page.body ||
             "完成這份食譜了嗎？歡迎上傳成品照片與製作心得，與大家交流；也可以設定為只限自己查看。此步驟可以略過。"}
@@ -181,7 +195,7 @@ export function StoryPageView(props: StoryPageViewProps) {
 
   if (pageType === "recommendations") {
     return (
-      <EmbedShell title={page.title || "商品推薦"} subtitle={page.subtitle}>
+      <EmbedShell title={page.title || "商品推薦"} subtitle={page.subtitle} bookFit={bookFit}>
         <RecipeRecommendationsPanel
           recommendations={data.recommendations}
           ingredients={data.recipe.recipe_ingredients ?? []}
@@ -193,7 +207,7 @@ export function StoryPageView(props: StoryPageViewProps) {
 
   if (pageType === "related") {
     return (
-      <EmbedShell title={page.title || "相關食譜"} subtitle={page.subtitle}>
+      <EmbedShell title={page.title || "相關食譜"} subtitle={page.subtitle} bookFit={bookFit}>
         <ul className="space-y-3">
           {data.related.map((r) => (
             <li key={r.id}>
@@ -247,6 +261,7 @@ export function StoryPageView(props: StoryPageViewProps) {
         haveIds={props.haveIds}
         onToggleHave={props.onToggleHave}
         scalingEnabled={!hideScaling && data.recipe.ingredient_scaling_enabled !== false}
+        bookFit={bookFit}
       />
     );
   }
@@ -263,6 +278,7 @@ export function StoryPageView(props: StoryPageViewProps) {
           props.onComparisonChoice(page.id, opt);
           props.onMarkComplete(page.id);
         }}
+        className={bookFit ? "overflow-y-auto overscroll-contain" : undefined}
         onAskAi={
           showAsk
             ? (opt) =>
@@ -297,6 +313,7 @@ export function StoryPageView(props: StoryPageViewProps) {
         body={page.body}
         items={items}
         checkedIds={props.checkpointChecked}
+        className={bookFit ? undefined : "!min-h-[min(100dvh,820px)]"}
         onToggle={(id) => {
           props.onCheckpointToggle(id);
           const next = new Set(props.checkpointChecked);
@@ -341,6 +358,7 @@ export function StoryPageView(props: StoryPageViewProps) {
           props.onMarkComplete(page.id);
         }}
         onReset={props.onTimerReset}
+        className={bookFit ? "overflow-y-auto overscroll-contain" : undefined}
       />
     );
   }
@@ -367,6 +385,7 @@ export function StoryPageView(props: StoryPageViewProps) {
         subtitle={page.subtitle}
         frames={frames}
         mode={(config.galleryMode as StoryGalleryMode) || "swipe"}
+        className={bookFit ? "overflow-y-auto overscroll-contain" : "!min-h-[min(100dvh,820px)]"}
       />
     );
   }
@@ -384,6 +403,7 @@ export function StoryPageView(props: StoryPageViewProps) {
           subtitle={page.subtitle}
           body={page.body || "尚無影片"}
           eyebrow={props.stepIndexLabel || page.eyebrow}
+          bookFit={bookFit}
         />
       );
     }
@@ -410,6 +430,7 @@ export function StoryPageView(props: StoryPageViewProps) {
         startSeconds={clip.startSeconds}
         endSeconds={clip.endSeconds}
         muted={props.muted}
+        bookFit={bookFit}
         markers={markers}
         onPlaybackContext={props.onPlaybackContext}
         onAskAi={
@@ -440,6 +461,7 @@ export function StoryPageView(props: StoryPageViewProps) {
         body={page.body}
         alignment={page.alignment || "bottom_left"}
         overlayOpacity={config.overlayOpacity}
+        bookFit={bookFit}
       >
         {showAsk && page.ai_context ? (
           <AskTeacherChip
@@ -473,6 +495,7 @@ export function StoryPageView(props: StoryPageViewProps) {
         subtitle={config.temperatureLabel || page.subtitle}
         body={page.body}
         alignment={page.alignment || "center"}
+        bookFit={bookFit}
       />
     );
   }
@@ -484,15 +507,21 @@ export function StoryPageView(props: StoryPageViewProps) {
 
   if (pageType === "storage") {
     return (
-      <div className="flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#FFF9EA]">
+      <div
+        className={cn(
+          "flex w-full flex-col bg-[#FFF9EA]",
+          bookFit ? "h-full min-h-0 overflow-hidden" : "min-h-[min(100dvh,820px)]"
+        )}
+      >
         <FullBleedVisual
-          className="!min-h-[45vh]"
+          className={bookFit ? undefined : "!min-h-[45vh]"}
           imageUrl={primary?.url || data.recipe.cover_image}
           eyebrow={page.eyebrow || "保存"}
           title={page.title}
           subtitle={page.subtitle}
           body={page.body}
           alignment={page.alignment || "bottom_left"}
+          bookFit={bookFit}
         />
       </div>
     );
@@ -507,6 +536,7 @@ export function StoryPageView(props: StoryPageViewProps) {
       subtitle={page.subtitle}
       body={page.body}
       splitDirection={(config.splitDirection as StorySplitDirection) || "image_left"}
+      bookFit={bookFit}
     >
       {showAsk && page.ai_context ? (
         <AskTeacherChip
@@ -530,20 +560,28 @@ function EmbedShell({
   title,
   subtitle,
   children,
+  bookFit,
 }: {
   title: string;
   subtitle?: string | null;
   children: React.ReactNode;
+  bookFit?: boolean;
 }) {
   return (
-    <div className="flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#FFF9EA] px-4 pb-28 pt-16 sm:px-6">
-      <div className="mb-4 space-y-1">
-        <h2 className="text-2xl font-bold text-[#6B3F24]">{title}</h2>
+    <div
+      className={cn(
+        bookFit
+          ? "flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#FFF9EA] px-4 py-3 sm:px-6"
+          : "flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#FFF9EA] px-4 pb-28 pt-16 sm:px-6"
+      )}
+    >
+      <div className="mb-3 shrink-0 space-y-1">
+        <h2 className="text-xl font-bold text-[#6B3F24] sm:text-2xl">{title}</h2>
         {subtitle ? (
           <p className="text-sm text-[#6B3F24]/75">{subtitle}</p>
         ) : null}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
     </div>
   );
 }

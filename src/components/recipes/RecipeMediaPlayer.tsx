@@ -288,7 +288,7 @@ export function RecipeMediaPlayer({
               muted={muted}
               playsInline
               preload="metadata"
-              className="h-full w-full"
+              className="h-full w-full object-contain"
               onError={() => setErrored(true)}
             >
               {media.subtitle_url ? (

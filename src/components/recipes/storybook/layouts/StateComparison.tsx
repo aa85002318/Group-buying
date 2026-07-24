@@ -29,7 +29,7 @@ export function StateComparison({
   return (
     <div
       className={cn(
-        "flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#FFF9EA] px-4 pb-28 pt-16 sm:px-6",
+        "flex h-full min-h-0 w-full flex-col overflow-y-auto overscroll-contain bg-[#FFF9EA] px-4 py-3 sm:px-6",
         className
       )}
     >
@@ -68,7 +68,7 @@ export function StateComparison({
                     src={opt.imageUrl}
                     alt={opt.label}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     sizes="(max-width: 640px) 100vw, 33vw"
                   />
                 </div>

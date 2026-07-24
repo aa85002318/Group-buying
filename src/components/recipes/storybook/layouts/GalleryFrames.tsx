@@ -37,7 +37,7 @@ export function GalleryFrames({
     return (
       <div
         className={cn(
-          "flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#FFF9EA] px-4 pb-28 pt-16 sm:px-6",
+          "flex h-full min-h-0 w-full flex-col bg-[#FFF9EA] px-4 py-3 sm:px-6",
           className
         )}
       >
@@ -59,7 +59,7 @@ export function GalleryFrames({
   return (
     <div
       className={cn(
-        "flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#1a100c] text-white",
+        "flex h-full min-h-0 w-full flex-col bg-[#1a100c] text-white",
         className
       )}
       onTouchStart={(e) => {
@@ -74,7 +74,7 @@ export function GalleryFrames({
         else setIndex((i) => Math.max(0, i - 1));
       }}
     >
-      <div className="px-5 pb-2 pt-16 sm:px-8">
+      <div className="px-5 pb-2 pt-3 sm:px-8">
         <Header title={title} subtitle={subtitle} light />
       </div>
       <div className="relative mx-3 flex-1 overflow-hidden rounded-2xl bg-black/40 sm:mx-6">
@@ -83,7 +83,7 @@ export function GalleryFrames({
             src={current.imageUrl}
             alt={current.title || current.caption || ""}
             fill
-            className="object-cover"
+            className="object-contain"
             sizes="100vw"
           />
         ) : (
@@ -102,7 +102,7 @@ export function GalleryFrames({
           ) : null}
         </div>
       </div>
-      <div className="flex justify-center gap-2 py-4 pb-28">
+      <div className="flex justify-center gap-2 py-4 pb-3">
         {items.map((f, i) => (
           <button
             key={f.id}
@@ -163,7 +163,7 @@ function FrameCard({
     <div
       className={cn(
         "relative overflow-hidden rounded-xl bg-[#2a1810]",
-        tall ? "min-h-[28vh]" : "aspect-[4/5]"
+        tall ? "min-h-[20vh] sm:min-h-[28vh]" : "aspect-[4/5]"
       )}
     >
       {frame.imageUrl ? (
@@ -171,7 +171,7 @@ function FrameCard({
           src={frame.imageUrl}
           alt={frame.title || frame.caption || ""}
           fill
-          className="object-cover"
+          className="object-contain"
           sizes="50vw"
         />
       ) : null}

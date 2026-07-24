@@ -18,6 +18,7 @@ type ListLayoutProps = {
   onToggleHave: (id: string) => void;
   scalingEnabled?: boolean;
   className?: string;
+  bookFit?: boolean;
 };
 
 export function ListLayout({
@@ -34,20 +35,23 @@ export function ListLayout({
   onToggleHave,
   scalingEnabled = true,
   className,
+  bookFit,
 }: ListLayoutProps) {
   return (
     <div
       className={cn(
-        "flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#FFF9EA] px-5 pb-28 pt-16 sm:px-8",
+        bookFit
+          ? "flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#FFF9EA] px-4 py-3 sm:px-6"
+          : "flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#FFF9EA] px-5 pb-28 pt-16 sm:px-8",
         className
       )}
     >
-      <div className="mb-5 space-y-2">
+      <div className="mb-3 shrink-0 space-y-1">
         {title ? (
-          <h2 className="text-2xl font-bold text-[#6B3F24] sm:text-3xl">{title}</h2>
+          <h2 className="text-xl font-bold text-[#6B3F24] sm:text-2xl">{title}</h2>
         ) : null}
         {subtitle ? (
-          <p className="text-base text-[#6B3F24]/80">{subtitle}</p>
+          <p className="text-sm text-[#6B3F24]/80">{subtitle}</p>
         ) : null}
         {body ? (
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#6B3F24]/75">
@@ -56,6 +60,7 @@ export function ListLayout({
         ) : null}
       </div>
 
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
       {pageType === "ingredients" ? (
         <IngredientChecklist
           ingredients={ingredients}
@@ -121,6 +126,7 @@ export function ListLayout({
           showScaleControls
         />
       ) : null}
+      </div>
     </div>
   );
 }
