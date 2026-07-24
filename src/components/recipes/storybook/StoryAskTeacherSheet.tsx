@@ -72,15 +72,14 @@ export function StoryAskTeacherSheet({ open, onClose, recipe, context }: Props) 
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/recipes/${recipe.id}/discussions`, {
+      const res = await fetch(`/api/recipes/${recipe.id}/teacher-questions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: heading.slice(0, 80),
-          body: text,
+          question: text,
           step_id: context.stepId || null,
           story_page_id: context.storyPageId || null,
-          image_urls: photoUrl ? [photoUrl] : [],
+          photo_url: photoUrl,
         }),
       });
       const data = await res.json();

@@ -102,6 +102,8 @@ export type StoryContentConfig = {
   /** Challenge page copy */
   challengeHours?: number;
   challengeBadgeLabel?: string;
+  /** Optional deep link for challenge CTA (defaults to /challenges). */
+  challengeHref?: string;
 };
 
 export type StoryCompletionConfig = {

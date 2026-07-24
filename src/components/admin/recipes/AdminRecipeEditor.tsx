@@ -277,6 +277,22 @@ export function AdminRecipeEditor({ recipeId }: Props) {
       }
     >
   >([]);
+  const [teacherQuestions, setTeacherQuestions] = useState<
+    Array<{
+      id: string;
+      question: string;
+      photo_url?: string | null;
+      teacher_reply?: string | null;
+      replied_at?: string | null;
+      student_notified_at?: string | null;
+      status: string;
+      created_at: string;
+      story_page_id?: string | null;
+      profiles?: { id: string; full_name: string | null } | null;
+      recipe_story_pages?: { id: string; title: string | null; page_type: string } | null;
+      recipe_steps?: { id: string; step_number: number; title: string | null } | null;
+    }>
+  >([]);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<RecipeSubmission[]>([]);
@@ -373,9 +389,14 @@ export function AdminRecipeEditor({ recipeId }: Props) {
   }, [recipeId]);
 
   const loadDiscussions = useCallback(async () => {
-    const res = await fetch(`/api/admin/recipes/${recipeId}/discussions`);
-    const data = await res.json();
-    setDiscussions(data.discussions ?? []);
+    const [discRes, qRes] = await Promise.all([
+      fetch(`/api/admin/recipes/${recipeId}/discussions`),
+      fetch(`/api/admin/recipes/${recipeId}/teacher-questions`),
+    ]);
+    const discData = await discRes.json();
+    const qData = await qRes.json();
+    setDiscussions(discData.discussions ?? []);
+    setTeacherQuestions(qData.questions ?? []);
   }, [recipeId]);
 
   const loadSubmissions = useCallback(async () => {
@@ -438,7 +459,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     flip_mode_enabled: form.flip_mode_enabled,
     full_reading_enabled: form.full_reading_enabled,
     is_smart_recipe: form.is_smart_recipe,
-    ingredient_scaling_enabled: form.ingredient_scaling_enabled,
+                ingredient_scaling_enabled: false,
     discussion_enabled: form.discussion_enabled,
     submission_enabled: form.submission_enabled,
     ai_enabled: form.ai_enabled,
@@ -752,6 +773,30 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     }
   };
 
+  const replyTeacherQuestion = async (questionId: string) => {
+    const body = (replyDrafts[`tq-${questionId}`] ?? "").trim();
+    if (!body) {
+      alert("請填寫回覆內容");
+      return;
+    }
+    setReplyingId(questionId);
+    try {
+      const res = await fetch(`/api/admin/recipes/${recipeId}/teacher-questions`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: questionId, teacher_reply: body }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "回覆失敗");
+      setReplyDrafts((prev) => ({ ...prev, [`tq-${questionId}`]: "" }));
+      await loadDiscussions();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "回覆失敗");
+    } finally {
+      setReplyingId(null);
+    }
+  };
+
   const updateSubmission = async (
     id: string,
     patch: {
@@ -1005,13 +1050,8 @@ export function AdminRecipeEditor({ recipeId }: Props) {
                 checked={form.full_reading_enabled}
                 onChange={(v) => setForm({ ...form, full_reading_enabled: v })}
               />
-              <Toggle
-                label="材料縮放（已停用／僅舊版）ingredient_scaling_enabled"
-                checked={form.ingredient_scaling_enabled}
-                onChange={(v) => setForm({ ...form, ingredient_scaling_enabled: v })}
-              />
-              <p className="-mt-2 text-xs text-muted-foreground">
-                V3 翻頁教材預設關閉倍率；教學定位不建議開啟。
+              <p className="text-xs text-muted-foreground sm:col-span-2">
+                V3 翻頁教材已停用材料倍率縮放（ingredient_scaling 固定關閉）。
               </p>
               <Toggle
                 label="AI 協助 ai_enabled"
@@ -2078,17 +2118,79 @@ export function AdminRecipeEditor({ recipeId }: Props) {
               <div>
                 <h3 className="font-medium">學生提問（我要提問）</h3>
                 <p className="text-sm text-muted-foreground">
-                  依步驟／頁面回覆；回覆後會通知學生。
+                  依 Story Page 聚合；回覆後會通知學生。
                 </p>
               </div>
               <Button size="sm" variant="outline" type="button" onClick={() => loadDiscussions()}>
                 重新整理
               </Button>
             </div>
+
+            {teacherQuestions.map((q) => (
+              <div key={q.id} className="space-y-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold text-primary">教材提問</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {q.profiles?.full_name ? `${q.profiles.full_name} · ` : ""}
+                      {q.recipe_story_pages?.title
+                        ? `頁面「${q.recipe_story_pages.title}」 · `
+                        : ""}
+                      {q.recipe_steps
+                        ? `Step ${q.recipe_steps.step_number} · `
+                        : ""}
+                      {new Date(q.created_at).toLocaleString("zh-TW")} · {q.status}
+                      {q.student_notified_at ? " · 已通知" : ""}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-white px-2 py-0.5 text-xs">{q.status}</span>
+                </div>
+                <p className="text-sm whitespace-pre-wrap">{q.question}</p>
+                {q.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={q.photo_url}
+                    alt=""
+                    className="h-24 w-24 rounded-lg object-cover"
+                  />
+                ) : null}
+                {q.teacher_reply ? (
+                  <div className="rounded-lg bg-white p-3 text-sm">
+                    <p className="text-xs font-semibold text-muted-foreground">已回覆</p>
+                    <p className="mt-1 whitespace-pre-wrap">{q.teacher_reply}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 rounded-lg bg-muted/40 p-3">
+                    <p className="text-xs font-semibold">老師回覆</p>
+                    <textarea
+                      className="input-field min-h-[80px]"
+                      placeholder="例如：可以，再攪拌 30 秒即可。"
+                      value={replyDrafts[`tq-${q.id}`] ?? ""}
+                      onChange={(e) =>
+                        setReplyDrafts((prev) => ({
+                          ...prev,
+                          [`tq-${q.id}`]: e.target.value,
+                        }))
+                      }
+                    />
+                    <Button
+                      size="sm"
+                      type="button"
+                      disabled={replyingId === q.id}
+                      onClick={() => void replyTeacherQuestion(q.id)}
+                    >
+                      {replyingId === q.id ? "送出中…" : "送出回覆並通知學生"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
+
             {discussions.map((d) => (
               <div key={d.id} className="space-y-3 rounded-lg border p-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
+                    <p className="text-xs font-semibold text-muted-foreground">討論區提問</p>
                     <p className="font-medium">{d.title}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {d.profiles?.full_name ? `${d.profiles.full_name} · ` : ""}
@@ -2157,7 +2259,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
                 </div>
               </div>
             ))}
-            {!discussions.length && (
+            {!teacherQuestions.length && !discussions.length && (
               <p className="text-sm text-muted-foreground">尚無提問</p>
             )}
           </section>

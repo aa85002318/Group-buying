@@ -136,6 +136,10 @@ export function StoryPageView(props: StoryPageViewProps) {
   if (pageType === "challenge") {
     const hours = config.challengeHours ?? 48;
     const badge = config.challengeBadgeLabel || "完成徽章";
+    const challengeHref =
+      typeof config.challengeHref === "string" && config.challengeHref
+        ? config.challengeHref
+        : "/challenges";
     return (
       <div
         className={cn(
@@ -159,6 +163,12 @@ export function StoryPageView(props: StoryPageViewProps) {
           <p className="text-sm text-[#6B3F24]/80">
             {page.body || `完成即可取得${badge}`}
           </p>
+          <Link
+            href={challengeHref}
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF5A5F] px-5 text-sm font-bold text-white"
+          >
+            查看挑戰活動
+          </Link>
         </div>
       </div>
     );
