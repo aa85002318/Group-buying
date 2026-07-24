@@ -115,9 +115,16 @@ export function RecipeDetailClient({ slug, immersive = false }: Props) {
   const flipEnabled = payload.recipe.flip_mode_enabled !== false;
 
   // Resolve view: query > reader_settings.listPrimaryFull > recipe default
-  let view: "full" | "flip" =
-    viewParam === "full" ? "full" : viewParam === "flip" ? "flip" : "full";
-  if (viewParam !== "full" && viewParam !== "flip") {
+  // "full" and "flip" both open the immersive page-turner; "scroll" keeps the long-form outline.
+  let view: "full" | "flip" | "scroll" =
+    viewParam === "scroll"
+      ? "scroll"
+      : viewParam === "full"
+        ? "full"
+        : viewParam === "flip"
+          ? "flip"
+          : "full";
+  if (viewParam !== "full" && viewParam !== "flip" && viewParam !== "scroll") {
     if (settings.listPrimaryFull === false && flipEnabled) view = "flip";
     else if (
       payload.recipe.reading_mode_default === "flip" &&
@@ -129,15 +136,17 @@ export function RecipeDetailClient({ slug, immersive = false }: Props) {
       view = fullEnabled ? "full" : "flip";
     }
   }
-  if (view === "full" && !fullEnabled && flipEnabled) view = "flip";
+  if ((view === "full" || view === "scroll") && !fullEnabled && flipEnabled) view = "flip";
   if (view === "flip" && !flipEnabled && fullEnabled) view = "full";
 
   if (hasStories) {
-    if (view === "full") {
+    // Long-form scroll outline (optional)
+    if (view === "scroll") {
       return <StoryFullRecipeView data={payload} stories={stories!} />;
     }
+    // Default / full / flip → immersive one-page-at-a-time storybook
     return (
-      <RecipeStorybookReader data={payload} stories={stories!} immersive={immersive} />
+      <RecipeStorybookReader data={payload} stories={stories!} immersive />
     );
   }
 
@@ -145,7 +154,7 @@ export function RecipeDetailClient({ slug, immersive = false }: Props) {
     <SmartRecipeReader
       data={payload}
       immersive={immersive}
-      initialMode={view}
+      initialMode={view === "scroll" ? "full" : view === "flip" ? "flip" : "full"}
     />
   );
 }

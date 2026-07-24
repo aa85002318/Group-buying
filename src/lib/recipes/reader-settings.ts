@@ -17,7 +17,7 @@ export type RecipeReaderSettings = {
   showCautionPopup: boolean;
   /** Completion badge */
   showCompletionBadge: boolean;
-  /** List primary CTA = 查看完整食譜 (?view=full) */
+  /** List primary CTA = 翻頁閱讀 (?view=full) */
   listPrimaryFull: boolean;
   /** Allow public share on submissions */
   allowPublicShare: boolean;

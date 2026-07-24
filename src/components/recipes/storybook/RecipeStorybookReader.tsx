@@ -44,7 +44,7 @@ type RecipeStorybookReaderProps = {
 
 /**
  * Flip Story Book — one page at a time, fixed 100dvh shell, centered book frame.
- * Does not affect ?view=full (StoryFullRecipeView).
+ * Used for ?view=full and ?view=flip. Long-form scroll remains at ?view=scroll.
  */
 export function RecipeStorybookReader({
   data,

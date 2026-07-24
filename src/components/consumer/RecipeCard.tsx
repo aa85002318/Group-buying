@@ -13,12 +13,12 @@ const DIFFICULTY: Record<RecipeSummary["difficulty"], string> = {
 
 export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
   const baseHref = recipe.href.split("?")[0] || recipe.href;
-  const fullHref = `${baseHref}?view=full`;
-  const flipHref = `${baseHref}?view=flip`;
+  const flipHref = `${baseHref}?view=full`;
+  const scrollHref = `${baseHref}?view=scroll`;
 
   return (
     <article className="card-lift flex h-full flex-col overflow-hidden border-border-soft bg-surface">
-      <Link href={fullHref} className="relative block aspect-[4/3] bg-surface-soft" aria-label={recipe.title}>
+      <Link href={flipHref} className="relative block aspect-[4/3] bg-surface-soft" aria-label={recipe.title}>
         <div className="flex h-full items-center justify-center">
           <span className="rounded-chip bg-surface-yellow px-2 py-0.5 text-sm font-bold text-brand-caramel">
             {recipe.category}
@@ -32,7 +32,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
         ) : null}
       </Link>
       <div className="flex flex-1 flex-col p-3">
-        <Link href={fullHref}>
+        <Link href={flipHref}>
           <h3 className="line-clamp-2 text-sm font-bold text-brand-caramel">{recipe.title}</h3>
         </Link>
         <p className="mt-2 flex flex-wrap gap-2 text-[11px] font-medium">
@@ -46,16 +46,16 @@ export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
         </p>
         <div className="mt-auto flex flex-col gap-2 pt-3">
           <Link
-            href={fullHref}
+            href={flipHref}
             className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand-primary px-3 text-sm font-bold text-white"
           >
-            查看完整食譜
+            翻頁閱讀
           </Link>
           <Link
-            href={flipHref}
+            href={scrollHref}
             className="inline-flex min-h-9 items-center justify-center rounded-xl border border-border-soft bg-white px-3 text-xs font-semibold text-brand-caramel"
           >
-            翻頁閱讀
+            展開全文
           </Link>
         </div>
       </div>

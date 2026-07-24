@@ -1041,7 +1041,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
                   [
                     ["fullscreen", "滿版閱讀模式"],
                     ["showToc", "顯示目錄"],
-                    ["listPrimaryFull", "列表主要按鈕用「查看完整食譜」"],
+                    ["listPrimaryFull", "列表主要按鈕用「翻頁閱讀」"],
                     ["showAskTeacher", "顯示提問功能"],
                     ["showChallenge", "顯示食譜挑戰"],
                     ["showCautionPopup", "顯示老師提醒（Popup）"],
