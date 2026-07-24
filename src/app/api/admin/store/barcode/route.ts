@@ -72,7 +72,7 @@ export async function GET(request: Request) {
 
   const { data: batches } = await admin
     .from("store_batches")
-    .select("expiry_date, remaining_quantity, quantity, status")
+    .select("id, batch_no, expiry_date, remaining_quantity, quantity, status, location")
     .eq("product_id", product.id)
     .order("expiry_date", { ascending: true })
     .limit(20);
@@ -90,6 +90,7 @@ export async function GET(request: Request) {
       nearest_expiry: nearest,
       batch_qty: batchQty,
       matched_via: matchedVia,
+      batches: active,
     },
   });
 }

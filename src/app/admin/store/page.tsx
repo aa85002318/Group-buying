@@ -52,13 +52,13 @@ export default function AdminStoreHomePage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="門市總覽"
-        description="效期、庫存、報廢、異常與退貨 — 商品一律引用 Product Master（products.product_id）"
+        description="Store Ops V2：以批次為核心。商品請在商品主檔建立；此處管理進貨批次、效期、報廢、退貨、異常與盤點。"
         actions={
           <Link
-            href="/admin/store/batch"
+            href="/admin/store/batches?receive=1"
             className="rounded-[12px] bg-[#6F4E37] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5D402E]"
           >
-            批次登記
+            快速進貨
           </Link>
         }
       />
@@ -85,16 +85,16 @@ export default function AdminStoreHomePage() {
       ) : metrics ? (
         <>
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <AdminMetricCard label="商品總數" value={metrics.productCount} href="/admin/store/products" />
-            <AdminMetricCard label="庫存批次總數" value={metrics.batchCount} href="/admin/store/inventory" />
+            <AdminMetricCard label="主檔商品（門市上架）" value={metrics.productCount} href="/admin/products" />
+            <AdminMetricCard label="批次總數" value={metrics.batchCount} href="/admin/store/batches" />
             <AdminMetricCard
-              label="7 天內到期"
+              label="7 天內到期批次"
               value={metrics.expiring7}
               href="/admin/store/expiry?range=7"
               tone={metrics.expiring7 ? "warning" : "default"}
             />
             <AdminMetricCard
-              label="30 天內到期"
+              label="30 天內到期批次"
               value={metrics.expiring30}
               href="/admin/store/expiry?range=30"
             />

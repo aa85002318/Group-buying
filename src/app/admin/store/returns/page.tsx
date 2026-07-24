@@ -6,9 +6,10 @@ export default function StoreReturnsPage() {
     <Suspense fallback={<p className="text-sm text-[#756B64]">載入中…</p>}>
       <StoreRecordsClient
         title="退貨管理"
-        description="退貨寫入 store_returns，關聯 product_id"
+        description="掃條碼 → 選商品 → 選批次 → 退貨。必須關聯 batch_id。"
         resource="returns"
         createLabel="＋新增退貨"
+        requireBatch
         fields={[
           { key: "quantity", label: "數量", type: "number", required: true },
           { key: "reason", label: "原因", type: "text", required: true },

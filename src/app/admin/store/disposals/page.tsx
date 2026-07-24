@@ -6,9 +6,10 @@ export default function StoreDisposalsPage() {
     <Suspense fallback={<p className="text-sm text-[#756B64]">載入中…</p>}>
       <StoreRecordsClient
         title="報廢管理"
-        description="報廢紀錄寫入 store_disposals，必須使用 product_id"
+        description="掃條碼 → 選商品 → 選批次 → 報廢。不得直接報廢商品（必須 batch_id）。"
         resource="disposals"
         createLabel="＋新增報廢"
+        requireBatch
         fields={[
           { key: "quantity", label: "數量", type: "number", required: true },
           { key: "unit_cost", label: "單位成本", type: "number" },

@@ -6,9 +6,10 @@ export default function StoreExpiryPage() {
     <Suspense fallback={<p className="text-sm text-[#756B64]">載入中…</p>}>
       <StoreRecordsClient
         title="效期管理"
-        description="以 store_batches 管理效期批次，關聯 products.id"
+        description="以批次顯示效期。商品＋批號＋剩餘＋天數；點「查看批次」進入批次詳情。"
         resource="batches"
-        createLabel="＋新增效期"
+        createLabel="＋新增效期批次"
+        expiryColumns
         fields={[
           { key: "quantity", label: "數量", type: "number", required: true },
           { key: "expiry_date", label: "效期", type: "date", required: true },

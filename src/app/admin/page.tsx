@@ -158,12 +158,12 @@ export default function AdminDashboardPage() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
               {
-                label: "7 天內到期商品",
+                label: "7 天內到期批次",
                 value: stats?.expiring7 ?? 0,
                 href: "/admin/store/expiry?range=7",
               },
               {
-                label: "低庫存商品",
+                label: "低庫存（彙總）",
                 value: stats?.lowStockProducts ?? 0,
                 href: "/admin/store/inventory?low=1",
               },

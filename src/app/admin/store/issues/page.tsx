@@ -6,9 +6,10 @@ export default function StoreIssuesPage() {
     <Suspense fallback={<p className="text-sm text-[#756B64]">載入中…</p>}>
       <StoreRecordsClient
         title="異常登記"
-        description="異常寫入 store_anomalies（issue records）"
+        description="商品 → 選批次 → 登記異常。紀錄含 batch_id。"
         resource="anomalies"
         createLabel="＋新增異常"
+        requireBatch
         fields={[
           {
             key: "anomaly_type",

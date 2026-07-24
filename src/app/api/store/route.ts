@@ -200,8 +200,75 @@ export async function POST(request: Request) {
     }
   }
 
+  // Store Ops V2: disposals / returns / anomalies must reference a batch
+  if (
+    (resource === "disposals" || resource === "returns" || resource === "anomalies") &&
+    !payload.batch_id
+  ) {
+    return NextResponse.json(
+      { error: "請選擇批次（batch_id）。門市作業以批次為核心，不可只指定商品。" },
+      { status: 400 }
+    );
+  }
+
   const { data, error } = await admin.from(table).insert(payload).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Best-effort inventory movement + batch remaining for disposals/returns
+  try {
+    const { recordInventoryMovement, syncInventoryFromBatches } = await import(
+      "@/lib/admin/inventory-movements"
+    );
+    if (resource === "batches" && payload.store_id && payload.product_id) {
+      await recordInventoryMovement({
+        storeId: String(payload.store_id),
+        productId: String(payload.product_id),
+        batchId: data.id,
+        movementType: "receive",
+        quantityDelta: Number(payload.quantity ?? 0),
+        quantityBefore: 0,
+        quantityAfter: Number(payload.quantity ?? 0),
+        createdBy: auth!.profile.id,
+      });
+      await syncInventoryFromBatches(String(payload.store_id), String(payload.product_id));
+    }
+    if (
+      (resource === "disposals" || resource === "returns") &&
+      payload.batch_id &&
+      payload.store_id &&
+      payload.product_id
+    ) {
+      const qty = Number(payload.quantity ?? 0);
+      const { data: batch } = await admin
+        .from("store_batches")
+        .select("remaining_quantity, quantity, store_id, product_id")
+        .eq("id", payload.batch_id)
+        .single();
+      if (batch) {
+        const before = Number(batch.remaining_quantity ?? batch.quantity ?? 0);
+        const after = Math.max(0, before - qty);
+        await admin
+          .from("store_batches")
+          .update({ remaining_quantity: after })
+          .eq("id", payload.batch_id);
+        await recordInventoryMovement({
+          storeId: String(payload.store_id),
+          productId: String(payload.product_id),
+          batchId: String(payload.batch_id),
+          movementType: resource === "disposals" ? "disposal" : "return",
+          quantityDelta: -qty,
+          quantityBefore: before,
+          quantityAfter: after,
+          referenceType: table,
+          referenceId: data.id,
+          createdBy: auth!.profile.id,
+        });
+        await syncInventoryFromBatches(String(payload.store_id), String(payload.product_id));
+      }
+    }
+  } catch (e) {
+    console.error("[store POST movement]", e);
+  }
 
   await logAudit(auth!.profile.id, "create", table, data.id, null, data, request as never);
   return NextResponse.json({ item: data }, { status: 201 });

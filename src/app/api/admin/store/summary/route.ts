@@ -110,7 +110,7 @@ export async function GET() {
   if ((expired.count ?? 0) > 0) {
     todos.push({
       priority: 1,
-      label: "已過期但尚未處理",
+      label: "已過期批次尚未處理",
       href: "/admin/store/expiry?range=expired",
       count: expired.count ?? 0,
     });
@@ -126,7 +126,7 @@ export async function GET() {
   if ((exp3 ?? 0) > 0) {
     todos.push({
       priority: 2,
-      label: "3 天內到期",
+      label: "3 天內到期批次",
       href: "/admin/store/expiry?range=3",
       count: exp3 ?? 0,
     });
@@ -134,8 +134,8 @@ export async function GET() {
   if (low > 0) {
     todos.push({
       priority: 3,
-      label: "低於安全庫存",
-      href: "/admin/store/inventory?low=1",
+      label: "低於安全庫存（彙總）",
+      href: "/admin/store/inventory",
       count: low,
     });
   }
