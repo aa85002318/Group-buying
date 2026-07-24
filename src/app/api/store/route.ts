@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { requireStaffOrAdmin, logAudit } from "@/lib/auth";
+import { requireStoreOps, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { daysFromNow, todayISO } from "@/lib/admin/store-ops";
 
 type Resource =
   | "inventory"
@@ -23,7 +24,14 @@ const TABLE: Record<Exclude<Resource, "export">, string> = {
   announcements: "store_announcements",
 };
 
-const WITH_PRODUCT: Resource[] = ["inventory", "batches", "reservations", "returns", "disposals"];
+const WITH_PRODUCT: Resource[] = [
+  "inventory",
+  "batches",
+  "reservations",
+  "returns",
+  "disposals",
+  "anomalies",
+];
 
 function getResource(url: string): Resource {
   const r = new URL(url).searchParams.get("resource") ?? "inventory";
@@ -32,11 +40,16 @@ function getResource(url: string): Resource {
 }
 
 export async function GET(request: Request) {
-  const { error: authError } = await requireStaffOrAdmin();
+  const { error: authError } = await requireStoreOps();
   if (authError) return authError;
 
   const resource = getResource(request.url);
-  const storeId = new URL(request.url).searchParams.get("store_id");
+  const url = new URL(request.url);
+  const storeId = url.searchParams.get("store_id");
+  const range = url.searchParams.get("range");
+  const status = url.searchParams.get("status");
+  const low = url.searchParams.get("low");
+  const q = url.searchParams.get("q")?.trim();
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ items: [], resource });
@@ -60,20 +73,84 @@ export async function GET(request: Request) {
 
   const table = TABLE[resource];
   const select = WITH_PRODUCT.includes(resource)
-    ? "*, products(id, name, sku, barcode)"
+    ? "*, products(id, name, sku, barcode, image_url, supplier_name, safety_stock, stock)"
     : "*";
-  const orderCol = resource === "inventory" ? "updated_at" : "created_at";
+  const orderCol =
+    resource === "inventory"
+      ? "updated_at"
+      : resource === "batches"
+        ? "expiry_date"
+        : "created_at";
 
-  let query = admin.from(table).select(select).order(orderCol, { ascending: false }).limit(200);
+  let query = admin
+    .from(table)
+    .select(select)
+    .order(orderCol, { ascending: resource === "batches" })
+    .limit(300);
+
   if (storeId) query = query.eq("store_id", storeId);
+  if (status) {
+    if (status.includes(",")) query = query.in("status", status.split(","));
+    else query = query.eq("status", status);
+  }
+
+  if (resource === "batches" && range) {
+    const today = todayISO();
+    if (range === "expired") {
+      query = query.lt("expiry_date", today).eq("status", "active");
+    } else {
+      const days = Number(range);
+      if (!Number.isNaN(days) && days > 0) {
+        query = query
+          .gte("expiry_date", today)
+          .lte("expiry_date", daysFromNow(days))
+          .eq("status", "active");
+      }
+    }
+  }
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ items: data ?? [], resource });
+
+  type StoreRow = {
+    quantity?: number | null;
+    batch_no?: string | null;
+    products?: {
+      name?: string;
+      sku?: string;
+      barcode?: string;
+      stock?: number;
+      safety_stock?: number;
+    } | null;
+  };
+
+  let items = (data ?? []) as StoreRow[];
+  if (resource === "inventory" && low === "1") {
+    items = items.filter((item) => {
+      const product = item.products;
+      const stock = Number(product?.stock ?? item.quantity ?? 0);
+      const safety = Number(product?.safety_stock ?? 0);
+      return safety > 0 ? stock < safety : stock <= 5;
+    });
+  }
+  if (q) {
+    const needle = q.toLowerCase();
+    items = items.filter((item) => {
+      const product = item.products;
+      return (
+        product?.name?.toLowerCase().includes(needle) ||
+        product?.sku?.toLowerCase().includes(needle) ||
+        product?.barcode?.toLowerCase().includes(needle) ||
+        String(item.batch_no ?? "").toLowerCase().includes(needle)
+      );
+    });
+  }
+
+  return NextResponse.json({ items, resource });
 }
 
 export async function POST(request: Request) {
-  const { error: authError, auth } = await requireStaffOrAdmin();
+  const { error: authError, auth } = await requireStoreOps();
   if (authError) return authError;
 
   const body = await request.json();
@@ -91,9 +168,36 @@ export async function POST(request: Request) {
   const payload = { ...body };
   delete payload.resource;
 
-  if (resource === "anomalies") payload.reported_by = auth!.profile.id;
+  if (!payload.store_id) {
+    const { data: store } = await admin
+      .from("stores")
+      .select("id")
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    if (store?.id) payload.store_id = store.id;
+  }
+
+  if (resource === "anomalies") {
+    payload.reported_by = auth!.profile.id;
+    payload.reported_at = payload.reported_at ?? new Date().toISOString();
+  }
   if (resource === "returns" || resource === "disposals") {
     payload.created_by = auth!.profile.id;
+  }
+  if (resource === "batches") {
+    payload.created_by = auth!.profile.id;
+    if (payload.quantity != null && payload.remaining_quantity == null) {
+      payload.remaining_quantity = payload.quantity;
+    }
+    payload.status = payload.status ?? "active";
+    payload.batch_no = payload.batch_no || `B${Date.now()}`;
+  }
+  if (resource === "disposals") {
+    payload.disposed_at = payload.disposed_at ?? new Date().toISOString();
+    if (payload.unit_cost != null && payload.quantity != null && payload.total_loss == null) {
+      payload.total_loss = Number(payload.unit_cost) * Number(payload.quantity);
+    }
   }
 
   const { data, error } = await admin.from(table).insert(payload).select().single();
@@ -104,7 +208,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const { error: authError, auth } = await requireStaffOrAdmin();
+  const { error: authError, auth } = await requireStoreOps();
   if (authError) return authError;
 
   const body = await request.json();

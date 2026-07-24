@@ -11,7 +11,12 @@ import { BRAND_NAME, BRAND_SUBTITLE } from "@/lib/env";
 import type { AdminNavGroup, AdminNavItem } from "@/lib/admin/permissions";
 
 function isNavItemActive(pathname: string, href: string): boolean {
-  return pathname === href || (href !== "/admin" && pathname.startsWith(href));
+  if (pathname === href) return true;
+  // Exact-only hubs so children don't light up the parent item
+  if (href === "/admin" || href === "/admin/store" || href === "/admin/recipes") {
+    return false;
+  }
+  return pathname.startsWith(`${href}/`);
 }
 
 function groupContainsActivePath(group: AdminNavGroup, pathname: string): boolean {
@@ -107,6 +112,20 @@ function NavGroupSection({
   );
 }
 
+const EXPANDED_STORAGE_KEY = "chimeidiy-admin-nav-expanded";
+
+function readStoredExpanded(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = window.localStorage.getItem(EXPANDED_STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as string[];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
+
 function useExpandedGroups(navGroups: AdminNavGroup[], pathname: string) {
   const activeGroupIds = useMemo(
     () => navGroups.filter((g) => groupContainsActivePath(g, pathname)).map((g) => g.id),
@@ -114,6 +133,21 @@ function useExpandedGroups(navGroups: AdminNavGroup[], pathname: string) {
   );
 
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(activeGroupIds));
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const stored = readStoredExpanded();
+    setExpanded((prev) => {
+      const next = new Set<string>([
+        ...Array.from(stored),
+        ...Array.from(prev),
+        ...activeGroupIds,
+      ]);
+      return next;
+    });
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     setExpanded((prev) => {
@@ -122,6 +156,18 @@ function useExpandedGroups(navGroups: AdminNavGroup[], pathname: string) {
       return next;
     });
   }, [activeGroupIds]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      window.localStorage.setItem(
+        EXPANDED_STORAGE_KEY,
+        JSON.stringify(Array.from(expanded))
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [expanded, hydrated]);
 
   const toggle = (id: string) => {
     setExpanded((prev) => {
@@ -191,7 +237,7 @@ export function AdminDesktopSidebar() {
       <div className="sticky top-0 flex h-screen flex-col">
         <div className="shrink-0 border-b border-border px-4 py-4">
           <Link href={APP_ROUTES.admin} className="text-lg font-bold text-primary">
-            管理後台
+            CHIMEIDIY 管理中心
           </Link>
           <p className="mt-1 text-xs text-muted-foreground">
             {BRAND_NAME} · {BRAND_SUBTITLE}
@@ -224,7 +270,7 @@ export function AdminMobileDrawer() {
       <aside className="absolute left-0 top-0 flex h-full w-[min(100%,280px)] flex-col bg-card shadow-xl">
         <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
           <div>
-            <p className="font-bold text-primary">管理後台</p>
+            <p className="font-bold text-primary">CHIMEIDIY 管理中心</p>
             <p className="text-xs text-muted-foreground">功能選單</p>
           </div>
           <button

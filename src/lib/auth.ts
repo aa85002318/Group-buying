@@ -117,6 +117,14 @@ export async function requireStaffOrAdmin() {
   return requireRole(["admin", "store_staff", "customer_service"]);
 }
 
+/** Store ops module — admin or store_staff only (no customer_service writes). */
+export async function requireStoreOps() {
+  if (!isSupabaseConfigured()) {
+    return { error: null, auth: getMockAdminAuth() };
+  }
+  return requireRole(["admin", "store_staff"]);
+}
+
 export async function requireRole(roles: UserRole | UserRole[]) {
   const allowed = Array.isArray(roles) ? roles : [roles];
   const result = await requireAuth();

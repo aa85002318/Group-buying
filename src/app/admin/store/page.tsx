@@ -3,305 +3,152 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AdminMetricCard } from "@/components/admin/store/AdminMetricCard";
+import { STORE_QUICK_ACTIONS } from "@/lib/admin/store-ops";
+import { formatCurrency } from "@/lib/utils";
 
-type Tab =
-  | "overview"
-  | "members"
-  | "inventory"
-  | "batches"
-  | "anomalies"
-  | "returns"
-  | "disposals"
-  | "reservations";
+type Metrics = {
+  productCount: number;
+  batchCount: number;
+  expiring7: number;
+  expiring30: number;
+  expiredOpen: number;
+  disposalMonthLoss: number;
+  openIssues: number;
+  openReturns: number;
+  lowStock: number;
+  lastBackupAt: string | null;
+};
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "overview", label: "總覽" },
-  { id: "members", label: "門市會員" },
-  { id: "inventory", label: "庫存" },
-  { id: "batches", label: "效期／批號" },
-  { id: "anomalies", label: "異常" },
-  { id: "returns", label: "退貨" },
-  { id: "disposals", label: "報廢" },
-  { id: "reservations", label: "客人訂購" },
-];
+type Todo = { priority: number; label: string; href: string; count?: number };
 
-export default function AdminStorePage() {
-  const [tab, setTab] = useState<Tab>("overview");
-  const [items, setItems] = useState<Record<string, unknown>[]>([]);
-  const [members, setMembers] = useState<Record<string, unknown>[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [phone, setPhone] = useState("");
-  const [memberNo, setMemberNo] = useState("");
-  const [notes, setNotes] = useState("");
-  const [phoneHint, setPhoneHint] = useState<string | null>(null);
-  const [msg, setMsg] = useState<string | null>(null);
+export default function AdminStoreHomePage() {
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadResource = useCallback(async (resource: string) => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`/api/store?resource=${resource}`);
+      const res = await fetch("/api/admin/store/summary");
       const data = await res.json();
-      setItems(data.items ?? []);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const loadMembers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/store-members");
-      const data = await res.json();
-      setMembers(data.members ?? []);
+      if (!res.ok) throw new Error(data.error ?? "載入失敗");
+      setMetrics(data.metrics);
+      setTodos(data.todos ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "載入失敗");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (tab === "overview") return;
-    if (tab === "members") {
-      void loadMembers();
-      return;
-    }
-    void loadResource(tab);
-  }, [tab, loadMembers, loadResource]);
-
-  const checkPhone = async () => {
-    if (!phone.trim()) return;
-    const res = await fetch("/api/store-members", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
-    });
-    const data = await res.json();
-    setPhoneHint(data.phoneMatch?.message ?? null);
-  };
-
-  const createMember = async () => {
-    setMsg(null);
-    const res = await fetch("/api/store-members", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        phone,
-        store_member_no: memberNo || null,
-        notes: notes || null,
-        source: "manual",
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setMsg(data.error ?? "新增失敗");
-      return;
-    }
-    if (data.phoneMatch?.matched) {
-      setPhoneHint(data.phoneMatch.message);
-    }
-    setMsg("已新增門市會員（僅電話）");
-    setPhone("");
-    setMemberNo("");
-    setNotes("");
-    void loadMembers();
-  };
-
-  const exportData = async () => {
-    const res = await fetch("/api/store?resource=export");
-    const data = await res.json();
-    const blob = new Blob([JSON.stringify(data.export, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `store-export-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    void load();
+  }, [load]);
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="門市管理"
-        description="效期、批號、異常、退貨、報廢、訂購與門市會員（僅電話）— 商品一律使用 Product Master"
+        title="門市總覽"
+        description="效期、庫存、報廢、異常與退貨 — 商品一律引用 Product Master（products.product_id）"
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={exportData}>
-              Export
-            </Button>
-            <Link href="/admin/products">
-              <Button variant="outline">商品主檔</Button>
-            </Link>
-            <Link href="/admin/orders">
-              <Button variant="outline">統一訂單</Button>
-            </Link>
-          </div>
+          <Link
+            href="/admin/store/batch"
+            className="rounded-[12px] bg-[#6F4E37] px-4 py-2 text-sm font-semibold text-white hover:bg-[#5D402E]"
+          >
+            批次登記
+          </Link>
         }
       />
 
-      <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
-          <Button
-            key={t.id}
-            size="sm"
-            variant={tab === t.id ? "default" : "outline"}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </Button>
-        ))}
-      </div>
-
-      {tab === "overview" && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { title: "門市會員", desc: "僅電話／編號／來源／備註", tab: "members" as Tab },
-            { title: "效期批號", desc: "store_batches → products", tab: "batches" as Tab },
-            { title: "客人訂購", desc: "Store Reservation 渠道", tab: "reservations" as Tab },
-          ].map((card) => (
-            <button
-              key={card.title}
-              type="button"
-              onClick={() => setTab(card.tab)}
-              className="rounded-[20px] border border-border bg-white p-5 text-left shadow-card"
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-[#756B64]">快速功能</h2>
+        <div className="flex flex-wrap gap-2">
+          {STORE_QUICK_ACTIONS.map((a) => (
+            <Link
+              key={a.href + a.label}
+              href={a.href}
+              className="rounded-[12px] border border-[#E9DED4] bg-white px-3 py-2 text-sm font-medium text-[#2F2925] hover:border-[#6F4E37]/40"
             >
-              <p className="text-lg font-black text-foreground">{card.title}</p>
-              <p className="mt-1 text-sm text-foreground-secondary">{card.desc}</p>
-            </button>
+              {a.label}
+            </Link>
           ))}
         </div>
-      )}
+      </section>
 
-      {tab === "members" && (
-        <div className="space-y-4">
-          <div className="rounded-[20px] border border-border bg-white p-5 space-y-3">
-            <p className="font-bold text-foreground">新增門市會員（僅電話）</p>
-            <p className="text-xs text-foreground-secondary">
-              不得寫入姓名、Email、地址；與線上會員電話相同時僅提示，不自動合併。
-            </p>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <Input
-                placeholder="電話 *"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                onBlur={() => void checkPhone()}
-              />
-              <Input
-                placeholder="門市會員編號"
-                value={memberNo}
-                onChange={(e) => setMemberNo(e.target.value)}
-              />
-              <Input placeholder="備註" value={notes} onChange={(e) => setNotes(e.target.value)} />
-            </div>
-            {phoneHint && (
-              <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{phoneHint}</p>
+      {loading ? (
+        <p className="text-sm text-[#756B64]">載入中…</p>
+      ) : error ? (
+        <p className="text-sm text-[#C94C4C]">{error}</p>
+      ) : metrics ? (
+        <>
+          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <AdminMetricCard label="商品總數" value={metrics.productCount} href="/admin/store/products" />
+            <AdminMetricCard label="庫存批次總數" value={metrics.batchCount} href="/admin/store/inventory" />
+            <AdminMetricCard
+              label="7 天內到期"
+              value={metrics.expiring7}
+              href="/admin/store/expiry?range=7"
+              tone={metrics.expiring7 ? "warning" : "default"}
+            />
+            <AdminMetricCard
+              label="30 天內到期"
+              value={metrics.expiring30}
+              href="/admin/store/expiry?range=30"
+            />
+            <AdminMetricCard
+              label="本月報廢金額"
+              value={formatCurrency(metrics.disposalMonthLoss)}
+              href="/admin/store/disposals"
+              tone={metrics.disposalMonthLoss ? "danger" : "default"}
+            />
+            <AdminMetricCard
+              label="待處理異常"
+              value={metrics.openIssues}
+              href="/admin/store/issues?status=open"
+              tone={metrics.openIssues ? "warning" : "default"}
+            />
+            <AdminMetricCard
+              label="待處理退貨"
+              value={metrics.openReturns}
+              href="/admin/store/returns?status=open"
+            />
+            <AdminMetricCard
+              label="最後備份時間"
+              value={
+                metrics.lastBackupAt
+                  ? new Date(metrics.lastBackupAt).toLocaleString("zh-TW")
+                  : "尚未備份"
+              }
+              href="/admin/store/backups"
+              tone={metrics.lastBackupAt ? "success" : "info"}
+            />
+          </section>
+
+          <section className="rounded-[16px] border border-[#E9DED4] bg-white p-4">
+            <h2 className="text-base font-bold text-[#2F2925]">今日待辦</h2>
+            {todos.length === 0 ? (
+              <p className="mt-3 text-sm text-[#756B64]">目前沒有緊急待辦。</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {todos.map((t) => (
+                  <li key={t.label}>
+                    <Link
+                      href={t.href}
+                      className="flex items-center justify-between rounded-[12px] border border-[#E9DED4] px-3 py-2 text-sm hover:bg-[#FFF8F5]"
+                    >
+                      <span className="font-medium text-[#2F2925]">{t.label}</span>
+                      <span className="text-[#756B64]">{t.count != null ? t.count : "→"}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             )}
-            {msg && <p className="text-sm text-green-700">{msg}</p>}
-            <Button onClick={() => void createMember()} disabled={!phone.trim()}>
-              新增
-            </Button>
-          </div>
-
-          {loading ? (
-            <p className="text-sm text-foreground-secondary">載入中…</p>
-          ) : (
-            <div className="overflow-x-auto rounded-[20px] border border-border bg-white">
-              <table className="w-full text-sm">
-                <thead className="bg-[#F8FAFC] text-left text-foreground-secondary">
-                  <tr>
-                    <th className="px-4 py-3">電話</th>
-                    <th className="px-4 py-3">編號</th>
-                    <th className="px-4 py-3">來源</th>
-                    <th className="px-4 py-3">建立</th>
-                    <th className="px-4 py-3">備註</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {members.map((m) => (
-                    <tr key={String(m.id)} className="border-t border-border">
-                      <td className="px-4 py-3 font-medium">{String(m.phone)}</td>
-                      <td className="px-4 py-3">{String(m.store_member_no ?? "—")}</td>
-                      <td className="px-4 py-3">{String(m.source)}</td>
-                      <td className="px-4 py-3">
-                        {m.created_at
-                          ? new Date(String(m.created_at)).toLocaleDateString("zh-TW")
-                          : "—"}
-                      </td>
-                      <td className="px-4 py-3">{String(m.notes ?? "—")}</td>
-                    </tr>
-                  ))}
-                  {!members.length && (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-foreground-secondary">
-                        尚無門市會員
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {tab !== "overview" && tab !== "members" && (
-        <div className="overflow-x-auto rounded-[20px] border border-border bg-white">
-          {loading ? (
-            <p className="p-6 text-sm text-foreground-secondary">載入中…</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-[#F8FAFC] text-left text-foreground-secondary">
-                <tr>
-                  <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3">商品</th>
-                  <th className="px-4 py-3">詳情</th>
-                  <th className="px-4 py-3">狀態</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => {
-                  const product = item.products as { name?: string; sku?: string } | null;
-                  return (
-                    <tr key={String(item.id)} className="border-t border-border">
-                      <td className="px-4 py-3 font-mono text-xs">
-                        {String(item.id).slice(0, 8)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {product?.name ?? String(item.product_id ?? "—")}
-                        {product?.sku ? (
-                          <span className="ml-2 text-xs text-foreground-secondary">{product.sku}</span>
-                        ) : null}
-                      </td>
-                      <td className="px-4 py-3 text-foreground-secondary">
-                        {item.batch_no
-                          ? `批號 ${String(item.batch_no)}`
-                          : item.quantity != null
-                            ? `數量 ${String(item.quantity)}`
-                            : item.description
-                              ? String(item.description).slice(0, 40)
-                              : item.customer_phone
-                                ? String(item.customer_phone)
-                                : "—"}
-                        {item.expiry_date ? ` · 效期 ${String(item.expiry_date)}` : ""}
-                      </td>
-                      <td className="px-4 py-3">{String(item.status ?? "—")}</td>
-                    </tr>
-                  );
-                })}
-                {!items.length && (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-foreground-secondary">
-                      尚無資料 — 可透過 API POST /api/store 或 Excel Import 寫入
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+          </section>
+        </>
+      ) : null}
     </div>
   );
 }

@@ -123,6 +123,13 @@ export async function GET() {
         publishedNews: 1,
         scheduledNotifications: 0,
         activeBenefits: 1,
+        expiring7: 0,
+        openDisposals: 0,
+        openIssues: 0,
+        pendingRecipeQuestions: 0,
+        pendingSubmissions: 0,
+        activeGroupBuys: 1,
+        upcomingCourses: 1,
       },
       charts: {
         revenueTrend,
@@ -176,6 +183,13 @@ export async function GET() {
     publishedNewsRes,
     scheduledNotificationsRes,
     activeBenefitsRes,
+    expiring7Res,
+    openDisposalsRes,
+    openIssuesRes,
+    pendingQuestionsRes,
+    pendingSubmissionsRes,
+    activeGroupBuysRes,
+    upcomingCoursesRes,
   ] = await Promise.all([
     aggregateOrders(admin, today),
     aggregateOrders(admin, yesterday, yesterdayEnd),
@@ -202,6 +216,44 @@ export async function GET() {
       .select("id", { count: "exact", head: true })
       .eq("status", "scheduled"),
     admin.from("member_benefits").select("id", { count: "exact", head: true }).eq("status", "active"),
+    admin
+      .from("store_batches")
+      .select("id", { count: "exact", head: true })
+      .gte("expiry_date", today.slice(0, 10))
+      .lte(
+        "expiry_date",
+        (() => {
+          const d = new Date();
+          d.setDate(d.getDate() + 7);
+          return d.toISOString().slice(0, 10);
+        })()
+      )
+      .eq("status", "active"),
+    admin
+      .from("store_disposals")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["open", "approved"]),
+    admin
+      .from("store_anomalies")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["open", "processing"]),
+    admin
+      .from("recipe_discussions")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["open", "pending", "unanswered"]),
+    admin
+      .from("recipe_submissions")
+      .select("id", { count: "exact", head: true })
+      .in("moderation_status", ["pending", "review"]),
+    admin
+      .from("group_buy_events")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["active", "open", "ongoing"]),
+    admin
+      .from("baking_courses")
+      .select("id", { count: "exact", head: true })
+      .gte("start_at", today)
+      .eq("is_active", true),
   ]);
 
   const trendMap = new Map<string, number>();
@@ -270,6 +322,13 @@ export async function GET() {
       publishedNews: publishedNewsRes.count ?? 0,
       scheduledNotifications: scheduledNotificationsRes.count ?? 0,
       activeBenefits: activeBenefitsRes.count ?? 0,
+      expiring7: expiring7Res.count ?? 0,
+      openDisposals: openDisposalsRes.count ?? 0,
+      openIssues: openIssuesRes.count ?? 0,
+      pendingRecipeQuestions: pendingQuestionsRes.count ?? 0,
+      pendingSubmissions: pendingSubmissionsRes.count ?? 0,
+      activeGroupBuys: activeGroupBuysRes.count ?? 0,
+      upcomingCourses: upcomingCoursesRes.count ?? 0,
     },
     charts: {
       revenueTrend: Array.from(trendMap.entries()).map(([label, value]) => ({ label, value })),

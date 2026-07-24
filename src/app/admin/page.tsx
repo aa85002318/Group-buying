@@ -27,6 +27,7 @@ type DashboardData = {
     pendingPayment?: number;
     paymentPendingConfirm?: number;
     readyPickup?: number;
+    newMembers?: number;
     lowStockProducts: number;
     closingSoonProducts: Array<{ id: string; name: string }>;
     publishedRecipes?: number;
@@ -34,6 +35,13 @@ type DashboardData = {
     publishedNews?: number;
     scheduledNotifications?: number;
     activeBenefits?: number;
+    expiring7?: number;
+    openDisposals?: number;
+    openIssues?: number;
+    pendingRecipeQuestions?: number;
+    pendingSubmissions?: number;
+    activeGroupBuys?: number;
+    upcomingCourses?: number;
   };
   charts: {
     revenueTrend: Array<{ label: string; value: number }>;
@@ -93,8 +101,8 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="儀表板"
-        description="App 訂單與內容營運總覽（不含門市 POS 營業額或現場交易）"
+        title="營運總覽"
+        description="訂單、門市效期庫存、食譜與團購的整體營運儀表板"
       />
 
       <div className="flex flex-wrap gap-2">
@@ -129,19 +137,100 @@ export default function AdminDashboardPage() {
         </div>
       ) : (
         <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: "今日訂單", value: stats?.todayOrders ?? 0, href: "/admin/orders" },
+              { label: "今日營業額", value: formatCurrency(stats?.todaySales ?? 0), href: "/admin/orders" },
+              { label: "今日新增會員", value: stats?.newMembers ?? 0, href: "/admin/members" },
+              { label: "待處理取貨", value: stats?.readyPickup ?? 0, href: "/admin/pickup" },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="rounded-[16px] border border-[#E9DED4] bg-white p-5 shadow-sm transition hover:border-[#6F4E37]/40"
+              >
+                <p className="text-sm text-[#756B64]">{item.label}</p>
+                <p className="mt-1 text-2xl font-black text-[#2F2925]">{item.value}</p>
+              </Link>
+            ))}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: "7 天內到期商品",
+                value: stats?.expiring7 ?? 0,
+                href: "/admin/store/expiry?range=7",
+              },
+              {
+                label: "低庫存商品",
+                value: stats?.lowStockProducts ?? 0,
+                href: "/admin/store/inventory?low=1",
+              },
+              {
+                label: "待處理報廢",
+                value: stats?.openDisposals ?? 0,
+                href: "/admin/store/disposals?status=open",
+              },
+              {
+                label: "待處理異常",
+                value: stats?.openIssues ?? 0,
+                href: "/admin/store/issues?status=open",
+              },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="rounded-[16px] border border-[#E9DED4] bg-white p-5 shadow-sm transition hover:border-[#6F4E37]/40"
+              >
+                <p className="text-sm text-[#756B64]">{item.label}</p>
+                <p className="mt-1 text-2xl font-black text-[#2F2925]">{item.value}</p>
+              </Link>
+            ))}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: "待回答食譜問題",
+                value: stats?.pendingRecipeQuestions ?? 0,
+                href: "/admin/recipes",
+              },
+              {
+                label: "待審核成品",
+                value: stats?.pendingSubmissions ?? 0,
+                href: "/admin/recipes",
+              },
+              {
+                label: "進行中團購",
+                value: stats?.activeGroupBuys ?? 0,
+                href: "/admin/group-buy",
+              },
+              {
+                label: "近期課程",
+                value: stats?.upcomingCourses ?? 0,
+                href: "/admin/courses",
+              },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="rounded-[16px] border border-[#E9DED4] bg-white p-5 shadow-sm transition hover:border-[#6F4E37]/40"
+              >
+                <p className="text-sm text-[#756B64]">{item.label}</p>
+                <p className="mt-1 text-2xl font-black text-[#2F2925]">{item.value}</p>
+              </Link>
+            ))}
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {[
-              { label: "App 訂單營業額", value: formatCurrency(periodSales) },
-              { label: "今日 App 訂單數", value: stats?.todayOrders ?? 0 },
+              { label: "App 訂單營業額（區間）", value: formatCurrency(periodSales) },
               { label: "今日商城訂單", value: stats?.todayMallOrders ?? 0 },
               { label: "今日團購訂單", value: stats?.todayGroupBuyOrders ?? 0 },
               { label: "待處理付款", value: stats?.pendingPayment ?? 0, href: "/admin/orders" },
               { label: "待確認付款", value: stats?.paymentPendingConfirm ?? 0, href: "/admin/payments" },
-              { label: "待取貨", value: stats?.readyPickup ?? 0, href: "/admin/pickup" },
               { label: "今日 App 毛利", value: formatCurrency(stats?.todayGrossProfit ?? 0) },
-              { label: "今日 App 客單價", value: formatCurrency(stats?.todayAvgOrder ?? 0) },
-              { label: "今日退貨（App）", value: stats?.todayReturns ?? 0 },
-              { label: "低庫存商品", value: stats?.lowStockProducts ?? 0 },
             ].map((item) => (
               <div
                 key={item.label}
@@ -237,6 +326,9 @@ export default function AdminDashboardPage() {
           <div className="rounded-[20px] border border-border bg-white p-5">
             <h2 className="mb-3 font-bold text-foreground">快速操作</h2>
             <div className="flex flex-wrap gap-3 text-sm">
+              <Link href="/admin/store" className="font-semibold text-primary hover:underline">
+                → 門市管理
+              </Link>
               <Link href="/admin/orders" className="font-semibold text-primary hover:underline">
                 → App 訂單
               </Link>
@@ -251,6 +343,9 @@ export default function AdminDashboardPage() {
               </Link>
               <Link href="/admin/products/new" className="font-semibold text-primary hover:underline">
                 → 新增商品
+              </Link>
+              <Link href="/admin/store/expiry?range=7" className="font-semibold text-primary hover:underline">
+                → 7 天內效期
               </Link>
               <Link href="/admin/inventory" className="font-semibold text-primary hover:underline">
                 → 庫存報表
