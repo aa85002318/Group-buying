@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { SmartRecipeReader } from "@/components/recipes/SmartRecipeReader";
 import { RecipeStorybookReader } from "@/components/recipes/storybook/RecipeStorybookReader";
+import { StoryFullRecipeView } from "@/components/recipes/storybook/StoryFullRecipeView";
 import { recordBrowse } from "@/lib/home/browse-history";
 import type { SmartRecipePayload } from "@/lib/recipes/flip-pages";
+import {
+  parseReaderSettings,
+} from "@/lib/recipes/reader-settings";
 import {
   flattenStoryPages,
   hasActiveStorybook,
@@ -20,6 +25,8 @@ type Props = {
 };
 
 export function RecipeDetailClient({ slug, immersive = false }: Props) {
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get("view");
   const [payload, setPayload] = useState<SmartRecipePayload | null>(null);
   const [stories, setStories] = useState<StorybookPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,11 +109,43 @@ export function RecipeDetailClient({ slug, immersive = false }: Props) {
     );
   }
 
-  if (stories && hasActiveStorybook(stories.chapters)) {
+  const hasStories = stories && hasActiveStorybook(stories.chapters);
+  const settings = parseReaderSettings(payload.recipe.reader_settings);
+  const fullEnabled = payload.recipe.full_reading_enabled !== false;
+  const flipEnabled = payload.recipe.flip_mode_enabled !== false;
+
+  // Resolve view: query > reader_settings.listPrimaryFull > recipe default
+  let view: "full" | "flip" =
+    viewParam === "full" ? "full" : viewParam === "flip" ? "flip" : "full";
+  if (viewParam !== "full" && viewParam !== "flip") {
+    if (settings.listPrimaryFull === false && flipEnabled) view = "flip";
+    else if (
+      payload.recipe.reading_mode_default === "flip" &&
+      flipEnabled &&
+      !settings.listPrimaryFull
+    ) {
+      view = "flip";
+    } else {
+      view = fullEnabled ? "full" : "flip";
+    }
+  }
+  if (view === "full" && !fullEnabled && flipEnabled) view = "flip";
+  if (view === "flip" && !flipEnabled && fullEnabled) view = "full";
+
+  if (hasStories) {
+    if (view === "full") {
+      return <StoryFullRecipeView data={payload} stories={stories!} />;
+    }
     return (
-      <RecipeStorybookReader data={payload} stories={stories} immersive={immersive} />
+      <RecipeStorybookReader data={payload} stories={stories!} immersive={immersive} />
     );
   }
 
-  return <SmartRecipeReader data={payload} immersive={immersive} />;
+  return (
+    <SmartRecipeReader
+      data={payload}
+      immersive={immersive}
+      initialMode={view}
+    />
+  );
 }

@@ -1035,17 +1035,17 @@ export function AdminRecipeEditor({ recipeId }: Props) {
               />
             </div>
             <div className="rounded-xl border border-border p-4">
-              <p className="mb-3 text-sm font-semibold">Story Book 閱讀設定（V3）</p>
+              <p className="mb-3 text-sm font-semibold">閱讀設定</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {(
                   [
                     ["fullscreen", "滿版閱讀模式"],
                     ["showToc", "顯示目錄"],
+                    ["listPrimaryFull", "列表主要按鈕用「查看完整食譜」"],
                     ["showAskTeacher", "顯示提問功能"],
                     ["showChallenge", "顯示食譜挑戰"],
-                    ["showGallery", "顯示作品分享"],
-                    ["showProducts", "顯示推薦商品"],
                     ["showCautionPopup", "顯示老師提醒（Popup）"],
+                    ["showProducts", "顯示推薦商品"],
                     ["showCompletionBadge", "顯示完成徽章"],
                   ] as const
                 ).map(([key, label]) => (
@@ -1059,6 +1059,31 @@ export function AdminRecipeEditor({ recipeId }: Props) {
                   />
                 ))}
               </div>
+            </div>
+            <div className="rounded-xl border border-border p-4">
+              <p className="mb-3 text-sm font-semibold">作品分享</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(
+                  [
+                    ["showGallery", "啟用成品分享頁"],
+                    ["allowPublicShare", "允許公開分享"],
+                    ["allowPrivateShare", "允許私人留存"],
+                    ["showPublicWall", "顯示公開作品牆"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <Toggle
+                    key={key}
+                    label={label}
+                    checked={Boolean(readerSettings[key])}
+                    onChange={(v) =>
+                      setReaderSettings((prev) => ({ ...prev, [key]: v }))
+                    }
+                  />
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                關閉「啟用成品分享頁」後，前台目錄與閱讀器皆不顯示分享頁。
+              </p>
             </div>
             <div>
               <p className="mb-1 text-sm text-muted-foreground">預設閱讀模式</p>

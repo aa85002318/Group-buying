@@ -41,11 +41,14 @@ export async function GET(_request: Request, { params }: Params) {
     .limit(40);
 
   if (auth?.profile.id) {
+    // Public approved shares OR own rows (including private)
     query = query.or(
-      `moderation_status.eq.approved,user_id.eq.${auth.profile.id}`
+      `and(share_to_community.eq.true,moderation_status.eq.approved),user_id.eq.${auth.profile.id}`
     );
   } else {
-    query = query.eq("moderation_status", "approved");
+    query = query
+      .eq("share_to_community", true)
+      .eq("moderation_status", "approved");
   }
 
   const { data, error, count } = await query;
@@ -59,7 +62,11 @@ export async function GET(_request: Request, { params }: Params) {
     ),
   }));
 
-  return NextResponse.json({ submissions, total: count ?? submissions.length });
+  return NextResponse.json({
+    submissions,
+    total: count ?? submissions.length,
+    viewer_id: auth?.profile.id ?? null,
+  });
 }
 
 /** POST create submission (pending moderation) */
@@ -76,11 +83,14 @@ export async function POST(request: Request, { params }: Params) {
   const { id } = await params;
   const body = await request.json();
   const imageUrls = Array.isArray(body.image_urls)
-    ? body.image_urls.map(String).filter(Boolean).slice(0, 6)
+    ? body.image_urls.map(String).filter(Boolean).slice(0, 5)
     : [];
 
   if (imageUrls.length < 1) {
     return NextResponse.json({ error: "請至少上傳 1 張成品照片" }, { status: 400 });
+  }
+  if (imageUrls.length > 5) {
+    return NextResponse.json({ error: "最多上傳 5 張照片" }, { status: 400 });
   }
 
   const successStatus = String(body.success_status ?? "success");

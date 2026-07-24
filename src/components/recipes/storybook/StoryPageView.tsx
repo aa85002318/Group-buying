@@ -164,8 +164,17 @@ export function StoryPageView(props: StoryPageViewProps) {
 
   if (pageType === "submissions" || pageType === "gallery") {
     return (
-      <EmbedShell title={page.title || "成品分享"} subtitle={page.subtitle}>
-        <RecipeSubmissionsPanel recipeId={data.recipe.id} compact />
+      <EmbedShell title={page.title || "分享你的作品"} subtitle={page.subtitle}>
+        <p className="mb-4 text-sm leading-relaxed text-[#6B3F24]/80">
+          {page.body ||
+            "完成這份食譜了嗎？歡迎上傳成品照片與製作心得，與大家交流；也可以設定為只限自己查看。此步驟可以略過。"}
+        </p>
+        <RecipeSubmissionsPanel
+          recipeId={data.recipe.id}
+          compact
+          defaultShowForm
+          skippable
+        />
       </EmbedShell>
     );
   }
@@ -468,30 +477,23 @@ export function StoryPageView(props: StoryPageViewProps) {
     );
   }
 
-  if (pageType === "completion" || pageType === "storage") {
+  if (pageType === "completion") {
+    // Deprecated celebration pages — should be filtered by buildReaderPages
+    return null;
+  }
+
+  if (pageType === "storage") {
     return (
       <div className="flex min-h-[min(100dvh,820px)] w-full flex-col bg-[#FFF9EA]">
         <FullBleedVisual
           className="!min-h-[45vh]"
           imageUrl={primary?.url || data.recipe.cover_image}
-          eyebrow={page.eyebrow || (pageType === "completion" ? "完成" : "保存")}
+          eyebrow={page.eyebrow || "保存"}
           title={page.title}
           subtitle={page.subtitle}
           body={page.body}
           alignment={page.alignment || "bottom_left"}
         />
-        {pageType === "completion" ? (
-          <div className="space-y-6 px-5 py-6 pb-28">
-            <RecipeSubmissionsPanel recipeId={data.recipe.id} compact />
-            {data.recommendations.length ? (
-              <RecipeRecommendationsPanel
-                recommendations={data.recommendations}
-                ingredients={data.recipe.recipe_ingredients ?? []}
-                compact
-              />
-            ) : null}
-          </div>
-        ) : null}
       </div>
     );
   }

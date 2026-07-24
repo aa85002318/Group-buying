@@ -48,23 +48,31 @@ type SmartRecipeReaderProps = {
   data: SmartRecipePayload;
   /** Kindle-like fullscreen when opened from immersive route */
   immersive?: boolean;
+  /** Initial flip/full from ?view= */
+  initialMode?: "flip" | "full";
 };
 
-export function SmartRecipeReader({ data, immersive = false }: SmartRecipeReaderProps) {
+export function SmartRecipeReader({
+  data,
+  immersive = false,
+  initialMode,
+}: SmartRecipeReaderProps) {
   const { recipe } = data;
   const flipEnabled = recipe.flip_mode_enabled !== false;
   const fullEnabled = recipe.full_reading_enabled !== false;
   const defaultMode =
-    recipe.reading_mode_default === "full" && fullEnabled
+    initialMode === "full" && fullEnabled
       ? "full"
-      : flipEnabled
+      : initialMode === "flip" && flipEnabled
         ? "flip"
-        : "full";
+        : recipe.reading_mode_default === "full" && fullEnabled
+          ? "full"
+          : flipEnabled
+            ? "flip"
+            : "full";
 
   const pages = useMemo(() => buildFlipPages(data), [data]);
-  const [readingMode, setReadingMode] = useState<"flip" | "full">(
-    immersive ? "flip" : defaultMode
-  );
+  const [readingMode, setReadingMode] = useState<"flip" | "full">(defaultMode);
   const [pageIndex, setPageIndex] = useState(0);
   const [multiplier, setMultiplier] = useState(1);
   const [haveIds, setHaveIds] = useState<Set<string>>(new Set());
@@ -840,7 +848,7 @@ function FlipPageView({
         <section className="space-y-4 text-center">
           <h2 className="text-2xl font-bold text-[#6B3F24]">完成！</h2>
           <p className="text-sm text-foreground-secondary">
-            恭喜完成「{recipe.title}」。你可以保存、分享，或繼續看商品與討論。
+            食譜已完成。你可以保存、分享成品，或繼續看商品與討論。
           </p>
           {recipe.tips ? (
             <div className="rounded-2xl bg-[#FFF9EA] p-4 text-left text-sm text-[#6B3F24]">

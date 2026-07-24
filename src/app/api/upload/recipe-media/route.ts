@@ -4,8 +4,8 @@ import { isSupabaseConfigured } from "@/lib/config";
 import { rateLimit } from "@/lib/security/rateLimit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const MAX_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const MAX_SIZE = 10 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 /** Member upload for recipe discussion / submission images → recipe-media bucket */
 export async function POST(request: Request) {
@@ -34,10 +34,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "請選擇圖片檔案" }, { status: 400 });
   }
   if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json({ error: "僅支援 JPEG、PNG、WebP、GIF" }, { status: 400 });
+    return NextResponse.json({ error: "僅支援 JPEG、PNG、WebP" }, { status: 400 });
   }
   if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "圖片不可超過 5MB" }, { status: 400 });
+    return NextResponse.json({ error: "圖片不可超過 10MB" }, { status: 400 });
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";

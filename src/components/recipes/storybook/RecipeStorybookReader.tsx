@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import {
   StoryPageView,
-  type FlatStoryPage,
 } from "@/components/recipes/storybook/StoryPageView";
 import { StoryAskTeacherSheet } from "@/components/recipes/storybook/StoryAskTeacherSheet";
 import type { StoryTimerState } from "@/components/recipes/storybook/layouts/TimerLayout";
@@ -27,10 +26,14 @@ import type { SmartRecipePayload } from "@/lib/recipes/flip-pages";
 import type { RecipePlaybackContext } from "@/lib/recipes/media";
 import {
   parseReaderSettings,
-  type RecipeReaderSettings,
 } from "@/lib/recipes/reader-settings";
 import {
-  flattenStoryPages,
+  buildReaderPages,
+  SYNTH_COVER_ID,
+  SYNTH_TOC_ID,
+  tocLabelForPage,
+} from "@/lib/recipes/reader-pages";
+import {
   type StorybookPayload,
 } from "@/lib/recipes/storybook";
 import {
@@ -45,100 +48,6 @@ type RecipeStorybookReaderProps = {
   stories: StorybookPayload;
   immersive?: boolean;
 };
-
-type ReaderPage = FlatStoryPage & { __synthetic?: "cover" | "toc" };
-
-const SYNTH_COVER_ID = "__v3_cover__";
-const SYNTH_TOC_ID = "__v3_toc__";
-
-function buildReaderPages(
-  chapters: StorybookPayload["chapters"],
-  recipeTitle: string,
-  settings: RecipeReaderSettings
-): ReaderPage[] {
-  const raw = flattenStoryPages(chapters) as FlatStoryPage[];
-  // Drop legacy scale / empty failure-only pages (caution is popup)
-  const filtered = raw.filter((p) => {
-    if (p.page_type === "scale") return false;
-    if (p.active === false) return false;
-    return true;
-  });
-
-  const synthCover = (): ReaderPage =>
-    ({
-      id: SYNTH_COVER_ID,
-      recipe_id: filtered[0]?.recipe_id ?? "",
-      chapter_id: null,
-      step_id: null,
-      page_type: "cover",
-      layout_type: "full_bleed",
-      title: recipeTitle,
-      subtitle: "開始閱讀",
-      body: null,
-      eyebrow: "CHIMEIDIY 翻頁教材",
-      alignment: "bottom_left",
-      content_config: { ctaPrimary: "開始閱讀" },
-      completion_config: {},
-      ai_context: null,
-      sort_order: -2,
-      active: true,
-      created_at: "",
-      updated_at: "",
-      recipe_story_page_media: [],
-      __synthetic: "cover",
-    }) as ReaderPage;
-
-  const synthToc = (): ReaderPage =>
-    ({
-      id: SYNTH_TOC_ID,
-      recipe_id: filtered[0]?.recipe_id ?? "",
-      chapter_id: null,
-      step_id: null,
-      page_type: "toc",
-      layout_type: "list",
-      title: "Recipe Contents",
-      subtitle: "食譜目錄",
-      body: null,
-      eyebrow: null,
-      alignment: "top_left",
-      content_config: {},
-      completion_config: {},
-      ai_context: null,
-      sort_order: -1,
-      active: true,
-      created_at: "",
-      updated_at: "",
-      recipe_story_page_media: [],
-      __synthetic: "toc",
-    }) as ReaderPage;
-
-  const pages: ReaderPage[] = [];
-  const hasCover = filtered.some((p) => p.page_type === "cover");
-  const needSynthToc = settings.showToc && !filtered.some((p) => p.page_type === "toc");
-
-  if (!hasCover) pages.push(synthCover());
-
-  let tocPlaced = !needSynthToc;
-  for (const p of filtered) {
-    if (!settings.showProducts && p.page_type === "recommendations") continue;
-    if (!settings.showGallery && (p.page_type === "gallery" || p.page_type === "submissions"))
-      continue;
-    if (!settings.showChallenge && p.page_type === "challenge") continue;
-
-    pages.push(p);
-    if (p.page_type === "cover" && needSynthToc && !tocPlaced) {
-      pages.push(synthToc());
-      tocPlaced = true;
-    }
-  }
-
-  if (needSynthToc && !tocPlaced) {
-    const coverIdx = pages.findIndex((p) => p.page_type === "cover");
-    pages.splice(coverIdx >= 0 ? coverIdx + 1 : 0, 0, synthToc());
-  }
-
-  return pages;
-}
 
 export function RecipeStorybookReader({
   data,
@@ -375,12 +284,7 @@ export function RecipeStorybookReader({
       .map((p, i) => ({
         index: i,
         id: p.id,
-        title:
-          p.page_type === "cover"
-            ? "封面"
-            : p.page_type === "toc"
-              ? "目錄"
-              : p.title || p.chapter?.title || p.page_type,
+        title: tocLabelForPage(p),
         current: i === pageIndex,
       }))
       .filter((e) => e.id !== SYNTH_COVER_ID || e.index === 0);
@@ -388,9 +292,15 @@ export function RecipeStorybookReader({
 
   const isCover = page?.page_type === "cover";
   const isToc = page?.page_type === "toc";
+  const isSharePage =
+    page?.page_type === "submissions" || page?.page_type === "gallery";
+  const isLastPage = pageIndex >= pages.length - 1;
   const blockedNext = guided && !canAdvance(pageIndex);
-  const ctaPrimary =
-    config.ctaPrimary || (isCover ? "開始閱讀" : isToc ? "開始" : "下一頁");
+  const ctaPrimary = isSharePage
+    ? isLastPage
+      ? "結束"
+      : "下一頁"
+    : config.ctaPrimary || (isCover ? "開始閱讀" : isToc ? "開始" : "下一頁");
   const ctaSecondary = config.ctaSecondary || "上一頁";
 
   const shellClass = immersive
@@ -555,7 +465,7 @@ export function RecipeStorybookReader({
                 注意事項
               </button>
             ) : null}
-            {settings.showAskTeacher && page && !page.__synthetic ? (
+            {settings.showAskTeacher && page && !page.__synthetic && !isSharePage ? (
               <button
                 type="button"
                 onClick={() =>
@@ -571,6 +481,14 @@ export function RecipeStorybookReader({
                 <HelpCircle className="h-3.5 w-3.5" />
                 我要提問
               </button>
+            ) : null}
+            {isSharePage ? (
+              <Link
+                href="/recipes"
+                className="inline-flex items-center gap-1 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white"
+              >
+                稍後再分享
+              </Link>
             ) : null}
           </div>
           {blockedNext ? (
@@ -590,8 +508,15 @@ export function RecipeStorybookReader({
             </button>
             <button
               type="button"
-              disabled={pageIndex >= pages.length - 1 || blockedNext}
+              disabled={
+                blockedNext ||
+                (pageIndex >= pages.length - 1 && !isSharePage)
+              }
               onClick={() => {
+                if (isSharePage && isLastPage) {
+                  window.location.href = "/recipes";
+                  return;
+                }
                 if (page && config.skipAllowed) markComplete(page.id);
                 go(pageIndex + 1);
               }}

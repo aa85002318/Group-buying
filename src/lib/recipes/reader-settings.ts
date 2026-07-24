@@ -17,6 +17,14 @@ export type RecipeReaderSettings = {
   showCautionPopup: boolean;
   /** Completion badge */
   showCompletionBadge: boolean;
+  /** List primary CTA = 查看完整食譜 (?view=full) */
+  listPrimaryFull: boolean;
+  /** Allow public share on submissions */
+  allowPublicShare: boolean;
+  /** Allow private portfolio submissions */
+  allowPrivateShare: boolean;
+  /** Show public gallery wall under share form */
+  showPublicWall: boolean;
 };
 
 export const DEFAULT_READER_SETTINGS: RecipeReaderSettings = {
@@ -28,6 +36,10 @@ export const DEFAULT_READER_SETTINGS: RecipeReaderSettings = {
   showProducts: true,
   showCautionPopup: true,
   showCompletionBadge: false,
+  listPrimaryFull: true,
+  allowPublicShare: true,
+  allowPrivateShare: true,
+  showPublicWall: true,
 };
 
 export function parseReaderSettings(
@@ -46,5 +58,9 @@ export function parseReaderSettings(
     showProducts: obj.showProducts !== false,
     showCautionPopup: obj.showCautionPopup !== false,
     showCompletionBadge: Boolean(obj.showCompletionBadge),
+    listPrimaryFull: obj.listPrimaryFull !== false,
+    allowPublicShare: obj.allowPublicShare !== false,
+    allowPrivateShare: obj.allowPrivateShare !== false,
+    showPublicWall: obj.showPublicWall !== false,
   };
 }

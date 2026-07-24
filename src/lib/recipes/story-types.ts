@@ -159,7 +159,6 @@ export const STORY_PAGE_TYPES_V3: RecipeStoryPageType[] = [
   "challenge",
   "gallery",
   "submissions",
-  "completion",
   "chapter",
   "comparison",
   "timer",

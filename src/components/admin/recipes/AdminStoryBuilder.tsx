@@ -78,8 +78,7 @@ const WIZARD_INTENTS: { intent: string; label: string; hint: string }[] = [
   { intent: "image_text", label: "圖文", hint: "圖文內容頁" },
   { intent: "step", label: "製作步驟", hint: "步驟頁（可附影片）" },
   { intent: "challenge", label: "食譜挑戰", hint: "挑戰頁（需食譜開關）" },
-  { intent: "gallery", label: "成品分享", hint: "作品上傳／作品牆" },
-  { intent: "completion", label: "完成", hint: "完成頁" },
+  { intent: "gallery", label: "成品分享", hint: "作品上傳／作品牆（可略過）" },
   { intent: "recommendations", label: "推薦商品", hint: "商品推薦（需開關）" },
 ];
 
