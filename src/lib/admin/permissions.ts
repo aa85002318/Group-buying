@@ -19,6 +19,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/news",
   "/admin/banners",
   "/admin/home",
+  "/admin/content",
   "/admin/faqs",
   "/admin/cms",
   "/admin/articles",
@@ -157,6 +158,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin", "content_editor", "customer_service"],
     items: [
       { href: "/admin/home", label: "首頁設定", roles: ["admin", "content_editor"] },
+      { href: "/admin/content/popups", label: "首頁彈跳公告", roles: ["admin", "content_editor"] },
       { href: "/admin/banners", label: "Banner", roles: ["admin", "content_editor"] },
       { href: "/admin/news", label: "公告／最新資訊", roles: ["admin", "content_editor"] },
       { href: "/admin/articles", label: "文章管理", roles: ["admin", "content_editor"] },

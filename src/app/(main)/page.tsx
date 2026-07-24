@@ -14,6 +14,7 @@ import { GroupBuyClosingSection } from "@/components/home/GroupBuyClosingSection
 import { PromoBannerStrip } from "@/components/home/PromoBannerStrip";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
 import { HomeFooter } from "@/components/home/HomeFooter";
+import { HomepagePopupDialog } from "@/components/home/HomepagePopupDialog";
 import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 import { BrandStatementSection } from "@/components/home/BrandStatementSection";
 import { AiAssistantSection } from "@/components/home/AiAssistantSection";
@@ -653,6 +654,7 @@ export default function HomePage() {
       </HomeContentArea>
 
       <HomeFooter className="mt-0" />
+      <HomepagePopupDialog />
     </div>
   );
 }
