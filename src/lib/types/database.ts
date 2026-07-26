@@ -434,6 +434,26 @@ export interface GroupBuyEvent {
   leader_user_id: string | null;
   created_at: string;
   updated_at: string;
+  short_title?: string | null;
+  sort_order?: number;
+  is_featured?: boolean;
+  expected_arrival_at?: string | null;
+  pickup_start_at?: string | null;
+  pickup_end_at?: string | null;
+  original_price?: number | null;
+  group_price?: number | null;
+  member_group_price?: number | null;
+  min_qty?: number | null;
+  max_qty_per_user?: number | null;
+  threshold_type?: "none" | "qty" | "people" | "amount";
+  threshold_value?: number | null;
+  show_progress?: boolean;
+  show_reached_badge?: boolean;
+  allow_under_threshold?: boolean;
+  fulfillment_options?: string[];
+  manual_tags?: string[];
+  stats_mode?: "orders" | "members" | "qty" | "hidden";
+  category_label?: string | null;
 }
 
 export interface GroupBuyProduct {

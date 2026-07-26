@@ -16,6 +16,26 @@ const ALLOWED_FIELDS = [
   "status",
   "store_id",
   "leader_user_id",
+  "short_title",
+  "sort_order",
+  "is_featured",
+  "expected_arrival_at",
+  "pickup_start_at",
+  "pickup_end_at",
+  "original_price",
+  "group_price",
+  "member_group_price",
+  "min_qty",
+  "max_qty_per_user",
+  "threshold_type",
+  "threshold_value",
+  "show_progress",
+  "show_reached_badge",
+  "allow_under_threshold",
+  "fulfillment_options",
+  "manual_tags",
+  "stats_mode",
+  "category_label",
 ] as const;
 
 export async function PATCH(
@@ -45,12 +65,39 @@ export async function PATCH(
   const admin = createAdminClient();
 
   const { data: old } = await admin.from("group_buy_events").select("*").eq("id", id).single();
-  const { data, error: updateError } = await admin
+  let { data, error: updateError } = await admin
     .from("group_buy_events")
     .update(updates)
     .eq("id", id)
     .select()
     .single();
+
+  if (updateError && /column|does not exist/i.test(updateError.message)) {
+    const coreKeys = new Set([
+      "title",
+      "description",
+      "banner_url",
+      "banner_aspect_ratio",
+      "is_homepage_featured",
+      "homepage_sort_order",
+      "linked_product_id",
+      "start_at",
+      "end_at",
+      "status",
+      "store_id",
+      "leader_user_id",
+    ]);
+    const coreUpdates: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(updates)) {
+      if (coreKeys.has(k)) coreUpdates[k] = v;
+    }
+    ({ data, error: updateError } = await admin
+      .from("group_buy_events")
+      .update(coreUpdates)
+      .eq("id", id)
+      .select()
+      .single());
+  }
 
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
   await logAudit(auth!.profile.id, "update_group_buy", "group_buy_event", id, old, data);
