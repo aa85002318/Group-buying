@@ -3,7 +3,12 @@
 import { useEffect, useRef } from "react";
 import {
   formatPriceTwd,
+  formatSpecOrWeight,
   formatWeight,
+  getAppPrice,
+  getListPrice,
+  getSalePrice,
+  isPriceLabelTemplateCode,
   resolveLabelPrice,
   type LabelTemplateConfig,
   type PrintQueueItem,
@@ -14,7 +19,6 @@ type LabelPreviewCardProps = {
   item: PrintQueueItem;
   template: LabelTemplateConfig;
   className?: string;
-  /** When true, use absolute mm for print sheet */
   forPrint?: boolean;
 };
 
@@ -22,10 +26,12 @@ function LabelBarcode({
   value,
   type,
   height = 28,
+  moduleWidth = 1.15,
 }: {
   value: string;
   type: LabelTemplateConfig["barcode_type"];
   height?: number;
+  moduleWidth?: number;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -60,7 +66,7 @@ function LabelBarcode({
           margin: 0,
           background: "#FFFFFF",
           lineColor: "#000000",
-          width: 1.2,
+          width: moduleWidth,
         });
       } catch {
         // invalid
@@ -70,13 +76,229 @@ function LabelBarcode({
     return () => {
       cancelled = true;
     };
-  }, [value, type, height]);
+  }, [value, type, height, moduleWidth]);
 
   if (!value) return null;
   if (type === "QR") {
     return <canvas ref={canvasRef} className="mx-auto" width={56} height={56} />;
   }
-  return <svg ref={svgRef} className="mx-auto h-auto max-h-8 w-full" />;
+  return (
+    <svg
+      ref={svgRef}
+      className="block h-auto max-h-[9mm] w-auto max-w-full"
+      style={{ maxWidth: "100%" }}
+    />
+  );
+}
+
+function shellStyle(template: LabelTemplateConfig, forPrint: boolean) {
+  if (forPrint) {
+    return {
+      width: `${template.width_mm}mm`,
+      height: `${template.height_mm}mm`,
+      boxSizing: "border-box" as const,
+    };
+  }
+  return {
+    aspectRatio: `${template.width_mm} / ${template.height_mm}`,
+  };
+}
+
+/** 簡約／App 優惠／特價 — 70×30 純黑白熱感公版 */
+function MonochromeLabelCard({
+  item,
+  template,
+  className,
+  forPrint = false,
+}: LabelPreviewCardProps) {
+  const { product } = item;
+  const code = template.code;
+  const spec = formatSpecOrWeight(product);
+  const list = getListPrice(product);
+  const app = getAppPrice(product);
+  const sale = getSalePrice(product);
+  const save =
+    app != null && list > app ? Math.round(list - app) : null;
+
+  return (
+    <div
+      className={cn(
+        "price-label relative overflow-hidden bg-white text-black",
+        forPrint ? "border border-black" : "border-2 border-black shadow-none",
+        className
+      )}
+      style={{
+        ...shellStyle(template, forPrint),
+        fontFamily: '"Noto Sans TC", "PingFang TC", sans-serif',
+        printColorAdjust: "exact",
+        WebkitPrintColorAdjust: "exact",
+        padding: forPrint ? "1.2mm" : "6px",
+      }}
+    >
+      {code === "simple" && (
+        <div className="flex h-full gap-[2%]">
+          <div className="flex w-[58%] flex-col overflow-hidden">
+            <p
+              className="font-bold leading-tight"
+              style={{
+                fontSize: forPrint ? "9pt" : "11px",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {product.name}
+            </p>
+            {spec && (
+              <p
+                className="mt-auto font-medium"
+                style={{ fontSize: forPrint ? "7.5pt" : "10px" }}
+              >
+                {spec}
+              </p>
+            )}
+          </div>
+          <div className="flex w-[42%] flex-col items-end overflow-hidden border-l border-black pl-[2%]">
+            <p className="text-[7px] font-medium leading-none">建議售價</p>
+            <p
+              className="leading-none"
+              style={{
+                fontSize: forPrint ? "16pt" : "22px",
+                fontWeight: 900,
+              }}
+            >
+              {formatPriceTwd(list)}
+            </p>
+            {product.barcode && (
+              <div className="mt-auto w-full">
+                <LabelBarcode value={product.barcode} type="CODE128" height={22} moduleWidth={1} />
+                <p
+                  className="mt-0.5 text-center font-mono tracking-tight"
+                  style={{ fontSize: forPrint ? "6pt" : "8px" }}
+                >
+                  {product.barcode}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {code === "app_month" && (
+        <div className="flex h-full flex-col">
+          <div className="mb-0.5 border-b-2 border-double border-black pb-0.5">
+            <p
+              className="font-black leading-none tracking-wide"
+              style={{ fontSize: forPrint ? "8pt" : "10px" }}
+            >
+              本月 APP 優惠
+            </p>
+          </div>
+          <div className="flex min-h-0 flex-1 gap-[2%]">
+            <div className="flex w-[55%] flex-col overflow-hidden">
+              <p
+                className="font-bold leading-tight"
+                style={{
+                  fontSize: forPrint ? "8.5pt" : "11px",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {product.name}
+              </p>
+              {spec && (
+                <p style={{ fontSize: forPrint ? "7pt" : "9px" }} className="mt-0.5">
+                  {spec}
+                </p>
+              )}
+            </div>
+            <div className="flex w-[45%] flex-col items-end">
+              <p className="text-[7px] font-semibold leading-none">APP優惠價</p>
+              <p
+                className="leading-none"
+                style={{ fontSize: forPrint ? "15pt" : "20px", fontWeight: 900 }}
+              >
+                {formatPriceTwd(app ?? 0)}
+              </p>
+              {save != null && save > 0 && (
+                <p className="mt-0.5 font-bold" style={{ fontSize: forPrint ? "7pt" : "9px" }}>
+                  現省 {formatPriceTwd(save)}
+                </p>
+              )}
+            </div>
+          </div>
+          {product.barcode && (
+            <div className="mt-0.5 w-full border-t border-black pt-0.5">
+              <LabelBarcode value={product.barcode} type="CODE128" height={20} moduleWidth={1} />
+              <p
+                className="text-center font-mono tracking-tight"
+                style={{ fontSize: forPrint ? "6pt" : "8px" }}
+              >
+                {product.barcode}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {code === "sale" && (
+        <div className="flex h-full flex-col border-2 border-black p-[1px]">
+          <div className="flex min-h-0 flex-1 gap-[2%]">
+            <div className="flex w-[58%] flex-col overflow-hidden">
+              <p className="font-black leading-none" style={{ fontSize: forPrint ? "8pt" : "10px" }}>
+                【特價】
+              </p>
+              <p
+                className="mt-0.5 font-bold leading-tight"
+                style={{
+                  fontSize: forPrint ? "8.5pt" : "11px",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {product.name}
+              </p>
+              {spec && (
+                <p className="mt-auto" style={{ fontSize: forPrint ? "7pt" : "9px" }}>
+                  {spec}
+                </p>
+              )}
+            </div>
+            <div className="flex w-[42%] flex-col items-end">
+              <p
+                className="leading-none line-through"
+                style={{ fontSize: forPrint ? "7pt" : "9px" }}
+              >
+                原價 {formatPriceTwd(list)}
+              </p>
+              <p
+                className="leading-none"
+                style={{ fontSize: forPrint ? "16pt" : "22px", fontWeight: 900 }}
+              >
+                {formatPriceTwd(sale ?? 0)}
+              </p>
+            </div>
+          </div>
+          {product.barcode && (
+            <div className="mt-0.5 w-full border-t border-black pt-0.5">
+              <LabelBarcode value={product.barcode} type="CODE128" height={20} moduleWidth={1} />
+              <p
+                className="text-center font-mono tracking-tight"
+                style={{ fontSize: forPrint ? "6pt" : "8px" }}
+              >
+                {product.barcode}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function LabelPreviewCard({
@@ -85,6 +307,17 @@ export function LabelPreviewCard({
   className,
   forPrint = false,
 }: LabelPreviewCardProps) {
+  if (template.monochrome || isPriceLabelTemplateCode(template.code)) {
+    return (
+      <MonochromeLabelCard
+        item={item}
+        template={template}
+        className={className}
+        forPrint={forPrint}
+      />
+    );
+  }
+
   const { product, priceSource, customPrice, promoText } = item;
   const resolved = resolveLabelPrice(product, priceSource, customPrice);
   const weight = formatWeight(product.weight_grams, product.unit);
@@ -221,10 +454,7 @@ export function LabelPreviewCard({
 
       {template.show_qrcode && (product.barcode || product.sku || product.id) && (
         <div className="mt-1 flex justify-end">
-          <LabelBarcode
-            value={product.barcode || product.sku || product.id}
-            type="QR"
-          />
+          <LabelBarcode value={product.barcode || product.sku || product.id} type="QR" />
         </div>
       )}
     </div>
@@ -245,6 +475,7 @@ export function LabelPrintSheet({ items, template, paperMode }: LabelPrintSheetP
     paperMode === "a4"
       ? Math.max(1, Math.floor((pageW - 10) / (template.width_mm + gap)))
       : 1;
+  const isMono = Boolean(template.monochrome || isPriceLabelTemplateCode(template.code));
 
   return (
     <div className="label-print-root hidden print:block">
@@ -261,15 +492,34 @@ export function LabelPrintSheet({ items, template, paperMode }: LabelPrintSheetP
             left: 0; top: 0; width: 100%;
           }
           .no-print { display: none !important; }
+          body { margin: 0; background: #fff; }
+          ${
+            isMono && paperMode === "label"
+              ? `
+          .price-label {
+            break-after: page;
+            page-break-after: always;
+          }
+          .price-label:last-child {
+            break-after: auto;
+            page-break-after: auto;
+          }
+          `
+              : ""
+          }
         }
       `}</style>
       <div
-        className="grid"
-        style={{
-          gridTemplateColumns: `repeat(${cols}, ${template.width_mm}mm)`,
-          gap: `${gap}mm`,
-          justifyContent: paperMode === "a4" ? "start" : "center",
-        }}
+        className={cn(isMono && paperMode === "label" ? "block" : "grid")}
+        style={
+          isMono && paperMode === "label"
+            ? undefined
+            : {
+                gridTemplateColumns: `repeat(${cols}, ${template.width_mm}mm)`,
+                gap: `${gap}mm`,
+                justifyContent: paperMode === "a4" ? "start" : "center",
+              }
+        }
       >
         {items.map((item, idx) => (
           <LabelPreviewCard
@@ -280,9 +530,7 @@ export function LabelPrintSheet({ items, template, paperMode }: LabelPrintSheetP
           />
         ))}
       </div>
-      {paperMode === "label" && items.length === 0 && (
-        <p className="p-4 text-sm">無可列印標籤</p>
-      )}
+      {items.length === 0 && <p className="p-4 text-sm">無可列印標籤</p>}
     </div>
   );
 }

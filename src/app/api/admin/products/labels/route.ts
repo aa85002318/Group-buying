@@ -4,8 +4,18 @@ import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BUILTIN_TEMPLATES, type LabelProduct } from "@/lib/admin/product-labels";
 
-const PRODUCT_SELECT =
-  "id, name, barcode, sku, unit, specifications, weight_grams, price, sale_price, original_price, msrp, website_price, vip_price, is_active, status, brand_id, supplier_name, created_at, brands(name), primary_category:product_categories!products_primary_category_id_fkey(name), category:product_categories!products_category_id_fkey(name)";
+const REL =
+  "brands(name), primary_category:product_categories!products_primary_category_id_fkey(name), category:product_categories!products_category_id_fkey(name)";
+
+/** Progressive selects — production may lag behind migrations (app_price / weight_grams / …). */
+const PRODUCT_SELECTS = [
+  `id, name, subtitle, barcode, sku, unit, specifications, weight_grams, price, sale_price, app_price, original_price, msrp, website_price, vip_price, is_active, status, brand_id, supplier_name, created_at, ${REL}`,
+  `id, name, subtitle, barcode, sku, unit, specifications, weight_grams, price, sale_price, original_price, msrp, website_price, vip_price, is_active, status, brand_id, supplier_name, created_at, ${REL}`,
+  `id, name, subtitle, barcode, sku, unit, specifications, price, sale_price, app_price, original_price, msrp, website_price, vip_price, is_active, status, brand_id, supplier_name, created_at, ${REL}`,
+  `id, name, subtitle, barcode, sku, unit, specifications, price, sale_price, original_price, msrp, website_price, vip_price, is_active, status, brand_id, supplier_name, created_at, ${REL}`,
+  `id, name, barcode, sku, unit, specifications, price, sale_price, original_price, is_active, status, brand_id, supplier_name, created_at, ${REL}`,
+  `id, name, barcode, sku, unit, specifications, price, sale_price, is_active, status, brand_id, created_at, ${REL}`,
+];
 
 function mapProduct(row: Record<string, unknown>): LabelProduct {
   const brands = row.brands as { name?: string } | null;
@@ -14,6 +24,7 @@ function mapProduct(row: Record<string, unknown>): LabelProduct {
   return {
     id: String(row.id),
     name: String(row.name ?? ""),
+    subtitle: (row.subtitle as string | null) ?? null,
     barcode: (row.barcode as string | null) ?? null,
     sku: (row.sku as string | null) ?? null,
     unit: (row.unit as string | null) ?? null,
@@ -21,6 +32,7 @@ function mapProduct(row: Record<string, unknown>): LabelProduct {
     weight_grams: row.weight_grams != null ? Number(row.weight_grams) : null,
     price: Number(row.price ?? 0),
     sale_price: row.sale_price != null ? Number(row.sale_price) : null,
+    app_price: row.app_price != null ? Number(row.app_price) : null,
     original_price: row.original_price != null ? Number(row.original_price) : null,
     msrp: row.msrp != null ? Number(row.msrp) : null,
     website_price: row.website_price != null ? Number(row.website_price) : null,
@@ -33,6 +45,10 @@ function mapProduct(row: Record<string, unknown>): LabelProduct {
     supplier_name: (row.supplier_name as string | null) ?? null,
     created_at: (row.created_at as string | null) ?? null,
   };
+}
+
+function isMissingColumnError(message: string): boolean {
+  return /does not exist|column .* not found|Could not find/i.test(message);
 }
 
 export async function GET(request: Request) {
@@ -57,7 +73,6 @@ export async function GET(request: Request) {
       .select("*")
       .order("sort_order", { ascending: true });
     if (tplErr) {
-      // Table may not exist yet — fall back to builtins
       return NextResponse.json({ templates: BUILTIN_TEMPLATES, warning: tplErr.message });
     }
     if (!data?.length) {
@@ -75,33 +90,52 @@ export async function GET(request: Request) {
   const idsParam = searchParams.get("ids");
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") ?? 40)));
 
-  let query = admin
-    .from("products")
-    .select(PRODUCT_SELECT)
-    .order("updated_at", { ascending: false })
-    .limit(limit);
+  const buildQuery = (select: string, includeSubtitleInSearch: boolean) => {
+    let query = admin
+      .from("products")
+      .select(select)
+      .order("updated_at", { ascending: false })
+      .limit(limit);
 
-  if (idsParam) {
-    const ids = idsParam.split(",").map((s) => s.trim()).filter(Boolean);
-    if (ids.length) query = query.in("id", ids);
+    if (idsParam) {
+      const ids = idsParam.split(",").map((s) => s.trim()).filter(Boolean);
+      if (ids.length) query = query.in("id", ids);
+    }
+
+    if (search) {
+      query = includeSubtitleInSearch
+        ? query.or(
+            `name.ilike.%${search}%,subtitle.ilike.%${search}%,barcode.ilike.%${search}%,sku.ilike.%${search}%`
+          )
+        : query.or(`name.ilike.%${search}%,barcode.ilike.%${search}%,sku.ilike.%${search}%`);
+    }
+    if (brandId) query = query.eq("brand_id", brandId);
+    if (categoryId) query = query.eq("category_id", categoryId);
+    if (supplier) query = query.ilike("supplier_name", `%${supplier}%`);
+    if (activeOnly) query = query.eq("is_active", true);
+    if (recentDays > 0) {
+      const since = new Date();
+      since.setDate(since.getDate() - recentDays);
+      query = query.gte("created_at", since.toISOString());
+    }
+    return query;
+  };
+
+  let data: unknown[] | null = null;
+  let fetchError: { message: string } | null = null;
+
+  for (const select of PRODUCT_SELECTS) {
+    const includeSubtitle = select.includes("subtitle");
+    const result = await buildQuery(select, includeSubtitle);
+    if (!result.error) {
+      data = result.data as unknown[] | null;
+      fetchError = null;
+      break;
+    }
+    fetchError = result.error;
+    if (!isMissingColumnError(result.error.message)) break;
   }
 
-  if (search) {
-    query = query.or(
-      `name.ilike.%${search}%,barcode.ilike.%${search}%,sku.ilike.%${search}%`
-    );
-  }
-  if (brandId) query = query.eq("brand_id", brandId);
-  if (categoryId) query = query.eq("category_id", categoryId);
-  if (supplier) query = query.ilike("supplier_name", `%${supplier}%`);
-  if (activeOnly) query = query.eq("is_active", true);
-  if (recentDays > 0) {
-    const since = new Date();
-    since.setDate(since.getDate() - recentDays);
-    query = query.gte("created_at", since.toISOString());
-  }
-
-  const { data, error: fetchError } = await query;
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
 
   return NextResponse.json({
@@ -138,6 +172,12 @@ export async function POST(request: Request) {
     0
   );
 
+  const settings = {
+    ...(body.settings ?? {}),
+    templateCode: body.templateCode ?? body.settings?.templateCode ?? null,
+    printRequest: body.printRequest ?? null,
+  };
+
   const { data: job, error: jobErr } = await admin
     .from("print_jobs")
     .insert({
@@ -148,16 +188,15 @@ export async function POST(request: Request) {
       printed_by: auth!.profile.id,
       printed_at: new Date().toISOString(),
       total_labels: total,
-      width_mm: body.width_mm ?? null,
-      height_mm: body.height_mm ?? null,
+      width_mm: body.width_mm ?? body.widthMm ?? null,
+      height_mm: body.height_mm ?? body.heightMm ?? null,
       paper_mode: body.paper_mode ?? "label",
-      settings: body.settings ?? {},
+      settings,
     })
     .select("*")
     .single();
 
   if (jobErr) {
-    // Soft-fail if migration not applied yet — still allow client print
     return NextResponse.json({
       job: null,
       warning: jobErr.message,
@@ -167,14 +206,15 @@ export async function POST(request: Request) {
 
   const rows = items.map(
     (it: {
-      product_id: string;
+      product_id?: string;
+      productId?: string;
       copies?: number;
       price_used?: number;
       compare_price?: number | null;
       price_source?: string;
     }) => ({
       job_id: job.id,
-      product_id: it.product_id,
+      product_id: it.product_id ?? it.productId,
       quantity: 1,
       copies: Math.max(1, Number(it.copies ?? 1)),
       price_used: it.price_used ?? null,
@@ -194,7 +234,11 @@ export async function POST(request: Request) {
     "print_job",
     job.id,
     null,
-    { total_labels: total, item_count: items.length },
+    {
+      total_labels: total,
+      item_count: items.length,
+      templateCode: body.templateCode ?? null,
+    },
     request as never
   );
 

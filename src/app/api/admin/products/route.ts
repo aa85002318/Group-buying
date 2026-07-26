@@ -49,6 +49,7 @@ function mapProductRow(body: Record<string, unknown>) {
     original_price: body.original_price ?? null,
     live_price: body.live_price ?? null,
     vip_price: body.vip_price ?? null,
+    app_price: body.app_price ?? null,
     cost_price: body.cost_price ?? null,
     gross_margin: body.gross_margin ?? null,
     stock: body.stock ?? 100,
