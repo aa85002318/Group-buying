@@ -102,40 +102,68 @@ export async function getGroupBuyEventStatsMap(
   return map;
 }
 
+export type DisplayStatResult = {
+  participantCount: number;
+  /** Real sold qty from effective orders (or sold_count fallback) */
+  realSoldQuantity: number;
+  /** Admin virtual boost */
+  virtualSoldQuantity: number;
+  /** Displayed sold = real + virtual */
+  soldQuantity: number;
+  hide: boolean;
+  showVirtualLabel: boolean;
+};
+
 export function pickDisplayStat(
   stats: GroupBuyEventStats | undefined,
   mode: string | null | undefined,
-  soldCountFallback: number
-): { participantCount: number; soldQuantity: number; hide: boolean } {
-  if (mode === "hidden") {
-    return { participantCount: 0, soldQuantity: 0, hide: true };
+  soldCountFallback: number,
+  opts?: {
+    virtualSoldQty?: number | null;
+    showVirtualSalesLabel?: boolean | null;
   }
-  if (!stats) {
+): DisplayStatResult {
+  const virtual = Math.max(0, Number(opts?.virtualSoldQty ?? 0));
+  const showVirtualLabel = opts?.showVirtualSalesLabel !== false && virtual > 0;
+
+  if (mode === "hidden") {
     return {
-      participantCount: soldCountFallback,
-      soldQuantity: soldCountFallback,
-      hide: false,
+      participantCount: 0,
+      realSoldQuantity: 0,
+      virtualSoldQuantity: 0,
+      soldQuantity: 0,
+      hide: true,
+      showVirtualLabel: false,
     };
   }
-  switch (mode) {
-    case "members":
-      return {
-        participantCount: stats.memberCount,
-        soldQuantity: stats.soldQty,
-        hide: false,
-      };
-    case "qty":
-      return {
-        participantCount: stats.soldQty,
-        soldQuantity: stats.soldQty,
-        hide: false,
-      };
-    case "orders":
-    default:
-      return {
-        participantCount: stats.orderCount,
-        soldQuantity: stats.soldQty || soldCountFallback,
-        hide: false,
-      };
+
+  let participantCount = soldCountFallback;
+  let realSold = soldCountFallback;
+
+  if (stats) {
+    switch (mode) {
+      case "members":
+        participantCount = stats.memberCount;
+        realSold = stats.soldQty;
+        break;
+      case "qty":
+        participantCount = stats.soldQty;
+        realSold = stats.soldQty;
+        break;
+      case "orders":
+      default:
+        participantCount = stats.orderCount;
+        realSold = stats.soldQty || soldCountFallback;
+        break;
+    }
   }
+
+  return {
+    participantCount,
+    realSoldQuantity: realSold,
+    virtualSoldQuantity: virtual,
+    soldQuantity: realSold + virtual,
+    hide: false,
+    showVirtualLabel,
+  };
 }

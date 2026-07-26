@@ -454,6 +454,8 @@ export interface GroupBuyEvent {
   manual_tags?: string[];
   stats_mode?: "orders" | "members" | "qty" | "hidden";
   category_label?: string | null;
+  virtual_sold_qty?: number;
+  show_virtual_sales_label?: boolean;
 }
 
 export interface GroupBuyProduct {

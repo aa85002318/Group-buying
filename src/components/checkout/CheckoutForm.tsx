@@ -11,6 +11,12 @@ import {
   CHECKOUT_SHIPMENT_OPTIONS,
   shippingFeeForMethod,
 } from "@/lib/checkout/options";
+import {
+  buildTemperatureSplitNotice,
+  collectTemperatureZones,
+  type ProductTemperatureFlags,
+  type TemperatureZone,
+} from "@/lib/checkout/temperature-zones";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
 import { useEmailVerification } from "@/hooks/useEmailVerification";
 import { formatCurrency, cn } from "@/lib/utils";
@@ -89,8 +95,15 @@ export function CheckoutForm() {
   const [couponCode, setCouponCode] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [tempZones, setTempZones] = useState<TemperatureZone[]>([]);
   const { loading: authLoading, emailVerified, email, resending, resendVerification } =
     useEmailVerification();
+
+  const temperatureNotice = useMemo(
+    () => buildTemperatureSplitNotice(tempZones),
+    [tempZones]
+  );
+  const mixedTemperature = tempZones.length > 1;
 
   async function handleResendVerification() {
     try {
@@ -140,6 +153,41 @@ export function CheckoutForm() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
+  useEffect(() => {
+    if (items.length === 0) {
+      setTempZones([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const rows: ProductTemperatureFlags[] = [];
+      await Promise.all(
+        items.map(async (item) => {
+          try {
+            const res = await fetch(`/api/products/${item.productId}`);
+            const data = await res.json();
+            if (data.product) {
+              rows.push(data.product as ProductTemperatureFlags);
+            }
+          } catch {
+            /* ignore */
+          }
+        })
+      );
+      if (!cancelled) setTempZones(collectTemperatureZones(rows));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
+
+  // Mixed temperature → force store pickup (home/CVS cannot combine)
+  useEffect(() => {
+    if (mixedTemperature && shipmentMethod !== "store_pickup") {
+      setShipmentMethod("store_pickup");
+    }
+  }, [mixedTemperature, shipmentMethod]);
+
   const shippingFee = useMemo(() => shippingFeeForMethod(shipmentMethod), [shipmentMethod]);
   const grandTotal = Math.max(0, total + shippingFee);
 
@@ -161,9 +209,18 @@ export function CheckoutForm() {
       alert("請選擇或填寫宅配地址");
       return;
     }
+    if (
+      mixedTemperature &&
+      (shipmentMethod === "home_delivery" || shipmentMethod === "cvs_pickup")
+    ) {
+      alert(temperatureNotice ?? "不同溫層無法合併宅配，請分開結帳或改選門市取貨");
+      return;
+    }
 
     setSubmitting(true);
     try {
+      const groupBuyEventId =
+        items.find((i) => i.groupBuyEventId)?.groupBuyEventId ?? undefined;
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -172,8 +229,10 @@ export function CheckoutForm() {
             product_id: i.productId,
             quantity: i.quantity,
             group_buy_product_id: i.groupBuyProductId ?? undefined,
+            group_buy_event_id: i.groupBuyEventId ?? undefined,
           })),
           store_id: storeId || undefined,
+          group_buy_event_id: groupBuyEventId,
           payment_method: paymentMethod,
           shipment_method: shipmentMethod,
           recipient_name: recipientName.trim(),
@@ -271,11 +330,21 @@ export function CheckoutForm() {
 
       <section className="space-y-3">
         <h2 className="font-medium text-coffee">配送方式</h2>
+        {temperatureNotice && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            <p className="font-medium">溫層提醒</p>
+            <p className="mt-0.5 text-amber-900/90">{temperatureNotice}</p>
+          </div>
+        )}
         {CHECKOUT_SHIPMENT_OPTIONS.map((opt) => (
           <OptionCard
             key={opt.value}
             selected={shipmentMethod === opt.value}
-            disabled={!opt.enabled}
+            disabled={
+              !opt.enabled ||
+              (mixedTemperature &&
+                (opt.value === "home_delivery" || opt.value === "cvs_pickup"))
+            }
             title={opt.label}
             description={opt.description}
             hint={opt.feeHint}

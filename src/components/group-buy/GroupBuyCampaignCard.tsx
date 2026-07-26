@@ -23,6 +23,9 @@ export type GroupBuyCampaignCardData = {
   originalPrice: number;
   savings: number | null;
   soldQuantity?: number;
+  realSoldQuantity?: number;
+  virtualSoldQuantity?: number;
+  showVirtualLabel?: boolean;
   participantCount?: number;
   statsHidden?: boolean;
   productName?: string;
@@ -74,6 +77,7 @@ export function GroupBuyCampaignCard({
     ...(status === "sold_out" || status === "ended" || status === "ending_soon" || status === "upcoming"
       ? [STATUS_TEXT[status]]
       : []),
+    ...(campaign.showVirtualLabel ? ["含虛擬銷量"] : []),
     ...((campaign.manual_tags ?? []).slice(0, 2)),
   ].slice(0, 3);
   const fulfillment = fulfillmentShortLabels(campaign.fulfillment_options);
@@ -181,7 +185,14 @@ export function GroupBuyCampaignCard({
             <span>已跟團 {campaign.participantCount ?? 0} 人</span>
           )}
           {f.soldQuantity && !campaign.statsHidden && (
-            <span>已售 {campaign.soldQuantity ?? 0} 件</span>
+            <span>
+              已售 {campaign.soldQuantity ?? 0} 件
+              {campaign.showVirtualLabel && (campaign.virtualSoldQuantity ?? 0) > 0 ? (
+                <span className="ml-1 text-foreground-muted">
+                  （含虛擬 {campaign.virtualSoldQuantity}）
+                </span>
+              ) : null}
+            </span>
           )}
         </div>
 

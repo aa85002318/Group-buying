@@ -19,6 +19,7 @@ import type { GroupBuyEvent, Product } from "@/lib/types/database";
 
 type GroupBuyEventDetail = GroupBuyEvent & {
   group_buy_products?: Array<{
+    id?: string;
     special_price?: number | null;
     max_quantity?: number | null;
     sold_count?: number | null;
@@ -122,9 +123,18 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
           price: gbp.special_price ?? event.group_price ?? product.price,
           original_price: event.original_price ?? product.original_price,
           _soldOut: soldOut,
+          _groupBuyProductId: gbp.id ?? null,
         };
       })
       .filter(Boolean) ?? [];
+
+  const virtualSold = Number(event.virtual_sold_qty ?? 0);
+  const showVirtual =
+    event.show_virtual_sales_label !== false && virtualSold > 0;
+  const realSoldFallback = (event.group_buy_products ?? []).reduce(
+    (s, p) => s + Number(p.sold_count ?? 0),
+    0
+  );
 
   return (
     <div className="space-y-4">
@@ -182,6 +192,19 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
         {fulfillment.length > 0 && (
           <p className="text-sm text-foreground-secondary">取貨：{fulfillment.join(" · ")}</p>
         )}
+        {(realSoldFallback > 0 || showVirtual) && (
+          <p className="text-sm text-foreground-secondary">
+            已售 {realSoldFallback + virtualSold} 件
+            {showVirtual ? (
+              <span className="ml-1 text-foreground-muted">（含虛擬 {virtualSold}）</span>
+            ) : null}
+          </p>
+        )}
+        {event.max_qty_per_user != null && (
+          <p className="text-sm text-foreground-secondary">
+            每人限購 {event.max_qty_per_user} 件（跨訂單累計）
+          </p>
+        )}
         {!canBuy && (
           <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
             {runtime === "upcoming"
@@ -206,6 +229,8 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
                 original_price={product!.original_price}
                 image_url={product!.image_url}
                 groupBuyLabel="團購價"
+                groupBuyEventId={event.id}
+                groupBuyProductId={product!._groupBuyProductId}
                 badge={product!._soldOut || !canBuy ? "soldout" : "groupBuy"}
                 showQuickAdd={canBuy && !product!._soldOut}
               />

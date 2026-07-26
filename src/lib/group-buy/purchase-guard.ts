@@ -4,19 +4,64 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
 
 export type GroupBuyPurchaseCheck =
-  | { ok: true; runtimeStatus: string }
+  | { ok: true; runtimeStatus: string; priorQty: number }
   | { ok: false; code: string; message: string };
+
+const EXCLUDED_ORDER_STATUSES = new Set(["cancelled", "refunded"]);
+const EXCLUDED_PAYMENT = new Set(["failed", "refunded", "cancelled"]);
+
+/**
+ * Sum quantities this user already ordered for an event (effective orders only).
+ * Excludes cancelled / refunded / payment-failed.
+ */
+export async function getUserGroupBuyPurchasedQty(
+  eventId: string,
+  userId: string
+): Promise<number> {
+  if (!isSupabaseConfigured() || !userId) return 0;
+
+  try {
+    const admin = createAdminClient();
+    const { data: orders, error } = await admin
+      .from("orders")
+      .select("id, status, payment_status")
+      .eq("group_buy_event_id", eventId)
+      .eq("user_id", userId);
+
+    if (error || !orders?.length) return 0;
+
+    const effectiveIds = orders
+      .filter((o) => {
+        if (EXCLUDED_ORDER_STATUSES.has(String(o.status ?? ""))) return false;
+        if (EXCLUDED_PAYMENT.has(String(o.payment_status ?? ""))) return false;
+        return true;
+      })
+      .map((o) => o.id);
+
+    if (!effectiveIds.length) return 0;
+
+    const { data: items } = await admin
+      .from("order_items")
+      .select("quantity")
+      .in("order_id", effectiveIds);
+
+    return (items ?? []).reduce((s, i) => s + Number(i.quantity ?? 0), 0);
+  } catch {
+    return 0;
+  }
+}
 
 /**
  * Server-side gate for group-buy purchases.
  * Call from createOrder when groupBuyEventId is present.
+ * Enforces per-user max across prior effective orders + this cart.
  */
 export async function assertGroupBuyPurchasable(
   eventId: string,
   opts?: { productId?: string; quantity?: number; userId?: string }
 ): Promise<GroupBuyPurchaseCheck> {
   if (!isSupabaseConfigured()) {
-    return { ok: true, runtimeStatus: "active" };
+    return { ok: true, runtimeStatus: "active", priorQty: 0 };
   }
 
   const admin = createAdminClient();
@@ -60,7 +105,23 @@ export async function assertGroupBuyPurchasable(
       message: `最低購買數量為 ${event.min_qty}`,
     };
   }
-  if (event.max_qty_per_user != null && qty > Number(event.max_qty_per_user)) {
+
+  let priorQty = 0;
+  if (opts?.userId && event.max_qty_per_user != null) {
+    priorQty = await getUserGroupBuyPurchasedQty(eventId, opts.userId);
+    const max = Number(event.max_qty_per_user);
+    const remaining = Math.max(0, max - priorQty);
+    if (qty > remaining) {
+      return {
+        ok: false,
+        code: "MAX_QTY",
+        message:
+          priorQty > 0
+            ? `每人限購 ${max} 件，您已購買 ${priorQty} 件，本次最多還可買 ${remaining} 件`
+            : `每人限購 ${max} 件`,
+      };
+    }
+  } else if (event.max_qty_per_user != null && qty > Number(event.max_qty_per_user)) {
     return {
       ok: false,
       code: "MAX_QTY",
@@ -83,5 +144,5 @@ export async function assertGroupBuyPurchasable(
     }
   }
 
-  return { ok: true, runtimeStatus: runtime };
+  return { ok: true, runtimeStatus: runtime, priorQty };
 }

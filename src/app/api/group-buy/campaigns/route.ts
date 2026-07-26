@@ -199,7 +199,11 @@ export async function GET(request: Request) {
       const display = pickDisplayStat(
         statsMap.get(row.id),
         String(row.stats_mode ?? "orders"),
-        soldFallback
+        soldFallback,
+        {
+          virtualSoldQty: Number(row.virtual_sold_qty ?? 0),
+          showVirtualSalesLabel: row.show_virtual_sales_label !== false,
+        }
       );
       const product = firstProduct(row);
       return {
@@ -210,6 +214,9 @@ export async function GET(request: Request) {
         savings:
           originalPrice > groupPrice ? Math.round(originalPrice - groupPrice) : null,
         soldQuantity: display.hide ? 0 : display.soldQuantity,
+        realSoldQuantity: display.hide ? 0 : display.realSoldQuantity,
+        virtualSoldQuantity: display.hide ? 0 : display.virtualSoldQuantity,
+        showVirtualLabel: display.showVirtualLabel,
         participantCount: display.hide ? 0 : display.participantCount,
         statsHidden: display.hide,
         productName: product?.name ?? row.title,

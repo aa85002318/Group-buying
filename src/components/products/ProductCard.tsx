@@ -24,6 +24,8 @@ interface ProductCardProps {
   sticker?: ProductStickerType;
   groupBuyLabel?: string;
   isGroupBuy?: boolean;
+  groupBuyEventId?: string | null;
+  groupBuyProductId?: string | null;
   showQuickAdd?: boolean;
 }
 
@@ -65,6 +67,8 @@ export function ProductCard({
   sticker,
   groupBuyLabel,
   isGroupBuy,
+  groupBuyEventId,
+  groupBuyProductId,
   showQuickAdd = true,
 }: ProductCardProps) {
   const link = href ?? `/products/${id}`;
@@ -86,6 +90,8 @@ export function ProductCard({
         name,
         price,
         imageUrl: image_url,
+        groupBuyEventId: groupBuyEventId ?? null,
+        groupBuyProductId: groupBuyProductId ?? null,
       });
     } catch {
       /* toast optional in phase 1 */

@@ -192,7 +192,7 @@ export const DEFAULT_GROUP_BUY_PAGE_SETTINGS: GroupBuyPageSettings = {
     endDate: false,
     countdown: true,
     participantCount: true,
-    soldQuantity: false,
+    soldQuantity: true,
     progress: false,
     fulfillment: true,
     tags: true,

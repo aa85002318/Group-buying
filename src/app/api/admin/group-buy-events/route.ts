@@ -63,6 +63,8 @@ export async function POST(request: Request) {
     manual_tags: Array.isArray(body.manual_tags) ? body.manual_tags.slice(0, 2) : [],
     stats_mode: body.stats_mode ?? "orders",
     category_label: body.category_label ?? null,
+    virtual_sold_qty: Math.max(0, Number(body.virtual_sold_qty ?? 0)),
+    show_virtual_sales_label: body.show_virtual_sales_label !== false,
   };
 
   if (!isSupabaseConfigured()) {

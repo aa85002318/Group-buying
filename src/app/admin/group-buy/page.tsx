@@ -35,6 +35,11 @@ const emptyForm = {
   manual_tags: "",
   category_label: "",
   expected_arrival_at: "",
+  min_qty: "",
+  max_qty_per_user: "",
+  virtual_sold_qty: "0",
+  show_virtual_sales_label: true,
+  stats_mode: "orders",
 };
 
 export default function AdminGroupBuyPage() {
@@ -88,6 +93,11 @@ export default function AdminGroupBuyPage() {
       manual_tags: (e.manual_tags ?? []).join(","),
       category_label: e.category_label ?? "",
       expected_arrival_at: e.expected_arrival_at ? e.expected_arrival_at.slice(0, 16) : "",
+      min_qty: e.min_qty != null ? String(e.min_qty) : "",
+      max_qty_per_user: e.max_qty_per_user != null ? String(e.max_qty_per_user) : "",
+      virtual_sold_qty: String(e.virtual_sold_qty ?? 0),
+      show_virtual_sales_label: e.show_virtual_sales_label !== false,
+      stats_mode: e.stats_mode ?? "orders",
     });
     setShowForm(true);
   };
@@ -141,6 +151,11 @@ export default function AdminGroupBuyPage() {
         manual_tags: tags,
         category_label: form.category_label || null,
         expected_arrival_at: form.expected_arrival_at || null,
+        min_qty: form.min_qty ? Number(form.min_qty) : null,
+        max_qty_per_user: form.max_qty_per_user ? Number(form.max_qty_per_user) : null,
+        virtual_sold_qty: Math.max(0, Number(form.virtual_sold_qty || 0)),
+        show_virtual_sales_label: form.show_virtual_sales_label,
+        stats_mode: form.stats_mode,
       };
 
       if (editing) {
@@ -272,6 +287,68 @@ export default function AdminGroupBuyPage() {
                 value={form.group_price}
                 onChange={(e) => setForm({ ...form, group_price: e.target.value })}
               />
+            </label>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">
+              最低購買數量
+              <Input
+                type="number"
+                min={1}
+                className="mt-1"
+                value={form.min_qty}
+                onChange={(e) => setForm({ ...form, min_qty: e.target.value })}
+                placeholder="不限"
+              />
+            </label>
+            <label className="text-sm">
+              每人限購（跨訂單累計）
+              <Input
+                type="number"
+                min={1}
+                className="mt-1"
+                value={form.max_qty_per_user}
+                onChange={(e) => setForm({ ...form, max_qty_per_user: e.target.value })}
+                placeholder="不限"
+              />
+            </label>
+          </div>
+
+          <div className="rounded-lg border border-border p-3 space-y-3">
+            <p className="text-sm font-medium">銷量顯示</p>
+            <label className="text-sm block">
+              統計模式
+              <select
+                className="input-field mt-1"
+                value={form.stats_mode}
+                onChange={(e) => setForm({ ...form, stats_mode: e.target.value })}
+              >
+                <option value="orders">有效訂單數</option>
+                <option value="members">跟團人數</option>
+                <option value="qty">銷售件數</option>
+                <option value="hidden">隱藏統計</option>
+              </select>
+            </label>
+            <label className="text-sm block">
+              虛擬銷量（加到前台顯示）
+              <Input
+                type="number"
+                min={0}
+                className="mt-1"
+                value={form.virtual_sold_qty}
+                onChange={(e) => setForm({ ...form, virtual_sold_qty: e.target.value })}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.show_virtual_sales_label}
+                onChange={(e) =>
+                  setForm({ ...form, show_virtual_sales_label: e.target.checked })
+                }
+              />
+              前台標示「含虛擬銷量」
             </label>
           </div>
 

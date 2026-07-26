@@ -61,10 +61,16 @@ export async function POST(request: Request) {
       userId: auth!.profile.id,
       storeId: store_id,
       groupBuyEventId: group_buy_event_id,
-      items: items.map((i: { product_id: string; quantity: number; group_buy_product_id?: string }) => ({
+      items: items.map((i: {
+        product_id: string;
+        quantity: number;
+        group_buy_product_id?: string;
+        group_buy_event_id?: string;
+      }) => ({
         productId: i.product_id,
         quantity: i.quantity,
         groupBuyProductId: i.group_buy_product_id,
+        groupBuyEventId: i.group_buy_event_id ?? group_buy_event_id,
       })),
       referralCode: referral_code,
       livestreamId: livestream_id,
@@ -101,7 +107,7 @@ export async function POST(request: Request) {
     });
   } catch (e) {
     if (e instanceof OrderError) {
-      return NextResponse.json({ error: e.message }, { status: 400 });
+      return NextResponse.json({ error: e.message, code: e.code }, { status: 400 });
     }
     return NextResponse.json({ error: e instanceof Error ? e.message : "建立訂單失敗" }, { status: 500 });
   }

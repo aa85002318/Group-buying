@@ -67,6 +67,7 @@ export class OrderError extends Error {
       | "PRICE_ERROR"
       | "GROUP_BUY_CLOSED"
       | "GROUP_BUY_LIMIT"
+      | "TEMPERATURE_SPLIT"
   ) {
     super(message);
     this.name = "OrderError";
@@ -153,21 +154,73 @@ export async function priceOrderItems(
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<Order & { order_items: OrderItem[] }> {
-  if (input.groupBuyEventId) {
+  // Collect event ids from order-level field and/or line items
+  const qtyByEvent = new Map<string, number>();
+  const productByEvent = new Map<string, string>();
+  for (const item of input.items) {
+    const eid = item.groupBuyEventId ?? input.groupBuyEventId ?? null;
+    if (!eid) continue;
+    qtyByEvent.set(eid, (qtyByEvent.get(eid) ?? 0) + item.quantity);
+    if (!productByEvent.has(eid)) productByEvent.set(eid, item.productId);
+  }
+  if (input.groupBuyEventId && !qtyByEvent.has(input.groupBuyEventId)) {
+    qtyByEvent.set(
+      input.groupBuyEventId,
+      input.items.reduce((s, i) => s + i.quantity, 0)
+    );
+    if (input.items[0]) productByEvent.set(input.groupBuyEventId, input.items[0].productId);
+  }
+
+  if (qtyByEvent.size > 0) {
     const { assertGroupBuyPurchasable } = await import("@/lib/group-buy/purchase-guard");
-    const first = input.items[0];
-    const check = await assertGroupBuyPurchasable(input.groupBuyEventId, {
-      productId: first?.productId,
-      quantity: input.items.reduce((s, i) => s + i.quantity, 0),
-      userId: input.userId,
+    for (const [eventId, quantity] of Array.from(qtyByEvent.entries())) {
+      const check = await assertGroupBuyPurchasable(eventId, {
+        productId: productByEvent.get(eventId),
+        quantity,
+        userId: input.userId,
+      });
+      if (!check.ok) {
+        throw new OrderError(
+          check.message,
+          check.code === "MAX_QTY" || check.code === "MIN_QTY"
+            ? "GROUP_BUY_LIMIT"
+            : "GROUP_BUY_CLOSED"
+        );
+      }
+    }
+  }
+
+  // Temperature-zone split: block mixed zones for home/CVS delivery
+  if (isSupabaseConfigured() && input.items.length > 0) {
+    const {
+      assertShipmentTemperatureCompatible,
+      collectTemperatureZones,
+    } = await import("@/lib/checkout/temperature-zones");
+    const adminForTemp = createAdminClient();
+    const productIds = Array.from(new Set(input.items.map((i) => i.productId)));
+    let tempProducts: Array<Record<string, unknown>> | null = null;
+    const full = await adminForTemp
+      .from("products")
+      .select("id, name, storage_type, temp_ambient, temp_chilled, temp_frozen")
+      .in("id", productIds);
+    if (full.error && /column|does not exist/i.test(full.error.message)) {
+      const soft = await adminForTemp
+        .from("products")
+        .select("id, name, temp_ambient, temp_chilled, temp_frozen")
+        .in("id", productIds);
+      tempProducts = soft.data;
+    } else {
+      tempProducts = full.data;
+    }
+    const zones = collectTemperatureZones(
+      (tempProducts ?? []) as Parameters<typeof collectTemperatureZones>[0]
+    );
+    const tempCheck = assertShipmentTemperatureCompatible({
+      shipmentMethod: input.shipmentMethod ?? "store_pickup",
+      zones,
     });
-    if (!check.ok) {
-      throw new OrderError(
-        check.message,
-        check.code === "MAX_QTY" || check.code === "MIN_QTY"
-          ? "GROUP_BUY_LIMIT"
-          : "GROUP_BUY_CLOSED"
-      );
+    if (!tempCheck.ok) {
+      throw new OrderError(tempCheck.message, "TEMPERATURE_SPLIT");
     }
   }
 
@@ -181,6 +234,9 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { or
   const orderNumber = generateOrderNumber();
   const pickupToken = generatePickupToken();
   const now = new Date().toISOString();
+  const resolvedGroupBuyEventId =
+    input.groupBuyEventId ??
+    (qtyByEvent.size === 1 ? Array.from(qtyByEvent.keys())[0] : null);
 
   const noteParts = [input.notes?.trim()].filter(Boolean);
   if (input.couponCode?.trim()) {
@@ -216,7 +272,7 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { or
       pickup_status: "pending",
       user_id: input.userId || MOCK_USER_ID,
       store_id: input.storeId ?? null,
-      group_buy_event_id: input.groupBuyEventId ?? null,
+      group_buy_event_id: resolvedGroupBuyEventId,
       status: "awaiting_payment",
       subtotal,
       discount,
@@ -269,7 +325,7 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { or
       user_id: input.userId,
       store_id: input.storeId ?? null,
       pickup_store_id: input.storeId ?? null,
-      group_buy_event_id: input.groupBuyEventId ?? null,
+      group_buy_event_id: resolvedGroupBuyEventId,
       status: "awaiting_payment",
       subtotal,
       discount_amount: discount,

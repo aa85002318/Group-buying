@@ -36,6 +36,8 @@ const ALLOWED_FIELDS = [
   "manual_tags",
   "stats_mode",
   "category_label",
+  "virtual_sold_qty",
+  "show_virtual_sales_label",
 ] as const;
 
 export async function PATCH(
