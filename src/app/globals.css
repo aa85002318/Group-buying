@@ -36,6 +36,20 @@
     --brand-red: var(--primary);
     --brand-orange: var(--primary);
     --header-content-gap: 0px;
+    /* 首頁內容容器水平安全距（與第一個 Banner 共用） */
+    --site-content-pad-x: 16px;
+  }
+
+  @media (min-width: 640px) {
+    :root {
+      --site-content-pad-x: 20px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    :root {
+      --site-content-pad-x: 24px;
+    }
   }
 
   *,
@@ -165,6 +179,11 @@
     background: var(--background);
   }
 
+  /* sticky Header 下方固定 5px 安全間距（不含 header 高度） */
+  .page-main-content {
+    padding-top: 5px;
+  }
+
   /* 頂部區（Header 下方 ~ Hero 底部）：奶油白 → 杏仁白 Hero */
   .home-top-area {
     background: var(--gradient-hero);
@@ -177,24 +196,25 @@
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* 內容最大寬度置中（1400px = Banner 設計寬） */
+  /* 內容最大寬度置中（1400px = Banner 設計寬）；首頁區塊共用 */
+  .site-content-container,
   .home-page-inner {
     width: 100%;
     max-width: 1400px;
     margin-inline: auto;
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-left: max(var(--site-content-pad-x), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--site-content-pad-x), env(safe-area-inset-right, 0px));
+    box-sizing: border-box;
   }
 
-  /* 橫向卷軸 rail */
+  /* 橫向卷軸 rail：出血距離與共用容器 padding 同步 */
   .home-scroll {
     display: flex;
     gap: 12px;
-    /* 負 margin 讓 rail 出血至頁面邊緣，scroll 不會溢出 */
-    margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
-    margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    margin-left: calc(-1 * max(var(--site-content-pad-x), env(safe-area-inset-left, 0px)));
+    margin-right: calc(-1 * max(var(--site-content-pad-x), env(safe-area-inset-right, 0px)));
+    padding-left: max(var(--site-content-pad-x), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--site-content-pad-x), env(safe-area-inset-right, 0px));
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     scroll-snap-type: x proximity;
@@ -332,18 +352,6 @@
   }
 
   @media (min-width: 768px) {
-    .home-page-inner {
-      padding-left: max(24px, env(safe-area-inset-left, 0px));
-      padding-right: max(24px, env(safe-area-inset-right, 0px));
-    }
-
-    .home-scroll {
-      margin-left: calc(-1 * max(24px, env(safe-area-inset-left, 0px)));
-      margin-right: calc(-1 * max(24px, env(safe-area-inset-right, 0px)));
-      padding-left: max(24px, env(safe-area-inset-left, 0px));
-      padding-right: max(24px, env(safe-area-inset-right, 0px));
-    }
-
     .app-main-pad {
       padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
       padding-right: max(1.5rem, env(safe-area-inset-right, 0px));

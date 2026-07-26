@@ -140,7 +140,7 @@ export function HomeHero({ className }: { className?: string }) {
   return (
     <section
       aria-label="主視覺"
-      className={cn("home-hero relative mx-auto w-full max-w-[1400px]", className)}
+      className={cn("home-hero relative w-full", className)}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={(e) => {

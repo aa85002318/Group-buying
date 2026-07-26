@@ -10,7 +10,7 @@ export function HomeFooter({ className }: { className?: string }) {
         className
       )}
     >
-      <div className="home-page-inner">
+      <div className="site-content-container home-page-inner">
         <p className="text-sm font-bold text-brand-caramel">CHIMEIDIY 烘焙生活平台</p>
         <p className="mt-1 text-xs text-foreground-secondary">
           客服服務時間 09:00–18:00 · 全台門市可取貨

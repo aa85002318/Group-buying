@@ -633,15 +633,15 @@ export default function HomePage() {
 
   return (
     <div className="home-page page-enter w-full max-w-full overflow-x-clip">
-      <section className="home-top-area pb-4 pt-3 sm:pt-4">
-        <div className="home-page-inner space-y-3 sm:space-y-4">
+      <section className="home-top-area pb-4">
+        <div className="site-content-container home-page-inner space-y-3 sm:space-y-4">
           <HomeSearchBar />
           {creamToRender.map((block) => renderHomeSection(block, ctx))}
         </div>
       </section>
 
       <HomeContentArea>
-        <div className="home-page-inner space-y-6 min-[375px]:space-y-7 md:space-y-8">
+        <div className="site-content-container home-page-inner space-y-6 min-[375px]:space-y-7 md:space-y-8">
           {bodySections.map((block) => {
             try {
               return renderHomeSection(block, ctx);

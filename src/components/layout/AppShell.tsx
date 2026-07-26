@@ -20,7 +20,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <main
           className={[
             "page-enter min-w-0 flex-1 overflow-x-clip",
-            isHome ? "" : "app-main-pad",
+            isHome ? "page-main-content" : "app-main-pad",
           ]
             .join(" ")
             .trim()}
