@@ -143,7 +143,7 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
       </Link>
 
       {event.banner_url && (
-        <div className="relative -mx-4 aspect-video overflow-hidden bg-muted">
+        <div className="relative aspect-video overflow-hidden rounded-[16px] bg-muted">
           <Image
             src={event.banner_url}
             alt={event.title}

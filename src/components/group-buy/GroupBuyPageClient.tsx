@@ -179,7 +179,7 @@ export function GroupBuyPageClient() {
 
     if (id === "tabs") {
       return (
-        <div key={id} className="-mx-1 overflow-x-auto px-1">
+        <div key={id} className="overflow-x-auto">
           <div className="flex min-w-max gap-2 pb-1">
             {settings.enabledTabs.map((t) => (
               <button

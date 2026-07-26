@@ -116,10 +116,11 @@ export function AppHeader({
       )}
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      <div className="mx-auto flex h-16 w-full max-w-[var(--app-max-width)] items-center gap-1 px-4"
+      <div
+        className="site-header-inner mx-auto flex h-16 w-full max-w-[var(--app-max-width)] items-center gap-1"
         style={{
-          paddingLeft: "max(1rem, env(safe-area-inset-left, 0px))",
-          paddingRight: "max(1rem, env(safe-area-inset-right, 0px))",
+          paddingLeft: "max(var(--page-padding-x), env(safe-area-inset-left, 0px))",
+          paddingRight: "max(var(--page-padding-x), env(safe-area-inset-right, 0px))",
         }}
       >
         {resolved === "home" ? (

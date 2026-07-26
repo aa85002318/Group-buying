@@ -36,20 +36,9 @@
     --brand-red: var(--primary);
     --brand-orange: var(--primary);
     --header-content-gap: 10px;
-    /* 首頁內容容器水平安全距（與第一個 Banner 共用） */
-    --site-content-pad-x: 16px;
-  }
-
-  @media (min-width: 640px) {
-    :root {
-      --site-content-pad-x: 20px;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    :root {
-      --site-content-pad-x: 24px;
-    }
+    /* 全站左右安全距離：統一指向 design token */
+    --page-padding-x: 10px;
+    --site-content-pad-x: var(--page-padding-x);
   }
 
   *,
@@ -197,25 +186,24 @@
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* 內容最大寬度置中（1400px = Banner 設計寬）；首頁區塊共用 */
+  /* 內容最大寬度置中（1400px = Banner 設計寬）；水平留白由 .site-container 統一控制 */
   .site-content-container,
-  .home-page-inner {
+  .home-page-inner,
+  .site-container-inner {
     width: 100%;
     max-width: 1400px;
     margin-inline: auto;
-    padding-left: max(var(--site-content-pad-x), env(safe-area-inset-left, 0px));
-    padding-right: max(var(--site-content-pad-x), env(safe-area-inset-right, 0px));
     box-sizing: border-box;
   }
 
-  /* 橫向卷軸 rail：出血距離與共用容器 padding 同步 */
+  /* 橫向卷軸：不出血超出 site-container，首尾卡片與內容對齊並保留左右安全距 */
   .home-scroll {
     display: flex;
     gap: 12px;
-    margin-left: calc(-1 * max(var(--site-content-pad-x), env(safe-area-inset-left, 0px)));
-    margin-right: calc(-1 * max(var(--site-content-pad-x), env(safe-area-inset-right, 0px)));
-    padding-left: max(var(--site-content-pad-x), env(safe-area-inset-left, 0px));
-    padding-right: max(var(--site-content-pad-x), env(safe-area-inset-right, 0px));
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     scroll-snap-type: x proximity;
@@ -320,7 +308,8 @@
   }
 
   .page-pad-x {
-    @apply px-4 md:px-6;
+    padding-left: max(var(--page-padding-x), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--page-padding-x), env(safe-area-inset-right, 0px));
   }
 
   .scrollbar-none {
@@ -334,8 +323,15 @@
 
   /* Isolate horizontal carousels so they never widen the page */
   .h-scroll {
-    @apply -mx-4 overflow-x-auto overscroll-x-contain px-4 scrollbar-none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
     touch-action: pan-x;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .h-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   .app-shell {
@@ -347,16 +343,13 @@
     background: var(--background);
   }
 
+  /* 全站左右安全距離（含首頁）；與 Header／Footer 使用同一 token */
+  .site-container,
   .app-main-pad {
-    padding-left: max(1rem, env(safe-area-inset-left, 0px));
-    padding-right: max(1rem, env(safe-area-inset-right, 0px));
-  }
-
-  @media (min-width: 768px) {
-    .app-main-pad {
-      padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
-      padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
-    }
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: max(var(--page-padding-x), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--page-padding-x), env(safe-area-inset-right, 0px));
   }
 
   .bg-dots {

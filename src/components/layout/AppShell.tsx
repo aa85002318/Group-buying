@@ -8,14 +8,12 @@ import { cn } from "@/lib/utils";
 
 /**
  * App-first shell: phone full-bleed, tablet/desktop centered container.
- * Prevents horizontal page scroll; reserves space for sticky header + bottom nav.
- * Header→content gap (10px) is applied once on main for all storefront pages.
- * The homepage manages its own horizontal padding — other pages use app-main-pad.
+ * Header→content gap and horizontal page padding come from design tokens once here
+ * so every storefront page (including CMS blocks) shares the same inset.
  */
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isHome = pathname === "/";
-  const showHeaderGap = !isMinimalChromePath(pathname);
+  const showChromePad = !isMinimalChromePath(pathname);
 
   return (
     <div className="min-h-dvh w-full overflow-x-clip bg-background">
@@ -24,8 +22,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",
-            showHeaderGap && "site-main",
-            !isHome && "app-main-pad"
+            showChromePad && "site-main site-container"
           )}
           style={{
             paddingBottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px))",
