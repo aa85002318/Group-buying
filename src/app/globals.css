@@ -36,8 +36,8 @@
     --brand-red: var(--primary);
     --brand-orange: var(--primary);
     --header-content-gap: 10px;
-    /* 全站左右安全距離：統一指向 design token */
-    --page-padding-x: 10px;
+    /* 全站內容左右安全距離（背景滿版、內容 inset） */
+    --page-padding-x: 15px;
     --site-content-pad-x: var(--page-padding-x);
   }
 
@@ -174,29 +174,43 @@
     padding-top: var(--header-content-gap, 10px);
   }
 
-  /* 頂部區（Header 下方 ~ Hero 底部）：奶油白 → 杏仁白 Hero */
+  /* 頂部區（Header 下方 ~ Hero 底部）：奶油白 → 杏仁白 Hero — 背景滿版 */
   .home-top-area {
     background: var(--gradient-hero);
+    width: 100%;
   }
 
-  /* Hero 下方全部中段：嚴格純白 */
+  /* Hero 下方全部中段：嚴格純白 — 背景滿版 */
   .home-content-area {
     background: #ffffff;
+    width: 100%;
     padding-top: 20px;
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* 內容最大寬度置中（1400px = Banner 設計寬）；水平留白由 .site-container 統一控制 */
+  /*
+   * 內容容器：左右 inset（背景色區塊請放在外層 section，勿把 bg 加在此層）
+   * 結構：<section class="…bg…"><div class="site-container">…</div></section>
+   */
+  .site-container,
+  .site-content-container,
+  .home-page-inner,
+  .site-container-inner,
+  .app-main-pad {
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: max(var(--page-padding-x), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--page-padding-x), env(safe-area-inset-right, 0px));
+  }
+
   .site-content-container,
   .home-page-inner,
   .site-container-inner {
-    width: 100%;
     max-width: 1400px;
     margin-inline: auto;
-    box-sizing: border-box;
   }
 
-  /* 橫向卷軸：不出血超出 site-container，首尾卡片與內容對齊並保留左右安全距 */
+  /* 橫向卷軸：落在 site-container 內，首尾卡片自然保留 --page-padding-x */
   .home-scroll {
     display: flex;
     gap: 12px;
@@ -341,15 +355,6 @@
     margin-inline: auto;
     overflow-x: clip;
     background: var(--background);
-  }
-
-  /* 全站左右安全距離（含首頁）；與 Header／Footer 使用同一 token */
-  .site-container,
-  .app-main-pad {
-    width: 100%;
-    box-sizing: border-box;
-    padding-left: max(var(--page-padding-x), env(safe-area-inset-left, 0px));
-    padding-right: max(var(--page-padding-x), env(safe-area-inset-right, 0px));
   }
 
   .bg-dots {

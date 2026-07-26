@@ -336,8 +336,8 @@
   --touch-min: 44px;
   --input-min: 48px;
   --app-max-width: 960px;
-  /* 全站左右安全距離（Header／Main／Footer／CMS 區塊共用） */
-  --page-padding-x: 10px;
+  /* 全站左右安全距離（Header／內容區／Footer／CMS 區塊共用） */
+  --page-padding-x: 15px;
   --page-pad-x: var(--page-padding-x);
 
   /* —— Typography —— */

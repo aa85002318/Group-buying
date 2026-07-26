@@ -117,11 +117,7 @@ export function AppHeader({
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div
-        className="site-header-inner mx-auto flex h-16 w-full max-w-[var(--app-max-width)] items-center gap-1"
-        style={{
-          paddingLeft: "max(var(--page-padding-x), env(safe-area-inset-left, 0px))",
-          paddingRight: "max(var(--page-padding-x), env(safe-area-inset-right, 0px))",
-        }}
+        className="site-container site-header-inner mx-auto flex h-16 w-full max-w-[var(--app-max-width)] items-center gap-1"
       >
         {resolved === "home" ? (
           <>
@@ -161,7 +157,7 @@ export function AppHeader({
       </div>
       {/* 首頁與烘焙材料頁不顯示桌機第二層選單 */}
       {resolved !== "home" && !bakingMaterials ? (
-        <div className="mx-auto hidden w-full max-w-[1280px] md:block">
+        <div className="site-container mx-auto hidden w-full max-w-[1280px] md:block">
           <ConsumerHubNav />
         </div>
       ) : null}

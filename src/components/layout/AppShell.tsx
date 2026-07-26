@@ -8,12 +8,14 @@ import { cn } from "@/lib/utils";
 
 /**
  * App-first shell: phone full-bleed, tablet/desktop centered container.
- * Header→content gap and horizontal page padding come from design tokens once here
- * so every storefront page (including CMS blocks) shares the same inset.
+ * Main has no horizontal padding so color sections can go edge-to-edge.
+ * Content inset (--page-padding-x) lives on .site-container inside each section.
+ * Non-home pages wrap children once in .site-container; homepage manages its own.
  */
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const showChromePad = !isMinimalChromePath(pathname);
+  const isHome = pathname === "/";
+  const showChrome = !isMinimalChromePath(pathname);
 
   return (
     <div className="min-h-dvh w-full overflow-x-clip bg-background">
@@ -22,13 +24,19 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",
-            showChromePad && "site-main site-container"
+            showChrome && "site-main"
           )}
           style={{
             paddingBottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px))",
           }}
         >
-          <div className="mx-auto w-full min-w-0 max-w-full">{children}</div>
+          {showChrome && !isHome ? (
+            <div className="site-container mx-auto w-full min-w-0 max-w-full">
+              {children}
+            </div>
+          ) : (
+            <div className="mx-auto w-full min-w-0 max-w-full">{children}</div>
+          )}
         </main>
         <MobileBottomNav />
       </div>
