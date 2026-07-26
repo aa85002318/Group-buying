@@ -5,11 +5,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { BUILTIN_TEMPLATES, type LabelProduct } from "@/lib/admin/product-labels";
 
 const PRODUCT_SELECT =
-  "id, name, barcode, sku, unit, specifications, weight_grams, price, sale_price, original_price, msrp, website_price, vip_price, is_active, status, brand_id, supplier_name, created_at, brands(name), product_categories(name)";
+  "id, name, barcode, sku, unit, specifications, weight_grams, price, sale_price, original_price, msrp, website_price, vip_price, is_active, status, brand_id, supplier_name, created_at, brands(name), primary_category:product_categories!products_primary_category_id_fkey(name), category:product_categories!products_category_id_fkey(name)";
 
 function mapProduct(row: Record<string, unknown>): LabelProduct {
   const brands = row.brands as { name?: string } | null;
-  const cats = row.product_categories as { name?: string } | null;
+  const primary = row.primary_category as { name?: string } | null;
+  const category = row.category as { name?: string } | null;
   return {
     id: String(row.id),
     name: String(row.name ?? ""),
@@ -28,7 +29,7 @@ function mapProduct(row: Record<string, unknown>): LabelProduct {
     status: (row.status as string | null) ?? null,
     brand_id: (row.brand_id as string | null) ?? null,
     brand_name: brands?.name ?? null,
-    category_name: cats?.name ?? null,
+    category_name: primary?.name ?? category?.name ?? null,
     supplier_name: (row.supplier_name as string | null) ?? null,
     created_at: (row.created_at as string | null) ?? null,
   };
