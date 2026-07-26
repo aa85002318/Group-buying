@@ -53,7 +53,8 @@ export function daysUntil(expiry: string | null | undefined, from = todayISO()):
 export function expiryStatusLabel(days: number | null): string {
   if (days == null) return "無效期";
   if (days < 0) return "已過期";
-  if (days <= 7) return "緊急";
+  if (days <= 7) return "7天內";
+  if (days <= 14) return "14天內";
   if (days <= 30) return "即將到期";
   return "正常";
 }

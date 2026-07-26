@@ -1,203 +1,291 @@
 /**
- * CHIMEIDIY Brand Color — 高飽和珊瑚紅 · 蜜桃米 · 奶油白 · 焦糖棕 · 奶油黃
+ * CHIMEIDIY Premium Bakery Design System v1.0
+ * 精品烘焙材料 × 法式甜點 × 食譜教學 × 品味生活
+ *
+ * 配色比例：70% 奶油白 · 20% 杏仁白 · 10% 珊瑚紅 CTA
  * RGB channels keep Tailwind opacity modifiers (bg-primary/15).
  */
 
 :root {
-  /* —— Primary Coral —— */
-  --primary: #ff5a5f;
-  --primary-rgb: 255 90 95;
-  --primary-hover: #f0444a;
-  --primary-hover-rgb: 240 68 74;
-  --primary-active: #e93d43;
-  --primary-active-rgb: 233 61 67;
-  --primary-pressed: #e93d43;
-  --primary-pressed-rgb: 233 61 67;
-  --primary-soft: #ffe3e4;
-  --primary-muted: #ffd8d5;
-  --primary-subtle: #ffe3e4;
-  --primary-light: #ffe3e4;
+  /* ═══════════════════════════════════════════
+   * 一、品牌色彩（Brand Colors）
+   * ═══════════════════════════════════════════ */
+  --primary: #e86c5c;
+  --primary-rgb: 232 108 92;
+  --primary-hover: #d95d4f;
+  --primary-hover-rgb: 217 93 79;
+  --primary-active: #c94f42;
+  --primary-active-rgb: 201 79 66;
+  --primary-pressed: #c94f42;
+  --primary-pressed-rgb: 201 79 66;
+  --primary-soft: #fff5ef;
+  --primary-muted: #f3d6c7;
+  --primary-subtle: #fff5ef;
+  --primary-light: #fff5ef;
 
-  /* —— Orange —— */
-  --orange: #ff8a3d;
-  --orange-rgb: 255 138 61;
-  --orange-soft: #ffe6d3;
+  --brand-secondary: #b56a45;
+  --brand-secondary-rgb: 181 106 69;
+  --brand-secondary-hover: #9e5a39;
+  --brand-premium: #f6c65b;
+  --brand-premium-rgb: 246 198 91;
+  --brand-premium-deep: #e8b04a;
 
-  /* —— Accent Yellow —— */
-  --secondary-yellow: #ffc83d;
-  --secondary-yellow-rgb: 255 200 61;
-  --secondary-yellow-hover: #f0b82e;
-  --secondary-yellow-soft: #fff0b8;
+  /* —— Accent / module helpers —— */
+  --orange: #f39c6b;
+  --orange-rgb: 243 156 107;
+  --orange-soft: #fff0e8;
 
-  /* —— Peach —— */
-  --secondary-peach: #ffb27a;
-  --secondary-peach-rgb: 255 178 122;
-  --secondary-peach-soft: #ffe6d8;
-  --secondary-peach-light: #fff4ec;
+  --secondary-yellow: #e8b04a;
+  --secondary-yellow-rgb: 232 176 74;
+  --secondary-yellow-hover: #d9a03c;
+  --secondary-yellow-soft: #fff6e0;
 
-  /* —— Cream background —— */
-  --background: #fff9ea;
-  --background-rgb: 255 249 234;
-  --page-background: #fff9ea;
+  --secondary-peach: #f39c6b;
+  --secondary-peach-rgb: 243 156 107;
+  --secondary-peach-soft: #fff0e8;
+  --secondary-peach-light: #fff5ef;
+
+  /* —— Backgrounds (70% cream / 20% almond) —— */
+  --background: #fffdf9;
+  --background-rgb: 255 253 249;
+  --page-background: #fffdf9;
   --content-background: #ffffff;
-  --home-page-background: #fff9ea;
+  --home-page-background: #fffdf9;
   --home-header-background: #ffffff;
   --home-content-background: #ffffff;
-  --home-soft-background: #fff3e8;
-  --home-peach-background: #ffe6d8;
-  --home-yellow-background: #fff0b8;
-  --home-coral-background: #ffe3e4;
-  --background-soft: #fff3e8;
-  --background-soft-rgb: 255 243 232;
-  --color-section: #fff3e8;
+  --home-soft-background: #f8e6d7;
+  --home-peach-background: #fff5ef;
+  --home-yellow-background: #fff6e0;
+  --home-coral-background: #fff1ea;
+  --background-soft: #f8e6d7;
+  --background-soft-rgb: 248 230 215;
+  --color-section: #f8e6d7;
 
+  /* Surface = almond block; Card = white */
   --surface: #ffffff;
   --surface-rgb: 255 255 255;
+  --surface-almond: #f8e6d7;
+  --surface-almond-rgb: 248 230 215;
   --card: #ffffff;
-  --card-hover: #fff8f0;
+  --card-hover: #fffdf9;
 
-  --border: #f2d8bf;
-  --border-rgb: 242 216 191;
-  --divider: #f6e3d2;
-  --divider-rgb: 246 227 210;
+  --border: #f3e5d9;
+  --border-rgb: 243 229 217;
+  --divider: #f3e5d9;
+  --divider-rgb: 243 229 217;
 
-  --text: #6b3f24;
-  --text-rgb: 107 63 36;
-  --text-secondary: #8c644a;
-  --text-secondary-rgb: 140 100 74;
+  --text: #5e4035;
+  --text-rgb: 94 64 53;
+  --text-secondary: #8b6b5a;
+  --text-secondary-rgb: 139 107 90;
 
-  --success: #72b878;
-  --success-rgb: 114 184 120;
-  --success-soft: #eaf7ec;
+  /* ═══════════════════════════════════════════
+   * 三、狀態色（Status）
+   * ═══════════════════════════════════════════ */
+  --success: #72b67a;
+  --success-rgb: 114 182 122;
+  --success-soft: #eaf6ec;
 
-  --warning: #ffc83d;
-  --warning-rgb: 255 200 61;
-  --warning-soft: #fff0b8;
+  --warning: #e8b04a;
+  --warning-rgb: 232 176 74;
+  --warning-soft: #fff6e0;
 
-  --danger: #ff5a5f;
-  --danger-rgb: 255 90 95;
+  --danger: #d9534f;
+  --danger-rgb: 217 83 79;
 
-  --shadow: 0 4px 16px rgba(107, 63, 36, 0.08);
-  --shadow-soft: 0 4px 16px rgba(107, 63, 36, 0.08);
-  --shadow-card: 0 7px 22px rgba(107, 63, 36, 0.12);
-  --shadow-floating: 0 10px 28px rgba(107, 63, 36, 0.14);
+  --error: #d9534f;
+  --error-rgb: 217 83 79;
+  --error-soft: #fdeceb;
+
+  --info: #79a9e8;
+  --info-rgb: 121 169 232;
+  --info-soft: #eaf2fb;
+
+  /* —— Shadows —— */
+  --shadow: 0 6px 18px rgba(181, 106, 69, 0.12);
+  --shadow-soft: 0 4px 14px rgba(181, 106, 69, 0.08);
+  --shadow-card: 0 6px 18px rgba(181, 106, 69, 0.12);
+  --shadow-floating: 0 10px 28px rgba(181, 106, 69, 0.14);
 
   /* —— Cream aliases —— */
-  --cream: #fff9ea;
-  --cream-rgb: 255 249 234;
-  --cream-light: #fff3e8;
-  --cream-dark: #fff0b8;
-  --cream-white: #fff9ea;
-  --cream-soft: #fff3e8;
-  --cream-soft-rgb: 255 243 232;
-  --cream-deep: #fff0b8;
+  --cream: #fffdf9;
+  --cream-rgb: 255 253 249;
+  --cream-light: #f8e6d7;
+  --cream-dark: #fff6e0;
+  --cream-white: #fffdf9;
+  --cream-soft: #f8e6d7;
+  --cream-soft-rgb: 248 230 215;
+  --cream-deep: #fff6e0;
 
   /* —— Yellow aliases —— */
-  --yellow: #ffc83d;
-  --yellow-rgb: 255 200 61;
-  --yellow-soft: #fff0b8;
+  --yellow: #e8b04a;
+  --yellow-rgb: 232 176 74;
+  --yellow-soft: #fff6e0;
 
-  /* —— Caramel text —— */
-  --caramel-neutral: #ffb27a;
-  --caramel-neutral-rgb: 255 178 122;
-  --caramel: #6b3f24;
-  --caramel-rgb: 107 63 36;
-  --caramel-hover: #553018;
-  --caramel-hover-rgb: 85 48 24;
-  --caramel-light: #8c644a;
-  --caramel-soft: #f6e3d2;
+  /* —— Caramel ← Text Primary（相容舊元件） —— */
+  --caramel-neutral: #f39c6b;
+  --caramel-neutral-rgb: 243 156 107;
+  --caramel: #5e4035;
+  --caramel-rgb: 94 64 53;
+  --caramel-hover: #4a3229;
+  --caramel-hover-rgb: 74 50 41;
+  --caramel-light: #8b6b5a;
+  --caramel-soft: #f8e6d7;
 
-  /* —— Butter ← Yellow —— */
-  --butter: #ffc83d;
-  --butter-rgb: 255 200 61;
-  --butter-hover: #f0b82e;
-  --butter-soft: #fff0b8;
+  /* —— Butter ← Premium / Recipe yellow —— */
+  --butter: #f6c65b;
+  --butter-rgb: 246 198 91;
+  --butter-hover: #e8b04a;
+  --butter-soft: #fff6e0;
 
   /* —— Peach —— */
-  --peach: #ffb27a;
-  --peach-rgb: 255 178 122;
-  --peach-hover: #ffa060;
-  --peach-soft: #ffe6d8;
-  --peach-light: #fff4ec;
+  --peach: #f39c6b;
+  --peach-rgb: 243 156 107;
+  --peach-hover: #e88a55;
+  --peach-soft: #fff0e8;
+  --peach-light: #fff5ef;
 
-  /* —— Group Buy —— */
-  --group-buy: #ff5a5f;
-  --group-buy-rgb: 255 90 95;
-  --group-buy-hover: #f0444a;
-  --group-buy-hover-rgb: 240 68 74;
-  --group-buy-soft: #ffe3e4;
-  --group-buy-subtle: #fff4ec;
+  /* —— Group Buy = Brand Primary —— */
+  --group-buy: #e86c5c;
+  --group-buy-rgb: 232 108 92;
+  --group-buy-hover: #d95d4f;
+  --group-buy-hover-rgb: 217 93 79;
+  --group-buy-soft: #fff5ef;
+  --group-buy-subtle: #fff1ea;
 
   /* —— Surface layers —— */
-  --surface-soft: #fff3e8;
-  --surface-soft-rgb: 255 243 232;
-  --surface-warm: #ffe6d8;
-  --surface-warm-rgb: 255 230 216;
-  --surface-hover: #fff8f0;
-  --surface-peach: #ffe6d8;
-  --surface-yellow: #fff0b8;
-  --surface-coral: #ffe3e4;
-  --surface-image: #fff8f0;
+  --surface-soft: #f8e6d7;
+  --surface-soft-rgb: 248 230 215;
+  --surface-warm: #fff5ef;
+  --surface-warm-rgb: 255 245 239;
+  --surface-hover: #fffdf9;
+  --surface-peach: #fff5ef;
+  --surface-yellow: #fff6e0;
+  --surface-coral: #fff1ea;
+  --surface-image: #fffdf9;
 
   /* —— Text —— */
-  --text-primary: #6b3f24;
-  --text-primary-rgb: 107 63 36;
-  --text-muted: #b99a83;
-  --text-muted-rgb: 185 154 131;
+  --text-primary: #5e4035;
+  --text-primary-rgb: 94 64 53;
+  --text-muted: #a98a7a;
+  --text-muted-rgb: 169 138 122;
   --text-inverse: #ffffff;
 
-  /* —— Header / Nav —— */
-  --header-icon: #7a4528;
-  --header-icon-rgb: 122 69 40;
-  --nav-inactive: #9a684a;
-  --nav-inactive-rgb: 154 104 74;
-  --header-border: #f1d5bd;
+  /* —— Header / Nav / Icons —— */
+  --header-icon: #8b5a3c;
+  --header-icon-rgb: 139 90 60;
+  --icon: #8b5a3c;
+  --icon-hover: #e86c5c;
+  --icon-active: #e86c5c;
+  --icon-disabled: #d7c8bf;
+  --nav-inactive: #a98a7a;
+  --nav-inactive-rgb: 169 138 122;
+  --nav-active: #e86c5c;
+  --header-border: #f3e5d9;
+  --bottom-nav-bg: #ffffff;
+  --bottom-nav-border: #f3e5d9;
+  --bottom-nav-badge: #e86c5c;
 
-  /* —— Search / Chips —— */
-  --search-border: #f0c9a9;
-  --chip-text: #7a4528;
+  /* —— Search / Chips / Tags —— */
+  --search-border: #f3d6c7;
+  --chip-text: #b56a45;
+  --tag-bg: #fff5ef;
+  --tag-text: #b56a45;
+  --tag-border: #f3d6c7;
 
   /* —— Border —— */
-  --border-soft: #f2d8bf;
-  --border-soft-rgb: 242 216 191;
-  --border-strong: #e8c8a8;
-  --border-strong-rgb: 232 200 168;
+  --border-soft: #f3e5d9;
+  --border-soft-rgb: 243 229 217;
+  --border-strong: #f3d6c7;
+  --border-strong-rgb: 243 214 199;
 
   /* —— Commerce —— */
-  --price: #ff4f55;
-  --price-rgb: 255 79 85;
-  --price-soft: #ffe3e4;
+  --price: #e86c5c;
+  --price-rgb: 232 108 92;
+  --price-soft: #fff5ef;
 
-  /* —— Status —— */
-  --error: #ff5a5f;
-  --error-rgb: 255 90 95;
-  --error-soft: #ffe3e4;
-  --info: #8c644a;
-  --info-rgb: 140 100 74;
-  --info-soft: #f6e3d2;
-  --disabled: #b99a83;
-  --disabled-rgb: 185 154 131;
-  --disabled-soft: #f6e3d2;
+  --disabled: #a98a7a;
+  --disabled-rgb: 169 138 122;
+  --disabled-soft: #f3e5d9;
 
   /* —— Overlay / focus —— */
-  --overlay: rgba(107, 63, 36, 0.4);
-  --focus-ring: rgba(255, 90, 95, 0.18);
-  --ring-primary: rgba(255, 90, 95, 0.18);
-  --ring-group-buy: rgba(255, 90, 95, 0.18);
-  --color-focus-ring: rgba(255, 90, 95, 0.18);
+  --overlay: rgba(94, 64, 53, 0.4);
+  --focus-ring: rgba(232, 108, 92, 0.18);
+  --ring-primary: rgba(232, 108, 92, 0.18);
+  --ring-group-buy: rgba(232, 108, 92, 0.18);
+  --color-focus-ring: rgba(232, 108, 92, 0.18);
 
-  /* —— Quick action icon wells —— */
-  --qa-material-bg: #ffe6d8;
-  --qa-groupbuy-bg: #ffdce0;
-  --qa-recipe-bg: #fff0b8;
-  --qa-member-bg: #ffe1c3;
-  --qa-ai-bg: #ffe2d5;
-  --qa-store-bg: #fff1b5;
-  --qa-promo-bg: #ffd9d9;
-  --qa-news-bg: #ffeac7;
-  --qa-icon-brown: #c47b00;
-  --qa-icon-brown-dark: #9b5d2e;
-  --qa-icon-orange: #ff7043;
+  /* ═══════════════════════════════════════════
+   * 二、功能色（Module Colors）
+   * ═══════════════════════════════════════════ */
+  --module-materials: #b56a45;
+  --module-groupbuy: #e86c5c;
+  --module-recipe: #e8b04a;
+  --module-ai: #8f74d8;
+  --module-video: #79a9e8;
+  --module-store: #72b67a;
+  --module-course: #f39c6b;
+  --module-news: #5ba8d8;
+
+  --qa-material-bg: #fff0e8;
+  --qa-groupbuy-bg: #fff1ea;
+  --qa-recipe-bg: #fff6e0;
+  --qa-member-bg: #fff6e0;
+  --qa-ai-bg: #f7f3ff;
+  --qa-store-bg: #eaf6ec;
+  --qa-promo-bg: #fff1ea;
+  --qa-news-bg: #eaf2fb;
+  --qa-icon-brown: #b56a45;
+  --qa-icon-brown-dark: #8b5a3c;
+  --qa-icon-orange: #f39c6b;
+
+  /* ═══════════════════════════════════════════
+   * 四、效期管理專用色
+   * ═══════════════════════════════════════════ */
+  --expiry-ok: #72b67a;
+  --expiry-30: #e8b04a;
+  --expiry-14: #f39c6b;
+  --expiry-7: #e86c5c;
+  --expiry-expired: #c13f36;
+  --expiry-done: #b5b5b5;
+
+  /* ═══════════════════════════════════════════
+   * 十一、Store Ops（後台）
+   * ═══════════════════════════════════════════ */
+  --admin-header: #ffffff;
+  --admin-sidebar: #fffdf9;
+  --admin-sidebar-active: #fff1ea;
+  --admin-active-border: #e86c5c;
+  --admin-card: #ffffff;
+  --admin-table-header: #f8e6d7;
+  --admin-primary: #e86c5c;
+
+  /* ═══════════════════════════════════════════
+   * 十二、圖表（Dashboard）
+   * ═══════════════════════════════════════════ */
+  --chart-products: #b56a45;
+  --chart-batches: #79a9e8;
+  --chart-expiring: #e8b04a;
+  --chart-expired: #d9534f;
+  --chart-disposal: #c13f36;
+  --chart-anomaly: #8f74d8;
+  --chart-return: #5ba8d8;
+
+  /* ═══════════════════════════════════════════
+   * 十三、AI 助手
+   * ═══════════════════════════════════════════ */
+  --ai-primary: #8f74d8;
+  --ai-primary-rgb: 143 116 216;
+  --ai-bg: #f7f3ff;
+  --ai-cta: #e86c5c;
+
+  /* ═══════════════════════════════════════════
+   * 十四、會員中心
+   * ═══════════════════════════════════════════ */
+  --member-standard: #b56a45;
+  --member-vip: #f6c65b;
+  --member-progress-from: #f6c65b;
+  --member-progress-to: #e8b04a;
 
   /* —— Radius —— */
   --radius-sm: 10px;
@@ -215,22 +303,24 @@
   --radius-sheet: 24px;
 
   /* —— Shadow —— */
-  --shadow-lift: 0 8px 24px rgba(107, 63, 36, 0.1);
-  --shadow-brand: 0 6px 18px rgba(255, 90, 95, 0.28);
-  --shadow-sticker: 0 2px 10px rgba(107, 63, 36, 0.08);
-  --shadow-header: 0 2px 10px rgba(107, 63, 36, 0.06);
+  --shadow-lift: 0 8px 24px rgba(181, 106, 69, 0.1);
+  --shadow-brand: 0 6px 18px rgba(232, 108, 92, 0.28);
+  --shadow-sticker: 0 2px 10px rgba(181, 106, 69, 0.08);
+  --shadow-header: 0 2px 10px rgba(181, 106, 69, 0.06);
 
   /* —— Gradients —— */
-  --gradient-primary: linear-gradient(120deg, #ff5a5f 0%, #ff7074 60%, #ffb88c 100%);
-  --gradient-promo: linear-gradient(120deg, #ff5a5f 0%, #ff7074 60%, #ffb88c 100%);
-  --gradient-hero: linear-gradient(135deg, #fff1be 0%, #ffd7a8 50%, #ffb88c 100%);
-  --gradient-ai: linear-gradient(135deg, #ffe6d8 0%, #fff4ec 100%);
-  --gradient-store: linear-gradient(135deg, #fff0b8 0%, #fff9de 100%);
-  --gradient-member: linear-gradient(135deg, #ffe6d8 0%, #fff0b8 100%);
-  --gradient-mint: linear-gradient(135deg, var(--success) 0%, #8fd496 100%);
-  --gradient-skeleton: linear-gradient(90deg, #ffe6d8 25%, #fff3e8 50%, #ffe6d8 75%);
-  --gradient-promo-peach: linear-gradient(120deg, #ffe6d8 0%, #ffffff 100%);
-  --gradient-promo-yellow: linear-gradient(120deg, #fff0b8 0%, #ffffff 100%);
+  --gradient-primary: linear-gradient(120deg, #e86c5c 0%, #f08a7c 55%, #f6c65b 100%);
+  --gradient-promo: linear-gradient(120deg, #e86c5c 0%, #f08a7c 60%, #f3d6c7 100%);
+  --gradient-hero: linear-gradient(180deg, #fffdf9 0%, #f8e6d7 100%);
+  --gradient-ai: linear-gradient(135deg, #f7f3ff 0%, #fff5ef 100%);
+  --gradient-store: linear-gradient(135deg, #eaf6ec 0%, #fffdf9 100%);
+  --gradient-member: linear-gradient(135deg, #fff6e0 0%, #f6c65b 100%);
+  --gradient-vip: linear-gradient(90deg, #f6c65b 0%, #e8b04a 100%);
+  --gradient-mint: linear-gradient(135deg, var(--success) 0%, #8fc896 100%);
+  --gradient-skeleton: linear-gradient(90deg, #f8e6d7 25%, #fffdf9 50%, #f8e6d7 75%);
+  --gradient-promo-peach: linear-gradient(120deg, #fff5ef 0%, #ffffff 100%);
+  --gradient-promo-yellow: linear-gradient(120deg, #fff6e0 0%, #ffffff 100%);
+  --gradient-gold-line: linear-gradient(90deg, transparent 0%, #f6c65b 50%, transparent 100%);
 
   /* —— Motion —— */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -252,46 +342,52 @@
   --font-sans: "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 
-  /* —— Spec aliases (--color-*) —— */
-  --color-primary: #ff5a5f;
-  --color-primary-hover: #f0444a;
-  --color-primary-active: #e93d43;
-  --color-primary-soft: #ffe3e4;
-  --color-primary-muted: #ffd8d5;
-  --color-peach: #ffb27a;
-  --color-peach-soft: #ffe6d8;
-  --color-peach-light: #fff4ec;
-  --color-cream: #fff9ea;
-  --color-cream-soft: #fff3e8;
-  --color-cream-deep: #fff0b8;
-  --color-yellow: #ffc83d;
-  --color-yellow-hover: #f0b82e;
-  --color-yellow-soft: #fff0b8;
-  --color-caramel: #6b3f24;
-  --color-caramel-hover: #553018;
-  --color-caramel-soft: #f6e3d2;
-  --color-text-primary: #6b3f24;
-  --color-text-secondary: #8c644a;
-  --color-text-muted: #b99a83;
+  /* ═══════════════════════════════════════════
+   * 十五、Spec aliases (--color-*)
+   * ═══════════════════════════════════════════ */
+  --color-primary: #e86c5c;
+  --color-primary-hover: #d95d4f;
+  --color-primary-active: #c94f42;
+  --color-primary-soft: #fff5ef;
+  --color-primary-muted: #f3d6c7;
+  --color-secondary: #b56a45;
+  --color-premium: #f6c65b;
+  --color-peach: #f39c6b;
+  --color-peach-soft: #fff0e8;
+  --color-peach-light: #fff5ef;
+  --color-cream: #fffdf9;
+  --color-cream-soft: #f8e6d7;
+  --color-cream-deep: #fff6e0;
+  --color-yellow: #e8b04a;
+  --color-yellow-hover: #d9a03c;
+  --color-yellow-soft: #fff6e0;
+  --color-caramel: #5e4035;
+  --color-caramel-hover: #4a3229;
+  --color-caramel-soft: #f8e6d7;
+  --color-text: #5e4035;
+  --color-text-primary: #5e4035;
+  --color-text-secondary: #8b6b5a;
+  --color-text-muted: #a98a7a;
   --color-text-inverse: #ffffff;
-  --color-background: #fff9ea;
-  --color-surface: #ffffff;
-  --color-surface-hover: #fff8f0;
-  --color-border: #f2d8bf;
-  --color-divider: #f6e3d2;
-  --color-success: #72b878;
-  --color-success-soft: #eaf7ec;
-  --color-warning: #ffc83d;
-  --color-warning-soft: #fff0b8;
-  --color-error: #ff5a5f;
-  --color-error-soft: #ffe3e4;
+  --color-bg: #fffdf9;
+  --color-background: #fffdf9;
+  --color-surface: #f8e6d7;
+  --color-surface-hover: #fffdf9;
+  --color-card: #ffffff;
+  --color-border: #f3e5d9;
+  --color-divider: #f3e5d9;
+  --color-success: #72b67a;
+  --color-success-soft: #eaf6ec;
+  --color-warning: #e8b04a;
+  --color-warning-soft: #fff6e0;
+  --color-error: #d9534f;
+  --color-error-soft: #fdeceb;
+  --color-info: #79a9e8;
+  --color-ai: #8f74d8;
 
   /* —— Legacy aliases —— */
-  --color-secondary: var(--group-buy);
   --color-mint: var(--success);
   --color-blue: var(--info);
-  --color-bg: var(--background);
-  --color-card: var(--card);
   --color-dark: var(--text-primary);
   --color-gray: var(--text-secondary);
   --color-muted: var(--surface-soft);

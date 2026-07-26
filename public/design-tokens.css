@@ -1,39 +1,96 @@
 /**
- * CHIMEIDIY Design Tokens — public share copy (Visual System 2.0)
- * Align with www.chimeidiy.shop via the same token names.
+ * CHIMEIDIY Premium Bakery Design System v1.0
+ * Public share copy — App / Admin / 官網 / PWA 共用同一套色彩 Token。
+ * 引入：https://shop.chimeidiygroupbuying.com/design-tokens.css
  */
 
 :root {
-  --primary: #e85d5d;
-  --primary-hover: #c9424a;
-  --group-buy: #ff8a3d;
-  --group-buy-hover: #e66b25;
-  --background: #fff9f3;
+  /* Brand */
+  --color-primary: #e86c5c;
+  --color-primary-hover: #d95d4f;
+  --color-secondary: #b56a45;
+  --color-premium: #f6c65b;
+
+  --color-bg: #fffdf9;
+  --color-surface: #f8e6d7;
+  --color-card: #ffffff;
+  --color-border: #f3e5d9;
+
+  --color-text: #5e4035;
+  --color-text-secondary: #8b6b5a;
+  --color-text-muted: #a98a7a;
+
+  --color-success: #72b67a;
+  --color-warning: #e8b04a;
+  --color-error: #d9534f;
+  --color-info: #79a9e8;
+  --color-ai: #8f74d8;
+
+  /* Canonical app tokens */
+  --primary: #e86c5c;
+  --primary-hover: #d95d4f;
+  --brand-secondary: #b56a45;
+  --brand-premium: #f6c65b;
+  --background: #fffdf9;
   --surface: #ffffff;
-  --surface-soft: #fff0eb;
-  --text-primary: #3d302b;
-  --text-secondary: #817672;
-  --border: #ede2da;
-  --price: #d92d20;
-  --success: #3f9b70;
-  --warning: #f5a623;
-  --error: #d9363e;
-  --info: #4285c5;
-  --disabled: #9a9490;
+  --surface-soft: #f8e6d7;
+  --card: #ffffff;
+  --border: #f3e5d9;
+  --text-primary: #5e4035;
+  --text-secondary: #8b6b5a;
+  --text-muted: #a98a7a;
+  --success: #72b67a;
+  --warning: #e8b04a;
+  --error: #d9534f;
+  --info: #79a9e8;
+  --group-buy: #e86c5c;
+  --price: #e86c5c;
+  --disabled: #a98a7a;
+
+  /* Modules */
+  --module-materials: #b56a45;
+  --module-groupbuy: #e86c5c;
+  --module-recipe: #e8b04a;
+  --module-ai: #8f74d8;
+  --module-video: #79a9e8;
+  --module-store: #72b67a;
+  --module-course: #f39c6b;
+  --module-news: #5ba8d8;
+
+  /* Expiry */
+  --expiry-ok: #72b67a;
+  --expiry-30: #e8b04a;
+  --expiry-14: #f39c6b;
+  --expiry-7: #e86c5c;
+  --expiry-expired: #c13f36;
+  --expiry-done: #b5b5b5;
+
+  /* Tags / Icons / Nav */
+  --tag-bg: #fff5ef;
+  --tag-text: #b56a45;
+  --tag-border: #f3d6c7;
+  --icon: #8b5a3c;
+  --icon-hover: #e86c5c;
+  --nav-inactive: #a98a7a;
+  --nav-active: #e86c5c;
+
+  /* AI / Member */
+  --ai-primary: #8f74d8;
+  --ai-bg: #f7f3ff;
+  --member-standard: #b56a45;
+  --member-vip: #f6c65b;
+
+  /* Gradients */
+  --gradient-hero: linear-gradient(180deg, #fffdf9 0%, #f8e6d7 100%);
+  --gradient-vip: linear-gradient(90deg, #f6c65b 0%, #e8b04a 100%);
+  --shadow-card: 0 6px 18px rgba(181, 106, 69, 0.12);
 
   /* Legacy aliases */
-  --color-primary: var(--primary);
-  --color-secondary: var(--group-buy);
-  --color-yellow: var(--warning);
-  --color-mint: var(--success);
-  --color-blue: var(--info);
-  --color-bg: var(--background);
-  --color-card: var(--surface);
-  --color-dark: var(--text-primary);
-  --color-gray: var(--text-secondary);
-  --color-border: var(--border);
-  --color-muted: var(--surface-soft);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error: var(--error);
+  --color-yellow: var(--color-warning);
+  --color-mint: var(--color-success);
+  --color-blue: var(--color-info);
+  --color-dark: var(--color-text);
+  --color-gray: var(--color-text-secondary);
+  --color-muted: var(--color-surface);
+  --color-background: var(--color-bg);
 }

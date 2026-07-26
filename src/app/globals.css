@@ -27,12 +27,12 @@
     --card-foreground: var(--text-primary);
     --muted: var(--surface-soft);
     --muted-foreground: var(--text-secondary);
-    --tag-bg: var(--surface-soft);
-    --tag-text: var(--primary);
+    --tag-bg: #fff5ef;
+    --tag-text: var(--brand-secondary);
     --countdown: var(--danger);
     --nav-active: var(--primary);
-    --nav-inactive: var(--text-secondary);
-    --nav-icon: var(--caramel);
+    --nav-inactive: var(--text-muted);
+    --nav-icon: var(--icon);
     --brand-red: var(--primary);
     --brand-orange: var(--primary);
     --header-content-gap: 0px;
@@ -120,19 +120,35 @@
   }
 
   .btn-secondary {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button border border-border bg-surface px-5 py-2.5 text-sm font-bold text-brand-caramel transition duration-250 ease-brand hover:bg-peach-light active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button border-2 border-primary bg-white px-5 py-2.5 text-sm font-bold text-primary transition duration-250 ease-brand hover:bg-primary-soft active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
   }
 
   .btn-ghost {
-    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-transparent px-4 py-2.5 text-sm font-semibold text-brand-caramel transition hover:bg-surface-yellow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30;
+    @apply inline-flex min-h-11 items-center justify-center rounded-button bg-transparent px-4 py-2.5 text-sm font-semibold text-[var(--brand-secondary)] transition hover:bg-[var(--tag-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30;
+  }
+
+  .btn-primary {
+    @apply btn-brand;
+  }
+
+  .ds-tag {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    border: 1px solid var(--tag-border);
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    padding: 0.125rem 0.625rem;
+    font-size: 11px;
+    font-weight: 600;
   }
 
   .card-surface {
-    @apply rounded-[20px] border border-border bg-surface shadow-soft transition duration-250 ease-brand;
+    @apply rounded-[20px] border border-border bg-card shadow-card transition duration-250 ease-brand;
   }
 
   .card-lift {
-    @apply card-surface transition-[transform,box-shadow] duration-[180ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(107,63,36,0.10)];
+    @apply card-surface transition-[transform,box-shadow,border-color] duration-[180ms] ease-out hover:-translate-y-0.5 hover:border-primary hover:shadow-lift;
   }
 
   .home-skeleton {
@@ -143,15 +159,15 @@
 
   /* ── 首頁兩段式背景 ───────────────────────────────────────── */
 
-  /* 頁面根容器：頂部奶油色 */
+  /* 頁面根容器：Premium Bakery 奶油白 */
   .home-page {
     min-height: 100%;
-    background: #fff9ea;
+    background: var(--background);
   }
 
-  /* 頂部區（Header 下方 ~ Hero 底部）：奶油色背景 */
+  /* 頂部區（Header 下方 ~ Hero 底部）：奶油白 → 杏仁白 Hero */
   .home-top-area {
-    background: #fff9ea;
+    background: var(--gradient-hero);
   }
 
   /* Hero 下方全部中段：嚴格純白 */
@@ -240,8 +256,15 @@
 
   .home-quick-action:hover {
     transform: translateY(-2px);
-    border-color: var(--peach);
-    box-shadow: 0 6px 18px rgba(107, 63, 36, 0.1);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-card);
+  }
+
+  .home-hero-gold-line {
+    height: 1px;
+    width: 100%;
+    background: var(--gradient-gold-line);
+    opacity: 0.85;
   }
 
   /* ── 商品卡圖片區 ── */

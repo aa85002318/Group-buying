@@ -43,7 +43,9 @@ function NavLink({
       onClick={onNavigate}
       className={cn(
         "block rounded-lg px-3 py-2 text-sm transition-colors",
-        active ? "bg-primary/10 font-medium text-primary" : "text-foreground hover:bg-muted",
+        active
+          ? "border-l-2 border-[var(--admin-active-border)] bg-[var(--admin-sidebar-active)] font-medium text-primary"
+          : "border-l-2 border-transparent text-foreground hover:bg-[var(--admin-sidebar-active)]/60",
         className
       )}
     >
@@ -233,9 +235,9 @@ export function AdminDesktopSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-60 shrink-0 border-r border-border bg-card lg:block">
+    <aside className="hidden w-60 shrink-0 border-r border-border bg-[var(--admin-sidebar)] lg:block">
       <div className="sticky top-0 flex h-screen flex-col">
-        <div className="shrink-0 border-b border-border px-4 py-4">
+        <div className="shrink-0 border-b border-border bg-[var(--admin-header)] px-4 py-4">
           <Link href={APP_ROUTES.admin} className="text-lg font-bold text-primary">
             CHIMEIDIY 管理中心
           </Link>

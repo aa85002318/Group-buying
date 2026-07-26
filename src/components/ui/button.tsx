@@ -16,12 +16,12 @@ const buttonVariants = cva(
         promo:
           "bg-groupBuy text-white shadow-card hover:bg-groupBuy-hover focus-visible:ring-groupBuy/40",
         secondary:
-          "border-2 border-primary bg-surface text-primary hover:bg-primary-soft",
+          "border-2 border-primary bg-white text-primary hover:bg-primary-soft",
         caramel:
-          "bg-caramel text-white shadow-card hover:bg-caramel-hover focus-visible:ring-caramel/40",
+          "bg-[var(--brand-secondary)] text-white shadow-card hover:bg-[var(--brand-secondary-hover)] focus-visible:ring-[var(--brand-secondary)]/40",
         outline:
           "border border-border bg-transparent text-caramel hover:bg-peach-soft",
-        ghost: "bg-transparent text-caramel hover:bg-caramel-soft",
+        ghost: "bg-transparent text-[var(--brand-secondary)] hover:bg-[var(--tag-bg)]",
         destructive:
           "bg-danger text-white hover:opacity-90 focus-visible:ring-danger/40",
         mint: "bg-success text-white shadow-card hover:opacity-95",

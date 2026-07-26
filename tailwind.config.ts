@@ -131,6 +131,8 @@ const config: Config = {
         },
         brand: {
           primary: rgb("--primary-rgb"),
+          secondary: rgb("--brand-secondary-rgb"),
+          premium: rgb("--brand-premium-rgb"),
           peach: rgb("--peach-rgb"),
           cream: rgb("--cream-rgb"),
           caramel: rgb("--caramel-rgb"),
@@ -152,8 +154,39 @@ const config: Config = {
           pink: rgb("--primary-rgb"),
           pinkLight: rgb("--surface-soft-rgb"),
         },
+        premium: {
+          DEFAULT: rgb("--brand-premium-rgb"),
+          deep: "var(--brand-premium-deep)",
+        },
+        module: {
+          materials: "var(--module-materials)",
+          groupbuy: "var(--module-groupbuy)",
+          recipe: "var(--module-recipe)",
+          ai: "var(--module-ai)",
+          video: "var(--module-video)",
+          store: "var(--module-store)",
+          course: "var(--module-course)",
+          news: "var(--module-news)",
+        },
+        expiry: {
+          ok: "var(--expiry-ok)",
+          d30: "var(--expiry-30)",
+          d14: "var(--expiry-14)",
+          d7: "var(--expiry-7)",
+          expired: "var(--expiry-expired)",
+          done: "var(--expiry-done)",
+        },
+        ai: {
+          DEFAULT: "var(--ai-primary)",
+          bg: "var(--ai-bg)",
+          cta: "var(--ai-cta)",
+        },
+        member: {
+          standard: "var(--member-standard)",
+          vip: "var(--member-vip)",
+        },
         secondary: {
-          DEFAULT: "var(--secondary-yellow)",
+          DEFAULT: "var(--brand-secondary)",
           yellow: "var(--secondary-yellow)",
           peach: "var(--secondary-peach)",
           foreground: rgb("--text-primary-rgb"),
@@ -166,8 +199,9 @@ const config: Config = {
         frozen: rgb("--info-rgb"),
         mint: rgb("--success-rgb"),
         tag: {
-          bg: rgb("--surface-soft-rgb"),
-          text: rgb("--primary-rgb"),
+          bg: "var(--tag-bg)",
+          text: "var(--tag-text)",
+          border: "var(--tag-border)",
         },
         countdown: rgb("--error-rgb"),
         nav: {
@@ -215,6 +249,7 @@ const config: Config = {
         "ai-gradient": "var(--gradient-ai)",
         "store-gradient": "var(--gradient-store)",
         "member-gradient": "var(--gradient-member)",
+        "vip-gradient": "var(--gradient-vip)",
         "skeleton-shimmer": "var(--gradient-skeleton)",
         "promo-strip":
           "linear-gradient(90deg, var(--surface-soft) 0%, var(--butter-soft) 100%)",

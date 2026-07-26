@@ -8,6 +8,7 @@ import { AdminBarcodeInput, type BarcodeProduct } from "@/components/admin/store
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { daysUntil, expiryStatusLabel } from "@/lib/admin/store-ops";
+import { expiryColorForDays } from "@/lib/design/premium-bakery";
 
 type ProductJoin = {
   id?: string;
@@ -328,7 +329,7 @@ export function StoreRecordsClient({
       ) : (
         <div className="overflow-x-auto rounded-[16px] border border-[#E9DED4] bg-white">
           <table className="w-full min-w-[720px] text-sm">
-            <thead className="bg-[#FAF6F1] text-left text-[#756B64]">
+            <thead className="bg-[var(--admin-table-header)] text-left text-[var(--color-text-secondary)]">
               <tr>
                 <th className="px-4 py-3">商品</th>
                 <th className="px-4 py-3">批次</th>
@@ -383,7 +384,10 @@ export function StoreRecordsClient({
                         <td className="px-4 py-3">{remaining}</td>
                         <td className="px-4 py-3">
                           {days == null ? "—" : `${days}天`}
-                          <span className="ml-1 text-xs text-[#756B64]">
+                          <span
+                            className="ml-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+                            style={{ backgroundColor: expiryColorForDays(days) }}
+                          >
                             {expiryStatusLabel(days)}
                           </span>
                         </td>
