@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Printer, Save } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminProductEditor } from "@/components/admin/v2/AdminProductEditor";
 import { Button } from "@/components/ui/button";
@@ -108,6 +108,12 @@ export default function AdminProductEditPage() {
             </Link>
             <Link href={`/admin/products/${productId}/analysis`}>
               <Button variant="outline">查看分析</Button>
+            </Link>
+            <Link href={`/admin/products/labels?productId=${productId}`}>
+              <Button variant="outline">
+                <Printer className="mr-1.5 h-4 w-4" />
+                列印價格牌
+              </Button>
             </Link>
             <Button onClick={save} disabled={saving} className="bg-primary hover:bg-[#E63D6A]">
               <Save className="mr-1.5 h-4 w-4" />

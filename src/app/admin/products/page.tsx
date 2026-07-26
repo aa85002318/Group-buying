@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart3, Download, PackagePlus, Upload } from "lucide-react";
+import { BarChart3, Download, PackagePlus, Printer, Upload } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -38,6 +38,12 @@ export default function AdminProductsPage() {
               <Button variant="secondary">
                 <BarChart3 className="mr-1.5 h-4 w-4" />
                 分析總覽
+              </Button>
+            </Link>
+            <Link href="/admin/products/labels">
+              <Button variant="secondary">
+                <Printer className="mr-1.5 h-4 w-4" />
+                價格牌列印
               </Button>
             </Link>
             <Link href="/admin/products/import">

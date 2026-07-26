@@ -97,6 +97,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/store/suppliers", label: "廠商管理", roles: ["admin", "store_staff"] },
       { href: "/admin/store/backups", label: "備份管理", roles: ["admin", "store_staff"] },
       { href: "/admin/products", label: "商品主檔", roles: ["admin", "store_staff"] },
+      { href: "/admin/products/labels", label: "價格牌列印", roles: ["admin", "store_staff"] },
     ],
   },
   {
@@ -182,6 +183,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/brands", label: "品牌管理", roles: ["admin"] },
       { href: "/admin/suppliers", label: "供應商", roles: ["admin"] },
       { href: "/admin/products/tags", label: "商品標籤", roles: ["admin"] },
+      { href: "/admin/products/labels", label: "價格牌列印", roles: ["admin", "store_staff"] },
       { href: "/admin/inventory", label: "庫存（舊入口）", roles: ["admin"] },
       { href: "/admin/product-imports", label: "批次匯入", roles: ["admin"] },
     ],
