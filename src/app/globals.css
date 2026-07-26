@@ -35,7 +35,7 @@
     --nav-icon: var(--icon);
     --brand-red: var(--primary);
     --brand-orange: var(--primary);
-    --header-content-gap: 0px;
+    --header-content-gap: 10px;
     /* 首頁內容容器水平安全距（與第一個 Banner 共用） */
     --site-content-pad-x: 16px;
   }
@@ -179,9 +179,10 @@
     background: var(--background);
   }
 
-  /* sticky Header 下方固定 5px 安全間距（不含 header 高度） */
+  /* sticky Header 下方固定安全間距（不含 header 高度；全站前台共用） */
+  .site-main,
   .page-main-content {
-    padding-top: 5px;
+    padding-top: var(--header-content-gap, 10px);
   }
 
   /* 頂部區（Header 下方 ~ Hero 底部）：奶油白 → 杏仁白 Hero */
