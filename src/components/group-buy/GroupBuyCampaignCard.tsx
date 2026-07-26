@@ -24,6 +24,7 @@ export type GroupBuyCampaignCardData = {
   savings: number | null;
   soldQuantity?: number;
   participantCount?: number;
+  statsHidden?: boolean;
   productName?: string;
   productImage?: string | null;
   productSpec?: string | null;
@@ -176,10 +177,12 @@ export function GroupBuyCampaignCard({
           {f.countdown && status === "upcoming" && (
             <span>開團 {formatCountdown(campaign.start_at)}</span>
           )}
-          {f.participantCount && (
+          {f.participantCount && !campaign.statsHidden && (
             <span>已跟團 {campaign.participantCount ?? 0} 人</span>
           )}
-          {f.soldQuantity && <span>已售 {campaign.soldQuantity ?? 0} 件</span>}
+          {f.soldQuantity && !campaign.statsHidden && (
+            <span>已售 {campaign.soldQuantity ?? 0} 件</span>
+          )}
         </div>
 
         {progress != null && (

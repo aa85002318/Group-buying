@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
@@ -44,6 +45,15 @@ function orderTypeLabel(o: AdminOrderRow): "團購" | "商城" {
 }
 
 export default function AdminOrdersPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-muted-foreground">載入中…</p>}>
+      <AdminOrdersPageInner />
+    </Suspense>
+  );
+}
+
+function AdminOrdersPageInner() {
+  const searchParams = useSearchParams();
   const { items, search, setSearch, page, setPage, refresh, loading, error } =
     useAdminList<AdminOrderRow>("/api/admin/orders", "orders", [
       "order_number",
@@ -55,6 +65,11 @@ export default function AdminOrdersPage() {
   const [methodFilter, setMethodFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  useEffect(() => {
+    const t = searchParams.get("type");
+    if (t === "group_buy" || t === "mall") setTypeFilter(t);
+  }, [searchParams]);
 
   const filtered = useMemo(() => {
     return items.filter((o) => {
@@ -111,8 +126,12 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title="App 訂單"
-        description="此區僅管理透過 CHIMEIDIY App 建立的訂單。不包含門市 POS、現場刷卡或現金交易。"
+        title={typeFilter === "group_buy" ? "團購訂單" : "App 訂單"}
+        description={
+          typeFilter === "group_buy"
+            ? "僅顯示含 group_buy_event_id 或 channel=group_buy 的 App 訂單"
+            : "此區僅管理透過 CHIMEIDIY App 建立的訂單。不包含門市 POS、現場刷卡或現金交易。"
+        }
         actions={
           <a
             href="/api/admin/orders/export?format=xlsx"

@@ -8,20 +8,49 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { getMockGroupBuyEventsWithProducts } from "@/lib/mock-data";
 import { recordBrowse } from "@/lib/home/browse-history";
+import {
+  computeGroupBuyRuntimeStatus,
+  formatCountdown,
+  formatPriceTwd,
+  fulfillmentShortLabels,
+  DEFAULT_GROUP_BUY_PAGE_SETTINGS,
+} from "@/lib/group-buy/page-settings";
 import type { GroupBuyEvent, Product } from "@/lib/types/database";
 
 type GroupBuyEventDetail = GroupBuyEvent & {
   group_buy_products?: Array<{
     special_price?: number | null;
+    max_quantity?: number | null;
+    sold_count?: number | null;
     products?: Product | null;
   }>;
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  active: "進行中",
+  ending_soon: "即將結團",
+  upcoming: "即將開團",
+  ended: "已結團",
+  sold_out: "已售罄",
+  draft: "草稿",
+  cancelled: "已取消",
+};
+
 export default function GroupBuyDetailPage({ params }: { params: { id: string } }) {
   const [event, setEvent] = useState<GroupBuyEventDetail | null>(null);
+  const [endingSoonHours, setEndingSoonHours] = useState(
+    DEFAULT_GROUP_BUY_PAGE_SETTINGS.endingSoonHours
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetch("/api/group-buy/page-settings")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.settings?.endingSoonHours) setEndingSoonHours(d.settings.endingSoonHours);
+      })
+      .catch(() => {});
+
     fetch(`/api/group-buy-events/${params.id}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
@@ -69,14 +98,30 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
     );
   }
 
+  const runtime = computeGroupBuyRuntimeStatus({
+    status: event.status,
+    start_at: event.start_at,
+    end_at: event.end_at,
+    endingSoonHours,
+  });
+  const canBuy = runtime === "active" || runtime === "ending_soon";
+  const fulfillment = fulfillmentShortLabels(event.fulfillment_options);
+  const groupPrice = Number(event.group_price ?? 0);
+  const originalPrice = Number(event.original_price ?? 0);
+
   const products =
     event.group_buy_products
       ?.map((gbp) => {
         const product = gbp.products;
         if (!product) return null;
+        const soldOut =
+          gbp.max_quantity != null &&
+          Number(gbp.sold_count ?? 0) >= Number(gbp.max_quantity);
         return {
           ...product,
-          price: gbp.special_price ?? product.price,
+          price: gbp.special_price ?? event.group_price ?? product.price,
+          original_price: event.original_price ?? product.original_price,
+          _soldOut: soldOut,
         };
       })
       .filter(Boolean) ?? [];
@@ -104,7 +149,9 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-xl font-bold text-coffee">{event.title}</h1>
-          <Badge variant="success">進行中</Badge>
+          <Badge variant={canBuy ? "success" : "secondary"}>
+            {STATUS_LABEL[runtime] ?? runtime}
+          </Badge>
         </div>
         {event.description && (
           <p className="text-sm text-muted-foreground">{event.description}</p>
@@ -112,6 +159,36 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
         <p className="text-xs text-coffee">
           {formatDate(event.start_at)} — {formatDate(event.end_at)}
         </p>
+        {(runtime === "active" || runtime === "ending_soon") && (
+          <p className="text-sm font-semibold text-groupBuy">
+            倒數 {formatCountdown(event.end_at)}
+          </p>
+        )}
+        {runtime === "upcoming" && (
+          <p className="text-sm font-semibold text-foreground-secondary">
+            開團倒數 {formatCountdown(event.start_at)}
+          </p>
+        )}
+        {groupPrice > 0 && (
+          <p className="text-lg font-black text-groupBuy">
+            {formatPriceTwd(groupPrice)}
+            {originalPrice > groupPrice && (
+              <span className="ml-2 text-sm font-normal text-foreground-muted line-through">
+                {formatPriceTwd(originalPrice)}
+              </span>
+            )}
+          </p>
+        )}
+        {fulfillment.length > 0 && (
+          <p className="text-sm text-foreground-secondary">取貨：{fulfillment.join(" · ")}</p>
+        )}
+        {!canBuy && (
+          <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            {runtime === "upcoming"
+              ? "尚未開團，可查看詳情但無法加入購物車。"
+              : "此團購目前無法購買。"}
+          </p>
+        )}
       </div>
 
       <section>
@@ -129,6 +206,8 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
                 original_price={product!.original_price}
                 image_url={product!.image_url}
                 groupBuyLabel="團購價"
+                badge={product!._soldOut || !canBuy ? "soldout" : "groupBuy"}
+                showQuickAdd={canBuy && !product!._soldOut}
               />
             ))}
           </div>

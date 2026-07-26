@@ -61,7 +61,12 @@ export interface PricedOrderItem {
 export class OrderError extends Error {
   constructor(
     message: string,
-    public code: "OUT_OF_STOCK" | "INVALID_ITEM" | "PRICE_ERROR"
+    public code:
+      | "OUT_OF_STOCK"
+      | "INVALID_ITEM"
+      | "PRICE_ERROR"
+      | "GROUP_BUY_CLOSED"
+      | "GROUP_BUY_LIMIT"
   ) {
     super(message);
     this.name = "OrderError";
@@ -148,6 +153,24 @@ export async function priceOrderItems(
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<Order & { order_items: OrderItem[] }> {
+  if (input.groupBuyEventId) {
+    const { assertGroupBuyPurchasable } = await import("@/lib/group-buy/purchase-guard");
+    const first = input.items[0];
+    const check = await assertGroupBuyPurchasable(input.groupBuyEventId, {
+      productId: first?.productId,
+      quantity: input.items.reduce((s, i) => s + i.quantity, 0),
+      userId: input.userId,
+    });
+    if (!check.ok) {
+      throw new OrderError(
+        check.message,
+        check.code === "MAX_QTY" || check.code === "MIN_QTY"
+          ? "GROUP_BUY_LIMIT"
+          : "GROUP_BUY_CLOSED"
+      );
+    }
+  }
+
   const pricedItems = await priceOrderItems(input.items);
   const subtotal = pricedItems.reduce((sum, i) => sum + i.subtotal, 0);
   const discount = input.discount ?? 0;

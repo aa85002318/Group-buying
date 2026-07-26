@@ -71,6 +71,9 @@ export function GroupBuyPageClient() {
   const [sort, setSort] = useState<GroupBuySort>("recommended");
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [fulfillment, setFulfillment] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
   const [campaigns, setCampaigns] = useState<GroupBuyCampaignCardData[]>([]);
   const [endingSoon, setEndingSoon] = useState<GroupBuyCampaignCardData[]>([]);
   const [upcoming, setUpcoming] = useState<GroupBuyCampaignCardData[]>([]);
@@ -106,6 +109,8 @@ export function GroupBuyPageClient() {
         pageSize: String(pageSize),
       });
       if (query) params.set("search", query);
+      if (category) params.set("category", category);
+      if (fulfillment) params.set("fulfillment", fulfillment);
 
       const [listRes, soonRes, upRes] = await Promise.all([
         fetch(`/api/group-buy/campaigns?${params}`),
@@ -119,6 +124,7 @@ export function GroupBuyPageClient() {
 
       const listData = await listRes.json();
       setCampaigns(listData.campaigns ?? []);
+      setCategories(listData.meta?.categories ?? []);
       setMeta({
         activeCount: listData.meta?.activeCount ?? 0,
         endingSoonCount: listData.meta?.endingSoonCount ?? 0,
@@ -139,7 +145,7 @@ export function GroupBuyPageClient() {
     } finally {
       setLoading(false);
     }
-  }, [tab, sort, page, pageSize, query, settings.sections.ending_soon, settings.sections.upcoming]);
+  }, [tab, sort, page, pageSize, query, category, fulfillment, settings.sections.ending_soon, settings.sections.upcoming]);
 
   useEffect(() => {
     void loadList();
@@ -239,6 +245,40 @@ export function GroupBuyPageClient() {
                   </option>
                 ))}
               </select>
+              {settings.enabledFilters.category && categories.length > 0 && (
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    setPage(1);
+                  }}
+                  className="h-9 rounded-lg border border-border bg-background px-2"
+                >
+                  <option value="">全部分類</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {settings.enabledFilters.fulfillment && (
+                <select
+                  value={fulfillment}
+                  onChange={(e) => {
+                    setFulfillment(e.target.value);
+                    setPage(1);
+                  }}
+                  className="h-9 rounded-lg border border-border bg-background px-2"
+                >
+                  <option value="">全部取貨方式</option>
+                  <option value="store_pickup">門市取貨</option>
+                  <option value="ambient">常溫宅配</option>
+                  <option value="chilled">冷藏宅配</option>
+                  <option value="frozen">冷凍宅配</option>
+                  <option value="cvs">超商取貨</option>
+                </select>
+              )}
             </div>
           )}
         </div>

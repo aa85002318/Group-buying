@@ -9,6 +9,10 @@ import {
   type GroupBuySort,
   type GroupBuyTab,
 } from "@/lib/group-buy/page-settings";
+import {
+  getGroupBuyEventStatsMap,
+  pickDisplayStat,
+} from "@/lib/group-buy/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +128,8 @@ export async function GET(request: Request) {
     Math.max(1, Number(searchParams.get("pageSize") ?? settings.pageSizeDesktop))
   );
   const section = searchParams.get("section"); // ending_soon | upcoming | list
+  const category = (searchParams.get("category") ?? "").trim();
+  const fulfillment = (searchParams.get("fulfillment") ?? "").trim();
 
   // Block disabled tabs from URL forcing
   const effectiveStatus: GroupBuyTab =
@@ -158,8 +164,25 @@ export async function GET(request: Request) {
   }
 
   const now = new Date();
+  const eventIds = raw
+    .filter((row) => row.status !== "draft" && row.status !== "cancelled")
+    .map((row) => row.id);
+  const statsMap = await getGroupBuyEventStatsMap(eventIds);
+
   const annotated = raw
     .filter((row) => row.status !== "draft" && row.status !== "cancelled")
+    .filter((row) => {
+      if (category && settings.enabledFilters.category) {
+        if (String(row.category_label ?? "") !== category) return false;
+      }
+      if (fulfillment && settings.enabledFilters.fulfillment) {
+        const opts = Array.isArray(row.fulfillment_options)
+          ? (row.fulfillment_options as string[])
+          : [];
+        if (!opts.includes(fulfillment)) return false;
+      }
+      return true;
+    })
     .map((row) => {
       const runtime_status = computeGroupBuyRuntimeStatus({
         status: row.status,
@@ -169,9 +192,14 @@ export async function GET(request: Request) {
         now,
       });
       const { groupPrice, originalPrice } = resolvePrices(row);
-      const soldQuantity = (row.group_buy_products ?? []).reduce(
+      const soldFallback = (row.group_buy_products ?? []).reduce(
         (s, p) => s + Number(p.sold_count ?? 0),
         0
+      );
+      const display = pickDisplayStat(
+        statsMap.get(row.id),
+        String(row.stats_mode ?? "orders"),
+        soldFallback
       );
       const product = firstProduct(row);
       return {
@@ -181,14 +209,23 @@ export async function GET(request: Request) {
         originalPrice,
         savings:
           originalPrice > groupPrice ? Math.round(originalPrice - groupPrice) : null,
-        soldQuantity,
-        participantCount: soldQuantity,
+        soldQuantity: display.hide ? 0 : display.soldQuantity,
+        participantCount: display.hide ? 0 : display.participantCount,
+        statsHidden: display.hide,
         productName: product?.name ?? row.title,
         productImage: product?.image_url ?? row.banner_url ?? null,
         productSpec: product?.specifications ?? null,
       };
     })
     .filter((row) => matchesSearch(row, search, settings.enabledSearchFields));
+
+  const categories = Array.from(
+    new Set(
+      raw
+        .map((r) => String(r.category_label ?? "").trim())
+        .filter(Boolean)
+    )
+  ).sort();
 
   const activeCount = annotated.filter(
     (r) => r.runtime_status === "active" || r.runtime_status === "ending_soon"
@@ -235,6 +272,7 @@ export async function GET(request: Request) {
       endingSoonCount,
       status: effectiveStatus,
       sort,
+      categories,
     },
   });
 }
