@@ -28,7 +28,7 @@ export function ShopHubClient() {
   const [active, setActive] = useState(CHIPS[0].label);
 
   useEffect(() => {
-    fetch("/api/products")
+    fetch("/api/products?scope=baking&channel=website")
       .then((r) => r.json())
       .then((p) => {
         if (p.products?.length) setProducts(p.products);

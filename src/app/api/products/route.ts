@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   const supabase = await createClient();
   let query = supabase
     .from("products")
-    .select("*, product_categories(name, slug)")
+    .select("*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)")
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 

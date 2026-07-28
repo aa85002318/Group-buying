@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getCategoryBySlug } from "@/lib/baking-materials/queries";
+import {
+  getBakingMaterialCategories,
+  getBrandsForCatalog,
+  getCategoryBySlug,
+  getCategoryTree,
+  parseBakingFiltersFromSearchParams,
+  searchBakingProducts,
+} from "@/lib/baking-materials/queries";
 import { BakingMaterialsClient } from "../BakingMaterialsClient";
 
 type PageProps = {
   params: Promise<{ categorySlug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -29,11 +37,40 @@ function CatalogFallback() {
   );
 }
 
-export default async function BakingMaterialsCategoryPage({ params }: PageProps) {
+export default async function BakingMaterialsCategoryPage({ params, searchParams }: PageProps) {
   const { categorySlug } = await params;
+  const rawSearchParams = await searchParams;
+  const normalizedSearchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(rawSearchParams)) {
+    if (Array.isArray(value)) {
+      for (const item of value) normalizedSearchParams.append(key, item);
+    } else if (typeof value === "string") {
+      normalizedSearchParams.set(key, value);
+    }
+  }
+
+  const filters = parseBakingFiltersFromSearchParams(normalizedSearchParams);
+  filters.categorySlug = categorySlug;
+
+  const [categories, brands, initialProducts] = await Promise.all([
+    getBakingMaterialCategories(),
+    getBrandsForCatalog(),
+    searchBakingProducts(filters),
+  ]);
+
   return (
     <Suspense fallback={<CatalogFallback />}>
-      <BakingMaterialsClient categorySlug={categorySlug} />
+      <BakingMaterialsClient
+        categorySlug={categorySlug}
+        initialMeta={{
+          categories,
+          tree: getCategoryTree(categories),
+          brands,
+        }}
+        initialProducts={initialProducts}
+        initialQueryString={normalizedSearchParams.toString()}
+      />
     </Suspense>
   );
 }

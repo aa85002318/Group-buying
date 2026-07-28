@@ -15,7 +15,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
-    .select("*, product_categories(name, slug)")
+    .select("*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)")
     .eq("id", id)
     .eq("is_active", true)
     .single();

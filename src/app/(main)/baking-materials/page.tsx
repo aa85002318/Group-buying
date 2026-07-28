@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import {
+  getBakingMaterialCategories,
+  getBrandsForCatalog,
+  getCategoryTree,
+  parseBakingFiltersFromSearchParams,
+  searchBakingProducts,
+} from "@/lib/baking-materials/queries";
 import { BakingMaterialsClient } from "./BakingMaterialsClient";
 
 export const metadata: Metadata = {
@@ -15,10 +22,40 @@ function CatalogFallback() {
   );
 }
 
-export default function BakingMaterialsPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function BakingMaterialsPage({ searchParams }: PageProps) {
+  const rawSearchParams = await searchParams;
+  const normalizedSearchParams = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(rawSearchParams)) {
+    if (Array.isArray(value)) {
+      for (const item of value) normalizedSearchParams.append(key, item);
+    } else if (typeof value === "string") {
+      normalizedSearchParams.set(key, value);
+    }
+  }
+
+  const filters = parseBakingFiltersFromSearchParams(normalizedSearchParams);
+  const [categories, brands, initialProducts] = await Promise.all([
+    getBakingMaterialCategories(),
+    getBrandsForCatalog(),
+    searchBakingProducts(filters),
+  ]);
+
   return (
     <Suspense fallback={<CatalogFallback />}>
-      <BakingMaterialsClient />
+      <BakingMaterialsClient
+        initialMeta={{
+          categories,
+          tree: getCategoryTree(categories),
+          brands,
+        }}
+        initialProducts={initialProducts}
+        initialQueryString={normalizedSearchParams.toString()}
+      />
     </Suspense>
   );
 }

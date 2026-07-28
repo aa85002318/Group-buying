@@ -14,7 +14,7 @@ async function fetchRelatedProducts(
   if (video.related_product_ids?.length) {
     const { data: byIds } = await supabase
       .from("products")
-      .select("*, product_categories(name, slug)")
+      .select("*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)")
       .in("id", video.related_product_ids)
       .eq("is_active", true);
     for (const p of byIds ?? []) {
@@ -29,7 +29,7 @@ async function fetchRelatedProducts(
       ? (
           await supabase
             .from("products")
-            .select("*, product_categories(name, slug)")
+            .select("*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)")
             .eq("id", video.product_id)
             .single()
         ).data
@@ -42,7 +42,7 @@ async function fetchRelatedProducts(
     if (bound.category_id) {
       const { data: sameCategory } = await supabase
         .from("products")
-        .select("*, product_categories(name, slug)")
+        .select("*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)")
         .eq("category_id", bound.category_id)
         .eq("is_active", true)
         .neq("id", bound.id)
@@ -60,7 +60,7 @@ async function fetchRelatedProducts(
   if (related.length < 4) {
     const { data: fallback } = await supabase
       .from("products")
-      .select("*, product_categories(name, slug)")
+      .select("*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)")
       .eq("is_active", true)
       .limit(6);
 
@@ -91,7 +91,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   let query = supabase
     .from("videos")
-    .select("*, products(*, product_categories(name, slug))");
+    .select(
+      "*, products(*, product_categories:product_categories!products_primary_category_id_fkey(name, slug))"
+    );
 
   query = isUuid ? query.eq("id", id) : query.eq("slug", id);
 

@@ -26,6 +26,13 @@ import { cn } from "@/lib/utils";
 
 type BakingMaterialsClientProps = {
   categorySlug?: string;
+  initialMeta?: CatalogMeta;
+  initialProducts?: {
+    products: BakingListProduct[];
+    total: number;
+    totalPages: number;
+  };
+  initialQueryString?: string;
 };
 
 type CatalogMeta = {
@@ -99,16 +106,27 @@ function productBadge(product: BakingListProduct): ProductBadge | undefined {
   return undefined;
 }
 
-export function BakingMaterialsClient({ categorySlug }: BakingMaterialsClientProps) {
+export function BakingMaterialsClient({
+  categorySlug,
+  initialMeta,
+  initialProducts,
+  initialQueryString,
+}: BakingMaterialsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobileRef = useRef(false);
+  const shouldSkipInitialMetaFetch = useRef(Boolean(initialMeta));
+  const shouldSkipInitialProductsFetch = useRef(
+    Boolean(initialProducts) && (searchParams.toString() === (initialQueryString ?? ""))
+  );
   const [isMobile, setIsMobile] = useState(false);
-  const [meta, setMeta] = useState<CatalogMeta>({ categories: [], tree: [], brands: [] });
-  const [products, setProducts] = useState<BakingListProduct[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [meta, setMeta] = useState<CatalogMeta>(
+    initialMeta ?? { categories: [], tree: [], brands: [] }
+  );
+  const [products, setProducts] = useState<BakingListProduct[]>(initialProducts?.products ?? []);
+  const [total, setTotal] = useState(initialProducts?.total ?? 0);
+  const [totalPages, setTotalPages] = useState(initialProducts?.totalPages ?? 0);
+  const [loading, setLoading] = useState(!initialProducts);
   const [loadingMore, setLoadingMore] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -157,6 +175,11 @@ export function BakingMaterialsClient({ categorySlug }: BakingMaterialsClientPro
   }, [filters.q]);
 
   useEffect(() => {
+    if (shouldSkipInitialMetaFetch.current) {
+      shouldSkipInitialMetaFetch.current = false;
+      return;
+    }
+
     let cancelled = false;
     Promise.all([
       fetch("/api/baking-materials/categories").then((r) => r.json()),
@@ -179,6 +202,11 @@ export function BakingMaterialsClient({ categorySlug }: BakingMaterialsClientPro
   }, []);
 
   useEffect(() => {
+    if (shouldSkipInitialProductsFetch.current) {
+      shouldSkipInitialProductsFetch.current = false;
+      return;
+    }
+
     let cancelled = false;
     const append = isMobileRef.current && (filters.page ?? 1) > 1;
 

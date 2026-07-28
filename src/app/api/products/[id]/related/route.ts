@@ -30,7 +30,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   const { data, error } = await supabase
     .from("products")
-    .select("*, product_categories(name, slug)")
+    .select("*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)")
     .eq("is_active", true)
     .neq("id", id)
     .order("created_at", { ascending: false })
