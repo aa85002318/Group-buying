@@ -52,6 +52,7 @@ export function FeaturedCoursesSection({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const manualKey = manualIds.join(",");
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +78,7 @@ export function FeaturedCoursesSection({
     return () => {
       cancelled = true;
     };
-  }, [limit, manualIds.join(","), tick]);
+  }, [limit, manualKey, manualIds, tick]);
 
   return (
     <section className="space-y-3" aria-label={title}>

@@ -141,6 +141,14 @@ WHERE block_key IN (
   'monthly_challenge', 'seasonal_themes', 'store_information', 'latest_articles'
 );
 
+-- Hide any other legacy keys not in the primary architecture
+UPDATE homepage_blocks SET is_visible = false
+WHERE block_key NOT IN (
+  'hero','hot_searches','latest_recipes','recipe_kits','popular_categories',
+  'popular_baking_products','featured_courses','closing_group_buys',
+  'latest_videos','trust_services'
+);
+
 -- ---------------------------------------------------------------------------
 -- Branding site_settings
 -- ---------------------------------------------------------------------------
