@@ -46,6 +46,20 @@ const IMAGE_SPEC = `Hero 背景圖固定為 16:9。
 格式：WebP、JPG、PNG（桌機 ≤ 700KB，手機 ≤ 450KB）
 圖片左側請預留主標題空間，底部預留搜尋欄區域。`;
 
+function normalizeHeroForEdit(h: HeroRow & { brand_hero_tags?: Array<Record<string, unknown>> }): HeroRow {
+  const rawTags = h.tags ?? h.brand_hero_tags ?? [];
+  const tags: Tag[] = (rawTags as Array<Record<string, unknown>>).map((t) => ({
+    id: String(t.id ?? `tag-${Date.now()}`),
+    label: String(t.label ?? ""),
+    keyword: String(t.keyword ?? t.label ?? ""),
+    linkType: t.link_type === "url" || t.linkType === "url" ? "url" : "search",
+    targetUrl: t.target_url ? String(t.target_url) : t.targetUrl ? String(t.targetUrl) : null,
+    sortOrder: Number(t.sort_order ?? t.sortOrder ?? 0),
+    enabled: t.enabled !== false,
+  }));
+  return { ...h, tags };
+}
+
 function newTag(): Tag {
   return {
     id: `tag-${Date.now()}`,
@@ -378,7 +392,7 @@ export default function AdminBrandHeroesPage() {
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error ?? "儲存失敗");
-      setMessage(publish ? "已發布" : "已儲存草稿");
+      setMessage(publish ? "已發布，前台將立即更新" : "已儲存草稿（需按「立即發布」前台才會更新）");
       setEditing(null);
       load();
     } catch (e) {
@@ -435,7 +449,7 @@ export default function AdminBrandHeroesPage() {
                 >
                   {h.status}
                 </span>
-                <Button size="sm" variant="outline" onClick={() => setEditing(h)}>
+                <Button size="sm" variant="outline" onClick={() => setEditing(normalizeHeroForEdit(h))}>
                   編輯
                 </Button>
               </div>

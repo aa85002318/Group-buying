@@ -29,7 +29,9 @@ export function BrandHero({
     }
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/brand-system/heroes/${encodeURIComponent(heroKey)}`)
+    fetch(`/api/brand-system/heroes/${encodeURIComponent(heroKey)}`, {
+      cache: "no-store",
+    })
       .then(async (r) => {
         const d = await r.json();
         if (cancelled) return;

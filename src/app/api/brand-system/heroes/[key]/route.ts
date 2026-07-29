@@ -4,6 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveBrandHeroFallback } from "@/lib/brand-system/hero-defaults";
 import type { BrandHeroData, BrandHeroTag } from "@/components/brand/hero/types";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function isLive(row: {
   enabled: boolean;
   status: string;
@@ -25,7 +28,10 @@ export async function GET(
   const fallback = resolveBrandHeroFallback(key);
 
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ hero: fallback, source: "fallback" });
+    return NextResponse.json(
+      { hero: fallback, source: "fallback" },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
   }
 
   try {
@@ -37,7 +43,10 @@ export async function GET(
       .maybeSingle();
 
     if (error || !row || !isLive(row)) {
-      return NextResponse.json({ hero: fallback, source: "fallback" });
+      return NextResponse.json(
+        { hero: fallback, source: "fallback" },
+        { headers: { "Cache-Control": "no-store, max-age=0" } }
+      );
     }
 
     const { data: tags } = await admin
@@ -75,8 +84,14 @@ export async function GET(
       ),
     };
 
-    return NextResponse.json({ hero, source: "cms" });
+    return NextResponse.json(
+      { hero, source: "cms" },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
   } catch {
-    return NextResponse.json({ hero: fallback, source: "fallback" });
+    return NextResponse.json(
+      { hero: fallback, source: "fallback" },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
   }
 }
