@@ -21,11 +21,6 @@ const PLACEMENTS = [
   { value: "member", label: "會員中心" },
 ];
 
-function formatPlacementLabel(value: string | null | undefined) {
-  if (!value || value === "home_hero") return "（舊）首頁 Hero";
-  return PLACEMENTS.find((p) => p.value === value)?.label ?? value;
-}
-
 const emptyForm = {
   title: "",
   subtitle: "",
@@ -38,10 +33,6 @@ const emptyForm = {
   status: "active",
   starts_at: "",
   ends_at: "",
-  background_color: "",
-  text_color: "",
-  text_align: "center",
-  audience: "all",
 };
 
 function toLocalInput(iso: string | null | undefined) {
@@ -122,10 +113,6 @@ function AdminBannersClient() {
       status: b.status ?? (b.is_active ? "active" : "inactive"),
       starts_at: toLocalInput(b.starts_at),
       ends_at: toLocalInput(b.ends_at),
-      background_color: b.background_color ?? "",
-      text_color: b.text_color ?? "",
-      text_align: b.text_align ?? "center",
-      audience: b.audience ?? "all",
     });
     setShowForm(true);
   };
@@ -156,10 +143,6 @@ function AdminBannersClient() {
         is_active: form.status === "active",
         starts_at: form.starts_at ? new Date(form.starts_at).toISOString() : null,
         ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
-        background_color: form.background_color || null,
-        text_color: form.text_color || null,
-        text_align: form.text_align || "center",
-        audience: form.audience || "all",
       };
 
       const res = await fetch("/api/admin/cms", {
@@ -211,7 +194,7 @@ function AdminBannersClient() {
     <div className="space-y-4">
       <AdminPageHeader
         title={placementLabel ? `Banner｜${placementLabel}` : "Banner 管理"}
-        description="管理本週優惠、次要 Banner 等版位。首頁 Hero 已改由「品牌體驗系統 → Brand Hero」管理。"
+        description="管理本週優惠與次要 Banner。首頁 Hero 已改由「品牌體驗系統 → Brand Hero」管理。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Button onClick={openCreate}>新增 Banner</Button>
@@ -256,7 +239,7 @@ function AdminBannersClient() {
             multiple={false}
           />
           <AdminImageUpload
-            label="手機版圖片（建議 750×700 px；未設定則使用桌機圖）"
+            label="手機圖（選填，未設定則使用桌機圖）"
             images={form.mobile_image_url ? [form.mobile_image_url] : []}
             onChange={(images) => setForm({ ...form, mobile_image_url: images[0] ?? "" })}
             uploadFolder="banners"
@@ -267,96 +250,28 @@ function AdminBannersClient() {
             <Input
               placeholder={
                 form.placement === "home_weekly_promo"
-                  ? "Banner 名稱（後台辨識／可作主標）"
+                  ? "管理用名稱（僅後台）"
                   : "標題"
               }
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
+            {form.placement !== "home_weekly_promo" ? (
+              <>
+                <Input placeholder="副標" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
+                <Input placeholder="按鈕文字" value={form.button_text} onChange={(e) => setForm({ ...form, button_text: e.target.value })} />
+              </>
+            ) : null}
             <Input
-              placeholder="主標題／副標（前台可選顯示）"
-              value={form.subtitle}
-              onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
-            />
-            <Input
-              placeholder="按鈕文字"
-              value={form.button_text}
-              onChange={(e) => setForm({ ...form, button_text: e.target.value })}
-            />
-            <Input
-              placeholder="按鈕連結（/shop 或 https://…）"
+              placeholder="連結（/shop 或 https://…，整張 Banner 可點擊）"
               value={form.link_url}
               onChange={(e) => setForm({ ...form, link_url: e.target.value })}
             />
-            <Input
-              placeholder="背景色 #FFF9F5"
-              value={form.background_color}
-              onChange={(e) => setForm({ ...form, background_color: e.target.value })}
-            />
-            <Input
-              placeholder="文字色 #43332B"
-              value={form.text_color}
-              onChange={(e) => setForm({ ...form, text_color: e.target.value })}
-            />
-            <select
-              className="input-field"
-              value={form.text_align}
-              onChange={(e) => setForm({ ...form, text_align: e.target.value })}
-            >
-              <option value="left">文字靠左</option>
-              <option value="center">文字置中</option>
-              <option value="right">文字靠右</option>
+            <select className="input-field" value={form.placement} onChange={(e) => setForm({ ...form, placement: e.target.value })}>
+              {PLACEMENTS.map((p) => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
             </select>
-            <select
-              className="input-field"
-              value={form.audience}
-              onChange={(e) => setForm({ ...form, audience: e.target.value })}
-            >
-              <option value="all">顯示對象：全部</option>
-              <option value="guest">僅未登入</option>
-              <option value="member">僅會員</option>
-            </select>
-            <div className="space-y-1">
-              <select
-                className="input-field w-full"
-                value={
-                  PLACEMENTS.some((p) => p.value === form.placement)
-                    ? form.placement
-                    : "__custom__"
-                }
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (v === "__custom__") {
-                    setForm({
-                      ...form,
-                      placement: placementFilter || form.placement || "home_custom",
-                    });
-                    return;
-                  }
-                  setForm({ ...form, placement: v });
-                }}
-              >
-                {PLACEMENTS.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-                <option value="__custom__">自訂 placement…</option>
-              </select>
-              {!PLACEMENTS.some((p) => p.value === form.placement) ||
-              form.placement === placementFilter ? (
-                <Input
-                  placeholder="自訂 placement（對應首頁 Banner 帶）"
-                  value={form.placement}
-                  onChange={(e) => setForm({ ...form, placement: e.target.value })}
-                />
-              ) : null}
-              {placementFilter && !PLACEMENTS.some((p) => p.value === placementFilter) ? (
-                <p className="text-xs text-muted-foreground">
-                  目前篩選自訂版位：{placementFilter}
-                </p>
-              ) : null}
-            </div>
             <select className="input-field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
               <option value="active">啟用</option>
               <option value="draft">草稿</option>
@@ -379,7 +294,7 @@ function AdminBannersClient() {
           {
             key: "placement",
             header: "版位",
-            render: (b) => formatPlacementLabel(b.placement),
+            render: (b) => PLACEMENTS.find((p) => p.value === b.placement)?.label ?? b.placement ?? "—",
           },
           {
             key: "status",
