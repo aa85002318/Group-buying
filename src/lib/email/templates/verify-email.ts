@@ -14,7 +14,7 @@ export function buildVerifyEmail(data: VerifyEmailData): { subject: string; html
       感謝您註冊 <strong>${BRAND_NAME}</strong>（${data.recipientEmail}）。
       請點擊下方按鈕完成 Email 驗證，驗證成功後即可登入購物與下單。
     </p>
-    ${emailButton("驗證 Email", data.confirmationUrl)}
+    ${emailButton(data.confirmationUrl, "驗證 Email")}
     <p style="font-size:13px;color:#888888;margin-top:24px;">若按鈕無法點擊，請複製以下連結至瀏覽器：</p>
     <p style="font-size:12px;word-break:break-all;color:#aaaaaa;">${data.confirmationUrl}</p>
   `;

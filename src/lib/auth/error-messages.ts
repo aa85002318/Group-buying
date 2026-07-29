@@ -33,7 +33,11 @@ export function getAuthErrorMessage(
     const name = typeof maybe.name === "string" ? maybe.name : "";
     const status = typeof maybe.status === "number" ? maybe.status : 0;
     if (name === "AuthRetryableFetchError" || status >= 500) {
-      return "註冊失敗：Supabase Auth 服務暫時錯誤。請到 Supabase 關閉錯誤的自訂 SMTP，或改為正確的 Resend SMTP 設定後再試。";
+      return context === "login"
+        ? "登入暫時失敗：Supabase Auth 服務異常。請稍後再試；若持續發生，請聯絡客服。"
+        : context === "resend"
+          ? "寄送暫時失敗：Supabase Auth 服務異常。請稍後再試。"
+          : "註冊暫時失敗：Supabase Auth 服務異常。請稍後再試；若持續發生，請到 Authentication → Logs 查看錯誤。";
     }
   }
 

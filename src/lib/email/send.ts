@@ -1,5 +1,3 @@
-import { BRAND_NAME } from "@/lib/env";
-
 export interface SendEmailInput {
   to: string;
   subject: string;
@@ -12,8 +10,25 @@ export interface SendEmailInput {
   replyTo?: string;
 }
 
+/** Resend rejects non-ASCII in the From header display name. */
+function asciiSafeEmailFrom(raw: string): string {
+  const trimmed = raw.trim();
+  const match = trimmed.match(/^(.*)<([^>]+)>\s*$/);
+  if (!match) {
+    return trimmed.replace(/[^\x20-\x7E]/g, "").trim() || "noreply@chimeidiy.com";
+  }
+  const display = match[1]
+    .replace(/[^\x20-\x7E]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const address = match[2].trim();
+  return display ? `${display} <${address}>` : address;
+}
+
 function getEmailFrom(): string {
-  return process.env.EMAIL_FROM?.trim() || `${BRAND_NAME} <noreply@chimeidiy.com>`;
+  const configured = process.env.EMAIL_FROM?.trim();
+  const fallback = `CHIMEIDIY <noreply@chimeidiy.com>`;
+  return asciiSafeEmailFrom(configured || fallback);
 }
 
 /** Prefer same-domain reply-to to avoid spam filters (cross-domain reply-to hurts deliverability). */
