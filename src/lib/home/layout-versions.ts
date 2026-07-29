@@ -63,7 +63,7 @@ export async function loadLiveBlocks(): Promise<HomepageBlock[]> {
 
 export async function ensureDraft(updatedBy?: string | null): Promise<LayoutVersionMeta> {
   const existing = await readSetting<LayoutVersionMeta>(DRAFT_KEY);
-  if (existing?.blocks_snapshot?.length) return existing;
+  if (existing && Array.isArray(existing.blocks_snapshot)) return existing;
 
   const live = await loadLiveBlocks();
   const history = (await readSetting<LayoutVersionMeta[]>(HISTORY_KEY)) ?? [];
@@ -124,10 +124,59 @@ export async function patchDraftBlock(
 async function applyBlocksToLive(blocks: HomepageBlock[]) {
   if (!isSupabaseConfigured()) return;
   const admin = createAdminClient();
-  for (const block of blocks) {
-    const { id, ...rest } = block;
-    await admin.from("homepage_blocks").update(rest).eq("id", id);
+  const live = await loadLiveBlocks();
+  const draftIds = new Set(blocks.map((b) => b.id));
+
+  // Delete orphans removed from draft
+  const orphanIds = live.filter((b) => !draftIds.has(b.id)).map((b) => b.id);
+  if (orphanIds.length) {
+    await admin.from("homepage_blocks").delete().in("id", orphanIds);
   }
+
+  // Upsert each draft block by id
+  for (const block of blocks) {
+    const row = {
+      id: block.id,
+      block_key: block.block_key,
+      title: block.title,
+      subtitle: block.subtitle ?? null,
+      is_visible: block.is_visible !== false,
+      sort_order: block.sort_order ?? 0,
+      display_count: block.display_count ?? null,
+      source_mode: block.source_mode ?? "auto",
+      data_source: block.data_source ?? null,
+      view_all_url: block.view_all_url ?? null,
+      manual_ids: Array.isArray(block.manual_ids) ? block.manual_ids : [],
+      config: block.config ?? {},
+      instance_label: block.instance_label ?? null,
+      updated_at: nowIso(),
+    };
+    const { error } = await admin.from("homepage_blocks").upsert(row, { onConflict: "id" });
+    if (error) throw new Error(error.message);
+  }
+}
+
+export async function addDraftBlock(
+  block: HomepageBlock,
+  updatedBy?: string | null
+): Promise<LayoutVersionMeta> {
+  const draft = await ensureDraft(updatedBy);
+  if (draft.blocks_snapshot.some((b) => b.id === block.id)) {
+    throw new Error("區塊已存在");
+  }
+  return saveDraft([...draft.blocks_snapshot, block], { updatedBy });
+}
+
+export async function removeDraftBlock(
+  blockId: string,
+  updatedBy?: string | null
+): Promise<LayoutVersionMeta> {
+  const draft = await ensureDraft(updatedBy);
+  const next = draft.blocks_snapshot.filter((b) => b.id !== blockId);
+  if (next.length === draft.blocks_snapshot.length) {
+    throw new Error("找不到此區塊");
+  }
+  return saveDraft(next, { updatedBy });
 }
 
 export async function publishDraft(opts?: {

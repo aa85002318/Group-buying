@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   HOME_ADMIN_SECTIONS,
-  findBlock,
+  getSectionMeta,
   parseBrandHeadline,
   parseBrandStatementTags,
   parsePopularCategories,
@@ -27,6 +27,11 @@ import {
   parseHotSearchKeywords,
   type HotSearchKeyword,
 } from "@/lib/home/hot-search";
+import {
+  isHomeSectionKey,
+  isSingletonHomeSection,
+  type HomeSectionKey,
+} from "@/lib/home/section-keys";
 import type { HomepageBlock } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 import { HomeLayoutPublishBar } from "@/components/admin/HomeLayoutPublishBar";
@@ -62,6 +67,8 @@ export default function AdminHomeHubPage() {
   >([]);
   const [pageForm, setPageForm] = useState({ slug: "", title: "", content: "" });
   const [pageSaving, setPageSaving] = useState(false);
+  const [showCatalog, setShowCatalog] = useState(false);
+  const [catalogBusy, setCatalogBusy] = useState(false);
 
   useEffect(() => {
     const section = new URLSearchParams(window.location.search).get("section");
@@ -164,16 +171,74 @@ export default function AdminHomeHubPage() {
   };
 
   const moveSection = async (block: HomepageBlock, dir: -1 | 1) => {
-    const ordered = HOME_ADMIN_SECTIONS.map((s) => findBlock(blocks, s.id)).filter(
-      Boolean
-    ) as HomepageBlock[];
+    const ordered = [...blocks].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
     const idx = ordered.findIndex((b) => b.id === block.id);
     const swap = ordered[idx + dir];
     if (!swap) return;
-    // Sequential — draft patches must not race
     await patch(block.id, { sort_order: swap.sort_order });
     await patch(swap.id, { sort_order: block.sort_order });
   };
+
+  const addBlock = async (blockKey: HomeSectionKey) => {
+    setCatalogBusy(true);
+    try {
+      const res = await fetch("/api/admin/home/layout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add_block",
+          block_key: blockKey,
+          instance_label:
+            blockKey === "product_series"
+              ? "新系列"
+              : blockKey === "banner_strip"
+                ? "新 Banner 帶"
+                : undefined,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "加入失敗");
+      setShowCatalog(false);
+      setExpanded(d.block?.id ?? null);
+      await load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "加入失敗");
+    } finally {
+      setCatalogBusy(false);
+    }
+  };
+
+  const removeBlock = async (block: HomepageBlock) => {
+    const meta = getSectionMeta(block.block_key);
+    if (
+      !confirm(
+        `確定從草稿移除「${block.instance_label || block.title || meta?.label || block.block_key}」？發布後線上也會刪除。`
+      )
+    ) {
+      return;
+    }
+    setSavingId(block.id);
+    try {
+      const res = await fetch("/api/admin/home/layout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "remove_block", block_id: block.id }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "刪除失敗");
+      await load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "刪除失敗");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const orderedBlocks = [...blocks].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+  );
+
+  const catalogItems = HOME_ADMIN_SECTIONS.filter((s) => s.catalog !== false);
 
   const filterProductsForScope = useCallback(
     (scope: string | undefined) => {
@@ -297,12 +362,63 @@ export default function AdminHomeHubPage() {
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 className="text-base font-bold text-coffee">首頁區塊（草稿）</h2>
-            <p className="text-xs text-muted-foreground">儲存僅更新草稿，需按上方「發布」才會上線。</p>
+            <p className="text-xs text-muted-foreground">
+              可新增多列「系列商品曝光」「Banner 帶」。儲存僅更新草稿，需按上方「發布」才會上線。
+            </p>
           </div>
-          <Link href="/admin/home/preview" className={buttonVariants({ size: "sm", variant: "outline" })}>
-            預覽草稿
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => setShowCatalog(true)}>
+              <Plus className="mr-1 h-4 w-4" />
+              加入區塊
+            </Button>
+            <Link
+              href="/admin/home/preview"
+              className={buttonVariants({ size: "sm", variant: "outline" })}
+            >
+              預覽草稿
+            </Link>
+          </div>
         </div>
+
+        {showCatalog ? (
+          <div className="rounded-xl border border-border bg-white p-4 shadow-card">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="font-semibold text-coffee">區塊庫</p>
+              <Button size="sm" variant="ghost" onClick={() => setShowCatalog(false)}>
+                關閉
+              </Button>
+            </div>
+            <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {catalogItems.map((item) => {
+                const singleton = isSingletonHomeSection(item.id);
+                const exists = blocks.some((b) => b.block_key === item.id);
+                const disabled = catalogBusy || (singleton && exists);
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => void addBlock(item.id)}
+                      className={cn(
+                        "w-full rounded-xl border border-border-soft p-3 text-left transition hover:bg-surface-soft",
+                        disabled && "cursor-not-allowed opacity-40"
+                      )}
+                    >
+                      <p className="text-sm font-semibold text-coffee">{item.label}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>
+                      {singleton ? (
+                        <p className="mt-1 text-[11px] font-medium text-caramel">最多一個</p>
+                      ) : (
+                        <p className="mt-1 text-[11px] font-medium text-success">可重複加入</p>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
+
         {loading ? (
           <p className="text-sm text-muted-foreground">載入中…</p>
         ) : error ? (
@@ -314,23 +430,41 @@ export default function AdminHomeHubPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {HOME_ADMIN_SECTIONS.map((section, index) => {
-              const block = findBlock(blocks, section.id);
-              const open = expanded === section.id;
+            {orderedBlocks.map((block, index) => {
+              const section =
+                getSectionMeta(block.block_key) ??
+                ({
+                  id: (isHomeSectionKey(block.block_key)
+                    ? block.block_key
+                    : "popular_baking_products") as HomeSectionKey,
+                  label: block.title || block.block_key,
+                  description: block.block_key,
+                  contentMode: "manual" as const,
+                } satisfies HomeAdminSectionMeta);
+              const open = expanded === block.id || expanded === block.block_key;
+              const pickerScope =
+                section.hasProductSeriesSettings
+                  ? String(block.config?.product_scope ?? "baking")
+                  : section.productScope;
               const pickerProducts = section.hasProductPicker
-                ? filterProductsForScope(section.productScope)
+                ? filterProductsForScope(
+                    pickerScope === "chime_select" || pickerScope === "baking"
+                      ? pickerScope
+                      : undefined
+                  )
                 : [];
               return (
                 <SectionCard
-                  key={section.id}
+                  key={block.id}
                   section={section}
                   block={block}
                   index={index}
                   open={open}
-                  saving={savingId === block?.id}
-                  onToggle={() => setExpanded(open ? null : section.id)}
+                  saving={savingId === block.id}
+                  onToggle={() => setExpanded(open ? null : block.id)}
                   onPatch={patch}
                   onMove={moveSection}
+                  onRemove={removeBlock}
                   products={pickerProducts}
                   productSearch={productSearch}
                   onProductSearch={setProductSearch}
@@ -338,6 +472,11 @@ export default function AdminHomeHubPage() {
                 />
               );
             })}
+            {!loading && orderedBlocks.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+                草稿尚無區塊。請按「加入區塊」從區塊庫新增。
+              </p>
+            ) : null}
           </div>
         )}
       </section>
@@ -411,6 +550,7 @@ function SectionCard({
   onToggle,
   onPatch,
   onMove,
+  onRemove,
   products,
   productSearch,
   onProductSearch,
@@ -424,6 +564,7 @@ function SectionCard({
   onToggle: () => void;
   onPatch: (id: string, updates: Record<string, unknown>) => Promise<void>;
   onMove: (block: HomepageBlock, dir: -1 | 1) => Promise<void>;
+  onRemove: (block: HomepageBlock) => Promise<void>;
   products: ProductOption[];
   productSearch: string;
   onProductSearch: (v: string) => void;
@@ -445,6 +586,11 @@ function SectionCard({
   const [aiTargetPath, setAiTargetPath] = useState("/ai");
   const [newDays, setNewDays] = useState("7");
   const [manualIds, setManualIds] = useState<string[]>([]);
+  const [instanceLabel, setInstanceLabel] = useState(block?.instance_label ?? "");
+  const [seriesScope, setSeriesScope] = useState("baking");
+  const [seriesCategoryId, setSeriesCategoryId] = useState("");
+  const [seriesBadge, setSeriesBadge] = useState("");
+  const [bannerPlacement, setBannerPlacement] = useState("home_custom");
 
   useEffect(() => {
     setTitle(block?.title ?? section.label);
@@ -453,6 +599,7 @@ function SectionCard({
     setViewAllUrl(block?.view_all_url ?? "");
     setDataSource(block?.data_source ?? "");
     setSourceMode(block?.source_mode === "manual" ? "manual" : "auto");
+    setInstanceLabel(block?.instance_label ?? "");
     if (section.hasKeywords) {
       const kws = parseHotSearchKeywords(block?.config ?? null);
       setKeywordText(keywordsToLines(kws));
@@ -476,12 +623,22 @@ function SectionCard({
     if (section.hasProductPicker) {
       setManualIds(Array.isArray(block?.manual_ids) ? block!.manual_ids! : []);
     }
+    if (section.hasProductSeriesSettings) {
+      const cfg = block?.config ?? {};
+      setSeriesScope(String(cfg.product_scope ?? "baking"));
+      setSeriesCategoryId(String(cfg.category_id ?? ""));
+      setSeriesBadge(String(cfg.badge ?? ""));
+    }
+    if (section.hasBannerPlacement) {
+      const cfg = block?.config ?? {};
+      setBannerPlacement(String(cfg.placement ?? "home_custom"));
+    }
   }, [block, section]);
 
   if (!block) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-surface-soft p-4 text-sm text-muted-foreground">
-        {section.label}（區塊尚未建立，請套用 migration）
+        {section.label}（區塊尚未建立，請從區塊庫加入）
       </div>
     );
   }
@@ -494,6 +651,7 @@ function SectionCard({
       view_all_url: viewAllUrl.trim() || null,
       data_source: dataSource.trim() || null,
       source_mode: sourceMode,
+      instance_label: instanceLabel.trim() || null,
     });
   };
 
@@ -550,13 +708,18 @@ function SectionCard({
     });
   };
 
-  const scopeFilteredAll = section.productScope
-    ? allProducts.filter((p) => (p.product_scope ?? "baking") === section.productScope)
-    : allProducts;
+  const scopeFilteredAll = section.hasProductSeriesSettings
+    ? allProducts.filter((p) => (p.product_scope ?? "baking") === seriesScope)
+    : section.productScope
+      ? allProducts.filter((p) => (p.product_scope ?? "baking") === section.productScope)
+      : allProducts;
 
   const selectedProducts = manualIds
-    .map((id) => scopeFilteredAll.find((p) => p.id === id))
+    .map((id) => scopeFilteredAll.find((p) => p.id === id) ?? allProducts.find((p) => p.id === id))
     .filter(Boolean) as ProductOption[];
+
+  const displayName =
+    instanceLabel.trim() || title.trim() || section.label;
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-white shadow-card">
@@ -565,8 +728,11 @@ function SectionCard({
           {index + 1}
         </span>
         <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
-          <p className="font-semibold text-coffee">{section.label}</p>
-          <p className="text-xs text-muted-foreground">{section.description}</p>
+          <p className="font-semibold text-coffee">{displayName}</p>
+          <p className="text-xs text-muted-foreground">
+            {section.label}
+            {block.instance_label ? ` · ${block.block_key}` : ` · ${section.description}`}
+          </p>
         </button>
         <span
           className={cn(
@@ -593,6 +759,15 @@ function SectionCard({
         <Button size="sm" variant="outline" onClick={onToggle}>
           {open ? "收合" : "設定"}
         </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={saving}
+          onClick={() => void onRemove(block)}
+          aria-label="刪除區塊"
+        >
+          <Trash2 className="h-4 w-4 text-danger" />
+        </Button>
       </div>
 
       {open ? (
@@ -601,6 +776,15 @@ function SectionCard({
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">區塊標題</label>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} onBlur={saveBasics} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">後台別名</label>
+              <Input
+                value={instanceLabel}
+                onChange={(e) => setInstanceLabel(e.target.value)}
+                onBlur={saveBasics}
+                placeholder="例如：端午麵粉系列"
+              />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">副標</label>
@@ -624,6 +808,99 @@ function SectionCard({
               </div>
             ) : null}
           </div>
+
+          {section.hasBannerPlacement ? (
+            <div className="space-y-2 rounded-xl border border-border bg-white p-3">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Banner placement（對應 Banner 管理版位）
+              </label>
+              <Input
+                value={bannerPlacement}
+                onChange={(e) => setBannerPlacement(e.target.value)}
+                placeholder="home_strip_xxx"
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  disabled={saving}
+                  onClick={() =>
+                    onPatch(block.id, {
+                      config: { ...(block.config ?? {}), placement: bannerPlacement.trim() },
+                      data_source: "banners",
+                    })
+                  }
+                >
+                  儲存 placement
+                </Button>
+                {bannerPlacement.trim() ? (
+                  <Link
+                    href={`/admin/home/banners?placement=${encodeURIComponent(bannerPlacement.trim())}`}
+                    className={buttonVariants({ size: "sm", variant: "outline" })}
+                  >
+                    管理此版位 Banner
+                    <ExternalLink className="ml-1 h-3.5 w-3.5" />
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {section.hasProductSeriesSettings ? (
+            <div className="space-y-2 rounded-xl border border-border bg-white p-3">
+              <p className="text-xs font-medium text-muted-foreground">系列商品曝光設定</p>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">商品範圍</label>
+                  <select
+                    className="input-field w-full"
+                    value={seriesScope}
+                    onChange={(e) => setSeriesScope(e.target.value)}
+                  >
+                    <option value="baking">烘焙材料</option>
+                    <option value="chime_select">CHIME 精選</option>
+                    <option value="all">全部</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">分類 ID（選填）</label>
+                  <Input
+                    value={seriesCategoryId}
+                    onChange={(e) => setSeriesCategoryId(e.target.value)}
+                    placeholder="product_categories.id"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">角標</label>
+                  <select
+                    className="input-field w-full"
+                    value={seriesBadge}
+                    onChange={(e) => setSeriesBadge(e.target.value)}
+                  >
+                    <option value="">無</option>
+                    <option value="hot">熱賣</option>
+                    <option value="new">新品</option>
+                  </select>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                disabled={saving}
+                onClick={() =>
+                  onPatch(block.id, {
+                    config: {
+                      ...(block.config ?? {}),
+                      product_scope: seriesScope === "all" ? null : seriesScope,
+                      category_id: seriesCategoryId.trim() || null,
+                      badge: seriesBadge || null,
+                    },
+                    source_mode: sourceMode,
+                  })
+                }
+              >
+                儲存系列設定
+              </Button>
+            </div>
+          ) : null}
 
           {(section.hasViewAllUrl || section.hasDataSource) && (
             <div className="grid gap-2 sm:grid-cols-3">

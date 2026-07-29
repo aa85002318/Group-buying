@@ -22,6 +22,11 @@ const PLACEMENTS = [
   { value: "member", label: "會員中心" },
 ];
 
+function formatPlacementLabel(value: string | null | undefined) {
+  if (!value) return "首頁 Hero";
+  return PLACEMENTS.find((p) => p.value === value)?.label ?? value;
+}
+
 const emptyForm = {
   title: "",
   subtitle: "",
@@ -309,11 +314,47 @@ function AdminBannersClient() {
               <option value="guest">僅未登入</option>
               <option value="member">僅會員</option>
             </select>
-            <select className="input-field" value={form.placement} onChange={(e) => setForm({ ...form, placement: e.target.value })}>
-              {PLACEMENTS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
+            <div className="space-y-1">
+              <select
+                className="input-field w-full"
+                value={
+                  PLACEMENTS.some((p) => p.value === form.placement)
+                    ? form.placement
+                    : "__custom__"
+                }
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "__custom__") {
+                    setForm({
+                      ...form,
+                      placement: placementFilter || form.placement || "home_custom",
+                    });
+                    return;
+                  }
+                  setForm({ ...form, placement: v });
+                }}
+              >
+                {PLACEMENTS.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+                <option value="__custom__">自訂 placement…</option>
+              </select>
+              {!PLACEMENTS.some((p) => p.value === form.placement) ||
+              form.placement === placementFilter ? (
+                <Input
+                  placeholder="自訂 placement（對應首頁 Banner 帶）"
+                  value={form.placement}
+                  onChange={(e) => setForm({ ...form, placement: e.target.value })}
+                />
+              ) : null}
+              {placementFilter && !PLACEMENTS.some((p) => p.value === placementFilter) ? (
+                <p className="text-xs text-muted-foreground">
+                  目前篩選自訂版位：{placementFilter}
+                </p>
+              ) : null}
+            </div>
             <select className="input-field" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
               <option value="active">啟用</option>
               <option value="draft">草稿</option>
@@ -336,7 +377,7 @@ function AdminBannersClient() {
           {
             key: "placement",
             header: "版位",
-            render: (b) => PLACEMENTS.find((p) => p.value === b.placement)?.label ?? b.placement ?? "首頁 Hero",
+            render: (b) => formatPlacementLabel(b.placement),
           },
           {
             key: "status",

@@ -145,12 +145,13 @@ type HomeDataCtx = {
 
 function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNode {
   const { key } = block;
+  const reactKey = block.id;
   switch (key) {
     case "hot_searches": {
       const keywords = resolveHotSearchKeywords(block.config);
       return (
         <HotSearchChips
-          key={key}
+          key={reactKey}
           title={block.title || "熱門搜尋"}
           keywords={keywords}
           loading={ctx.cmsLoading}
@@ -158,11 +159,11 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       );
     }
     case "hero":
-      return <HomeHero key={key} />;
+      return <HomeHero key={reactKey} />;
     case "brand_statement":
-      return <BrandStatementSection key={key} config={block.config} />;
+      return <BrandStatementSection key={reactKey} config={block.config} />;
     case "quick_menu":
-      return <HomeQuickMenuCarousel key={key} />;
+      return <HomeQuickMenuCarousel key={reactKey} />;
     case "ai_assistant": {
       const placeholder =
         typeof block.config?.placeholder === "string"
@@ -174,7 +175,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
           : block.viewAllUrl || "/ai";
       return (
         <AiAssistantSection
-          key={key}
+          key={reactKey}
           title={block.title}
           subtitle={block.subtitle || "今天想做什麼？"}
           placeholder={placeholder}
@@ -187,7 +188,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "baking_inspiration":
       return (
         <BakingInspirationSection
-          key={key}
+          key={reactKey}
           title={block.title}
           subtitle={block.subtitle}
           viewAllHref={block.viewAllUrl || undefined}
@@ -198,7 +199,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       const fromCms = parsePopularCategories(block.config);
       return (
         <PopularCategories
-          key={key}
+          key={reactKey}
           items={
             fromCms.length > 0
               ? fromCms.map((c) => ({
@@ -227,7 +228,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       const difficultyLabel = (d?: string | null) =>
         d === "easy" ? "簡單" : d === "hard" ? "進階" : d === "medium" ? "中等" : null;
       return (
-        <section key={key} className="space-y-3">
+        <section key={reactKey} className="space-y-3">
           <SectionHeader
             title={block.title || "本週熱門食譜"}
             href={block.viewAllUrl || "/recipes"}
@@ -292,7 +293,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "recipe_kits":
       return (
         <RecipeKitsSection
-          key={key}
+          key={reactKey}
           title={block.title || "一鍵購買材料"}
           subtitle={block.subtitle}
           viewAllHref={block.viewAllUrl || "/recipes"}
@@ -302,7 +303,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "featured_courses":
       return (
         <FeaturedCoursesSection
-          key={key}
+          key={reactKey}
           title={block.title || "最新課程"}
           subtitle={block.subtitle}
           viewAllHref={block.viewAllUrl || "/courses"}
@@ -313,7 +314,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "trust_services":
       return (
         <TrustServicesSection
-          key={key}
+          key={reactKey}
           title={block.title || "安心服務"}
           subtitle={block.subtitle}
           items={parseTrustServices(block.config)}
@@ -337,7 +338,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       });
       return (
         <HorizontalProductRail
-          key={key}
+          key={reactKey}
           title={block.title || "本週新品推薦"}
           href={block.viewAllUrl || "/products?sort=newest"}
           products={products}
@@ -361,7 +362,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       });
       return (
         <HorizontalProductRail
-          key={key}
+          key={reactKey}
           title={block.title || "本週熱賣商品"}
           href={block.viewAllUrl || "/baking-materials"}
           products={products}
@@ -372,10 +373,48 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
         />
       );
     }
+    case "product_series": {
+      const scopeRaw = String(block.config?.product_scope ?? "baking");
+      const scope =
+        scopeRaw === "chime_select" || scopeRaw === "baking" ? scopeRaw : undefined;
+      let pool = scope ? filterProductsByScope(ctx.products, scope) : ctx.products;
+      const categoryId = String(block.config?.category_id ?? "").trim();
+      if (categoryId) {
+        pool = pool.filter(
+          (p) =>
+            p.category_id === categoryId ||
+            (p as { primary_category_id?: string | null }).primary_category_id === categoryId
+        );
+      }
+      const badgeRaw = String(block.config?.badge ?? "");
+      const badge =
+        badgeRaw === "new" || badgeRaw === "hot" ? (badgeRaw as "new" | "hot") : undefined;
+      const mode =
+        block.manualIds.length > 0 || block.sourceMode === "manual" ? "manual" : "auto";
+      const products = pickHomeProducts({
+        products: pool,
+        manualIds: block.manualIds,
+        autoList: pool,
+        mode: mode === "manual" && block.manualIds.length === 0 ? "auto" : mode,
+        limit: block.displayCount,
+      });
+      return (
+        <HorizontalProductRail
+          key={reactKey}
+          title={block.title || "系列商品曝光"}
+          href={block.viewAllUrl || "/baking-materials"}
+          products={products}
+          badge={badge}
+          loading={ctx.productsLoading}
+          error={ctx.productsError}
+          onRetry={ctx.reloadProducts}
+        />
+      );
+    }
     case "chime_select":
       return (
         <ChimeSelectSection
-          key={key}
+          key={reactKey}
           title={block.title}
           subtitle={block.subtitle || "每天發現值得買的生活好物"}
           viewAllHref={block.viewAllUrl || "/shop?scope=chime_select"}
@@ -387,7 +426,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "weekly_live_streams":
       return (
         <WeeklyLiveStreamsSection
-          key={key}
+          key={reactKey}
           title={block.title}
           viewAllHref={block.viewAllUrl || "/live"}
           limit={block.displayCount}
@@ -401,7 +440,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
         .slice(0, block.displayCount);
       return (
         <GroupBuyClosingSection
-          key={key}
+          key={reactKey}
           title={block.title || "團購優惠"}
           events={closing}
           loading={ctx.eventsLoading}
@@ -413,15 +452,27 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "weekly_promotions":
       return (
         <PromoBannerStrip
-          key={key}
+          key={reactKey}
           title={block.title || "本週優惠"}
           limit={block.displayCount}
+          placement="home_weekly_promo"
         />
       );
+    case "banner_strip": {
+      const placement = String(block.config?.placement ?? "").trim() || "home_weekly_promo";
+      return (
+        <PromoBannerStrip
+          key={reactKey}
+          title={block.title || "Banner 帶"}
+          limit={block.displayCount}
+          placement={placement}
+        />
+      );
+    }
     case "monthly_challenge":
       return (
         <MonthlyChallengeSection
-          key={key}
+          key={reactKey}
           title={block.title}
           viewAllHref={block.viewAllUrl || "/challenges"}
           limit={block.displayCount}
@@ -430,7 +481,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "seasonal_themes":
       return (
         <SeasonalThemesSection
-          key={key}
+          key={reactKey}
           title={block.title}
           viewAllHref={block.viewAllUrl || "/themes"}
           limit={block.displayCount}
@@ -439,7 +490,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "latest_videos": {
       const videos = ctx.videos.slice(0, block.displayCount);
       return (
-        <section key={key} className="space-y-3">
+        <section key={reactKey} className="space-y-3">
           <SectionHeader
             title={block.title || "最新影音"}
             href={block.viewAllUrl || "/videos"}
@@ -513,7 +564,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
             : null;
       return (
         <StoreInformationSection
-          key={key}
+          key={reactKey}
           title={block.title}
           viewAllHref={block.viewAllUrl || "/stores"}
           storeId={storeId}
@@ -529,7 +580,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       });
       const articles = list.slice(0, block.displayCount);
       return (
-        <section key={key} className="space-y-3">
+        <section key={reactKey} className="space-y-3">
           <SectionHeader
             title={block.title || "最新資訊"}
             href={block.viewAllUrl || "/articles"}

@@ -32,26 +32,33 @@ type PromoItem = {
   image: string | null;
 };
 
-/** 本週優惠 — 優先使用 cms_banners placement=home_weekly_promo */
+/** Banner strip — fetch cms_banners by placement */
 export function PromoBannerStrip({
   className,
   title = "本週優惠",
   limit = 4,
+  placement = "home_weekly_promo",
 }: {
   className?: string;
   title?: string;
   limit?: number;
+  placement?: string;
 }) {
   const [items, setItems] = useState<PromoItem[]>(FALLBACK_PROMOS);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/cms?placement=home_weekly_promo")
+    const q = encodeURIComponent(placement || "home_weekly_promo");
+    fetch(`/api/cms?placement=${q}`)
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
         const banners = (d.banners ?? []) as CmsBanner[];
-        if (!banners.length) return;
+        if (!banners.length) {
+          // Only show fallback for the classic weekly promo placement
+          if (placement !== "home_weekly_promo") setItems([]);
+          return;
+        }
         setItems(
           banners.slice(0, limit).map((b) => ({
             id: b.id,
@@ -66,7 +73,9 @@ export function PromoBannerStrip({
     return () => {
       cancelled = true;
     };
-  }, [limit]);
+  }, [limit, placement]);
+
+  if (!items.length) return null;
 
   return (
     <section aria-label={title} className={cn("space-y-3", className)}>

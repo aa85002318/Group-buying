@@ -242,6 +242,8 @@ export interface HomepageBlock {
   view_all_url?: string | null;
   manual_ids?: string[];
   config?: Record<string, unknown>;
+  /** Admin-facing label to distinguish repeated instances */
+  instance_label?: string | null;
   updated_at: string;
 }
 

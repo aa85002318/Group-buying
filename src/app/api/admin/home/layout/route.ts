@@ -151,6 +151,76 @@ export async function POST(request: Request) {
       return NextResponse.json({ draft });
     }
 
+    if (action === "add_block") {
+      const blockKey = String(body.block_key ?? "").trim();
+      const { isHomeSectionKey, isSingletonHomeSection } = await import(
+        "@/lib/home/section-keys"
+      );
+      if (!isHomeSectionKey(blockKey)) {
+        return NextResponse.json({ error: "未知區塊類型" }, { status: 400 });
+      }
+      const draft = await getDraft();
+      if (
+        isSingletonHomeSection(blockKey) &&
+        draft.blocks_snapshot.some((b) => b.block_key === blockKey)
+      ) {
+        return NextResponse.json(
+          { error: "此區塊類型最多只能有一個" },
+          { status: 400 }
+        );
+      }
+      const { createBlockInstance } = await import("@/lib/home/blocks");
+      const { addDraftBlock } = await import("@/lib/home/layout-versions");
+      const maxSort = Math.max(0, ...draft.blocks_snapshot.map((b) => b.sort_order ?? 0));
+      const label =
+        typeof body.instance_label === "string" ? body.instance_label.trim() : "";
+      const placement =
+        typeof body.placement === "string" ? body.placement.trim() : "";
+      const instance = createBlockInstance(blockKey, {
+        sortOrder: maxSort + 10,
+        instanceLabel: label || null,
+        configOverrides:
+          blockKey === "banner_strip" && placement
+            ? { placement }
+            : blockKey === "banner_strip"
+              ? { placement: `home_strip_${Date.now().toString(36)}` }
+              : undefined,
+      });
+      if (typeof body.title === "string" && body.title.trim()) {
+        instance.title = body.title.trim();
+      }
+      const next = await addDraftBlock(instance, auth!.profile.id);
+      await logAudit(
+        auth!.profile.id,
+        "create",
+        "homepage_layout_draft",
+        instance.id,
+        null,
+        { block_key: blockKey },
+        request as never
+      );
+      return NextResponse.json({ draft: next, block: instance }, { status: 201 });
+    }
+
+    if (action === "remove_block") {
+      const blockId = String(body.block_id ?? "").trim();
+      if (!blockId) {
+        return NextResponse.json({ error: "缺少 block_id" }, { status: 400 });
+      }
+      const { removeDraftBlock } = await import("@/lib/home/layout-versions");
+      const draft = await removeDraftBlock(blockId, auth!.profile.id);
+      await logAudit(
+        auth!.profile.id,
+        "delete",
+        "homepage_layout_draft",
+        blockId,
+        null,
+        null,
+        request as never
+      );
+      return NextResponse.json({ draft });
+    }
+
     return NextResponse.json({ error: "未知 action" }, { status: 400 });
   } catch (e) {
     return NextResponse.json(

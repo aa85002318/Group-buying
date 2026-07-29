@@ -7,35 +7,144 @@ import {
 
 export type HomeBlockKey = HomeSectionKey;
 
-const DEFAULTS: Record<
+export const SECTION_DEFAULTS: Record<
   HomeSectionKey,
-  { title: string; displayCount: number; visible: boolean }
+  {
+    title: string;
+    displayCount: number;
+    visible: boolean;
+    sourceMode?: "auto" | "manual";
+    dataSource?: string | null;
+    viewAllUrl?: string | null;
+    config?: Record<string, unknown>;
+  }
 > = {
-  hero: { title: "Hero Banner", displayCount: 5, visible: true },
-  hot_searches: { title: "熱門搜尋", displayCount: 10, visible: true },
-  latest_recipes: { title: "本週熱門食譜", displayCount: 4, visible: true },
-  recipe_kits: { title: "一鍵購買材料", displayCount: 4, visible: true },
-  popular_categories: { title: "找材料", displayCount: 8, visible: true },
-  popular_baking_products: { title: "本週熱賣商品", displayCount: 8, visible: true },
-  featured_courses: { title: "最新課程", displayCount: 4, visible: true },
-  closing_group_buys: { title: "團購優惠", displayCount: 4, visible: true },
-  latest_videos: { title: "最新影音", displayCount: 4, visible: true },
+  hero: { title: "Hero Banner", displayCount: 5, visible: true, dataSource: "banners" },
+  hot_searches: {
+    title: "熱門搜尋",
+    displayCount: 10,
+    visible: true,
+    sourceMode: "manual",
+  },
+  latest_recipes: {
+    title: "本週熱門食譜",
+    displayCount: 4,
+    visible: true,
+    viewAllUrl: "/recipes",
+  },
+  recipe_kits: {
+    title: "一鍵購買材料",
+    displayCount: 4,
+    visible: true,
+    viewAllUrl: "/recipes",
+  },
+  popular_categories: {
+    title: "找材料",
+    displayCount: 8,
+    visible: true,
+    viewAllUrl: "/baking-materials",
+  },
+  popular_baking_products: {
+    title: "本週熱賣商品",
+    displayCount: 8,
+    visible: true,
+    sourceMode: "manual",
+    viewAllUrl: "/baking-materials",
+    config: { product_scope: "baking" },
+  },
+  product_series: {
+    title: "系列商品曝光",
+    displayCount: 8,
+    visible: true,
+    sourceMode: "manual",
+    viewAllUrl: "/baking-materials",
+    config: { product_scope: "baking", badge: "hot" },
+  },
+  featured_courses: {
+    title: "最新課程",
+    displayCount: 4,
+    visible: true,
+    viewAllUrl: "/courses",
+  },
+  closing_group_buys: {
+    title: "團購優惠",
+    displayCount: 4,
+    visible: true,
+    viewAllUrl: "/group-buy",
+  },
+  latest_videos: {
+    title: "最新影音",
+    displayCount: 4,
+    visible: true,
+    viewAllUrl: "/videos",
+  },
   trust_services: { title: "安心服務", displayCount: 4, visible: true },
-  brand_statement: { title: "品牌定位", displayCount: 4, visible: false },
-  quick_menu: { title: "快捷入口", displayCount: 8, visible: false },
-  ai_assistant: { title: "AI 烘焙助手", displayCount: 4, visible: false },
-  baking_inspiration: { title: "今日烘焙靈感", displayCount: 4, visible: false },
-  weekly_new_products: { title: "本週新品推薦", displayCount: 8, visible: false },
-  chime_select: { title: "CHIME 精選", displayCount: 8, visible: false },
-  weekly_live_streams: { title: "本週團購直播", displayCount: 4, visible: false },
-  weekly_promotions: { title: "本週優惠", displayCount: 4, visible: false },
-  monthly_challenge: { title: "本月烘焙挑戰", displayCount: 3, visible: false },
-  seasonal_themes: { title: "季節主題企劃", displayCount: 4, visible: false },
-  store_information: { title: "門市資訊", displayCount: 1, visible: false },
-  latest_articles: { title: "最新資訊", displayCount: 5, visible: false },
+  brand_statement: { title: "品牌定位", displayCount: 4, visible: true },
+  quick_menu: { title: "快捷入口", displayCount: 8, visible: true },
+  ai_assistant: { title: "AI 烘焙助手", displayCount: 4, visible: true },
+  baking_inspiration: { title: "今日烘焙靈感", displayCount: 4, visible: true },
+  weekly_new_products: {
+    title: "本週新品推薦",
+    displayCount: 8,
+    visible: true,
+    viewAllUrl: "/products?sort=newest",
+    config: { new_days: 7, product_scope: "baking" },
+  },
+  chime_select: {
+    title: "CHIME 精選",
+    displayCount: 8,
+    visible: true,
+    viewAllUrl: "/shop?scope=chime_select",
+    config: { product_scope: "chime_select" },
+  },
+  weekly_live_streams: {
+    title: "本週團購直播",
+    displayCount: 4,
+    visible: true,
+    viewAllUrl: "/live",
+  },
+  weekly_promotions: {
+    title: "本週優惠",
+    displayCount: 4,
+    visible: true,
+    dataSource: "banners",
+  },
+  banner_strip: {
+    title: "Banner 帶",
+    displayCount: 4,
+    visible: true,
+    dataSource: "banners",
+    config: { placement: "home_custom" },
+  },
+  monthly_challenge: {
+    title: "本月烘焙挑戰",
+    displayCount: 3,
+    visible: true,
+    viewAllUrl: "/challenges",
+  },
+  seasonal_themes: {
+    title: "季節主題企劃",
+    displayCount: 4,
+    visible: true,
+    viewAllUrl: "/themes",
+  },
+  store_information: {
+    title: "門市資訊",
+    displayCount: 1,
+    visible: true,
+    viewAllUrl: "/stores",
+  },
+  latest_articles: {
+    title: "最新資訊",
+    displayCount: 5,
+    visible: true,
+    viewAllUrl: "/articles",
+  },
 };
 
 export type ResolvedHomeBlock = {
+  /** Row id when from CMS; synthetic key when fallback */
+  id: string;
   key: HomeSectionKey;
   visible: boolean;
   title: string;
@@ -47,66 +156,84 @@ export type ResolvedHomeBlock = {
   viewAllUrl: string | null;
   manualIds: string[];
   config: Record<string, unknown> | null;
+  instanceLabel: string | null;
   raw: HomepageBlock | null;
 };
 
+export function resolveHomeBlockRow(row: HomepageBlock): ResolvedHomeBlock | null {
+  if (!isHomeSectionKey(row.block_key)) return null;
+  const fallback = SECTION_DEFAULTS[row.block_key];
+  return {
+    id: row.id,
+    key: row.block_key,
+    visible: row.is_visible !== false,
+    title: row.title || fallback.title,
+    subtitle: row.subtitle ?? null,
+    displayCount: Math.max(
+      1,
+      Number(row.display_count ?? fallback.displayCount) || fallback.displayCount
+    ),
+    sortOrder: Number(row.sort_order ?? HOME_SECTION_SORT_DEFAULT[row.block_key]),
+    sourceMode: row.source_mode === "manual" ? "manual" : "auto",
+    dataSource: row.data_source ?? fallback.dataSource ?? null,
+    viewAllUrl: row.view_all_url ?? fallback.viewAllUrl ?? null,
+    manualIds: Array.isArray(row.manual_ids) ? row.manual_ids : [],
+    config: (row.config as Record<string, unknown> | null) ?? fallback.config ?? null,
+    instanceLabel: row.instance_label ?? null,
+    raw: row,
+  };
+}
+
+/** Resolve first matching block_key (legacy helpers / cream defaults). */
 export function resolveHomeBlock(
   blocks: HomepageBlock[] | null | undefined,
   key: HomeSectionKey
 ): ResolvedHomeBlock {
-  const fallback = DEFAULTS[key];
+  const fallback = SECTION_DEFAULTS[key];
   const found = blocks?.find((b) => b.block_key === key);
   if (!found) {
     return {
+      id: `fallback-${key}`,
       key,
       visible: fallback.visible,
       title: fallback.title,
       subtitle: null,
       displayCount: fallback.displayCount,
       sortOrder: HOME_SECTION_SORT_DEFAULT[key],
-      sourceMode: "auto",
-      dataSource: null,
-      viewAllUrl: null,
+      sourceMode: fallback.sourceMode ?? "auto",
+      dataSource: fallback.dataSource ?? null,
+      viewAllUrl: fallback.viewAllUrl ?? null,
       manualIds: [],
-      config: null,
+      config: fallback.config ?? null,
+      instanceLabel: null,
       raw: null,
     };
   }
-  return {
-    key,
-    visible: found.is_visible !== false,
-    title: found.title || fallback.title,
-    subtitle: found.subtitle ?? null,
-    displayCount: Math.max(
-      1,
-      Number(found.display_count ?? fallback.displayCount) || fallback.displayCount
-    ),
-    sortOrder: Number(found.sort_order ?? HOME_SECTION_SORT_DEFAULT[key]),
-    sourceMode: found.source_mode === "manual" ? "manual" : "auto",
-    dataSource: found.data_source ?? null,
-    viewAllUrl: found.view_all_url ?? null,
-    manualIds: Array.isArray(found.manual_ids) ? found.manual_ids : [],
-    config: (found.config as Record<string, unknown> | null) ?? null,
-    raw: found,
-  };
+  return resolveHomeBlockRow(found)!;
 }
 
-/** Visible CMS sections ordered by sort_order (unknown keys skipped). */
+/**
+ * Visible CMS sections ordered by sort_order.
+ * Supports multiple instances of the same block_key (each row is one section).
+ */
 export function listOrderedHomeSections(
   blocks: HomepageBlock[] | null | undefined
 ): ResolvedHomeBlock[] {
-  const known = (blocks ?? []).filter((b) => isHomeSectionKey(b.block_key));
-  const keys = known.length
-    ? known
-        .slice()
-        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-        .map((b) => b.block_key as HomeSectionKey)
-    : (Object.keys(HOME_SECTION_SORT_DEFAULT) as HomeSectionKey[]).sort(
-        (a, b) => HOME_SECTION_SORT_DEFAULT[a] - HOME_SECTION_SORT_DEFAULT[b]
-      );
+  const rows = (blocks ?? [])
+    .map(resolveHomeBlockRow)
+    .filter((b): b is ResolvedHomeBlock => Boolean(b));
 
-  const resolved = keys.map((key) => resolveHomeBlock(blocks, key));
-  return resolved.filter((b) => b.visible);
+  if (rows.length === 0) {
+    return (Object.keys(HOME_SECTION_SORT_DEFAULT) as HomeSectionKey[])
+      .sort((a, b) => HOME_SECTION_SORT_DEFAULT[a] - HOME_SECTION_SORT_DEFAULT[b])
+      .map((key) => resolveHomeBlock([], key))
+      .filter((b) => b.visible);
+  }
+
+  return rows
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .filter((b) => b.visible);
 }
 
 export function warnUnknownHomeSection(key: string) {
@@ -124,4 +251,33 @@ export function blockVisibleOnViewport(
   if (isMobile && config.show_mobile === false) return false;
   if (!isMobile && config.show_desktop === false) return false;
   return true;
+}
+
+/** Build a new draft block instance from a catalog type. */
+export function createBlockInstance(
+  key: HomeSectionKey,
+  opts?: {
+    sortOrder?: number;
+    instanceLabel?: string | null;
+    configOverrides?: Record<string, unknown>;
+  }
+): HomepageBlock {
+  const def = SECTION_DEFAULTS[key];
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    block_key: key,
+    title: def.title,
+    subtitle: null,
+    is_visible: true,
+    sort_order: opts?.sortOrder ?? HOME_SECTION_SORT_DEFAULT[key],
+    display_count: def.displayCount,
+    source_mode: def.sourceMode ?? "auto",
+    data_source: def.dataSource ?? null,
+    view_all_url: def.viewAllUrl ?? null,
+    manual_ids: [],
+    config: { ...(def.config ?? {}), ...(opts?.configOverrides ?? {}) },
+    instance_label: opts?.instanceLabel ?? null,
+    updated_at: now,
+  };
 }

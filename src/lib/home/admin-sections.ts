@@ -23,6 +23,12 @@ export type HomeAdminSectionMeta = {
   hasViewAllUrl?: boolean;
   hasDataSource?: boolean;
   hasNewDays?: boolean;
+  /** Series product exposure: category + badge + scope */
+  hasProductSeriesSettings?: boolean;
+  /** Banner strip: custom placement */
+  hasBannerPlacement?: boolean;
+  /** Shown in "add block" catalog */
+  catalog?: boolean;
 };
 
 export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
@@ -34,6 +40,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     manageHref: "/admin/home/banners?placement=home_hero",
     manageLabel: "管理 Hero Banner",
     hasDisplayCount: true,
+    catalog: true,
   },
   {
     id: "hot_searches",
@@ -44,6 +51,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasDisplayCount: true,
     manageHref: "/admin/home/search-tags",
     manageLabel: "熱門搜尋專頁",
+    catalog: true,
   },
   {
     id: "latest_recipes",
@@ -55,6 +63,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasDataSource: true,
     manageHref: "/admin/home/featured-recipes",
     manageLabel: "精選食譜專頁",
+    catalog: true,
   },
   {
     id: "recipe_kits",
@@ -65,6 +74,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     manageLabel: "管理材料包",
     hasDisplayCount: true,
     hasViewAllUrl: true,
+    catalog: true,
   },
   {
     id: "popular_categories",
@@ -76,6 +86,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasViewAllUrl: true,
     manageHref: "/admin/home/ingredient-categories",
     manageLabel: "找材料分類專頁",
+    catalog: true,
   },
   {
     id: "popular_baking_products",
@@ -88,6 +99,18 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasViewAllUrl: true,
     manageHref: "/admin/home/featured-products",
     manageLabel: "熱賣商品專頁",
+    catalog: true,
+  },
+  {
+    id: "product_series",
+    label: "系列商品曝光",
+    description: "可重複加入。手動選品或依分類／商品範圍自動曝光。",
+    contentMode: "mixed",
+    hasProductPicker: true,
+    hasProductSeriesSettings: true,
+    hasDisplayCount: true,
+    hasViewAllUrl: true,
+    catalog: true,
   },
   {
     id: "featured_courses",
@@ -98,6 +121,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasViewAllUrl: true,
     manageHref: "/admin/home/featured-courses",
     manageLabel: "最新課程專頁",
+    catalog: true,
   },
   {
     id: "closing_group_buys",
@@ -108,6 +132,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasViewAllUrl: true,
     manageHref: "/admin/home/group-buy-section",
     manageLabel: "團購區塊專頁",
+    catalog: true,
   },
   {
     id: "latest_videos",
@@ -119,6 +144,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasDataSource: true,
     manageHref: "/admin/videos",
     manageLabel: "管理影音",
+    catalog: true,
   },
   {
     id: "trust_services",
@@ -126,6 +152,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     description: "服務保證條：標題／副標／Lucide Icon（存於區塊 config）。",
     contentMode: "manual",
     hasDisplayCount: true,
+    catalog: true,
   },
   {
     id: "brand_statement",
@@ -133,6 +160,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     description: "主標語與快捷標籤（預設隱藏，可再啟用）。",
     contentMode: "manual",
     hasBrandTags: true,
+    catalog: true,
   },
   {
     id: "quick_menu",
@@ -141,6 +169,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     contentMode: "cms_items",
     manageHref: "/admin/home/quick-menu",
     manageLabel: "管理快捷入口",
+    catalog: true,
   },
   {
     id: "ai_assistant",
@@ -150,6 +179,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasAiSettings: true,
     manageHref: "/admin/home/ai-prompts",
     manageLabel: "管理 AI 提問",
+    catalog: true,
   },
   {
     id: "baking_inspiration",
@@ -159,6 +189,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     manageHref: "/admin/home/inspirations",
     manageLabel: "管理烘焙靈感",
     hasDisplayCount: true,
+    catalog: true,
   },
   {
     id: "weekly_new_products",
@@ -171,6 +202,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasNewDays: true,
     manageHref: "/admin/products",
     manageLabel: "前往商品管理",
+    catalog: true,
   },
   {
     id: "chime_select",
@@ -183,6 +215,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasViewAllUrl: true,
     manageHref: "/admin/products",
     manageLabel: "前往商品管理",
+    catalog: true,
   },
   {
     id: "weekly_live_streams",
@@ -193,15 +226,26 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasViewAllUrl: true,
     manageHref: "/admin/livestreams",
     manageLabel: "管理直播",
+    catalog: true,
   },
   {
     id: "weekly_promotions",
     label: "本週優惠",
-    description: "橫向優惠 Banner（預設隱藏）。",
+    description: "橫向優惠 Banner（placement=home_weekly_promo）。",
     contentMode: "banners",
     manageHref: "/admin/home/banners?placement=home_weekly_promo",
     manageLabel: "管理本週優惠 Banner",
     hasDisplayCount: true,
+    catalog: true,
+  },
+  {
+    id: "banner_strip",
+    label: "Banner 帶",
+    description: "可重複加入。自訂 placement，對應 Banner 管理中的投放位置。",
+    contentMode: "banners",
+    hasBannerPlacement: true,
+    hasDisplayCount: true,
+    catalog: true,
   },
   {
     id: "monthly_challenge",
@@ -212,6 +256,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasViewAllUrl: true,
     manageHref: "/admin/challenges",
     manageLabel: "管理烘焙挑戰",
+    catalog: true,
   },
   {
     id: "seasonal_themes",
@@ -222,6 +267,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasViewAllUrl: true,
     manageHref: "/admin/themes",
     manageLabel: "管理季節主題",
+    catalog: true,
   },
   {
     id: "store_information",
@@ -231,6 +277,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasViewAllUrl: true,
     manageHref: "/admin/stores",
     manageLabel: "管理門市",
+    catalog: true,
   },
   {
     id: "latest_articles",
@@ -242,14 +289,26 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasDataSource: true,
     manageHref: "/admin/articles",
     manageLabel: "文章管理（置頂／順序／新增）",
+    catalog: true,
   },
 ];
+
+export function getSectionMeta(blockKey: string): HomeAdminSectionMeta | undefined {
+  return HOME_ADMIN_SECTIONS.find((s) => s.id === blockKey);
+}
 
 export function findBlock(
   blocks: HomepageBlock[],
   blockKey: string
 ): HomepageBlock | undefined {
   return blocks.find((b) => b.block_key === blockKey);
+}
+
+export function findBlockById(
+  blocks: HomepageBlock[],
+  id: string
+): HomepageBlock | undefined {
+  return blocks.find((b) => b.id === id);
 }
 
 export type PopularCategoryConfig = {
