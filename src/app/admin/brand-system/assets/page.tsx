@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { buttonVariants } from "@/components/ui/button";
+import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type AssetRow = {
   id: string;
@@ -15,7 +18,7 @@ type AssetRow = {
   created_at: string;
 };
 
-const CATEGORIES = [
+const ASSET_TYPES = [
   "Logo",
   "IP 主形象",
   "IP 動作",
@@ -31,8 +34,11 @@ export default function AdminBrandAssetsPage() {
   const [assets, setAssets] = useState<AssetRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: "", asset_type: "Hero 背景", alt_text: "", file_url: "" });
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
     fetch("/api/admin/brand-system/assets")
       .then(async (r) => {
         const d = await r.json();
@@ -41,13 +47,45 @@ export default function AdminBrandAssetsPage() {
       })
       .catch((e) => setMessage(e instanceof Error ? e.message : "載入失敗"))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const save = async () => {
+    if (!form.name.trim() || !form.file_url.trim()) {
+      setMessage("請填寫名稱並上傳圖片");
+      return;
+    }
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/admin/brand-system/assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          asset_type: form.asset_type,
+          file_url: form.file_url,
+          alt_text: form.alt_text.trim() || null,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "儲存失敗");
+      setMessage("已新增素材");
+      setForm({ name: "", asset_type: "Hero 背景", alt_text: "", file_url: "" });
+      load();
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "儲存失敗");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <AdminPageHeader
         title="素材中心"
-        description="IP 規範：深藍圓弧瀏海、金光環、白翅膀、品牌紅上衣、扁平插畫。上傳（WebP／EXIF）下一波接上。"
+        description="上傳 Logo、IP、Hero 背景等品牌素材，供各區塊引用。"
         actions={
           <Link href="/admin/brand-system" className={buttonVariants({ size: "sm", variant: "outline" })}>
             返回
@@ -59,36 +97,65 @@ export default function AdminBrandAssetsPage() {
         <p className="rounded-lg bg-surface-soft px-3 py-2 text-sm text-coffee">{message}</p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map((c) => (
-          <span
-            key={c}
-            className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium text-coffee"
+      <div className="space-y-4 rounded-xl border border-border bg-white p-4 shadow-card">
+        <p className="font-semibold text-coffee">新增素材</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="素材名稱"
+          />
+          <select
+            className="h-10 rounded-md border border-input bg-white px-3 text-sm"
+            value={form.asset_type}
+            onChange={(e) => setForm({ ...form, asset_type: e.target.value })}
           >
-            {c}
-          </span>
-        ))}
+            {ASSET_TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+          <Input
+            className="sm:col-span-2"
+            value={form.alt_text}
+            onChange={(e) => setForm({ ...form, alt_text: e.target.value })}
+            placeholder="Alt 文字（選填）"
+          />
+        </div>
+        <AdminImageUpload
+          label="素材圖片"
+          hint="建議 WebP／PNG，≤5MB"
+          images={form.file_url ? [form.file_url] : []}
+          onChange={(urls) => setForm({ ...form, file_url: urls[0] ?? "" })}
+          uploadFolder="brand-assets"
+          maxImages={1}
+          multiple={false}
+        />
+        <Button disabled={saving} onClick={() => void save()}>新增素材</Button>
       </div>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">載入中…</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {assets.map((a) => (
             <li
               key={a.id}
-              className="rounded-xl border border-border bg-white px-4 py-3 text-sm shadow-card"
+              className="overflow-hidden rounded-xl border border-border bg-white shadow-card"
             >
-              <p className="font-semibold text-coffee">
-                {a.name}{" "}
-                <span className="text-xs font-normal text-muted-foreground">({a.asset_type})</span>
-              </p>
-              <p className="truncate text-xs text-muted-foreground">{a.file_url}</p>
+              <div className="relative aspect-video bg-surface-soft">
+                {a.file_url ? (
+                  <Image src={a.file_url} alt={a.alt_text ?? a.name} fill className="object-contain p-2" unoptimized />
+                ) : null}
+              </div>
+              <div className="p-3 text-sm">
+                <p className="font-semibold text-coffee">{a.name}</p>
+                <p className="text-xs text-muted-foreground">{a.asset_type}</p>
+              </div>
             </li>
           ))}
           {!assets.length ? (
-            <li className="text-sm text-muted-foreground">
-              尚無素材。資料表 `brand_assets` 已就緒，請之後上傳至 `brand-assets` bucket。
+            <li className="text-sm text-muted-foreground sm:col-span-2 lg:col-span-3">
+              尚無素材，請使用上方表單上傳。
             </li>
           ) : null}
         </ul>

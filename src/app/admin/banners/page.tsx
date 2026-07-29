@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -12,7 +12,6 @@ import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import type { CmsBanner } from "@/lib/types/database";
 
 const PLACEMENTS = [
-  { value: "home_hero", label: "首頁 Hero" },
   { value: "home_weekly_promo", label: "首頁本週優惠" },
   { value: "home_secondary", label: "首頁次要 Banner" },
   { value: "shop", label: "商城" },
@@ -23,7 +22,7 @@ const PLACEMENTS = [
 ];
 
 function formatPlacementLabel(value: string | null | undefined) {
-  if (!value) return "首頁 Hero";
+  if (!value || value === "home_hero") return "（舊）首頁 Hero";
   return PLACEMENTS.find((p) => p.value === value)?.label ?? value;
 }
 
@@ -34,7 +33,7 @@ const emptyForm = {
   mobile_image_url: "",
   button_text: "了解更多",
   link_url: "",
-  placement: "home_hero",
+  placement: "home_weekly_promo",
   sort_order: "0",
   status: "active",
   starts_at: "",
@@ -54,6 +53,7 @@ function toLocalInput(iso: string | null | undefined) {
 }
 
 function AdminBannersClient() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const placementFilter = searchParams.get("placement") ?? "";
   const [banners, setBanners] = useState<CmsBanner[]>([]);
@@ -76,13 +76,20 @@ function AdminBannersClient() {
   }, []);
 
   useEffect(() => {
-    if (!placementFilter) return;
+    if (placementFilter === "home_hero") {
+      router.replace("/admin/brand-system/heroes");
+    }
+  }, [placementFilter, router]);
+
+  useEffect(() => {
+    if (!placementFilter || placementFilter === "home_hero") return;
     setForm((f) => ({ ...f, placement: placementFilter }));
   }, [placementFilter]);
 
   const visibleBanners = useMemo(() => {
-    if (!placementFilter) return banners;
-    return banners.filter((b) => (b.placement ?? "home_hero") === placementFilter);
+    const list = banners.filter((b) => (b.placement ?? "") !== "home_hero");
+    if (!placementFilter || placementFilter === "home_hero") return list;
+    return list.filter((b) => (b.placement ?? "") === placementFilter);
   }, [banners, placementFilter]);
 
   const placementLabel =
@@ -92,12 +99,16 @@ function AdminBannersClient() {
     setEditingId(null);
     setForm({
       ...emptyForm,
-      placement: placementFilter || "home_hero",
+      placement: placementFilter && placementFilter !== "home_hero" ? placementFilter : "home_weekly_promo",
     });
     setShowForm(true);
   };
 
   const openEdit = (b: CmsBanner) => {
+    if ((b.placement ?? "") === "home_hero") {
+      router.push("/admin/brand-system/heroes");
+      return;
+    }
     setEditingId(b.id);
     setForm({
       title: b.title,
@@ -106,7 +117,7 @@ function AdminBannersClient() {
       mobile_image_url: b.mobile_image_url ?? "",
       button_text: b.button_text ?? "了解更多",
       link_url: b.link_url ?? "",
-      placement: b.placement ?? "home_hero",
+      placement: b.placement ?? "home_weekly_promo",
       sort_order: String(b.sort_order ?? 0),
       status: b.status ?? (b.is_active ? "active" : "inactive"),
       starts_at: toLocalInput(b.starts_at),
@@ -120,18 +131,13 @@ function AdminBannersClient() {
   };
 
   const save = async () => {
-    const isHero = form.placement === "home_hero";
     const isWeekly = form.placement === "home_weekly_promo";
     if (!form.title.trim()) {
-      alert(isHero || isWeekly ? "請填寫管理用名稱（僅後台辨識，不顯示於前台）" : "請填寫標題");
+      alert(isWeekly ? "請填寫管理用名稱（僅後台辨識，不顯示於前台）" : "請填寫標題");
       return;
     }
-    if ((isHero || isWeekly) && !form.image_url.trim()) {
-      alert(
-        isHero
-          ? "請上傳桌機版 Banner（建議 1440×560 px，＜500KB）"
-          : "請上傳本週優惠圖片（建議 720×360 px）"
-      );
+    if (isWeekly && !form.image_url.trim()) {
+      alert("請上傳本週優惠圖片（建議 720×360 px）");
       return;
     }
     setSaving(true);
@@ -205,10 +211,16 @@ function AdminBannersClient() {
     <div className="space-y-4">
       <AdminPageHeader
         title={placementLabel ? `Banner｜${placementLabel}` : "Banner 管理"}
-        description="首頁 Hero：桌機 1440×560、手機 750×700。可從「首頁管理」進入對應版位。"
+        description="管理本週優惠、次要 Banner 等版位。首頁 Hero 已改由「品牌體驗系統 → Brand Hero」管理。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Button onClick={openCreate}>新增 Banner</Button>
+            <Link
+              href="/admin/brand-system/heroes"
+              className="inline-flex h-10 items-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-caramel"
+            >
+              首頁 Hero
+            </Link>
             <Link
               href="/admin/home"
               className="inline-flex h-10 items-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-caramel"
@@ -224,14 +236,6 @@ function AdminBannersClient() {
           <p className="text-sm font-medium text-coffee">
             {editingId ? "編輯 Banner" : "新增 Banner"}
           </p>
-          {form.placement === "home_hero" ? (
-            <p className="rounded-lg bg-surface-soft px-3 py-2 text-xs leading-relaxed text-foreground-secondary">
-              首頁 Hero：桌機建議{" "}
-              <strong className="text-brand-caramel">1440×560 px（＜500KB）</strong>、手機{" "}
-              <strong className="text-brand-caramel">750×700 px（＜350KB）</strong>
-              。可設定主標／副標／按鈕文字與文字位置；未填則純圖片。
-            </p>
-          ) : null}
           {form.placement === "home_weekly_promo" ? (
             <p className="rounded-lg bg-surface-soft px-3 py-2 text-xs leading-relaxed text-foreground-secondary">
               本週優惠建議上傳{" "}
@@ -241,11 +245,9 @@ function AdminBannersClient() {
           ) : null}
           <AdminImageUpload
             label={
-              form.placement === "home_hero"
-                ? "桌機版圖片（建議 1440×560 px）"
-                : form.placement === "home_weekly_promo"
-                  ? "優惠圖片（建議 720×360 px）"
-                  : "桌機圖"
+              form.placement === "home_weekly_promo"
+                ? "優惠圖片（建議 720×360 px）"
+                : "桌機圖"
             }
             images={form.image_url ? [form.image_url] : []}
             onChange={(images) => setForm({ ...form, image_url: images[0] ?? "" })}
@@ -264,7 +266,7 @@ function AdminBannersClient() {
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
               placeholder={
-                form.placement === "home_hero" || form.placement === "home_weekly_promo"
+                form.placement === "home_weekly_promo"
                   ? "Banner 名稱（後台辨識／可作主標）"
                   : "標題"
               }

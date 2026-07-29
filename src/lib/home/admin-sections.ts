@@ -36,7 +36,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     id: "hero",
     label: "Hero 搜尋區",
     description: "BrandHero 主視覺、搜尋與熱門標籤。樣式固定，內容由品牌體驗系統管理。",
-    contentMode: "banners",
+    contentMode: "external",
     manageHref: "/admin/brand-system/heroes",
     manageLabel: "管理 Brand Hero",
     hasDisplayCount: false,
