@@ -3,14 +3,20 @@ import type { BrandHeroData, BrandHeroKey } from "@/components/brand/hero/types"
 export const BRAND_HERO_DEFAULTS: Record<BrandHeroKey, BrandHeroData> = {
   home: {
     heroKey: "home",
-    title: "從靈感到成品",
-    subtitle: "一站完成你的烘焙生活",
-    searchPlaceholder: "搜尋材料、食譜、課程…",
+    title: "今天想做什麼？",
+    subtitle: "從食譜開始，輕鬆完成每一個烘焙時刻",
+    showTitle: true,
+    showSubtitle: true,
+    imagePosition: "center",
+    searchPlaceholder: "搜尋食譜、材料、商品、課程……",
     searchScope: "global",
+    showPopularTags: true,
     tags: [
-      { id: "t1", label: "麵粉", keyword: "麵粉", sortOrder: 10 },
-      { id: "t2", label: "奶油", keyword: "奶油", sortOrder: 20 },
-      { id: "t3", label: "巧克力", keyword: "巧克力", sortOrder: 30 },
+      { id: "t1", label: "草莓蛋糕", keyword: "草莓蛋糕", sortOrder: 10 },
+      { id: "t2", label: "司康", keyword: "司康", sortOrder: 20 },
+      { id: "t3", label: "生乳捲", keyword: "生乳捲", sortOrder: 30 },
+      { id: "t4", label: "巧克力餅乾", keyword: "巧克力餅乾", sortOrder: 40 },
+      { id: "t5", label: "可頌", keyword: "可頌", sortOrder: 50 },
     ],
   },
   recipes: {

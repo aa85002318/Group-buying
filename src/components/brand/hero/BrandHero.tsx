@@ -53,41 +53,50 @@ export function BrandHero({
   if (hero.enabled === false) return null;
 
   const scope = (hero.searchScope || "global") as SearchScope;
+  const showPopularTags = showTags && (hero.showPopularTags !== false);
 
   return (
     <section
-      className={cn("relative w-full", className)}
+      className={cn("w-full px-[15px]", className)}
       aria-label={hero.name || hero.title || "品牌主視覺"}
     >
-      <div className="brand-page-pad">
-        <div
-          className="relative mx-auto w-full max-w-[var(--content-max-width)] overflow-hidden border border-[var(--brand-border)] shadow-[var(--shadow-sm)]"
-          style={{
-            borderRadius: "var(--brand-hero-radius)",
-            minHeight: "var(--brand-hero-height-mobile)",
-          }}
-        >
-          <div
-            className="relative w-full md:[min-height:var(--brand-hero-height-desktop)]"
-            style={{ minHeight: "var(--brand-hero-height-mobile)" }}
-          >
-            <BrandHeroImage
-              desktopUrl={hero.desktopImageUrl}
-              mobileUrl={hero.mobileImageUrl}
-              alt={hero.imageAlt || hero.title}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-4 pb-10 md:p-8 md:pb-12">
-              <BrandHeroContent title={hero.title} subtitle={hero.subtitle} />
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* 16:9 panel */}
+      <div className="relative mx-auto w-full max-w-[1280px] overflow-hidden border border-[var(--brand-border,#f2e7df)] bg-[#fff8f1] max-[767px]:rounded-[18px] md:rounded-[24px]" style={{ aspectRatio: "16/9" }}>
+        {/* Background image — fullscreen inside the panel */}
+        <BrandHeroImage
+          desktopUrl={hero.desktopImageUrl}
+          mobileUrl={hero.mobileImageUrl}
+          alt={hero.imageAlt || hero.title}
+          position={hero.imagePosition ?? "center"}
+        />
 
-      {showSearch ? (
-        <BrandHeroSearch placeholder={hero.searchPlaceholder} scope={scope} />
-      ) : null}
-      {showTags ? <BrandHeroTags tags={hero.tags ?? []} searchScope={scope} /> : null}
+        {/* Light overlay so text stays readable over any photo */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent" aria-hidden />
+
+        {/* Title + subtitle — left 45% safe zone */}
+        <BrandHeroContent
+          title={hero.title}
+          subtitle={hero.subtitle}
+          showTitle={hero.showTitle !== false}
+          showSubtitle={hero.showSubtitle !== false}
+        />
+
+        {/* Search + popular tags — fixed at bottom inside panel */}
+        {showSearch ? (
+          <div
+            className="absolute z-[5]"
+            style={{ right: "5%", bottom: "5%", left: "5%" }}
+          >
+            <BrandHeroSearch
+              placeholder={hero.searchPlaceholder}
+              scope={scope}
+            />
+            {showPopularTags && (hero.tags?.length ?? 0) > 0 ? (
+              <BrandHeroTags tags={hero.tags ?? []} searchScope={scope} />
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

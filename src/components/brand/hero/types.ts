@@ -20,9 +20,12 @@ export type BrandHeroData = {
   name?: string;
   title: string;
   subtitle?: string | null;
+  showTitle?: boolean;
+  showSubtitle?: boolean;
   desktopImageUrl?: string | null;
   mobileImageUrl?: string | null;
   imageAlt?: string | null;
+  imagePosition?: "left" | "center" | "right";
   searchPlaceholder?: string | null;
   searchScope?:
     | "global"
@@ -31,6 +34,7 @@ export type BrandHeroData = {
     | "courses"
     | "group_buy"
     | "articles";
+  showPopularTags?: boolean;
   tags?: BrandHeroTag[];
   enabled?: boolean;
 };

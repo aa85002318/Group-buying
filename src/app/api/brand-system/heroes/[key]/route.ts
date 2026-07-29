@@ -52,11 +52,15 @@ export async function GET(
       name: row.name,
       title: row.title || fallback.title,
       subtitle: row.subtitle,
+      showTitle: row.show_title !== false,
+      showSubtitle: row.show_subtitle !== false,
       desktopImageUrl: row.desktop_image_url,
       mobileImageUrl: row.mobile_image_url,
       imageAlt: row.image_alt,
+      imagePosition: (row.image_position as "left" | "center" | "right") ?? "center",
       searchPlaceholder: row.search_placeholder,
       searchScope: row.search_scope,
+      showPopularTags: row.show_popular_tags !== false,
       enabled: row.enabled,
       tags: ((tags ?? []) as Array<Record<string, unknown>>).map(
         (t): BrandHeroTag => ({

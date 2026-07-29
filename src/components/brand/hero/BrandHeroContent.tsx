@@ -1,27 +1,42 @@
-import { cn } from "@/lib/utils";
-
 export function BrandHeroContent({
   title,
   subtitle,
-  className,
+  showTitle = true,
+  showSubtitle = true,
 }: {
   title: string;
   subtitle?: string | null;
-  className?: string;
+  showTitle?: boolean;
+  showSubtitle?: boolean;
 }) {
+  if (!showTitle && !showSubtitle) return null;
+
   return (
-    <div className={cn("relative z-[1] max-w-xl space-y-2 text-[var(--brand-text-inverse)]", className)}>
-      <h1
-        className="font-bold leading-tight drop-shadow"
-        style={{
-          fontSize: "var(--font-size-h1-mobile)",
-          fontFamily: "var(--font-brand)",
-        }}
-      >
-        <span className="md:[font-size:var(--font-size-h1-desktop)]">{title}</span>
-      </h1>
-      {subtitle ? (
-        <p className="text-sm font-medium text-white/90 drop-shadow md:text-base">{subtitle}</p>
+    <div
+      className="absolute z-[2]"
+      style={{
+        top: "18%",
+        left: "6%",
+        width: "42%",
+      }}
+    >
+      {showTitle && title ? (
+        <h1
+          className="m-0 font-bold leading-[1.25] text-[#43332b]"
+          style={{
+            fontSize: "clamp(20px, 3.2vw, 44px)",
+          }}
+        >
+          {title}
+        </h1>
+      ) : null}
+      {showSubtitle && subtitle ? (
+        <p
+          className="mt-[10px] hidden leading-[1.6] text-[#6d5c53] min-[375px]:block"
+          style={{ fontSize: "clamp(12px, 1.35vw, 18px)" }}
+        >
+          {subtitle}
+        </p>
       ) : null}
     </div>
   );
