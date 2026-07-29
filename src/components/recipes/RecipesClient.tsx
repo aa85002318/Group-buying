@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { BrandHero } from "@/components/brand/hero/BrandHero";
 import { RecipeCard } from "@/components/consumer/RecipeCard";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import type { RecipeSummary } from "@/lib/consumer-hub";
@@ -17,11 +19,12 @@ const DIFFICULTY_OPTIONS = [
 ];
 
 export function RecipesClient() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") ?? "";
   const [recipes, setRecipes] = useState<RecipeSummary[]>(MOCK_RECIPES);
   const [categories, setCategories] = useState<RecipeCategory[]>(MOCK_RECIPE_CATEGORIES);
   const [category, setCategory] = useState("all");
   const [difficulty, setDifficulty] = useState("");
-  const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +50,7 @@ export function RecipesClient() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, difficulty]);
+  }, [category, difficulty, q]);
 
   const featured = useMemo(() => recipes.filter((r) => r.href).slice(0, 1), [recipes]);
   const latest = recipes;
@@ -59,25 +62,14 @@ export function RecipesClient() {
 
   return (
     <div className="space-y-8 page-enter">
-      <header>
-        <h1 className="text-2xl font-bold text-caramel">食譜影音</h1>
-        <p className="mt-1 text-sm text-foreground-secondary">
-          找食譜、看教學，把烘焙變得更簡單
-        </p>
-      </header>
+      <BrandHero heroKey="recipes" />
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <input
-          className="min-h-12 flex-1 rounded-2xl border border-border-soft bg-cream px-4 text-sm outline-none focus:border-primary"
-          placeholder="搜尋食譜名稱、食材或類型"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && load()}
-        />
         <select
           className="min-h-12 rounded-2xl border border-border-soft bg-surface px-3 text-sm"
           value={difficulty}
           onChange={(e) => setDifficulty(e.target.value)}
+          aria-label="難度篩選"
         >
           {DIFFICULTY_OPTIONS.map((o) => (
             <option key={o.value || "all"} value={o.value}>
@@ -85,13 +77,6 @@ export function RecipesClient() {
             </option>
           ))}
         </select>
-        <button
-          type="button"
-          onClick={load}
-          className="min-h-12 rounded-2xl bg-primary px-5 text-sm font-semibold text-white"
-        >
-          搜尋
-        </button>
       </div>
 
       <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

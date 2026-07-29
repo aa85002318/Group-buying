@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BrandHero } from "@/components/brand/hero/BrandHero";
 import { CourseCard, type CourseCardData } from "@/components/courses/CourseCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -40,10 +41,7 @@ export default function CoursesPage() {
 
   return (
     <div className="page-enter space-y-5">
-      <div>
-        <h1 className="text-xl font-black text-coffee">課程中心</h1>
-        <p className="mt-1 text-sm text-muted-foreground">線上報名 · 剩餘名額 · 電子票券報到</p>
-      </div>
+      <BrandHero heroKey="courses" />
 
       <div className="rounded-[20px] bg-promo-strip p-4 text-sm text-coffee">
         報名後可取得電子票券 QR Code。線上付款金流將持續串接；目前可先完成報名／候補。

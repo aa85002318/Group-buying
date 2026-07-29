@@ -1,0 +1,90 @@
+/**
+ * CHIMEIDIY Brand Experience System — Design Tokens
+ * Style rules are fixed here; CMS only controls content.
+ */
+
+:root {
+  /* Brand colors */
+  --brand-primary: #ff5f6b;
+  --brand-primary-hover: #ff7680;
+  --brand-primary-soft: #ffe6e8;
+
+  --brand-secondary: #ff9a7a;
+  --brand-accent: #ffd8a8;
+  --brand-warning: #ffbd59;
+  --brand-success: #79c99e;
+  --brand-info: #8fc8ed;
+
+  /* Background */
+  --brand-background: #fffaf6;
+  --brand-background-soft: #fff4ec;
+  --brand-surface: #ffffff;
+  --brand-surface-muted: #fff8f3;
+
+  /* Text */
+  --brand-text-primary: #43332b;
+  --brand-text-secondary: #6d5c53;
+  --brand-text-muted: #a39389;
+  --brand-text-inverse: #ffffff;
+
+  /* Border */
+  --brand-border: #f2e7df;
+  --brand-border-strong: #e6d7ce;
+
+  /* Mascot */
+  --brand-mascot-hair: #123f76;
+  --brand-mascot-red: #eb2855;
+  --brand-mascot-halo: #ffb617;
+
+  /* Radius */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* Shadow */
+  --shadow-xs: 0 2px 8px rgba(82, 48, 34, 0.05);
+  --shadow-sm: 0 6px 18px rgba(82, 48, 34, 0.08);
+  --shadow-md: 0 10px 28px rgba(82, 48, 34, 0.12);
+
+  /* Spacing */
+  --page-padding-mobile: 15px;
+  --page-padding-tablet: 24px;
+  --page-padding-desktop: 32px;
+
+  --section-gap-mobile: 32px;
+  --section-gap-desktop: 56px;
+
+  /* Layout */
+  --content-max-width: 1280px;
+  --header-height-mobile: 64px;
+  --header-height-desktop: 72px;
+
+  /* Typography */
+  --font-brand: "Noto Sans TC", sans-serif;
+
+  --font-size-caption: 12px;
+  --font-size-body-sm: 14px;
+  --font-size-body: 15px;
+  --font-size-h3: 18px;
+  --font-size-h2: 22px;
+  --font-size-h1-mobile: 28px;
+  --font-size-h1-desktop: 40px;
+
+  /* Motion */
+  --motion-fast: 150ms;
+  --motion-normal: 250ms;
+  --motion-slow: 400ms;
+
+  /* Brand Hero fixed geometry (not CMS-editable) */
+  --brand-hero-radius: var(--radius-xl);
+  --brand-hero-height-mobile: 265px;
+  --brand-hero-height-desktop: 380px;
+  --brand-search-height: 56px;
+  --brand-search-radius: var(--radius-lg);
+  --brand-search-float: 26px;
+  --brand-search-btn: 44px;
+  --brand-card-radius: 16px;
+}

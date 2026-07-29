@@ -27,6 +27,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/stores",
   "/admin/challenges",
   "/admin/themes",
+  "/admin/brand-system",
 ] as const;
 
 export const CUSTOMER_SERVICE_ADMIN_PATHS = [
@@ -162,6 +163,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin", "content_editor", "customer_service"],
     items: [
       { href: "/admin/home", label: "首頁設定", roles: ["admin", "content_editor"] },
+      { href: "/admin/brand-system", label: "品牌體驗系統", roles: ["admin", "content_editor"] },
       { href: "/admin/content/popups", label: "首頁彈跳公告", roles: ["admin", "content_editor"] },
       { href: "/admin/banners", label: "Banner", roles: ["admin", "content_editor"] },
       { href: "/admin/news", label: "公告／最新資訊", roles: ["admin", "content_editor"] },

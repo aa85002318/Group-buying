@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { BrandHero } from "@/components/brand/hero/BrandHero";
 import {
   DEFAULT_GROUP_BUY_PAGE_SETTINGS,
   TAB_LABELS,
@@ -163,18 +164,8 @@ export function GroupBuyPageClient() {
     if (!settings.sections[id]) return null;
 
     if (id === "header") {
-      return (
-        <header key={id} className="space-y-2">
-          <h1 className="text-2xl font-black text-foreground sm:text-3xl">{settings.title}</h1>
-          {settings.subtitle && (
-            <p className="text-sm text-foreground-secondary">{settings.subtitle}</p>
-          )}
-          <div className="flex flex-wrap gap-3 text-sm font-semibold text-groupBuy">
-            {settings.showActiveCount && <span>目前開團 {meta.activeCount} 團</span>}
-            {settings.showEndingSoonCount && <span>即將結團 {meta.endingSoonCount} 團</span>}
-          </div>
-        </header>
-      );
+      // BrandHero 已提供頁面主視覺與標題，略過舊 header 區塊避免重複
+      return null;
     }
 
     if (id === "tabs") {
@@ -404,6 +395,7 @@ export function GroupBuyPageClient() {
 
   return (
     <div className="space-y-8 page-enter">
+      <BrandHero heroKey="group-buy" />
       {settings.sectionOrder.map((id) => renderSection(id))}
     </div>
   );

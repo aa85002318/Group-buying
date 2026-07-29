@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Clock3, Heart, Play } from "lucide-react";
-import { HomeSearchBar } from "@/components/home/HomeSearchBar";
-import { HomeHero } from "@/components/home/HomeHero";
+import { BrandHero } from "@/components/brand/hero/BrandHero";
 import { HomeContentArea } from "@/components/home/HomeContentArea";
 import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
 import { PopularCategories } from "@/components/home/PopularCategories";
@@ -152,7 +151,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       );
     }
     case "hero":
-      return <HomeHero key={key} />;
+      return <BrandHero key={key} heroKey="home" />;
     case "brand_statement":
       return <BrandStatementSection key={key} config={block.config} />;
     case "quick_menu":
@@ -635,7 +634,6 @@ export default function HomePage() {
     <div className="home-page page-enter w-full max-w-full overflow-x-clip">
       <section className="home-top-area pb-4">
         <div className="site-container site-content-container home-page-inner space-y-3 sm:space-y-4">
-          <HomeSearchBar />
           {creamToRender.map((block) => renderHomeSection(block, ctx))}
         </div>
       </section>
