@@ -2,6 +2,7 @@
 
 export type HomeSectionKey =
   | "hero"
+  | "store_news"
   | "hot_searches"
   | "latest_recipes"
   | "recipe_kits"
@@ -11,6 +12,7 @@ export type HomeSectionKey =
   | "featured_courses"
   | "closing_group_buys"
   | "latest_videos"
+  | "service_shortcuts"
   | "trust_services"
   | "brand_statement"
   | "quick_menu"
@@ -26,16 +28,23 @@ export type HomeSectionKey =
   | "store_information"
   | "latest_articles";
 
-export const HOME_SECTION_KEYS: HomeSectionKey[] = [
+/** Primary homepage architecture (spec order 1–8). */
+export const PRIMARY_HOME_SECTION_KEYS: HomeSectionKey[] = [
   "hero",
-  "hot_searches",
+  "store_news",
   "latest_recipes",
   "recipe_kits",
   "popular_categories",
   "popular_baking_products",
+  "closing_group_buys",
+  "service_shortcuts",
+];
+
+export const HOME_SECTION_KEYS: HomeSectionKey[] = [
+  ...PRIMARY_HOME_SECTION_KEYS,
+  "hot_searches",
   "product_series",
   "featured_courses",
-  "closing_group_buys",
   "latest_videos",
   "trust_services",
   "brand_statement",
@@ -56,43 +65,47 @@ export const HOME_SECTION_KEYS: HomeSectionKey[] = [
 /** At most one instance of these types on the homepage. */
 export const HOME_SECTION_SINGLETONS = new Set<HomeSectionKey>([
   "hero",
+  "store_news",
   "hot_searches",
   "brand_statement",
   "quick_menu",
   "ai_assistant",
+  "service_shortcuts",
   "trust_services",
   "store_information",
 ]);
 
-/** Cream top band (search sits above CMS-driven sections). */
-export const CREAM_ZONE_KEYS: HomeSectionKey[] = ["hero", "hot_searches"];
+/** Cream top band — Hero only (search lives inside BrandHero). */
+export const CREAM_ZONE_KEYS: HomeSectionKey[] = ["hero"];
 
 /** Spec default order for the primary architecture. */
 export const HOME_SECTION_SORT_DEFAULT: Record<HomeSectionKey, number> = {
   hero: 10,
-  hot_searches: 20,
+  store_news: 20,
   latest_recipes: 30,
   recipe_kits: 40,
   popular_categories: 50,
   popular_baking_products: 60,
-  product_series: 65,
-  featured_courses: 70,
-  closing_group_buys: 80,
-  latest_videos: 90,
-  trust_services: 100,
-  brand_statement: 110,
-  quick_menu: 120,
-  ai_assistant: 130,
-  baking_inspiration: 140,
-  weekly_new_products: 150,
-  chime_select: 160,
-  weekly_live_streams: 170,
-  weekly_promotions: 180,
-  banner_strip: 185,
-  monthly_challenge: 190,
-  seasonal_themes: 200,
-  store_information: 210,
-  latest_articles: 220,
+  closing_group_buys: 70,
+  service_shortcuts: 80,
+  hot_searches: 90,
+  product_series: 95,
+  featured_courses: 100,
+  latest_videos: 110,
+  trust_services: 120,
+  brand_statement: 130,
+  quick_menu: 140,
+  ai_assistant: 150,
+  baking_inspiration: 160,
+  weekly_new_products: 170,
+  chime_select: 180,
+  weekly_live_streams: 190,
+  weekly_promotions: 200,
+  banner_strip: 205,
+  monthly_challenge: 210,
+  seasonal_themes: 220,
+  store_information: 230,
+  latest_articles: 240,
 };
 
 export function isHomeSectionKey(value: string): value is HomeSectionKey {

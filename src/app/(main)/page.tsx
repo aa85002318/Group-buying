@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Clock3, Heart, Play } from "lucide-react";
 import { BrandHero } from "@/components/brand/hero/BrandHero";
+import { HomeStoreNews } from "@/components/home/HomeStoreNews";
+import { HomeServiceShortcuts } from "@/components/home/HomeServiceShortcuts";
 import { HomeContentArea } from "@/components/home/HomeContentArea";
 import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
 import { PopularCategories } from "@/components/home/PopularCategories";
@@ -159,6 +161,22 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     }
     case "hero":
       return <BrandHero key={reactKey} heroKey="home" />;
+    case "store_news":
+      return (
+        <HomeStoreNews
+          key={reactKey}
+          title={block.title || "門市最新資訊"}
+          subtitle={block.subtitle}
+          viewAllHref={block.viewAllUrl || "/member"}
+          viewAllLabel={
+            typeof block.config?.more_label === "string"
+              ? block.config.more_label
+              : "查看全部"
+          }
+          config={block.config}
+          limit={block.displayCount}
+        />
+      );
     case "brand_statement":
       return <BrandStatementSection key={reactKey} config={block.config} />;
     case "quick_menu":
@@ -229,14 +247,14 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       return (
         <section key={reactKey} className="space-y-3">
           <SectionHeader
-            title={block.title || "本週熱門食譜"}
+            title={block.title || "熱門食譜"}
             href={block.viewAllUrl || "/recipes"}
             className="!mb-0"
           />
           {block.subtitle ? (
             <p className="text-xs text-foreground-secondary">{block.subtitle}</p>
           ) : (
-            <p className="text-xs text-foreground-secondary">一分鐘教你做 · 老師推薦</p>
+            <p className="text-xs text-foreground-secondary">從靈感開始，找到今天想做的甜點</p>
           )}
           <HomeSectionFrame
             loading={ctx.recipesLoading}
@@ -249,12 +267,12 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
             emptyActionLabel="看全部食譜"
             skeletonCount={3}
           >
-            <HorizontalScroller className="md:grid md:grid-cols-3 md:gap-4 md:overflow-visible xl:grid-cols-4">
+            <HorizontalScroller className="md:grid md:grid-cols-4 md:gap-4 md:overflow-visible">
               {recipes.map((r) => (
                 <Link
                   key={r.id}
                   href={r.href}
-                  className="flex w-[152px] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface min-[375px]:w-[160px] sm:w-[168px] md:w-auto"
+                  className="flex w-[42vw] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface min-[375px]:w-[44vw] sm:w-[168px] md:w-auto"
                 >
                   <div className="relative aspect-[4/3] bg-surface-soft">
                     {r.coverImage ? (
@@ -293,8 +311,12 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       return (
         <RecipeKitsSection
           key={reactKey}
-          title={block.title || "一鍵購買材料"}
-          subtitle={block.subtitle}
+          title={block.title || "一鍵買齊材料"}
+          subtitle={
+            block.subtitle ||
+            (typeof block.config?.subtitle === "string" ? block.config.subtitle : undefined) ||
+            "跟著食譜，一次買齊所有材料"
+          }
           viewAllHref={block.viewAllUrl || "/recipes"}
           limit={block.displayCount}
         />
@@ -317,6 +339,16 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
           title={block.title || "安心服務"}
           subtitle={block.subtitle}
           items={parseTrustServices(block.config)}
+        />
+      );
+    case "service_shortcuts":
+      return (
+        <HomeServiceShortcuts
+          key={reactKey}
+          title={block.title || "服務快捷入口"}
+          subtitle={block.subtitle}
+          config={block.config}
+          limit={block.displayCount}
         />
       );
     case "weekly_new_products": {
@@ -362,7 +394,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       return (
         <HorizontalProductRail
           key={reactKey}
-          title={block.title || "本週熱賣商品"}
+          title={block.title || "本週熱門商品"}
           href={block.viewAllUrl || "/baking-materials"}
           products={products}
           badge="hot"
@@ -440,7 +472,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       return (
         <GroupBuyClosingSection
           key={reactKey}
-          title={block.title || "團購優惠"}
+          title={block.title || "團購優惠中"}
           events={closing}
           loading={ctx.eventsLoading}
           error={ctx.eventsError}

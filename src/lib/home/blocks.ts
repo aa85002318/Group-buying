@@ -1,9 +1,12 @@
 import type { HomepageBlock } from "@/lib/types/database";
 import {
   HOME_SECTION_SORT_DEFAULT,
+  PRIMARY_HOME_SECTION_KEYS,
   isHomeSectionKey,
   type HomeSectionKey,
 } from "@/lib/home/section-keys";
+import { DEFAULT_SERVICE_SHORTCUTS } from "@/lib/home/service-shortcuts";
+import { DEFAULT_STORE_NEWS_CARDS } from "@/lib/home/store-news";
 
 export type HomeBlockKey = HomeSectionKey;
 
@@ -19,24 +22,32 @@ export const SECTION_DEFAULTS: Record<
     config?: Record<string, unknown>;
   }
 > = {
-  hero: { title: "Hero Banner", displayCount: 5, visible: true, dataSource: "banners" },
+  hero: { title: "Hero 搜尋區", displayCount: 5, visible: true, dataSource: "banners" },
+  store_news: {
+    title: "門市最新資訊",
+    displayCount: 2,
+    visible: true,
+    viewAllUrl: "/member",
+    config: { cards: DEFAULT_STORE_NEWS_CARDS },
+  },
   hot_searches: {
     title: "熱門搜尋",
     displayCount: 10,
-    visible: true,
+    visible: false,
     sourceMode: "manual",
   },
   latest_recipes: {
-    title: "本週熱門食譜",
-    displayCount: 4,
+    title: "熱門食譜",
+    displayCount: 8,
     visible: true,
     viewAllUrl: "/recipes",
   },
   recipe_kits: {
-    title: "一鍵購買材料",
+    title: "一鍵買齊材料",
     displayCount: 4,
     visible: true,
     viewAllUrl: "/recipes",
+    config: { subtitle: "跟著食譜，一次買齊所有材料" },
   },
   popular_categories: {
     title: "找材料",
@@ -45,7 +56,7 @@ export const SECTION_DEFAULTS: Record<
     viewAllUrl: "/baking-materials",
   },
   popular_baking_products: {
-    title: "本週熱賣商品",
+    title: "本週熱門商品",
     displayCount: 8,
     visible: true,
     sourceMode: "manual",
@@ -55,7 +66,7 @@ export const SECTION_DEFAULTS: Record<
   product_series: {
     title: "系列商品曝光",
     displayCount: 8,
-    visible: true,
+    visible: false,
     sourceMode: "manual",
     viewAllUrl: "/baking-materials",
     config: { product_scope: "baking", badge: "hot" },
@@ -63,81 +74,88 @@ export const SECTION_DEFAULTS: Record<
   featured_courses: {
     title: "最新課程",
     displayCount: 4,
-    visible: true,
+    visible: false,
     viewAllUrl: "/courses",
   },
   closing_group_buys: {
-    title: "團購優惠",
+    title: "團購優惠中",
     displayCount: 4,
     visible: true,
     viewAllUrl: "/group-buy",
+    config: { show_countdown: true, show_progress: true },
   },
   latest_videos: {
     title: "最新影音",
     displayCount: 4,
-    visible: true,
+    visible: false,
     viewAllUrl: "/videos",
   },
-  trust_services: { title: "安心服務", displayCount: 4, visible: true },
-  brand_statement: { title: "品牌定位", displayCount: 4, visible: true },
-  quick_menu: { title: "快捷入口", displayCount: 8, visible: true },
-  ai_assistant: { title: "AI 烘焙助手", displayCount: 4, visible: true },
-  baking_inspiration: { title: "今日烘焙靈感", displayCount: 4, visible: true },
+  service_shortcuts: {
+    title: "服務快捷入口",
+    displayCount: 4,
+    visible: true,
+    config: { items: DEFAULT_SERVICE_SHORTCUTS },
+  },
+  trust_services: { title: "安心服務", displayCount: 4, visible: false },
+  brand_statement: { title: "品牌定位", displayCount: 4, visible: false },
+  quick_menu: { title: "快捷入口", displayCount: 8, visible: false },
+  ai_assistant: { title: "AI 烘焙助手", displayCount: 4, visible: false },
+  baking_inspiration: { title: "今日烘焙靈感", displayCount: 4, visible: false },
   weekly_new_products: {
     title: "本週新品推薦",
     displayCount: 8,
-    visible: true,
+    visible: false,
     viewAllUrl: "/products?sort=newest",
     config: { new_days: 7, product_scope: "baking" },
   },
   chime_select: {
     title: "CHIME 精選",
     displayCount: 8,
-    visible: true,
+    visible: false,
     viewAllUrl: "/shop?scope=chime_select",
     config: { product_scope: "chime_select" },
   },
   weekly_live_streams: {
     title: "本週團購直播",
     displayCount: 4,
-    visible: true,
+    visible: false,
     viewAllUrl: "/live",
   },
   weekly_promotions: {
     title: "本週優惠",
     displayCount: 4,
-    visible: true,
+    visible: false,
     dataSource: "banners",
   },
   banner_strip: {
     title: "Banner 帶",
     displayCount: 4,
-    visible: true,
+    visible: false,
     dataSource: "banners",
     config: { placement: "home_custom" },
   },
   monthly_challenge: {
     title: "本月烘焙挑戰",
     displayCount: 3,
-    visible: true,
+    visible: false,
     viewAllUrl: "/challenges",
   },
   seasonal_themes: {
     title: "季節主題企劃",
     displayCount: 4,
-    visible: true,
+    visible: false,
     viewAllUrl: "/themes",
   },
   store_information: {
     title: "門市資訊",
     displayCount: 1,
-    visible: true,
+    visible: false,
     viewAllUrl: "/stores",
   },
   latest_articles: {
     title: "最新資訊",
     displayCount: 5,
-    visible: true,
+    visible: false,
     viewAllUrl: "/articles",
   },
 };
@@ -224,10 +242,9 @@ export function listOrderedHomeSections(
     .filter((b): b is ResolvedHomeBlock => Boolean(b));
 
   if (rows.length === 0) {
-    return (Object.keys(HOME_SECTION_SORT_DEFAULT) as HomeSectionKey[])
-      .sort((a, b) => HOME_SECTION_SORT_DEFAULT[a] - HOME_SECTION_SORT_DEFAULT[b])
-      .map((key) => resolveHomeBlock([], key))
-      .filter((b) => b.visible);
+    return PRIMARY_HOME_SECTION_KEYS.map((key) => resolveHomeBlock([], key)).filter(
+      (b) => b.visible
+    );
   }
 
   return rows

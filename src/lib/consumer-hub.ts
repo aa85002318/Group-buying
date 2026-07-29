@@ -215,9 +215,19 @@ export const CONSUMER_SECONDARY_NAV = [
   { href: "/store-map", label: "門市地圖" },
 ] as const;
 
-/** Mobile bottom nav — 首頁／團購／烘焙圈（中央凸出）／食譜／我的 */
+/** Mobile bottom nav — 首頁／商城／團購／AI／我的 */
 export const CONSUMER_BOTTOM_NAV = [
   { href: "/", label: "首頁", match: (p: string) => p === "/", accent: "primary" as const },
+  {
+    href: "/baking-materials",
+    label: "商城",
+    match: (p: string) =>
+      p.startsWith("/baking-materials") ||
+      p.startsWith("/shop") ||
+      p.startsWith("/products") ||
+      p.startsWith("/categories"),
+    accent: "primary" as const,
+  },
   {
     href: "/group-buy",
     label: "團購",
@@ -225,21 +235,9 @@ export const CONSUMER_BOTTOM_NAV = [
     accent: "primary" as const,
   },
   {
-    href: "/baking-materials",
-    label: "烘焙圈",
-    match: (p: string) =>
-      p.startsWith("/baking-materials") ||
-      p.startsWith("/shop") ||
-      p.startsWith("/products") ||
-      p.startsWith("/categories"),
-    accent: "primary" as const,
-    featured: true as const,
-  },
-  {
-    href: "/recipes",
-    label: "食譜",
-    match: (p: string) =>
-      p.startsWith("/recipes") || p.startsWith("/videos") || p.startsWith("/articles"),
+    href: "/ai",
+    label: "AI",
+    match: (p: string) => p.startsWith("/ai") || p.startsWith("/ai-tools"),
     accent: "primary" as const,
   },
   {
