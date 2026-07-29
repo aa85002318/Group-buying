@@ -46,7 +46,7 @@ export function HotSearchChips({
           {keywords.map((k) => (
             <li key={k.id} className="shrink-0">
               <Link
-                href={hotSearchHref(k.label)}
+                href={hotSearchHref(k)}
                 className="home-hot-chip inline-flex h-7 items-center whitespace-nowrap rounded-full px-2.5 text-xs font-medium"
               >
                 #{k.label}

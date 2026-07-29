@@ -94,6 +94,10 @@ export async function POST(request: Request) {
         is_active: body.is_active !== false,
         starts_at: body.starts_at ?? null,
         ends_at: body.ends_at ?? null,
+        background_color: body.background_color ?? null,
+        text_color: body.text_color ?? null,
+        text_align: body.text_align ?? "center",
+        audience: body.audience ?? "all",
         created_by: auth!.profile.id,
         updated_by: auth!.profile.id,
       })

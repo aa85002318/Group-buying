@@ -27,6 +27,9 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/stores",
   "/admin/challenges",
   "/admin/themes",
+  "/admin/side-menu",
+  "/admin/navigation",
+  "/admin/settings",
 ] as const;
 
 export const CUSTOMER_SERVICE_ADMIN_PATHS = [
@@ -162,15 +165,18 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin", "content_editor", "customer_service"],
     items: [
       { href: "/admin/home", label: "首頁設定", roles: ["admin", "content_editor"] },
+      { href: "/admin/home/recipe-kits", label: "材料包", roles: ["admin", "content_editor"] },
       { href: "/admin/content/popups", label: "首頁彈跳公告", roles: ["admin", "content_editor"] },
       { href: "/admin/banners", label: "Banner", roles: ["admin", "content_editor"] },
+      { href: "/admin/settings/branding", label: "品牌設定", roles: ["admin", "content_editor"] },
       { href: "/admin/news", label: "公告／最新資訊", roles: ["admin", "content_editor"] },
       { href: "/admin/articles", label: "文章管理", roles: ["admin", "content_editor"] },
       { href: "/admin/videos", label: "影音", roles: ["admin", "content_editor"] },
       { href: "/admin/livestreams", label: "直播", roles: ["admin", "content_editor"] },
       { href: "/admin/themes", label: "季節主題", roles: ["admin", "content_editor"] },
       { href: "/admin/faqs", label: "FAQ", roles: ["admin", "content_editor", "customer_service"] },
-      { href: "/admin/side-menu", label: "側邊選單", roles: ["admin"] },
+      { href: "/admin/side-menu", label: "側邊選單", roles: ["admin", "content_editor"] },
+      { href: "/admin/navigation", label: "前台導覽", roles: ["admin", "content_editor"] },
       { href: "/admin/courses", label: "課程", roles: ["admin"] },
     ],
   },

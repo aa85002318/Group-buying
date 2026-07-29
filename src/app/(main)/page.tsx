@@ -24,6 +24,12 @@ import { WeeklyLiveStreamsSection } from "@/components/home/WeeklyLiveStreamsSec
 import { MonthlyChallengeSection } from "@/components/home/MonthlyChallengeSection";
 import { SeasonalThemesSection } from "@/components/home/SeasonalThemesSection";
 import { StoreInformationSection } from "@/components/home/StoreInformationSection";
+import { RecipeKitsSection } from "@/components/home/RecipeKitsSection";
+import { FeaturedCoursesSection } from "@/components/home/FeaturedCoursesSection";
+import {
+  TrustServicesSection,
+  parseTrustServices,
+} from "@/components/home/TrustServicesSection";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import {
   filterProductsByScope,
@@ -193,17 +199,37 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       return (
         <PopularCategories
           key={key}
-          items={fromCms.length > 0 ? fromCms : undefined}
-          title={block.title || "熱門烘焙分類"}
+          items={
+            fromCms.length > 0
+              ? fromCms.map((c) => ({
+                  id: c.id,
+                  name: c.name,
+                  href: c.href,
+                  imageUrl: c.imageUrl,
+                  icon: c.icon,
+                  iconBg: c.iconBg,
+                }))
+              : undefined
+          }
+          title={block.title || "找材料"}
         />
       );
     }
     case "latest_recipes": {
-      const recipes = ctx.recipes.slice(0, block.displayCount);
+      let recipes = ctx.recipes;
+      if (block.manualIds.length > 0) {
+        const byId = new Map(ctx.recipes.map((r) => [r.id, r]));
+        recipes = block.manualIds
+          .map((id) => byId.get(id))
+          .filter(Boolean) as RecipeSummary[];
+      }
+      recipes = recipes.slice(0, block.displayCount);
+      const difficultyLabel = (d?: string | null) =>
+        d === "easy" ? "簡單" : d === "hard" ? "進階" : d === "medium" ? "中等" : null;
       return (
         <section key={key} className="space-y-3">
           <SectionHeader
-            title={block.title || "最新食譜"}
+            title={block.title || "本週熱門食譜"}
             href={block.viewAllUrl || "/recipes"}
             className="!mb-0"
           />
@@ -246,9 +272,14 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
                     <p className="line-clamp-2 text-[13px] font-bold text-brand-caramel">
                       {r.title}
                     </p>
-                    <p className="inline-flex items-center gap-1 text-[11px] text-foreground-secondary">
-                      <Clock3 className="h-3 w-3 text-brand-yellow" aria-hidden />
-                      {r.durationMinutes} 分
+                    <p className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground-secondary">
+                      <span className="inline-flex items-center gap-1">
+                        <Clock3 className="h-3 w-3 text-brand-yellow" aria-hidden />
+                        {r.durationMinutes} 分
+                      </span>
+                      {difficultyLabel(r.difficulty) ? (
+                        <span>{difficultyLabel(r.difficulty)}</span>
+                      ) : null}
                     </p>
                   </div>
                 </Link>
@@ -258,6 +289,36 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
         </section>
       );
     }
+    case "recipe_kits":
+      return (
+        <RecipeKitsSection
+          key={key}
+          title={block.title || "一鍵購買材料"}
+          subtitle={block.subtitle}
+          viewAllHref={block.viewAllUrl || "/recipes"}
+          limit={block.displayCount}
+        />
+      );
+    case "featured_courses":
+      return (
+        <FeaturedCoursesSection
+          key={key}
+          title={block.title || "最新課程"}
+          subtitle={block.subtitle}
+          viewAllHref={block.viewAllUrl || "/courses"}
+          limit={block.displayCount}
+          manualIds={block.manualIds}
+        />
+      );
+    case "trust_services":
+      return (
+        <TrustServicesSection
+          key={key}
+          title={block.title || "安心服務"}
+          subtitle={block.subtitle}
+          items={parseTrustServices(block.config)}
+        />
+      );
     case "weekly_new_products": {
       const baking = filterProductsByScope(ctx.products, "baking");
       const newDays = Math.max(1, Number(block.config?.new_days ?? 7) || 7);
@@ -301,7 +362,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       return (
         <HorizontalProductRail
           key={key}
-          title={block.title || "人氣烘焙材料"}
+          title={block.title || "本週熱賣商品"}
           href={block.viewAllUrl || "/baking-materials"}
           products={products}
           badge="hot"
@@ -341,7 +402,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       return (
         <GroupBuyClosingSection
           key={key}
-          title={block.title || "即將結單"}
+          title={block.title || "團購優惠"}
           events={closing}
           loading={ctx.eventsLoading}
           error={ctx.eventsError}

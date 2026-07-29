@@ -200,6 +200,10 @@ export interface CmsBanner {
   badge_text?: string | null;
   placement?: string;
   status?: "draft" | "active" | "inactive";
+  background_color?: string | null;
+  text_color?: string | null;
+  text_align?: "left" | "center" | "right";
+  audience?: "all" | "guest" | "member";
   is_active: boolean;
   sort_order: number;
   starts_at: string | null;

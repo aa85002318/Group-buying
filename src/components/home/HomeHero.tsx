@@ -11,20 +11,31 @@ type Slide = {
   id: string;
   /** 僅供 aria-label / alt，不在 Banner 上顯示 */
   label: string;
+  subtitle: string | null;
+  buttonText: string | null;
   href: string | null;
   image: string | null;
   mobileImage: string | null;
+  backgroundColor: string | null;
+  textColor: string | null;
+  textAlign: "left" | "center" | "right";
 };
 
 function mapBanner(b: CmsBanner, i: number): Slide {
   const href =
     b.link_url && isSafeLinkUrl(b.link_url) ? b.link_url : null;
+  const align = b.text_align === "left" || b.text_align === "right" ? b.text_align : "center";
   return {
     id: b.id ?? `cms-${i}`,
     label: b.title || `Banner ${i + 1}`,
+    subtitle: b.subtitle ?? null,
+    buttonText: b.button_text ?? null,
     href,
     image: b.image_url,
     mobileImage: b.mobile_image_url ?? null,
+    backgroundColor: b.background_color ?? null,
+    textColor: b.text_color ?? null,
+    textAlign: align,
   };
 }
 
@@ -68,11 +79,32 @@ function SlideFrame({
   const frame = (
     <div
       className={cn(
-        "relative aspect-[2/1] w-full overflow-hidden rounded-[20px] border border-border bg-surface-soft",
+        "relative aspect-[18/7] max-md:aspect-[750/700] w-full overflow-hidden rounded-[20px] border border-border bg-surface-soft",
         className
       )}
+      style={slide.backgroundColor ? { backgroundColor: slide.backgroundColor } : undefined}
     >
       <BannerImage slide={slide} />
+      {(slide.subtitle || slide.buttonText) && (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 flex flex-col justify-end gap-2 p-5 md:p-8",
+            slide.textAlign === "left" && "items-start text-left",
+            slide.textAlign === "right" && "items-end text-right",
+            slide.textAlign === "center" && "items-center text-center"
+          )}
+          style={{ color: slide.textColor || "#FFFFFF" }}
+        >
+          {slide.subtitle ? (
+            <p className="max-w-[90%] text-base font-bold drop-shadow md:text-2xl">{slide.subtitle}</p>
+          ) : null}
+          {slide.buttonText ? (
+            <span className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-white shadow">
+              {slide.buttonText}
+            </span>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 
@@ -181,9 +213,14 @@ export function HomeHero({ className }: { className?: string }) {
           slide={{
             id: "empty",
             label: "Banner",
+            subtitle: null,
+            buttonText: null,
             href: APP_ROUTES.shop,
             image: null,
             mobileImage: null,
+            backgroundColor: null,
+            textColor: null,
+            textAlign: "center",
           }}
         />
       )}

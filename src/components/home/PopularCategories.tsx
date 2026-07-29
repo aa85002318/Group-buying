@@ -4,57 +4,74 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { HorizontalScroller } from "@/components/home/HorizontalScroller";
+import { CategoryLucideIcon } from "@/components/home/TrustServicesSection";
 
 export type PopularCategoryItem = {
   id: string;
   name: string;
   href: string;
   imageUrl?: string | null;
+  icon?: string | null;
+  iconBg?: string | null;
 };
 
 const DEFAULT_CATEGORIES: PopularCategoryItem[] = [
-  { id: "flour", name: "麵粉", href: "/baking-materials/flour", imageUrl: "/categories/food.png" },
+  { id: "flour", name: "麵粉", href: "/baking-materials/flour", icon: "Wheat", iconBg: "#FFE8E2" },
   {
     id: "choco",
     name: "巧克力",
     href: "/baking-materials/chocolate",
-    imageUrl: "/categories/fresh.png",
+    icon: "Package",
+    iconBg: "#FFF0D6",
   },
   {
     id: "dairy",
-    name: "乳製品",
+    name: "奶油乳酪",
     href: "/baking-materials/dairy",
-    imageUrl: "/categories/kitchen.png",
-  },
-  {
-    id: "tools",
-    name: "器具",
-    href: "/baking-materials/tools",
-    imageUrl: "/categories/seasonal.png",
-  },
-  {
-    id: "pack",
-    name: "包裝",
-    href: "/baking-materials/packaging",
-    imageUrl: "/categories/cleaning.png",
-  },
-  {
-    id: "frozen",
-    name: "冷凍",
-    href: "/baking-materials/frozen-goods",
-    imageUrl: "/categories/frozen.png",
-  },
-  {
-    id: "chill",
-    name: "冷藏",
-    href: "/baking-materials/chilled-goods",
-    imageUrl: "/categories/fresh.png",
+    icon: "Milk",
+    iconBg: "#E8F6FF",
   },
   {
     id: "mix",
     name: "預拌粉",
     href: "/baking-materials/premix",
-    imageUrl: "/categories/food.png",
+    icon: "Package",
+    iconBg: "#EAF8F0",
+  },
+  {
+    id: "raw",
+    name: "烘焙原料",
+    href: "/baking-materials/ingredients",
+    icon: "Egg",
+    iconBg: "#FFE8E2",
+  },
+  {
+    id: "pack",
+    name: "包裝材料",
+    href: "/baking-materials/packaging",
+    icon: "Box",
+    iconBg: "#F2E7DF",
+  },
+  {
+    id: "tools",
+    name: "器具",
+    href: "/baking-materials/tools",
+    icon: "CookingPot",
+    iconBg: "#E8F6FF",
+  },
+  {
+    id: "frozen",
+    name: "冷凍食品",
+    href: "/baking-materials/frozen-goods",
+    icon: "Snowflake",
+    iconBg: "#E8F6FF",
+  },
+  {
+    id: "chill",
+    name: "冷藏食品",
+    href: "/baking-materials/chilled-goods",
+    icon: "Refrigerator",
+    iconBg: "#EAF8F0",
   },
 ];
 
@@ -63,10 +80,10 @@ type PopularCategoriesProps = {
   title?: string;
 };
 
-/** 圓形圖入口，一次約 5–6 個 */
+/** 圓形圖入口；支援 Lucide icon 或圖片 */
 export function PopularCategories({
   items = DEFAULT_CATEGORIES,
-  title = "熱門分類",
+  title = "找材料",
 }: PopularCategoriesProps) {
   return (
     <section aria-label={title} className="space-y-3">
@@ -80,8 +97,9 @@ export function PopularCategories({
           >
             <span
               className={cn(
-                "relative flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full border border-border-soft bg-surface-soft min-[375px]:h-[64px] min-[375px]:w-[64px] sm:h-[72px] sm:w-[72px] md:h-auto md:w-full md:aspect-square md:rounded-[18px]"
+                "relative flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full border border-border-soft min-[375px]:h-[64px] min-[375px]:w-[64px] sm:h-[72px] sm:w-[72px] md:h-auto md:w-full md:aspect-square md:rounded-[18px]"
               )}
+              style={{ backgroundColor: item.iconBg || "#FFF5F0" }}
             >
               {item.imageUrl ? (
                 <Image
@@ -93,9 +111,7 @@ export function PopularCategories({
                   unoptimized
                 />
               ) : (
-                <span className="text-xs font-bold text-brand-caramel">
-                  {item.name.slice(0, 2)}
-                </span>
+                <CategoryLucideIcon name={item.icon} className="h-6 w-6 text-brand-caramel" />
               )}
             </span>
             <span className="line-clamp-1 text-center text-[12px] font-medium text-brand-caramel">
