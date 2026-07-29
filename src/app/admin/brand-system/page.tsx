@@ -3,7 +3,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const LINKS = [
   { href: "/admin/brand-system/overview", label: "系統總覽", desc: "Brand Experience 狀態與指引" },
-  { href: "/admin/brand-system/heroes", label: "Brand Hero", desc: "各頁主視覺內容管理" },
+  { href: "/admin/brand-system/heroes", label: "Brand Hero", desc: "16:9 背景圖上傳、標題、搜尋與熱門標籤" },
   { href: "/admin/brand-system/navigation", label: "導覽管理", desc: "Header／Drawer／Bottom Nav" },
   { href: "/admin/brand-system/home-layout", label: "首頁版面", desc: "區塊排序／開關／標題" },
   { href: "/admin/home", label: "首頁 CMS", desc: "既有首頁區塊內容與發布" },

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -168,27 +169,33 @@ function HeroEditForm({
       {/* Background images */}
       <section className="space-y-3">
         <p className="text-sm font-medium text-coffee">背景板</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <AdminImageUpload
+            label="桌機版 16:9 背景圖"
+            hint="建議 1920×1080 或 1600×900 px，≤700KB"
+            images={editing.desktop_image_url ? [editing.desktop_image_url] : []}
+            onChange={(urls) =>
+              setEditing({ ...editing, desktop_image_url: urls[0] ?? null })
+            }
+            uploadFolder="brand-heroes"
+            maxImages={1}
+            multiple={false}
+            aspectRatio="video"
+          />
+          <AdminImageUpload
+            label="手機版 16:9 背景圖"
+            hint="建議 1280×720 或 960×540 px，≤450KB；未設定則使用桌機圖"
+            images={editing.mobile_image_url ? [editing.mobile_image_url] : []}
+            onChange={(urls) =>
+              setEditing({ ...editing, mobile_image_url: urls[0] ?? null })
+            }
+            uploadFolder="brand-heroes"
+            maxImages={1}
+            multiple={false}
+            aspectRatio="video"
+          />
+        </div>
         <div className="grid gap-2 sm:grid-cols-2">
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">桌機版 16:9 背景圖片 URL</label>
-            <Input
-              value={editing.desktop_image_url ?? ""}
-              onChange={(e) =>
-                setEditing({ ...editing, desktop_image_url: e.target.value || null })
-              }
-              placeholder="https://… (推薦 1920×1080px，≤700KB)"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">手機版 16:9 背景圖片 URL</label>
-            <Input
-              value={editing.mobile_image_url ?? ""}
-              onChange={(e) =>
-                setEditing({ ...editing, mobile_image_url: e.target.value || null })
-              }
-              placeholder="https://… (推薦 1280×720px，≤450KB)"
-            />
-          </div>
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">圖片替代文字（Alt）</label>
             <Input

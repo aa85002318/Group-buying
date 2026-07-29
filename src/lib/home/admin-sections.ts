@@ -36,12 +36,12 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   },
   {
     id: "hero",
-    label: "Hero Banner",
-    description: "首頁主視覺輪播。圖片建議 1400×700 px，圖上不放文字。",
-    contentMode: "banners",
-    manageHref: "/admin/banners?placement=home_hero",
-    manageLabel: "管理 Hero Banner",
-    hasDisplayCount: true,
+    label: "Hero 搜尋區",
+    description: "BrandHero 主視覺、搜尋與熱門標籤。樣式固定，內容由品牌體驗系統管理。",
+    contentMode: "external",
+    manageHref: "/admin/brand-system/heroes",
+    manageLabel: "管理 Brand Hero",
+    hasDisplayCount: false,
   },
   {
     id: "brand_statement",
