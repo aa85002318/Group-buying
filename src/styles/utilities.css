@@ -1,56 +1,55 @@
 /**
  * Brand Experience System — utility helpers
  * Prefer these over ad-hoc HEX in brand components.
+ * Note: defined outside @layer so this file can be imported before @tailwind.
  */
 
-@layer utilities {
-  .brand-text-primary {
-    color: var(--brand-text-primary);
-  }
-  .brand-text-secondary {
-    color: var(--brand-text-secondary);
-  }
-  .brand-text-muted {
-    color: var(--brand-text-muted);
-  }
-  .brand-bg {
-    background-color: var(--brand-background);
-  }
-  .brand-bg-soft {
-    background-color: var(--brand-background-soft);
-  }
-  .brand-surface {
-    background-color: var(--brand-surface);
-  }
-  .brand-border {
-    border-color: var(--brand-border);
-  }
-  .brand-shadow-sm {
-    box-shadow: var(--shadow-sm);
-  }
-  .brand-shadow-md {
-    box-shadow: var(--shadow-md);
-  }
-  .brand-focus-ring {
-    outline: none;
-  }
-  .brand-focus-ring:focus-visible {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 35%, transparent);
-  }
+.brand-text-primary {
+  color: var(--brand-text-primary);
+}
+.brand-text-secondary {
+  color: var(--brand-text-secondary);
+}
+.brand-text-muted {
+  color: var(--brand-text-muted);
+}
+.brand-bg {
+  background-color: var(--brand-background);
+}
+.brand-bg-soft {
+  background-color: var(--brand-background-soft);
+}
+.brand-surface {
+  background-color: var(--brand-surface);
+}
+.brand-border {
+  border-color: var(--brand-border);
+}
+.brand-shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+.brand-shadow-md {
+  box-shadow: var(--shadow-md);
+}
+.brand-focus-ring {
+  outline: none;
+}
+.brand-focus-ring:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 35%, transparent);
+}
+.brand-page-pad {
+  padding-left: var(--page-padding-mobile);
+  padding-right: var(--page-padding-mobile);
+}
+@media (min-width: 768px) {
   .brand-page-pad {
-    padding-left: var(--page-padding-mobile);
-    padding-right: var(--page-padding-mobile);
+    padding-left: var(--page-padding-tablet);
+    padding-right: var(--page-padding-tablet);
   }
-  @media (min-width: 768px) {
-    .brand-page-pad {
-      padding-left: var(--page-padding-tablet);
-      padding-right: var(--page-padding-tablet);
-    }
-  }
-  @media (min-width: 1024px) {
-    .brand-page-pad {
-      padding-left: var(--page-padding-desktop);
-      padding-right: var(--page-padding-desktop);
-    }
+}
+@media (min-width: 1024px) {
+  .brand-page-pad {
+    padding-left: var(--page-padding-desktop);
+    padding-right: var(--page-padding-desktop);
   }
 }
