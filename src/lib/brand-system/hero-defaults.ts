@@ -5,8 +5,12 @@ export const BRAND_HERO_DEFAULTS: Record<BrandHeroKey, BrandHeroData> = {
     heroKey: "home",
     title: "今天想做什麼？",
     subtitle: "從食譜開始，輕鬆完成每一個烘焙時刻",
+    showTitle: true,
+    showSubtitle: true,
+    imagePosition: "center",
     searchPlaceholder: "搜尋食譜、材料、商品、課程……",
     searchScope: "global",
+    showPopularTags: true,
     tags: [
       { id: "t1", label: "草莓蛋糕", keyword: "草莓蛋糕", sortOrder: 10 },
       { id: "t2", label: "司康", keyword: "司康", sortOrder: 20 },
