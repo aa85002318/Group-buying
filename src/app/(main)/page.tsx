@@ -606,8 +606,16 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
 }
 
 export default function HomePage() {
+  const [draftPreview, setDraftPreview] = useState(false);
+
   const cmsLoad = useIndependentLoad<HomepageBlock[]>([], async () => {
-    const r = await fetch("/api/cms");
+    const preview =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("preview") === "draft";
+    setDraftPreview(preview);
+    const r = await fetch(preview ? "/api/cms?preview=draft" : "/api/cms", {
+      credentials: "include",
+    });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error ?? "首頁設定載入失敗");
     return d.blocks ?? [];
@@ -694,6 +702,11 @@ export default function HomePage() {
 
   return (
     <div className="home-page page-enter w-full max-w-full overflow-x-clip">
+      {draftPreview ? (
+        <div className="sticky top-0 z-50 border-b border-amber-300 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-900">
+          草稿預覽模式 — 尚未發布，訪客看不到此版面
+        </div>
+      ) : null}
       <section className="home-top-area pb-4">
         <div className="site-container site-content-container home-page-inner space-y-3 sm:space-y-4">
           <HomeSearchBar />

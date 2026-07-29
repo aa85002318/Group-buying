@@ -10,7 +10,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
@@ -29,6 +29,7 @@ import {
 } from "@/lib/home/hot-search";
 import type { HomepageBlock } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
+import { HomeLayoutPublishBar } from "@/components/admin/HomeLayoutPublishBar";
 
 type ProductOption = {
   id: string;
@@ -62,10 +63,15 @@ export default function AdminHomeHubPage() {
   const [pageForm, setPageForm] = useState({ slug: "", title: "", content: "" });
   const [pageSaving, setPageSaving] = useState(false);
 
+  useEffect(() => {
+    const section = new URLSearchParams(window.location.search).get("section");
+    if (section) setExpanded(section);
+  }, []);
+
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetch("/api/admin/cms")
+    fetch("/api/admin/cms?source=draft")
       .then(async (r) => {
         const d = await r.json();
         if (!r.ok) throw new Error(d.error ?? "載入失敗");
@@ -103,7 +109,7 @@ export default function AdminHomeHubPage() {
       const res = await fetch("/api/admin/cms", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "block", id, ...updates }),
+        body: JSON.stringify({ kind: "block", id, target: "draft", ...updates }),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error ?? "儲存失敗");
@@ -164,10 +170,9 @@ export default function AdminHomeHubPage() {
     const idx = ordered.findIndex((b) => b.id === block.id);
     const swap = ordered[idx + dir];
     if (!swap) return;
-    await Promise.all([
-      patch(block.id, { sort_order: swap.sort_order }),
-      patch(swap.id, { sort_order: block.sort_order }),
-    ]);
+    // Sequential — draft patches must not race
+    await patch(block.id, { sort_order: swap.sort_order });
+    await patch(swap.id, { sort_order: block.sort_order });
   };
 
   const filterProductsForScope = useCallback(
@@ -187,20 +192,67 @@ export default function AdminHomeHubPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="首頁／CMS 管理"
-        description="整合首頁區塊設定、Banner／快捷入口連結，以及靜態 CMS 頁面。"
+        description="編輯草稿版面（不影響線上）。預覽確認後再發布；亦可排程或還原歷史版本。"
       />
+
+      <HomeLayoutPublishBar onChanged={load} />
 
       <div className="rounded-xl border border-border bg-white p-4 text-sm text-muted-foreground shadow-card">
         <p className="font-semibold text-coffee">相關內容管理</p>
         <ul className="mt-2 grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
           <li>
-            <Link className="text-primary underline" href="/admin/banners">
+            <Link className="text-primary underline" href="/admin/home/banners">
               Banner 管理
+            </Link>
+          </li>
+          <li>
+            <Link className="text-primary underline" href="/admin/home/search-tags">
+              熱門搜尋
+            </Link>
+          </li>
+          <li>
+            <Link className="text-primary underline" href="/admin/home/featured-recipes">
+              精選食譜
+            </Link>
+          </li>
+          <li>
+            <Link className="text-primary underline" href="/admin/home/recipe-kits">
+              材料包
+            </Link>
+          </li>
+          <li>
+            <Link className="text-primary underline" href="/admin/home/ingredient-categories">
+              找材料分類
+            </Link>
+          </li>
+          <li>
+            <Link className="text-primary underline" href="/admin/home/featured-products">
+              熱賣商品
+            </Link>
+          </li>
+          <li>
+            <Link className="text-primary underline" href="/admin/home/featured-courses">
+              最新課程
+            </Link>
+          </li>
+          <li>
+            <Link className="text-primary underline" href="/admin/home/group-buy-section">
+              團購區塊
             </Link>
           </li>
           <li>
             <Link className="text-primary underline" href="/admin/home/quick-menu">
               快捷入口
+            </Link>
+          </li>
+          <li>
+            <Link className="text-primary underline" href="/admin/navigation">
+              收縮選單
+            </Link>
+          </li>
+          <li>
+            <Link className="text-primary underline" href="/admin/settings/branding">
+              品牌設定
             </Link>
           </li>
           <li>
@@ -229,26 +281,6 @@ export default function AdminHomeHubPage() {
             </Link>
           </li>
           <li>
-            <Link className="text-primary underline" href="/admin/livestreams">
-              直播
-            </Link>
-          </li>
-          <li>
-            <Link className="text-primary underline" href="/admin/challenges">
-              烘焙挑戰
-            </Link>
-          </li>
-          <li>
-            <Link className="text-primary underline" href="/admin/themes">
-              季節主題
-            </Link>
-          </li>
-          <li>
-            <Link className="text-primary underline" href="/admin/stores">
-              門市
-            </Link>
-          </li>
-          <li>
             <Link className="text-primary underline" href="/admin/home/inspirations">
               烘焙靈感
             </Link>
@@ -262,7 +294,15 @@ export default function AdminHomeHubPage() {
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-base font-bold text-coffee">首頁區塊</h2>
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-base font-bold text-coffee">首頁區塊（草稿）</h2>
+            <p className="text-xs text-muted-foreground">儲存僅更新草稿，需按上方「發布」才會上線。</p>
+          </div>
+          <Link href="/admin/home/preview" className={buttonVariants({ size: "sm", variant: "outline" })}>
+            預覽草稿
+          </Link>
+        </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">載入中…</p>
         ) : error ? (

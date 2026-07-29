@@ -42,6 +42,8 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     contentMode: "manual",
     hasKeywords: true,
     hasDisplayCount: true,
+    manageHref: "/admin/home/search-tags",
+    manageLabel: "熱門搜尋專頁",
   },
   {
     id: "latest_recipes",
@@ -51,8 +53,8 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasDisplayCount: true,
     hasViewAllUrl: true,
     hasDataSource: true,
-    manageHref: "/admin/recipes",
-    manageLabel: "管理食譜",
+    manageHref: "/admin/home/featured-recipes",
+    manageLabel: "精選食譜專頁",
   },
   {
     id: "recipe_kits",
@@ -72,6 +74,8 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasCategories: true,
     hasDisplayCount: true,
     hasViewAllUrl: true,
+    manageHref: "/admin/home/ingredient-categories",
+    manageLabel: "找材料分類專頁",
   },
   {
     id: "popular_baking_products",
@@ -82,8 +86,8 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     productScope: "baking",
     hasDisplayCount: true,
     hasViewAllUrl: true,
-    manageHref: "/admin/products",
-    manageLabel: "前往商品管理",
+    manageHref: "/admin/home/featured-products",
+    manageLabel: "熱賣商品專頁",
   },
   {
     id: "featured_courses",
@@ -92,8 +96,8 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     contentMode: "mixed",
     hasDisplayCount: true,
     hasViewAllUrl: true,
-    manageHref: "/admin/courses",
-    manageLabel: "管理課程",
+    manageHref: "/admin/home/featured-courses",
+    manageLabel: "最新課程專頁",
   },
   {
     id: "closing_group_buys",
@@ -102,8 +106,8 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     contentMode: "mixed",
     hasDisplayCount: true,
     hasViewAllUrl: true,
-    manageHref: "/admin/group-buy",
-    manageLabel: "管理團購活動",
+    manageHref: "/admin/home/group-buy-section",
+    manageLabel: "團購區塊專頁",
   },
   {
     id: "latest_videos",

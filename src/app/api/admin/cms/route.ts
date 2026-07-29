@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getDraft, patchDraftBlock } from "@/lib/home/layout-versions";
 
 export async function GET(request: Request) {
   const { error } = await requireContentAdmin();
@@ -11,16 +12,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ pages: [], banners: [], blocks: [] });
   }
 
-  const type = new URL(request.url).searchParams.get("type") ?? "all";
+  const url = new URL(request.url);
+  const type = url.searchParams.get("type") ?? "all";
+  const source = url.searchParams.get("source") ?? "draft";
   const admin = createAdminClient();
+
+  const loadBlocks = async () => {
+    if (source === "live") {
+      const { data } = await admin.from("homepage_blocks").select("*").order("sort_order");
+      return data ?? [];
+    }
+    const draft = await getDraft();
+    return [...draft.blocks_snapshot].sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    );
+  };
 
   if (type === "banners") {
     const { data } = await admin.from("cms_banners").select("*").order("sort_order");
     return NextResponse.json({ banners: data ?? [] });
   }
   if (type === "blocks") {
-    const { data } = await admin.from("homepage_blocks").select("*").order("sort_order");
-    return NextResponse.json({ blocks: data ?? [] });
+    return NextResponse.json({ blocks: await loadBlocks(), source });
   }
   if (type === "pages") {
     const { data } = await admin.from("cms_pages").select("*").order("updated_at", { ascending: false });
@@ -30,13 +43,14 @@ export async function GET(request: Request) {
   const [pages, banners, blocks] = await Promise.all([
     admin.from("cms_pages").select("*").order("updated_at", { ascending: false }),
     admin.from("cms_banners").select("*").order("sort_order"),
-    admin.from("homepage_blocks").select("*").order("sort_order"),
+    loadBlocks(),
   ]);
 
   return NextResponse.json({
     pages: pages.data ?? [],
     banners: banners.data ?? [],
-    blocks: blocks.data ?? [],
+    blocks,
+    source,
   });
 }
 
@@ -117,11 +131,29 @@ export async function PATCH(request: Request) {
 
   const body = await request.json();
   const kind = body.kind as "page" | "banner" | "block";
+  const target = (body.target as string | undefined) ?? "draft";
   const { id, ...updates } = body;
   delete updates.kind;
+  delete updates.target;
 
   if (!id) return NextResponse.json({ error: "缺少 id" }, { status: 400 });
   if (!isSupabaseConfigured()) return NextResponse.json({ item: { id, ...updates } });
+
+  // Homepage block edits default to draft so live site stays unchanged until publish
+  if (kind === "block" && target !== "live") {
+    const draft = await patchDraftBlock(String(id), updates, auth!.profile.id);
+    const item = draft.blocks_snapshot.find((b) => b.id === id) ?? { id, ...updates };
+    await logAudit(
+      auth!.profile.id,
+      "update",
+      "homepage_layout_draft",
+      String(id),
+      null,
+      updates,
+      request as never
+    );
+    return NextResponse.json({ item, source: "draft" });
+  }
 
   const admin = createAdminClient();
   const table =

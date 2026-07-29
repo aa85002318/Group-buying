@@ -165,6 +165,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin", "content_editor", "customer_service"],
     items: [
       { href: "/admin/home", label: "首頁設定", roles: ["admin", "content_editor"] },
+      { href: "/admin/home/preview", label: "首頁預覽", roles: ["admin", "content_editor"] },
       { href: "/admin/home/recipe-kits", label: "材料包", roles: ["admin", "content_editor"] },
       { href: "/admin/content/popups", label: "首頁彈跳公告", roles: ["admin", "content_editor"] },
       { href: "/admin/banners", label: "Banner", roles: ["admin", "content_editor"] },
