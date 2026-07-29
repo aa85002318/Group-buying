@@ -26,7 +26,8 @@ export type HomeSectionKey =
   | "monthly_challenge"
   | "seasonal_themes"
   | "store_information"
-  | "latest_articles";
+  | "latest_articles"
+  | "ingredient_categories";
 
 /** Primary homepage architecture (spec order 1–8). */
 export const PRIMARY_HOME_SECTION_KEYS: HomeSectionKey[] = [
@@ -35,6 +36,7 @@ export const PRIMARY_HOME_SECTION_KEYS: HomeSectionKey[] = [
   "latest_recipes",
   "recipe_kits",
   "popular_categories",
+  "ingredient_categories",
   "popular_baking_products",
   "closing_group_buys",
   "service_shortcuts",
@@ -106,6 +108,7 @@ export const HOME_SECTION_SORT_DEFAULT: Record<HomeSectionKey, number> = {
   seasonal_themes: 220,
   store_information: 230,
   latest_articles: 240,
+  ingredient_categories: 45,
 };
 
 export function isHomeSectionKey(value: string): value is HomeSectionKey {

@@ -55,6 +55,13 @@ export const SECTION_DEFAULTS: Record<
     visible: true,
     viewAllUrl: "/baking-materials",
   },
+  ingredient_categories: {
+    title: "找材料",
+    displayCount: 10,
+    visible: true,
+    viewAllUrl: "/products",
+    config: { view_all_label: "查看全部", view_all_href: "/products", desktop_cols: 10, mobile_cols: 5 },
+  },
   popular_baking_products: {
     title: "本週熱門商品",
     displayCount: 8,

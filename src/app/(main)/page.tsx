@@ -6,6 +6,7 @@ import { Clock3, Heart, Play } from "lucide-react";
 import { BrandHero } from "@/components/brand/hero/BrandHero";
 import { HomeStoreNews } from "@/components/home/HomeStoreNews";
 import { HomeServiceShortcuts } from "@/components/home/HomeServiceShortcuts";
+import { HomeIngredientCategories } from "@/components/home/HomeIngredientCategories";
 import { HomeContentArea } from "@/components/home/HomeContentArea";
 import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
 import { PopularCategories } from "@/components/home/PopularCategories";
@@ -233,6 +234,20 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
         />
       );
     }
+    case "ingredient_categories":
+      return (
+        <HomeIngredientCategories
+          key={reactKey}
+          title={block.title || "找材料"}
+          subtitle={block.subtitle}
+          viewAllHref={block.viewAllUrl || "/products"}
+          viewAllLabel={
+            typeof block.config?.view_all_label === "string"
+              ? block.config.view_all_label
+              : "查看全部"
+          }
+        />
+      );
     case "latest_recipes": {
       let recipes = ctx.recipes;
       if (block.manualIds.length > 0) {
