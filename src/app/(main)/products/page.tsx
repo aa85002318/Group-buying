@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { BrandHero } from "@/components/brand/hero/BrandHero";
 import { ProductCard } from "@/components/products/ProductCard";
 import { ProductSortBar } from "@/components/products/ProductSortBar";
 import { mockCategories, mockProducts } from "@/lib/mock-data";
@@ -26,7 +27,7 @@ function sortProducts(products: Product[], sort: SortOption): Product[] {
 
 function ProductsContent() {
   const searchParams = useSearchParams();
-  const search = searchParams.get("search");
+  const search = searchParams.get("q") || searchParams.get("search");
   const category = searchParams.get("category");
   const tag = searchParams.get("tag");
   const sort = (searchParams.get("sort") as SortOption) || "newest";
@@ -78,11 +79,10 @@ function ProductsContent() {
 
   return (
     <div className="space-y-4">
+      <BrandHero heroKey="products" />
+
       <div className="flex items-center justify-between gap-2">
         <div>
-          <Link href="/" className="text-sm text-primary hover:underline md:hidden">
-            ← 首頁
-          </Link>
           <h1 className="text-xl font-bold text-coffee">{pageTitle}</h1>
         </div>
         {!loading && (

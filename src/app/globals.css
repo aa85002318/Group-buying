@@ -1,4 +1,6 @@
 @import "../styles/tokens.css";
+@import "../styles/brand-tokens.css";
+@import "../styles/utilities.css";
 
 @tailwind base;
 @tailwind components;
@@ -6,8 +8,8 @@
 
 @layer base {
   :root {
-    /* Bridge vars used by older components */
-    --brand-primary: var(--primary);
+    /* Bridge vars used by older components — keep legacy palette stable.
+       Brand Experience System components use --brand-* from brand-tokens.css. */
     --brand-dark: var(--primary-hover);
     --sale-red: var(--price);
     --accent-orange: var(--primary);
@@ -28,7 +30,7 @@
     --muted: var(--surface-soft);
     --muted-foreground: var(--text-secondary);
     --tag-bg: #fff5ef;
-    --tag-text: var(--brand-secondary);
+    --tag-text: var(--caramel);
     --countdown: var(--danger);
     --nav-active: var(--primary);
     --nav-inactive: var(--text-muted);
@@ -37,7 +39,7 @@
     --brand-orange: var(--primary);
     --header-content-gap: 10px;
     /* 全站內容左右安全距離（背景滿版、內容 inset） */
-    --page-padding-x: 15px;
+    --page-padding-x: var(--page-padding-mobile);
     --site-content-pad-x: var(--page-padding-x);
   }
 
