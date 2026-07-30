@@ -92,8 +92,8 @@
 
   /* Brand Hero V2 fixed geometry (not CMS-editable) */
   --brand-hero-radius: 32px;
-  --brand-hero-height-mobile: 340px;
-  --brand-hero-height-desktop: 360px;
+  --brand-hero-height-mobile: 220px;
+  --brand-hero-height-desktop: 420px;
   --brand-search-height: 60px;
   --brand-search-radius: 999px;
   --brand-search-float: 28px;

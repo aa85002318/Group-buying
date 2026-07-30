@@ -67,10 +67,9 @@ export function BrandHero({
       <div className="relative mx-auto w-full max-w-[1280px]">
         {/* Hero panel — warm lifestyle canvas */}
         <div
-          className="relative overflow-hidden"
+          className="relative w-full overflow-hidden max-md:h-[340px] md:aspect-[16/9] md:max-h-[420px]"
           style={{
             borderRadius: "var(--brand-hero-radius, 32px)",
-            height: "clamp(280px, 42vw, 360px)",
             background: hasImage
               ? "#FFD454"
               : "radial-gradient(ellipse 80% 70% at 70% 40%, #FFE88A 0%, #FFD454 55%, #FFC93A 100%)",

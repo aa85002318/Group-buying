@@ -11,7 +11,8 @@ export function BrandHeroSkeleton({ className }: { className?: string }) {
         <div
           className="animate-pulse overflow-hidden rounded-[32px]"
           style={{
-            height: "clamp(280px, 42vw, 360px)",
+            aspectRatio: "16 / 9",
+            maxHeight: "420px",
             background:
               "radial-gradient(ellipse 80% 70% at 70% 40%, #FFE88A 0%, #FFD454 55%, #FFC93A 100%)",
           }}
