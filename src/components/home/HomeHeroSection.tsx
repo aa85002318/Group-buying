@@ -69,7 +69,7 @@ function mapApiToHomeHero(raw: Record<string, unknown> | null): HomeHeroData {
       (typeof raw.subtitle === "string" && raw.subtitle) ||
       base.description,
     desktopImageUrl: desktop || HOME_HERO_DESKTOP_IMAGE,
-    mobileImageUrl: mobile || desktop || HOME_HERO_MOBILE_IMAGE,
+    mobileImageUrl: mobile || HOME_HERO_MOBILE_IMAGE,
     imageAlt:
       (typeof raw.imageAlt === "string" && raw.imageAlt) ||
       (typeof raw.image_alt === "string" && raw.image_alt) ||
