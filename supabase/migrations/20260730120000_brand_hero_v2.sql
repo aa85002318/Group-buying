@@ -1,12 +1,29 @@
 -- Brand Hero V2: lifestyle banner + CTA fields + home defaults
+-- Also ensures 16:9 columns exist (safe if already applied)
 
 alter table brand_heroes
+  add column if not exists show_title boolean not null default true,
+  add column if not exists show_subtitle boolean not null default true,
+  add column if not exists image_position text not null default 'center',
+  add column if not exists show_popular_tags boolean not null default true,
   add column if not exists capsule_label text,
   add column if not exists show_ctas boolean not null default false,
   add column if not exists primary_cta_label text,
   add column if not exists primary_cta_href text,
   add column if not exists secondary_cta_label text,
   add column if not exists secondary_cta_href text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'brand_heroes_image_position_check'
+  ) then
+    alter table brand_heroes
+      add constraint brand_heroes_image_position_check
+      check (image_position in ('left','center','right'));
+  end if;
+end $$;
 
 -- Seed home hero with bundled banner illustration + V2 copy
 update brand_heroes
@@ -21,9 +38,9 @@ set
   primary_cta_href = '/products',
   secondary_cta_label = '看看食譜',
   secondary_cta_href = '/recipes',
-  desktop_image_url = coalesce(nullif(desktop_image_url, ''), '/brand/hero-home-banner.png'),
-  mobile_image_url = coalesce(nullif(mobile_image_url, ''), '/brand/hero-home-banner.png'),
-  image_alt = coalesce(image_alt, 'CHIMEiDIY Lifestyle 首頁主視覺'),
+  desktop_image_url = '/brand/hero-home-banner.png',
+  mobile_image_url = '/brand/hero-home-banner.png',
+  image_alt = 'CHIMEiDIY Lifestyle 首頁主視覺',
   image_position = 'center',
   search_placeholder = '今天想做什麼？搜尋食譜、商品、團購、生鮮…',
   show_popular_tags = true,
