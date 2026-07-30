@@ -1,7 +1,7 @@
 import { RecipeWeeklyCarousel } from "./RecipeWeeklyCarousel";
-import { RecipeWeeklyTitle } from "./RecipeWeeklyTitle";
+import { RECIPE_WEEKLY_TITLE_ID, RecipeWeeklyTitle } from "./RecipeWeeklyTitle";
 
-/** 本週人氣食譜 — demo carousel below hero hot search. */
+/** 精選食譜 — demo carousel below hero hot search. */
 export function WeeklyPopularRecipesSection() {
   return (
     <section
@@ -12,7 +12,8 @@ export function WeeklyPopularRecipesSection() {
         padding: "40px 0 48px",
         margin: "24px 16px",
       }}
-      aria-label="本週人氣食譜"
+      aria-labelledby={RECIPE_WEEKLY_TITLE_ID}
+      aria-roledescription="carousel"
     >
       <RecipeWeeklyTitle />
       <div style={{ marginTop: 32 }}>

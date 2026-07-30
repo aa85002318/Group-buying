@@ -105,6 +105,30 @@
     padding-inline: max(16px, 15%);
   }
 
+  .recipe-weekly-header {
+    gap: 14px;
+  }
+
+  .recipe-weekly-section-title {
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: 0.04em;
+    font-size: clamp(32px, 10vw, 44px);
+  }
+
+  @media (min-width: 768px) {
+    .recipe-weekly-section-title {
+      font-size: clamp(38px, 5vw, 52px);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .recipe-weekly-section-title {
+      font-size: clamp(42px, 4vw, 56px);
+    }
+  }
+
   .ingredient-shop-tabs {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -136,6 +160,25 @@
 
   .ingredient-shop-more-card {
     min-height: 420px;
+  }
+
+  .home-wave-divider {
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .home-wave-divider__img {
+    display: block;
+    width: 100%;
+    height: clamp(120px, 28vw, 160px);
+    object-fit: cover;
+    object-position: center center;
+  }
+
+  @media (min-width: 768px) {
+    .home-wave-divider__img {
+      height: clamp(180px, 18vw, 240px);
+    }
   }
 
   @media (min-width: 768px) {
