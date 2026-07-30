@@ -1,12 +1,28 @@
 "use client";
 
 import {
-  HOME_HERO_MOBILE_HEIGHT,
-  HOME_HERO_MOBILE_WIDTH,
+  HOME_HERO_MOBILE_ASPECT,
   type HomeHeroObjectPosition,
 } from "@/types/home-hero";
 
-function toObjectPosition(pos?: HomeHeroObjectPosition | null): string {
+function toBackgroundPosition(pos?: string | null): string {
+  switch (pos) {
+    case "left center":
+    case "center left":
+      return "left top";
+    case "right center":
+    case "center right":
+      return "right top";
+    case "center top":
+      return "center top";
+    case "top":
+      return "center top";
+    default:
+      return "center top";
+  }
+}
+
+function toObjectPosition(pos?: string | null): string {
   switch (pos) {
     case "center left":
       return "left center";
@@ -22,8 +38,8 @@ function toObjectPosition(pos?: HomeHeroObjectPosition | null): string {
 }
 
 /**
- * Mobile must never crop — intrinsic dimensions + contain.
- * Desktop uses height clamp with contain.
+ * Mobile: background-size 100% auto — guaranteed no left/right crop on any browser.
+ * Desktop: img + object-contain inside height clamp.
  */
 export function ResponsiveHeroImage({
   desktopUrl,
@@ -35,30 +51,28 @@ export function ResponsiveHeroImage({
   desktopUrl: string;
   mobileUrl: string;
   alt: string;
-  desktopObjectPosition?: HomeHeroObjectPosition | null;
-  mobileObjectPosition?: HomeHeroObjectPosition | null;
+  desktopObjectPosition?: string | null;
+  mobileObjectPosition?: string | null;
 }) {
   const desktopPos = toObjectPosition(desktopObjectPosition);
-  const mobilePos = toObjectPosition(mobileObjectPosition);
+  const mobileBgPos = toBackgroundPosition(toObjectPosition(mobileObjectPosition));
 
   return (
     <div className="relative z-0 w-full bg-[#FFD454]">
-      {/* Mobile: explicit intrinsic ratio — browser scales width only, never crops sides */}
-      <div className="w-full md:hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={mobileUrl}
-          alt={alt}
-          width={HOME_HERO_MOBILE_WIDTH}
-          height={HOME_HERO_MOBILE_HEIGHT}
-          className="home-hero-mobile-img block h-auto w-full max-w-full"
-          style={{ objectFit: "contain", objectPosition: mobilePos }}
-          decoding="async"
-          fetchPriority="high"
-        />
-      </div>
+      {/* Mobile — background paint avoids img/object-fit cropping bugs (incl. iOS Safari) */}
+      <div
+        className="home-hero-mobile-bg w-full md:hidden"
+        style={{
+          aspectRatio: HOME_HERO_MOBILE_ASPECT,
+          backgroundImage: `url("${mobileUrl}")`,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "100% auto",
+          backgroundPosition: mobileBgPos,
+        }}
+        role="img"
+        aria-label={alt}
+      />
 
-      {/* Desktop */}
       <div
         className="relative hidden w-full md:block"
         style={{ height: "clamp(420px, 48vw, 720px)" }}
