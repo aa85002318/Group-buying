@@ -7,7 +7,7 @@ export function HomeWaveDividerBanner() {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/brand/home-wave-divider.png?v=202607301"
+        src="/brand/home-wave-divider.png?v=20260730m"
         alt=""
         width={1024}
         height={341}
