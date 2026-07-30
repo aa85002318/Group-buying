@@ -139,7 +139,7 @@
   }
 
   .ingredient-shop-scroll {
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: x proximity;
     scrollbar-width: none;
     -ms-overflow-style: none;
     cursor: grab;
@@ -156,10 +156,6 @@
 
   .ingredient-shop-card {
     scroll-snap-align: start;
-  }
-
-  .ingredient-shop-more-card {
-    min-height: 420px;
   }
 
   .home-wave-divider {

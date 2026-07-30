@@ -33,7 +33,7 @@ export function ProductHorizontalScroller({ children }: ProductHorizontalScrolle
   return (
     <div
       ref={ref}
-      className="ingredient-shop-scroll -mx-1 flex gap-4 overflow-x-auto px-1 pb-1 pt-1"
+      className="ingredient-shop-scroll -mx-1 flex gap-2.5 overflow-x-auto px-1 pb-2 pt-0.5 md:gap-3"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}

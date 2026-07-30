@@ -79,26 +79,28 @@ export function HomeIngredientShopSection() {
 
   return (
     <section
-      className="ingredient-shop-section bg-[#FFFEFA] py-10 md:py-16"
+      className="ingredient-shop-section bg-[#FFFEFA] py-7 md:py-10"
       aria-label={cmsSection.title}
     >
-      <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6">
-        <header className="mb-6">
-          <div className="flex items-start gap-2">
-            <span className="mt-1 inline-flex items-center gap-1 text-[#FFD454]" aria-hidden>
-              <Sparkles className="h-5 w-5 fill-[#FFD454] text-[#FFD454]" />
-              <UtensilsCrossed className="h-4 w-4 text-[#153E73]" />
+      <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
+        <header className="mb-3.5 md:mb-[18px]">
+          <div className="flex items-start gap-1.5">
+            <span className="mt-0.5 inline-flex items-center gap-0.5 text-[#FFD454]" aria-hidden>
+              <Sparkles className="h-4 w-4 fill-[#FFD454] text-[#FFD454]" />
+              <UtensilsCrossed className="h-3.5 w-3.5 text-[#153E73]" />
             </span>
-            <div>
-              <h2 className="text-2xl font-bold text-[#153E73] md:text-[32px]">
+            <div className="min-w-0">
+              <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">
                 {cmsSection.title}
               </h2>
-              <p className="mt-1 text-sm text-[#687386] md:text-base">{cmsSection.subtitle}</p>
+              <p className="mt-1.5 line-clamp-1 text-[13px] text-[#687386] md:text-sm">
+                {cmsSection.subtitle}
+              </p>
             </div>
           </div>
         </header>
 
-        <div className="mb-6">
+        <div className="mb-3.5 md:mb-[18px]">
           <ProductCategoryTabs
             tabs={tabs}
             activeId={activeCategoryId}
@@ -108,16 +110,16 @@ export function HomeIngredientShopSection() {
         </div>
 
         {loading ? (
-          <div className="flex gap-4 overflow-hidden">
-            {Array.from({ length: 3 }).map((_, i) => (
+          <div className="flex gap-2.5 overflow-hidden pb-2 md:gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="home-skeleton h-[420px] w-[78vw] max-w-[280px] shrink-0 rounded-[20px] md:w-[270px]"
+                className="home-skeleton h-[300px] w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] shrink-0 rounded-2xl md:h-[340px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]"
               />
             ))}
           </div>
         ) : visibleProducts.length === 0 ? (
-          <p className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-8 text-center text-sm text-[#687386]">
+          <p className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-6 text-center text-sm text-[#687386]">
             此分類暫無商品，試試其他分類或前往完整商品頁。
           </p>
         ) : (
@@ -127,7 +129,7 @@ export function HomeIngredientShopSection() {
             ))}
             <MoreProductsCard
               title={cmsSection.config.more_card_title}
-              subtitle={cmsSection.config.more_card_subtitle}
+              subtitle={cmsSection.config.more_card_subtitle || "查看全部"}
               href={moreHref}
             />
           </ProductHorizontalScroller>

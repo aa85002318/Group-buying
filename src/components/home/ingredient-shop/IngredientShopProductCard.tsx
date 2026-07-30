@@ -21,6 +21,9 @@ const BADGE_STYLES: Record<
   sold_out: { label: "售罄", className: "bg-[#E9EDF2] text-[#687386]" },
 };
 
+const CARD_WIDTH =
+  "w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]";
+
 type IngredientShopProductCardProps = {
   product: IngredientShopProduct;
 };
@@ -33,7 +36,8 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const href = `/products/${product.id}`;
-  const spec = product.unit || product.subtitle || product.short_description;
+  const spec = product.unit || product.subtitle || null;
+  const displayName = spec ? `${product.name} ${spec}` : product.name;
 
   const onAdd = async () => {
     if (soldOut || adding) return;
@@ -63,32 +67,34 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
   return (
     <article
       className={cn(
-        "ingredient-shop-card group flex w-[78vw] max-w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-[20px] border border-[#E9EDF2] bg-white p-4 shadow-[0_8px_24px_rgba(21,62,115,0.06)] transition duration-300 md:w-[270px] md:max-w-none",
-        !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_12px_28px_rgba(21,62,115,0.1)]"
+        "ingredient-shop-card group flex h-[300px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E9EDF2] bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[345px] md:p-3",
+        CARD_WIDTH,
+        !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
       )}
     >
       <div className="relative">
         <Link
           href={href}
           className={cn(
-            "relative block aspect-square overflow-hidden rounded-2xl bg-[#FFFEFA]",
+            "relative block h-[135px] overflow-hidden rounded-xl bg-[#FFFEFA] md:h-[165px] xl:h-[170px]",
             soldOut && "opacity-60"
           )}
         >
           {product.badge ? (
             <span
               className={cn(
-                "absolute left-3 top-3 z-10 rounded-full px-2.5 py-1.5 text-xs font-semibold",
+                "absolute left-2 top-2 z-10 rounded-full px-2 py-1 text-[11px] font-semibold",
                 BADGE_STYLES[product.badge].className
               )}
             >
               {BADGE_STYLES[product.badge].label}
             </span>
           ) : null}
-          <div className="absolute right-2 top-2 z-10">
+          <div className="absolute right-1.5 top-1.5 z-10">
             <FavoriteButton
               productId={product.id}
-              className="!h-10 !w-10 !rounded-full !border !border-[#E9EDF2] !bg-white !shadow-sm"
+              size="sm"
+              className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
             />
           </div>
           {product.image_url ? (
@@ -96,42 +102,39 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
               src={product.image_url}
               alt={product.name}
               fill
-              className="object-contain p-4"
-              sizes="(max-width: 767px) 78vw, 270px"
+              className="object-contain p-2.5 md:p-3.5"
+              sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-[#687386]">
+            <div className="flex h-full items-center justify-center text-xs text-[#687386]">
               暫無圖片
             </div>
           )}
         </Link>
       </div>
 
-      <div className="mt-3 flex min-h-0 flex-1 flex-col">
+      <div className="mt-2 flex min-h-0 flex-1 flex-col">
         <Link href={href}>
-          <h3 className="line-clamp-2 min-h-[48px] text-[15px] font-semibold leading-snug text-[#153E73]">
-            {product.name}
+          <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
+            {displayName}
           </h3>
         </Link>
-        {spec ? (
-          <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-[#687386]">{spec}</p>
-        ) : null}
 
-        <div className="mt-2 flex flex-wrap items-baseline gap-2">
-          <span className="text-lg font-bold text-[#F16458]">
+        <div className="mt-1.5 flex min-h-[28px] flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+          <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
             {formatCurrency(product.displayPrice)}
           </span>
           {product.displayOriginalPrice != null ? (
-            <span className="text-sm text-[#687386] line-through">
+            <span className="text-[11px] text-[#687386] line-through md:text-xs">
               {formatCurrency(product.displayOriginalPrice)}
             </span>
           ) : null}
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           <div
             className={cn(
-              "inline-flex h-10 items-center overflow-hidden rounded-xl border border-[#E9EDF2]",
+              "inline-flex h-8 w-24 items-center overflow-hidden rounded-lg border border-[#E9EDF2] md:h-[34px] md:w-[112px]",
               soldOut && "opacity-50"
             )}
           >
@@ -140,11 +143,11 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
               aria-label="減少數量"
               disabled={soldOut || quantity <= 1}
               onClick={dec}
-              className="inline-flex h-10 w-10 items-center justify-center text-[#153E73] disabled:cursor-not-allowed"
+              className="inline-flex h-8 w-8 items-center justify-center text-[#153E73] disabled:cursor-not-allowed md:h-[34px] md:w-8"
             >
-              <Minus className="h-4 w-4" />
+              <Minus className="h-3.5 w-3.5" />
             </button>
-            <span className="min-w-[28px] text-center text-sm font-semibold text-[#153E73]">
+            <span className="min-w-[20px] flex-1 text-center text-sm font-semibold text-[#153E73]">
               {quantity}
             </span>
             <button
@@ -152,9 +155,9 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
               aria-label="增加數量"
               disabled={soldOut || quantity >= maxQty}
               onClick={inc}
-              className="inline-flex h-10 w-10 items-center justify-center text-[#153E73] disabled:cursor-not-allowed"
+              className="inline-flex h-8 w-8 items-center justify-center text-[#153E73] disabled:cursor-not-allowed md:h-[34px] md:w-8"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3.5 w-3.5" />
             </button>
           </div>
 
@@ -163,18 +166,18 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
             aria-label="加入購物車"
             disabled={soldOut || adding}
             onClick={onAdd}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FFD454] text-[#153E73] transition hover:brightness-95 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFD454] text-[#153E73] transition hover:brightness-95 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 md:h-10 md:w-10"
           >
             {adding ? (
-              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+              <Loader2 className="h-4 w-4 animate-spin md:h-[19px] md:w-[19px]" aria-hidden />
             ) : (
-              <ShoppingCart className="h-5 w-5" aria-hidden />
+              <ShoppingCart className="h-[17px] w-[17px] md:h-[19px] md:w-[19px]" aria-hidden />
             )}
           </button>
         </div>
 
         {toast ? (
-          <p className="mt-2 text-center text-xs font-medium text-[#153E73]" role="status">
+          <p className="mt-1 text-center text-[10px] font-medium text-[#153E73]" role="status">
             {toast}
           </p>
         ) : null}

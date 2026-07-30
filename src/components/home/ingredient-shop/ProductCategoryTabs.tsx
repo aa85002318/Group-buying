@@ -14,6 +14,9 @@ type ProductCategoryTabsProps = {
   moreOptionsHref?: string;
 };
 
+const tabBase =
+  "inline-flex h-9 shrink-0 items-center gap-1 rounded-xl border px-3.5 text-[13px] font-semibold transition md:h-10 md:gap-1.5 md:rounded-[14px] md:px-[18px] md:text-sm";
+
 export function ProductCategoryTabs({
   tabs,
   activeId,
@@ -26,7 +29,7 @@ export function ProductCategoryTabs({
     <div className="relative">
       <div
         ref={scrollerRef}
-        className="ingredient-shop-tabs flex gap-2 overflow-x-auto pb-1"
+        className="ingredient-shop-tabs flex gap-2 overflow-x-auto pb-0.5 md:gap-2.5"
         role="tablist"
         aria-label="商品分類"
       >
@@ -40,24 +43,28 @@ export function ProductCategoryTabs({
               aria-selected={selected}
               onClick={() => onChange(tab.id)}
               className={cn(
-                "inline-flex h-[42px] shrink-0 items-center gap-1.5 rounded-2xl border px-[18px] text-sm font-semibold transition md:h-12 md:px-6",
+                tabBase,
                 selected
-                  ? "border-transparent bg-[#FFD454] text-[#153E73] shadow-[0_6px_18px_rgba(21,62,115,0.08)]"
+                  ? "border-transparent bg-[#FFD454] text-[#153E73] shadow-[0_4px_12px_rgba(21,62,115,0.08)]"
                   : "border-[#E9EDF2] bg-white text-[#153E73] hover:border-[#d5dde6]"
               )}
             >
-              {tab.icon ? <span aria-hidden>{tab.icon}</span> : null}
+              {tab.icon ? (
+                <span className="text-base leading-none md:text-lg" aria-hidden>
+                  {tab.icon}
+                </span>
+              ) : null}
               {tab.label}
             </button>
           );
         })}
         <Link
           href={moreOptionsHref}
-          className="inline-flex h-[42px] shrink-0 items-center gap-1.5 rounded-2xl border border-[#E9EDF2] bg-white px-[18px] text-sm font-semibold text-[#153E73] transition hover:border-[#d5dde6] md:h-12 md:px-6"
+          className={cn(tabBase, "border-[#E9EDF2] bg-white text-[#153E73] hover:border-[#d5dde6]")}
         >
-          <Filter className="h-4 w-4" aria-hidden />
+          <Filter className="h-4 w-4 md:h-[18px] md:w-[18px]" aria-hidden />
           更多選項
-          <ChevronDown className="h-4 w-4 opacity-70" aria-hidden />
+          <ChevronDown className="h-3.5 w-3.5 opacity-70" aria-hidden />
         </Link>
       </div>
     </div>
