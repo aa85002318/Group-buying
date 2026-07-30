@@ -25,8 +25,14 @@ type HeroRow = {
   name: string;
   title: string;
   subtitle: string | null;
+  capsule_label: string | null;
   show_title: boolean;
   show_subtitle: boolean;
+  show_ctas: boolean;
+  primary_cta_label: string | null;
+  primary_cta_href: string | null;
+  secondary_cta_label: string | null;
+  secondary_cta_href: string | null;
   desktop_image_url: string | null;
   mobile_image_url: string | null;
   image_alt: string | null;
@@ -40,11 +46,11 @@ type HeroRow = {
   updated_at: string;
 };
 
-const IMAGE_SPEC = `Hero 背景圖固定為 16:9。
-建議桌機尺寸：1920×1080px 或 1600×900px
-建議手機尺寸：1280×720px 或 960×540px
-格式：WebP、JPG、PNG（桌機 ≤ 700KB，手機 ≤ 450KB）
-圖片左側請預留主標題空間，底部預留搜尋欄區域。`;
+const IMAGE_SPEC = `Hero Banner 主視覺圖（可隨時替換）。
+建議尺寸：1600×900 或 1024×576（約 16:9）
+高度視覺約 340–360px，圓角 32px，底部會自動套用波浪漸層銜接。
+格式：WebP / JPG / PNG（桌機 ≤ 700KB，手機 ≤ 450KB）
+若上傳完整 Banner（含文案與 IP 插圖），請關閉「顯示主標題／副標題」避免重複。`;
 
 function normalizeHeroForEdit(h: HeroRow & { brand_hero_tags?: Array<Record<string, unknown>> }): HeroRow {
   const rawTags = h.tags ?? h.brand_hero_tags ?? [];
@@ -57,7 +63,16 @@ function normalizeHeroForEdit(h: HeroRow & { brand_hero_tags?: Array<Record<stri
     sortOrder: Number(t.sort_order ?? t.sortOrder ?? 0),
     enabled: t.enabled !== false,
   }));
-  return { ...h, tags };
+  return {
+    ...h,
+    capsule_label: h.capsule_label ?? null,
+    show_ctas: h.show_ctas === true,
+    primary_cta_label: h.primary_cta_label ?? null,
+    primary_cta_href: h.primary_cta_href ?? null,
+    secondary_cta_label: h.secondary_cta_label ?? null,
+    secondary_cta_href: h.secondary_cta_href ?? null,
+    tags,
+  };
 }
 
 function newTag(): Tag {
@@ -91,7 +106,7 @@ function TagEditor({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-coffee">熱門搜尋標籤</p>
+        <p className="text-sm font-medium text-coffee">熱門搜尋 Chips（可含 emoji）</p>
         <Button size="sm" variant="outline" onClick={add}>
           + 新增標籤
         </Button>
@@ -108,8 +123,8 @@ function TagEditor({
               <Input
                 value={tag.label}
                 onChange={(e) => update(idx, { label: e.target.value })}
-                placeholder="顯示名稱（≤10字）"
-                maxLength={10}
+                placeholder="顯示名稱（例：🥐 佛卡夏）"
+                maxLength={16}
               />
               <Input
                 value={tag.keyword}
@@ -180,13 +195,13 @@ function HeroEditForm({
         <span className="text-xs font-normal text-muted-foreground">({editing.hero_key})</span>
       </p>
 
-      {/* Background images */}
+      {/* Banner images */}
       <section className="space-y-3">
-        <p className="text-sm font-medium text-coffee">背景板</p>
+        <p className="text-sm font-medium text-coffee">Hero Banner 圖片（可替換）</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <AdminImageUpload
-            label="桌機版 16:9 背景圖"
-            hint="建議 1920×1080 或 1600×900 px，≤700KB"
+            label="桌機版 Banner"
+            hint="建議 1600×900，可含 IP 插圖與文案"
             images={editing.desktop_image_url ? [editing.desktop_image_url] : []}
             onChange={(urls) =>
               setEditing({ ...editing, desktop_image_url: urls[0] ?? null })
@@ -197,8 +212,8 @@ function HeroEditForm({
             aspectRatio="video"
           />
           <AdminImageUpload
-            label="手機版 16:9 背景圖"
-            hint="建議 1280×720 或 960×540 px，≤450KB；未設定則使用桌機圖"
+            label="手機版 Banner"
+            hint="未設定則使用桌機圖；建議 ≤450KB"
             images={editing.mobile_image_url ? [editing.mobile_image_url] : []}
             onChange={(urls) =>
               setEditing({ ...editing, mobile_image_url: urls[0] ?? null })
@@ -243,10 +258,20 @@ function HeroEditForm({
         </p>
       </section>
 
-      {/* Title / Subtitle */}
+      {/* Overlay text */}
       <section className="space-y-3">
-        <p className="text-sm font-medium text-coffee">上方文字</p>
+        <p className="text-sm font-medium text-coffee">疊加文案（完整 Banner 圖建議關閉）</p>
         <div className="grid gap-2 sm:grid-cols-2">
+          <div className="space-y-1 sm:col-span-2">
+            <label className="text-xs text-muted-foreground">膠囊標籤</label>
+            <Input
+              value={editing.capsule_label ?? ""}
+              onChange={(e) =>
+                setEditing({ ...editing, capsule_label: e.target.value || null })
+              }
+              placeholder="✨ CHIMEiDIY Lifestyle"
+            />
+          </div>
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -266,31 +291,75 @@ function HeroEditForm({
             顯示副標題
           </label>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">主標題（≤20字）</label>
+            <label className="text-xs text-muted-foreground">主標題（≤24字）</label>
             <Input
               value={editing.title}
               onChange={(e) => setEditing({ ...editing, title: e.target.value })}
-              placeholder="今天想做什麼？"
-              maxLength={20}
+              placeholder="今天想做點什麼？"
+              maxLength={24}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">副標題（≤50字）</label>
+            <label className="text-xs text-muted-foreground">副標題</label>
             <Input
               value={editing.subtitle ?? ""}
               onChange={(e) =>
                 setEditing({ ...editing, subtitle: e.target.value || null })
               }
-              placeholder="從食譜開始，輕鬆完成每一個烘焙時刻"
-              maxLength={50}
+              placeholder="探索食譜、團購、生鮮、居家好物"
+              maxLength={80}
             />
           </div>
         </div>
       </section>
 
+      {/* CTAs */}
+      <section className="space-y-3">
+        <label className="flex items-center gap-2 text-sm font-medium text-coffee">
+          <input
+            type="checkbox"
+            checked={editing.show_ctas === true}
+            onChange={(e) => setEditing({ ...editing, show_ctas: e.target.checked })}
+          />
+          顯示按鈕（立即逛逛 / 看看食譜）
+        </label>
+        {editing.show_ctas ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Input
+              value={editing.primary_cta_label ?? ""}
+              onChange={(e) =>
+                setEditing({ ...editing, primary_cta_label: e.target.value || null })
+              }
+              placeholder="主按鈕文字（立即逛逛）"
+            />
+            <Input
+              value={editing.primary_cta_href ?? ""}
+              onChange={(e) =>
+                setEditing({ ...editing, primary_cta_href: e.target.value || null })
+              }
+              placeholder="主按鈕連結（/products）"
+            />
+            <Input
+              value={editing.secondary_cta_label ?? ""}
+              onChange={(e) =>
+                setEditing({ ...editing, secondary_cta_label: e.target.value || null })
+              }
+              placeholder="次按鈕文字（看看食譜）"
+            />
+            <Input
+              value={editing.secondary_cta_href ?? ""}
+              onChange={(e) =>
+                setEditing({ ...editing, secondary_cta_href: e.target.value || null })
+              }
+              placeholder="次按鈕連結（/recipes）"
+            />
+          </div>
+        ) : null}
+      </section>
+
       {/* Search settings */}
       <section className="space-y-3">
-        <p className="text-sm font-medium text-coffee">搜尋設定</p>
+        <p className="text-sm font-medium text-coffee">漂浮搜尋欄</p>
         <div className="grid gap-2 sm:grid-cols-2">
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">搜尋提示文字</label>
@@ -299,7 +368,7 @@ function HeroEditForm({
               onChange={(e) =>
                 setEditing({ ...editing, search_placeholder: e.target.value || null })
               }
-              placeholder="搜尋食譜、材料、商品、課程……"
+              placeholder="今天想做什麼？搜尋食譜、商品、團購、生鮮…"
             />
           </div>
           <div className="space-y-1">
@@ -405,8 +474,8 @@ export default function AdminBrandHeroesPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="首頁 Hero 搜尋區"
-        description="管理各頁主視覺背景圖片、標題文字、搜尋提示與熱門搜尋標籤。樣式幾何由 Brand System 固定，後台不可修改。"
+        title="首頁 Hero Banner"
+        description="管理 Hero 主視覺圖片（可替換）、疊加文案、漂浮搜尋與熱門搜尋 Chips。波浪漸層與搜尋欄樣式由 Brand System 固定。"
         actions={
           <Link
             href="/admin/brand-system"
@@ -429,7 +498,19 @@ export default function AdminBrandHeroesPage() {
         <ul className="space-y-3">
           {heroes.map((h) => (
             <li key={h.id} className="rounded-xl border border-border bg-white p-4 shadow-card">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
+                {h.desktop_image_url || h.mobile_image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={h.desktop_image_url || h.mobile_image_url || ""}
+                    alt=""
+                    className="h-14 w-24 rounded-lg object-cover border border-border"
+                  />
+                ) : (
+                  <div className="flex h-14 w-24 items-center justify-center rounded-lg bg-[#FFD454]/40 text-[10px] text-[#153E73]">
+                    無圖
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-coffee">
                     {h.name}{" "}

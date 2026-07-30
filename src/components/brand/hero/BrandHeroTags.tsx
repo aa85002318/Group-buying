@@ -21,30 +21,29 @@ export function BrandHeroTags({
   if (!active.length) return null;
 
   return (
-    <div
-      className="mt-[10px] flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-[374px]:[&>button:nth-child(n+5)]:hidden max-[767px]:gap-[6px] max-[767px]:mt-[7px]"
-      aria-label="熱門搜尋"
-    >
-      {active.map((tag) => {
-        const href =
-          tag.linkType === "url" && tag.targetUrl
-            ? tag.targetUrl
-            : `${SEARCH_SCOPE_PATH[searchScope] || "/search"}?q=${encodeURIComponent(
-                tag.keyword || tag.label
-              )}`;
+    <div className="mt-5" aria-label="熱門搜尋">
+      <p className="mb-3 text-[15px] font-bold text-[#153E73]">熱門搜尋</p>
+      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {active.map((tag) => {
+          const href =
+            tag.linkType === "url" && tag.targetUrl
+              ? tag.targetUrl
+              : `${SEARCH_SCOPE_PATH[searchScope] || "/search"}?q=${encodeURIComponent(
+                  tag.keyword || tag.label
+                )}`;
 
-        return (
-          <button
-            key={tag.id}
-            type="button"
-            onClick={() => router.push(href)}
-            className="inline-flex flex-none items-center whitespace-nowrap rounded-[999px] border border-[#f2e7df] bg-white/[0.94] px-[14px] text-[13px] font-medium text-[#5a4035] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B5B]/50 max-[767px]:h-[27px] max-[767px]:px-[10px] max-[767px]:text-[11px]"
-            style={{ height: "32px" }}
-          >
-            {tag.label}
-          </button>
-        );
-      })}
+          return (
+            <button
+              key={tag.id}
+              type="button"
+              onClick={() => router.push(href)}
+              className="inline-flex h-9 flex-none items-center whitespace-nowrap rounded-full border border-[#E9EDF2] bg-white px-3.5 text-[13px] font-medium text-[#153E73] shadow-[0_2px_8px_rgba(21,62,115,0.05)] transition hover:bg-[#FFF5CC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD454]/60"
+            >
+              {tag.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,40 +1,50 @@
 /**
  * CHIMEIDIY Brand Experience System — Design Tokens
  * Style rules are fixed here; CMS only controls content.
+ * Palette: Apple × Airbnb lifestyle (Primary Yellow / Blue / Coral)
  */
 
 :root {
-  /* Brand colors */
-  --brand-primary: #ff5f6b;
-  --brand-primary-hover: #ff7680;
-  --brand-primary-soft: #ffe6e8;
+  /* Brand colors — IP V2 */
+  --brand-yellow: #ffd454;
+  --brand-yellow-soft: #fff5cc;
+  --brand-blue: #153e73;
+  --brand-blue-soft: #eef8fc;
+  --brand-coral: #f16458;
+  --brand-sky: #79c7e8;
+  --brand-cream: #fffefa;
+  --brand-card: #ffffff;
 
-  --brand-secondary: #ff9a7a;
-  --brand-accent: #ffd8a8;
-  --brand-warning: #ffbd59;
+  --brand-primary: #f16458;
+  --brand-primary-hover: #ff7a70;
+  --brand-primary-soft: #ffe8e6;
+
+  --brand-secondary: #79c7e8;
+  --brand-accent: #ffd454;
+  --brand-warning: #ffd454;
   --brand-success: #79c99e;
-  --brand-info: #8fc8ed;
+  --brand-info: #79c7e8;
 
   /* Background */
-  --brand-background: #fffaf6;
-  --brand-background-soft: #fff4ec;
+  --brand-background: #fffefa;
+  --brand-background-soft: #fff8e8;
   --brand-surface: #ffffff;
-  --brand-surface-muted: #fff8f3;
+  --brand-surface-muted: #eef8fc;
 
   /* Text */
-  --brand-text-primary: #43332b;
-  --brand-text-secondary: #6d5c53;
-  --brand-text-muted: #a39389;
+  --brand-text-primary: #153e73;
+  --brand-text-secondary: #687386;
+  --brand-text-muted: #8a94a3;
   --brand-text-inverse: #ffffff;
 
   /* Border */
-  --brand-border: #f2e7df;
-  --brand-border-strong: #e6d7ce;
+  --brand-border: #e9edf2;
+  --brand-border-strong: #d5dce6;
 
   /* Mascot */
-  --brand-mascot-hair: #123f76;
-  --brand-mascot-red: #eb2855;
-  --brand-mascot-halo: #ffb617;
+  --brand-mascot-hair: #153e73;
+  --brand-mascot-red: #f16458;
+  --brand-mascot-halo: #ffd454;
 
   /* Radius */
   --radius-xs: 6px;
@@ -42,12 +52,14 @@
   --radius-md: 14px;
   --radius-lg: 18px;
   --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-pill: 999px;
 
   /* Shadow */
-  --shadow-xs: 0 2px 8px rgba(82, 48, 34, 0.05);
-  --shadow-sm: 0 6px 18px rgba(82, 48, 34, 0.08);
-  --shadow-md: 0 10px 28px rgba(82, 48, 34, 0.12);
+  --shadow-xs: 0 2px 8px rgba(21, 62, 115, 0.05);
+  --shadow-sm: 0 6px 18px rgba(21, 62, 115, 0.08);
+  --shadow-md: 0 10px 28px rgba(21, 62, 115, 0.12);
+  --shadow-search: 0 12px 32px rgba(21, 62, 115, 0.14);
 
   /* Spacing */
   --page-padding-mobile: 15px;
@@ -78,13 +90,13 @@
   --motion-normal: 250ms;
   --motion-slow: 400ms;
 
-  /* Brand Hero fixed geometry (not CMS-editable) */
-  --brand-hero-radius: var(--radius-xl);
-  --brand-hero-height-mobile: 265px;
-  --brand-hero-height-desktop: 380px;
-  --brand-search-height: 56px;
-  --brand-search-radius: var(--radius-lg);
-  --brand-search-float: 26px;
+  /* Brand Hero V2 fixed geometry (not CMS-editable) */
+  --brand-hero-radius: 32px;
+  --brand-hero-height-mobile: 340px;
+  --brand-hero-height-desktop: 360px;
+  --brand-search-height: 60px;
+  --brand-search-radius: 999px;
+  --brand-search-float: 28px;
   --brand-search-btn: 44px;
   --brand-card-radius: 16px;
 }

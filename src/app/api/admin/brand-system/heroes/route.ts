@@ -126,6 +126,12 @@ export async function POST(request: Request) {
       subtitle: body.subtitle ?? null,
       show_title: body.show_title !== false,
       show_subtitle: body.show_subtitle !== false,
+      capsule_label: body.capsule_label ?? null,
+      show_ctas: body.show_ctas === true,
+      primary_cta_label: body.primary_cta_label ?? null,
+      primary_cta_href: body.primary_cta_href ?? null,
+      secondary_cta_label: body.secondary_cta_label ?? null,
+      secondary_cta_href: body.secondary_cta_href ?? null,
       desktop_image_url: body.desktop_image_url ?? null,
       mobile_image_url: body.mobile_image_url ?? null,
       image_alt: body.image_alt ?? null,
@@ -176,6 +182,12 @@ export async function PUT(request: Request) {
     "subtitle",
     "show_title",
     "show_subtitle",
+    "capsule_label",
+    "show_ctas",
+    "primary_cta_label",
+    "primary_cta_href",
+    "secondary_cta_label",
+    "secondary_cta_href",
     "desktop_image_url",
     "mobile_image_url",
     "image_alt",
@@ -191,12 +203,31 @@ export async function PUT(request: Request) {
     if (key in body) updates[key] = body[key];
   }
 
-  const { data, error } = await admin
+  let { data, error } = await admin
     .from("brand_heroes")
     .update(updates)
     .eq("id", id)
     .select()
     .single();
+
+  // Staging/prod may not have V2 columns yet — retry without them
+  if (error && /capsule_label|show_ctas|primary_cta|secondary_cta|column/i.test(error.message)) {
+    const v2Keys = [
+      "capsule_label",
+      "show_ctas",
+      "primary_cta_label",
+      "primary_cta_href",
+      "secondary_cta_label",
+      "secondary_cta_href",
+    ];
+    for (const k of v2Keys) delete updates[k];
+    ({ data, error } = await admin
+      .from("brand_heroes")
+      .update(updates)
+      .eq("id", id)
+      .select()
+      .single());
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

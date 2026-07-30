@@ -7,6 +7,7 @@ import { BrandHeroContent } from "./BrandHeroContent";
 import { BrandHeroSearch } from "./BrandHeroSearch";
 import { BrandHeroTags } from "./BrandHeroTags";
 import { BrandHeroSkeleton } from "./BrandHeroSkeleton";
+import { BrandHeroWave } from "./BrandHeroWave";
 import { resolveBrandHeroFallback } from "@/lib/brand-system/hero-defaults";
 import type { BrandHeroData, BrandHeroProps } from "./types";
 import type { SearchScope } from "@/components/brand/search/types";
@@ -55,39 +56,54 @@ export function BrandHero({
   if (hero.enabled === false) return null;
 
   const scope = (hero.searchScope || "global") as SearchScope;
-  const showPopularTags = showTags && (hero.showPopularTags !== false);
+  const showPopularTags = showTags && hero.showPopularTags !== false;
+  const hasImage = Boolean(hero.desktopImageUrl || hero.mobileImageUrl);
 
   return (
     <section
-      className={cn("w-full px-[15px]", className)}
+      className={cn("w-full bg-[#FFFEFA] px-[15px] pt-2", className)}
       aria-label={hero.name || hero.title || "品牌主視覺"}
     >
-      {/* 16:9 panel */}
-      <div className="relative mx-auto w-full max-w-[1280px] overflow-hidden border border-[var(--brand-border,#f2e7df)] bg-[#fff8f1] max-[767px]:rounded-[18px] md:rounded-[24px]" style={{ aspectRatio: "16/9" }}>
-        {/* Background image — fullscreen inside the panel */}
-        <BrandHeroImage
-          desktopUrl={hero.desktopImageUrl}
-          mobileUrl={hero.mobileImageUrl}
-          alt={hero.imageAlt || hero.title}
-          position={hero.imagePosition ?? "center"}
-        />
+      <div className="relative mx-auto w-full max-w-[1280px]">
+        {/* Hero panel — warm lifestyle canvas */}
+        <div
+          className="relative overflow-hidden"
+          style={{
+            borderRadius: "var(--brand-hero-radius, 32px)",
+            height: "clamp(280px, 42vw, 360px)",
+            background: hasImage
+              ? "#FFD454"
+              : "radial-gradient(ellipse 80% 70% at 70% 40%, #FFE88A 0%, #FFD454 55%, #FFC93A 100%)",
+          }}
+        >
+          <BrandHeroImage
+            desktopUrl={hero.desktopImageUrl}
+            mobileUrl={hero.mobileImageUrl}
+            alt={hero.imageAlt || hero.title}
+            position={hero.imagePosition ?? "center"}
+          />
 
-        {/* Light overlay so text stays readable over any photo */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent" aria-hidden />
+          <BrandHeroContent
+            title={hero.title}
+            subtitle={hero.subtitle}
+            capsuleLabel={hero.capsuleLabel}
+            showTitle={hero.showTitle !== false}
+            showSubtitle={hero.showSubtitle !== false}
+            showCtas={hero.showCtas === true}
+            primaryCtaLabel={hero.primaryCtaLabel}
+            primaryCtaHref={hero.primaryCtaHref}
+            secondaryCtaLabel={hero.secondaryCtaLabel}
+            secondaryCtaHref={hero.secondaryCtaHref}
+          />
 
-        {/* Title + subtitle — left 45% safe zone */}
-        <BrandHeroContent
-          title={hero.title}
-          subtitle={hero.subtitle}
-          showTitle={hero.showTitle !== false}
-          showSubtitle={hero.showSubtitle !== false}
-        />
+          <BrandHeroWave />
+        </div>
 
-        {/* Search + popular tags — fixed at bottom inside panel */}
+        {/* Floating search — overlaps hero wave by ~28px */}
         {showSearch ? (
           <div
-            className="absolute z-[5]"
-            style={{ right: "5%", bottom: "5%", left: "5%" }}
+            className="relative z-[6] mx-auto w-full"
+            style={{ marginTop: "calc(var(--brand-search-float, 28px) * -1)" }}
           >
             <BrandHeroSearch
               placeholder={hero.searchPlaceholder}
@@ -96,6 +112,10 @@ export function BrandHero({
             {showPopularTags && (hero.tags?.length ?? 0) > 0 ? (
               <BrandHeroTags tags={hero.tags ?? []} searchScope={scope} />
             ) : null}
+          </div>
+        ) : showPopularTags && (hero.tags?.length ?? 0) > 0 ? (
+          <div className="relative z-[6] pt-4">
+            <BrandHeroTags tags={hero.tags ?? []} searchScope={scope} />
           </div>
         ) : null}
       </div>

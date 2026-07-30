@@ -17,11 +17,18 @@ export type BrandHeroTag = {
 
 export type BrandHeroData = {
   heroKey: BrandHeroKey | string;
+  /** Optional override; otherwise fetched from CMS */
   name?: string;
   title: string;
   subtitle?: string | null;
+  capsuleLabel?: string | null;
   showTitle?: boolean;
   showSubtitle?: boolean;
+  showCtas?: boolean;
+  primaryCtaLabel?: string | null;
+  primaryCtaHref?: string | null;
+  secondaryCtaLabel?: string | null;
+  secondaryCtaHref?: string | null;
   desktopImageUrl?: string | null;
   mobileImageUrl?: string | null;
   imageAlt?: string | null;
@@ -47,3 +54,6 @@ export type BrandHeroProps = {
   showSearch?: boolean;
   showTags?: boolean;
 };
+
+/** Default home banner illustration (bundled; admin can replace via CMS). */
+export const DEFAULT_HOME_HERO_IMAGE = "/brand/hero-home-banner.png";
