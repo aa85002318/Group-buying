@@ -20,11 +20,11 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh w-full overflow-x-clip bg-background">
       <div className="app-shell relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip bg-background md:shadow-lift">
-        <AppHeader />
+        {!isHome ? <AppHeader /> : null}
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",
-            showChrome && "site-main"
+            showChrome && !isHome && "site-main"
           )}
           style={{
             paddingBottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px))",

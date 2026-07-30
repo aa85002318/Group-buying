@@ -27,16 +27,17 @@ export function BrandHeroSearch({
     <form
       onSubmit={submit}
       role="search"
-      className="flex w-full items-center gap-3 border border-[#E9EDF2] bg-white shadow-[0_12px_32px_rgba(21,62,115,0.14)]"
+      className="flex w-full items-center gap-3 border border-[#E9EDF2] bg-white"
       style={{
-        height: "var(--brand-search-height, 60px)",
-        borderRadius: "var(--brand-search-radius, 999px)",
+        height: "clamp(56px, 8vw, 64px)",
+        borderRadius: "999px",
         paddingLeft: "18px",
         paddingRight: "10px",
+        boxShadow: "0 12px 30px rgba(21, 62, 115, 0.08)",
       }}
     >
       <Search
-        className="h-5 w-5 shrink-0 text-[#687386]"
+        className="h-5 w-5 shrink-0 text-[#8791A3]"
         strokeWidth={1.75}
         aria-hidden
       />
@@ -48,7 +49,7 @@ export function BrandHeroSearch({
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={placeholder || "今天想做什麼？搜尋食譜、商品、團購、生鮮…"}
-        className="min-w-0 flex-1 bg-transparent text-[15px] text-[#153E73] outline-none placeholder:text-[#687386]"
+        className="min-w-0 flex-1 bg-transparent text-[15px] text-[#153E73] outline-none placeholder:text-[#8791A3]"
         autoComplete="off"
         style={{ height: "100%" }}
       />

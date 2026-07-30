@@ -28,8 +28,14 @@ export const BRAND_HERO_DEFAULTS: Record<BrandHeroKey, BrandHeroData> = {
       { id: "t4", label: "🧈 奶油乳酪", keyword: "奶油乳酪", sortOrder: 40 },
       { id: "t5", label: "🛒 團購", keyword: "團購", sortOrder: 50 },
       { id: "t6", label: "🥬 生鮮", keyword: "生鮮", sortOrder: 60 },
-      { id: "t7", label: "🧹 居家清潔", keyword: "居家清潔", sortOrder: 70 },
-      { id: "t8", label: "🎉 限時優惠", keyword: "限時優惠", sortOrder: 80 },
+      {
+        id: "more",
+        label: "更多",
+        keyword: "__more__",
+        linkType: "url" as const,
+        targetUrl: "/products",
+        sortOrder: 70,
+      },
     ],
   },
   recipes: {

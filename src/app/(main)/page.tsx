@@ -804,10 +804,8 @@ export default function HomePage() {
           草稿預覽模式 — 尚未發布，訪客看不到此版面
         </div>
       ) : null}
-      <section className="home-top-area pb-4">
-        <div className="site-container site-content-container home-page-inner space-y-3 sm:space-y-4">
-          {creamToRender.map((block) => renderHomeSection(block, ctx))}
-        </div>
+      <section className="w-full max-w-full overflow-x-hidden p-0">
+        {creamToRender.map((block) => renderHomeSection(block, ctx))}
       </section>
 
       <HomeContentArea>

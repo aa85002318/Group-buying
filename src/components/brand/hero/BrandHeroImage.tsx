@@ -7,13 +7,15 @@ export function BrandHeroImage({
   alt,
   position = "center",
   fallbackYellow = true,
+  /** contain keeps IP/halo/wings intact; cover fills the panel. */
+  fit = "cover",
 }: {
   desktopUrl?: string | null;
   mobileUrl?: string | null;
   alt: string;
   position?: "left" | "center" | "right";
-  /** When no image, show warm yellow lifestyle canvas instead of empty. */
   fallbackYellow?: boolean;
+  fit?: "cover" | "contain";
 }) {
   const desktop = desktopUrl || mobileUrl;
   const mobile = mobileUrl || desktopUrl;
@@ -29,23 +31,9 @@ export function BrandHeroImage({
         aria-hidden
         style={{
           background:
-            "radial-gradient(ellipse 80% 70% at 70% 40%, #FFE88A 0%, #FFD454 55%, #FFC93A 100%)",
+            "linear-gradient(135deg, #FFD454 0%, #FFE483 55%, #FFF0B8 100%)",
         }}
-      >
-        {/* Soft sparkles */}
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 12% 22%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px)," +
-              "radial-gradient(circle at 28% 58%, rgba(255,255,255,0.7) 0 1px, transparent 2px)," +
-              "radial-gradient(circle at 78% 18%, rgba(255,255,255,0.85) 0 1.5px, transparent 2px)," +
-              "radial-gradient(circle at 88% 62%, rgba(255,255,255,0.6) 0 1px, transparent 2px)," +
-              "radial-gradient(circle at 48% 12%, rgba(255,255,255,0.75) 0 1px, transparent 2px)",
-            backgroundSize: "100% 100%",
-          }}
-        />
-      </div>
+      />
     );
   }
 
@@ -60,9 +48,9 @@ export function BrandHeroImage({
           alt={alt}
           fill
           priority
-          className="object-cover"
+          className={fit === "contain" ? "object-contain" : "object-cover"}
           style={{ objectPosition: objectPos }}
-          sizes="(max-width: 768px) 100vw, 1280px"
+          sizes="100vw"
           unoptimized
         />
       ) : null}

@@ -1,4 +1,4 @@
-/** Soft organic wave that blends hero into the page (Apple Weather / Airbnb feel). */
+/** Soft layered white wave — blends full-bleed yellow hero into page. */
 export function BrandHeroWave({ className }: { className?: string }) {
   return (
     <div
@@ -9,42 +9,38 @@ export function BrandHeroWave({ className }: { className?: string }) {
         left: 0,
         right: 0,
         bottom: -1,
-        height: "28%",
+        width: "100%",
+        height: "min(28%, 120px)",
+        minHeight: "72px",
         pointerEvents: "none",
         zIndex: 3,
+        overflow: "hidden",
       }}
     >
       <svg
         viewBox="0 0 1440 160"
         preserveAspectRatio="none"
         className="absolute inset-0 h-full w-full"
+        style={{ width: "100%", height: "100%" }}
       >
         <defs>
           <linearGradient id="heroWaveFade" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#FFFEFA" stopOpacity="0" />
-            <stop offset="45%" stopColor="#FFFEFA" stopOpacity="0.55" />
+            <stop offset="40%" stopColor="#FFFEFA" stopOpacity="0.45" />
             <stop offset="100%" stopColor="#FFFEFA" stopOpacity="1" />
           </linearGradient>
         </defs>
+        {/* Back wave — soft translucent */}
         <path
-          d="M0,72 C180,128 360,20 540,56 C720,92 900,140 1080,88 C1200,52 1320,28 1440,64 L1440,160 L0,160 Z"
+          d="M0,48 C160,110 320,16 480,52 C640,88 800,130 960,78 C1120,26 1280,40 1440,70 L1440,160 L0,160 Z"
           fill="url(#heroWaveFade)"
         />
+        {/* Front wave — solid cream */}
         <path
-          d="M0,96 C200,148 380,48 560,80 C740,112 900,150 1100,100 C1240,64 1340,52 1440,84 L1440,160 L0,160 Z"
+          d="M0,88 C180,140 360,44 540,76 C720,108 900,148 1080,96 C1220,58 1340,64 1440,90 L1440,160 L0,160 Z"
           fill="#FFFEFA"
-          opacity="0.92"
         />
       </svg>
-      <div
-        className="absolute inset-x-0 bottom-0"
-        style={{
-          height: "55%",
-          background:
-            "linear-gradient(180deg, rgba(255,254,250,0) 0%, rgba(255,254,250,0.7) 40%, #FFFEFA 100%)",
-          filter: "blur(6px)",
-        }}
-      />
     </div>
   );
 }

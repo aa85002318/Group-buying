@@ -55,5 +55,5 @@ export type BrandHeroProps = {
   showTags?: boolean;
 };
 
-/** Default home banner illustration (bundled; admin can replace via CMS). */
-export const DEFAULT_HOME_HERO_IMAGE = "/brand/hero-home-banner.png";
+/** Default home banner illustration (bundled; admin can replace via CMS later). */
+export const DEFAULT_HOME_HERO_IMAGE = "/brand/hero-home-banner.png?v=20260730";
