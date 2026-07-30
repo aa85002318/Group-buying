@@ -55,5 +55,8 @@ export type BrandHeroProps = {
   showTags?: boolean;
 };
 
-/** Default home banner illustration (bundled; admin can replace via CMS later). */
-export const DEFAULT_HOME_HERO_IMAGE = "/brand/hero-home-banner.png?v=20260730";
+/** Default home banner — rectangular full-bleed art (no rounded white frame). */
+export const DEFAULT_HOME_HERO_IMAGE = "/brand/hero-home-banner.png?v=20260730b";
+
+/** Intrinsic aspect of the cropped home banner asset (994×540). */
+export const HOME_HERO_ASPECT = "994 / 540";

@@ -12,7 +12,12 @@ import {
   BRAND_HERO_DEFAULTS,
   resolveBrandHeroFallback,
 } from "@/lib/brand-system/hero-defaults";
-import type { BrandHeroData, BrandHeroProps, BrandHeroTag } from "./types";
+import {
+  HOME_HERO_ASPECT,
+  type BrandHeroData,
+  type BrandHeroProps,
+  type BrandHeroTag,
+} from "./types";
 import type { SearchScope } from "@/components/brand/search/types";
 
 /** Homepage popular chips — frontend-only for this phase (admin later). */
@@ -101,8 +106,9 @@ export function BrandHero({
         aria-label={hero.name || hero.title || "品牌主視覺"}
       >
         {/*
-          Full-bleed yellow plane — no card radius, no side inset, no max-width.
-          Background yellow always fills the shell width; artwork uses cover.
+          Full-bleed: yellow fills viewport width.
+          Media plane uses the banner's intrinsic aspect so cover does not
+          crop title / IP (no CSS scale).
         */}
         <div
           className="relative w-full overflow-hidden"
@@ -113,18 +119,8 @@ export function BrandHero({
           }}
         >
           <div
-            className={cn(
-              "relative w-full overflow-hidden",
-              // Phone: edge-to-edge cover; keep IP/text readable
-              "h-[clamp(300px,78vw,440px)]",
-              // Large phone / small tablet
-              "min-[480px]:h-[clamp(320px,58vw,440px)]",
-              // Tablet
-              "md:h-[clamp(360px,48vw,480px)]",
-              // Desktop — stable height as width grows
-              "lg:h-[clamp(400px,34vw,520px)]",
-              "xl:h-[min(500px,30vw)]"
-            )}
+            className="relative w-full overflow-hidden"
+            style={{ aspectRatio: HOME_HERO_ASPECT }}
           >
             <BrandHeroImage
               desktopUrl={imageUrl}
@@ -132,23 +128,11 @@ export function BrandHero({
               alt={hero.imageAlt || "CHIMEiDIY Lifestyle 首頁主視覺"}
               position="center"
               fit="cover"
-              cropArtFrame
             />
-
-            <BrandHeroContent
-              title={hero.title}
-              subtitle={hero.subtitle}
-              capsuleLabel={null}
-              showTitle={false}
-              showSubtitle={false}
-              showCtas={false}
-            />
-
             <BrandHeroWave />
           </div>
         </div>
 
-        {/* Search + popular — inset content, not the yellow plane */}
         <div className="relative z-[6] mx-auto w-full max-w-[960px] px-5 pb-2 pt-3 md:max-w-[1100px] md:px-8 lg:max-w-[1280px] lg:px-10">
           {showSearch ? (
             <BrandHeroSearch

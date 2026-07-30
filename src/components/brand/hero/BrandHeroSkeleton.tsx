@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { HOME_HERO_ASPECT } from "./types";
 
 export function BrandHeroSkeleton({
   className,
@@ -15,17 +16,12 @@ export function BrandHeroSkeleton({
         aria-label="載入中"
       >
         <div
-          className={cn(
-            "w-full animate-pulse",
-            "h-[clamp(260px,68vw,400px)]",
-            "min-[480px]:h-[clamp(300px,56vw,420px)]",
-            "md:h-[clamp(340px,46vw,460px)]",
-            "lg:h-[clamp(380px,32vw,500px)]"
-          )}
+          className="w-full animate-pulse"
           style={{
             background:
               "linear-gradient(135deg, #FFD454 0%, #FFE483 55%, #FFF0B8 100%)",
             paddingTop: "env(safe-area-inset-top, 0px)",
+            aspectRatio: HOME_HERO_ASPECT,
           }}
         />
         <div className="mx-auto w-full max-w-[960px] px-5 pt-3 md:max-w-[1100px] md:px-8 lg:max-w-[1280px]">
@@ -63,9 +59,6 @@ export function BrandHeroSkeleton({
               "linear-gradient(135deg, #FFD454 0%, #FFE483 55%, #FFF0B8 100%)",
           }}
         />
-        <div className="relative z-[5] mx-auto pt-3">
-          <div className="h-[60px] animate-pulse rounded-full bg-white shadow-[0_12px_30px_rgba(21,62,115,0.08)]" />
-        </div>
       </div>
     </div>
   );
