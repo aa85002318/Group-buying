@@ -1,19 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
+import { ChevronLeft, ChevronRight, Hand } from "lucide-react";
 import type { DemoRecipe } from "@/lib/home/recipe-demo";
 import { demoRecipes } from "@/lib/home/recipe-demo";
-import { RecipeWeeklyCard } from "./RecipeWeeklyCard";
+import {
+  getCardState,
+  getCoverflowStyle,
+  RecipeWeeklyCard,
+} from "./RecipeWeeklyCard";
+import { cn } from "@/lib/utils";
 
-function getActiveIndex(container: HTMLDivElement, count: number) {
-  const { scrollLeft, clientWidth } = container;
-  const center = scrollLeft + clientWidth / 2;
+function nearestIndex(container: HTMLDivElement, count: number) {
+  const viewportCenter = container.scrollLeft + container.clientWidth / 2;
   const cards = container.querySelectorAll<HTMLElement>(".recipe-weekly-card");
   let best = 0;
   let bestDist = Infinity;
   cards.forEach((card, i) => {
+    if (i >= count) return;
     const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-    const dist = Math.abs(center - cardCenter);
+    const dist = Math.abs(cardCenter - viewportCenter);
     if (dist < bestDist) {
       bestDist = dist;
       best = i;
@@ -22,62 +34,239 @@ function getActiveIndex(container: HTMLDivElement, count: number) {
   return Math.min(best, count - 1);
 }
 
+function ArcPlatform() {
+  return (
+    <div className="recipe-coverflow-arc pointer-events-none absolute inset-x-0 bottom-11 z-0 mx-auto h-[90px] w-full max-w-[900px] opacity-70 lg:max-w-[1100px]" aria-hidden>
+      <svg viewBox="0 0 390 90" preserveAspectRatio="none" className="h-full w-full" aria-hidden>
+        <path
+          d="M0 70 Q195 5 390 70"
+          fill="none"
+          stroke="#87C9E8"
+          strokeWidth="3"
+        />
+        <path
+          d="M20 78 Q195 28 370 78"
+          fill="none"
+          stroke="#FFFDF7"
+          strokeWidth="18"
+          opacity="0.9"
+        />
+      </svg>
+    </div>
+  );
+}
+
 export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: DemoRecipe[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const drag = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false });
   const [active, setActive] = useState(0);
+  const [showHint, setShowHint] = useState(true);
+  const [compact, setCompact] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   const updateActive = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
-    setActive(getActiveIndex(el, recipes.length));
+    const next = nearestIndex(el, recipes.length);
+    setActive((prev) => (prev === next ? prev : next));
   }, [recipes.length]);
+
+  const scheduleUpdate = useCallback(() => {
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      updateActive();
+    });
+  }, [updateActive]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 374px)");
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => {
+      setCompact(mq.matches);
+      setReducedMotion(motion.matches);
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    motion.addEventListener("change", sync);
+    return () => {
+      mq.removeEventListener("change", sync);
+      motion.removeEventListener("change", sync);
+    };
+  }, []);
 
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
     updateActive();
-    el.addEventListener("scroll", updateActive, { passive: true });
-    window.addEventListener("resize", updateActive);
+    el.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
     return () => {
-      el.removeEventListener("scroll", updateActive);
-      window.removeEventListener("resize", updateActive);
+      el.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [updateActive]);
+  }, [scheduleUpdate, updateActive]);
 
-  const scrollTo = (index: number) => {
+  const scrollTo = useCallback(
+    (index: number) => {
+      const el = trackRef.current;
+      if (!el) return;
+      const card = el.querySelectorAll<HTMLElement>(".recipe-weekly-card")[index];
+      card?.scrollIntoView({
+        behavior: reducedMotion ? "auto" : "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+      setActive(index);
+      setShowHint(false);
+    },
+    [reducedMotion]
+  );
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const el = trackRef.current;
     if (!el) return;
-    const card = el.querySelectorAll<HTMLElement>(".recipe-weekly-card")[index];
-    card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-    setActive(index);
+    drag.current = {
+      active: true,
+      startX: e.clientX,
+      scrollLeft: el.scrollLeft,
+      moved: false,
+    };
+    el.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = trackRef.current;
+    if (!el || !drag.current.active) return;
+    const dx = e.clientX - drag.current.startX;
+    if (Math.abs(dx) > 6) drag.current.moved = true;
+    el.scrollLeft = drag.current.scrollLeft - dx;
+  };
+
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!drag.current.active) return;
+    drag.current.active = false;
+    trackRef.current?.releasePointerCapture(e.pointerId);
+    if (drag.current.moved) setShowHint(false);
+    scheduleUpdate();
+  };
+
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      scrollTo(Math.max(0, active - 1));
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      scrollTo(Math.min(recipes.length - 1, active + 1));
+    }
   };
 
   return (
-    <div className="recipe-weekly-carousel w-full">
-      <div
-        ref={trackRef}
-        className="recipe-weekly-track flex gap-4 overflow-x-auto scroll-smooth pb-1 pt-1 [scrollbar-width:none] md:gap-5 [&::-webkit-scrollbar]:hidden"
+    <div
+      className="recipe-weekly-carousel recipe-coverflow relative mx-auto w-full max-w-full lg:max-w-[1100px]"
+      onKeyDown={onKeyDown}
+      tabIndex={0}
+      role="group"
+      aria-label="精選食譜輪播"
+    >
+      {/* Desktop side arrows */}
+      <button
+        type="button"
+        aria-label="上一張食譜"
+        onClick={() => scrollTo(Math.max(0, active - 1))}
+        disabled={active <= 0}
+        className="absolute left-2 top-[42%] z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#FFD34E] text-[#123B73] shadow-md transition hover:brightness-95 disabled:opacity-40 md:inline-flex lg:left-0"
       >
-        {recipes.map((recipe) => (
-          <RecipeWeeklyCard key={recipe.id} recipe={recipe} />
-        ))}
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        aria-label="下一張食譜"
+        onClick={() => scrollTo(Math.min(recipes.length - 1, active + 1))}
+        disabled={active >= recipes.length - 1}
+        className="absolute right-2 top-[42%] z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#FFD34E] text-[#123B73] shadow-md transition hover:brightness-95 disabled:opacity-40 md:inline-flex lg:right-0"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
+
+      <div className="coverflow-viewport relative w-full max-w-full overflow-hidden">
+        <div
+          ref={trackRef}
+          className="coverflow-track recipe-weekly-track"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onScroll={() => {
+            if (!showHint) return;
+            setShowHint(false);
+          }}
+        >
+          {recipes.map((recipe, index) => {
+            const state = getCardState(index, active);
+            return (
+              <RecipeWeeklyCard
+                key={recipe.id}
+                recipe={recipe}
+                index={index}
+                total={recipes.length}
+                state={state}
+                style={getCoverflowStyle(index, active, compact)}
+                onActivate={scrollTo}
+              />
+            );
+          })}
+        </div>
+
+        <ArcPlatform />
+
+        {showHint ? (
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-0 bottom-[78px] z-[5] flex items-center justify-center gap-2 text-[#123B73]/70",
+              reducedMotion ? "opacity-80" : "animate-pulse"
+            )}
+            aria-hidden
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <Hand className="h-4 w-4" />
+            <span className="text-xs font-medium">左右滑動挑選</span>
+            <ChevronRight className="h-4 w-4" />
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-5 flex items-center justify-center gap-2" aria-label="輪播分頁">
-        {recipes.map((recipe, i) => (
-          <button
-            key={recipe.id}
-            type="button"
-            aria-label={`第 ${i + 1} 張食譜`}
-            aria-current={active === i ? "true" : undefined}
-            onClick={() => scrollTo(i)}
-            className="h-2.5 w-2.5 rounded-full transition"
-            style={{
-              background: active === i ? "#153E73" : "#C7D8E5",
-              transform: active === i ? "scale(1.15)" : "scale(1)",
-            }}
-          />
-        ))}
+      <div
+        className="relative z-[6] mt-2 flex items-end justify-center gap-2 pb-1"
+        aria-label="輪播分頁"
+      >
+        {recipes.map((recipe, i) => {
+          const selected = active === i;
+          const abs = Math.abs(i - active);
+          const drop = Math.min(4, abs * 2);
+          return (
+            <button
+              key={recipe.id}
+              type="button"
+              aria-label={`第 ${i + 1} 張食譜`}
+              aria-current={selected ? "true" : undefined}
+              onClick={() => scrollTo(i)}
+              className="inline-flex h-11 w-11 items-center justify-center"
+            >
+              <span
+                className="block rounded-full transition-all"
+                style={{
+                  width: selected ? 30 : 9,
+                  height: 9,
+                  background: selected ? "#123B73" : "#87C9E8",
+                  transform: `translateY(${drop}px)`,
+                }}
+              />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
