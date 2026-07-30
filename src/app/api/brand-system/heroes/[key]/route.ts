@@ -136,6 +136,12 @@ export async function GET(
       mobileImageUrl,
       imageAlt: row.image_alt ?? fallback.imageAlt,
       imagePosition: (row.image_position as "left" | "center" | "right") ?? "center",
+      desktopObjectPosition:
+        (row as { desktop_object_position?: string | null }).desktop_object_position ??
+        null,
+      mobileObjectPosition:
+        (row as { mobile_object_position?: string | null }).mobile_object_position ??
+        null,
       searchPlaceholder: row.search_placeholder || fallback.searchPlaceholder,
       searchScope: row.search_scope || fallback.searchScope,
       showPopularTags: row.show_popular_tags !== false,

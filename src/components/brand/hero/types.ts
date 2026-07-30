@@ -33,6 +33,8 @@ export type BrandHeroData = {
   mobileImageUrl?: string | null;
   imageAlt?: string | null;
   imagePosition?: "left" | "center" | "right";
+  desktopObjectPosition?: string | null;
+  mobileObjectPosition?: string | null;
   searchPlaceholder?: string | null;
   searchScope?:
     | "global"
@@ -56,7 +58,7 @@ export type BrandHeroProps = {
 };
 
 /** Default home banner — rectangular full-bleed art (no rounded white frame). */
-export const DEFAULT_HOME_HERO_IMAGE = "/brand/hero-home-banner.png?v=20260730b";
+export const DEFAULT_HOME_HERO_IMAGE = "/brand/hero-home-desktop.png?v=20260730c";
 
-/** Intrinsic aspect of the cropped home banner asset (994×540). */
-export const HOME_HERO_ASPECT = "994 / 540";
+/** Intrinsic aspect of the cropped home desktop banner asset (998×502). */
+export const HOME_HERO_ASPECT = "998 / 502";

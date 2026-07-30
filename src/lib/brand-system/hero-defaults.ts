@@ -1,11 +1,14 @@
 import type { BrandHeroData, BrandHeroKey } from "@/components/brand/hero/types";
-import { DEFAULT_HOME_HERO_IMAGE } from "@/components/brand/hero/types";
+import {
+  HOME_HERO_DESKTOP_IMAGE,
+  HOME_HERO_MOBILE_IMAGE,
+} from "@/types/home-hero";
 
 export const BRAND_HERO_DEFAULTS: Record<BrandHeroKey, BrandHeroData> = {
   home: {
     heroKey: "home",
     title: "今天想做點什麼？",
-    subtitle: "探索食譜、團購、生鮮、居家好物\n讓每天的生活更簡單。",
+    subtitle: "探索食譜、團購、生鮮、居家好物\n讓每一天的生活更簡單。",
     capsuleLabel: null,
     showTitle: false,
     showSubtitle: false,
@@ -14,8 +17,8 @@ export const BRAND_HERO_DEFAULTS: Record<BrandHeroKey, BrandHeroData> = {
     primaryCtaHref: "/products",
     secondaryCtaLabel: "看看食譜",
     secondaryCtaHref: "/recipes",
-    desktopImageUrl: DEFAULT_HOME_HERO_IMAGE,
-    mobileImageUrl: DEFAULT_HOME_HERO_IMAGE,
+    desktopImageUrl: HOME_HERO_DESKTOP_IMAGE,
+    mobileImageUrl: HOME_HERO_MOBILE_IMAGE,
     imageAlt: "CHIMEiDIY Lifestyle 首頁主視覺",
     imagePosition: "center",
     searchPlaceholder: "今天想做什麼？搜尋食譜、商品、團購、生鮮…",

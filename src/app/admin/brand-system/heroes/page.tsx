@@ -37,6 +37,8 @@ type HeroRow = {
   mobile_image_url: string | null;
   image_alt: string | null;
   image_position: "left" | "center" | "right";
+  desktop_object_position?: string;
+  mobile_object_position?: string;
   search_placeholder: string | null;
   search_scope: string;
   show_popular_tags: boolean;
@@ -46,11 +48,46 @@ type HeroRow = {
   updated_at: string;
 };
 
-const IMAGE_SPEC = `Hero Banner 主視覺圖（可隨時替換）。
-建議尺寸：1600×900 或 1024×576（約 16:9）
-高度視覺約 340–360px，圓角 32px，底部會自動套用波浪漸層銜接。
-格式：WebP / JPG / PNG（桌機 ≤ 700KB，手機 ≤ 450KB）
-若上傳完整 Banner（含文案與 IP 插圖），請關閉「顯示主標題／副標題」避免重複。`;
+const IMAGE_SPEC = `Hero Banner 主視覺（網頁／手機分開上傳）。
+桌機建議：約 1.84:1（例 1920×1040 / 1440×783），PNG／WebP ≤700KB
+手機建議：約 5:4 或 1125×900，PNG／WebP ≤700KB
+黃底需直達四邊；圖片內不要再畫波浪（前台會渲染單層波浪）。
+比例不符時僅顯示警告，不會強制拉伸。
+完整含文案的 Banner 請關閉「顯示主標題／副標題」。`;
+
+function desktopPosToLegacy(pos: string): "left" | "center" | "right" {
+  if (pos === "center left") return "left";
+  if (pos === "center right") return "right";
+  return "center";
+}
+
+function HeroPreview({
+  label,
+  src,
+  aspectClass,
+}: {
+  label: string;
+  src: string | null;
+  aspectClass: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-[#FFD454]">
+      <p className="border-b border-border/40 bg-white/80 px-2 py-1 text-[11px] font-medium text-coffee">
+        {label}
+      </p>
+      <div className={`relative w-full ${aspectClass} bg-[#FFD454]`}>
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs text-[#153E73]/70">
+            尚未上傳
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function normalizeHeroForEdit(h: HeroRow & { brand_hero_tags?: Array<Record<string, unknown>> }): HeroRow {
   const rawTags = h.tags ?? h.brand_hero_tags ?? [];
@@ -71,6 +108,14 @@ function normalizeHeroForEdit(h: HeroRow & { brand_hero_tags?: Array<Record<stri
     primary_cta_href: h.primary_cta_href ?? null,
     secondary_cta_label: h.secondary_cta_label ?? null,
     secondary_cta_href: h.secondary_cta_href ?? null,
+    desktop_object_position:
+      h.desktop_object_position ??
+      (h.image_position === "left"
+        ? "center left"
+        : h.image_position === "right"
+          ? "center right"
+          : "center"),
+    mobile_object_position: h.mobile_object_position ?? "center",
     tags,
   };
 }
@@ -201,7 +246,7 @@ function HeroEditForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <AdminImageUpload
             label="桌機版 Banner"
-            hint="建議 1600×900，可含 IP 插圖與文案"
+            hint="建議約 1.84:1，PNG／WebP ≤700KB"
             images={editing.desktop_image_url ? [editing.desktop_image_url] : []}
             onChange={(urls) =>
               setEditing({ ...editing, desktop_image_url: urls[0] ?? null })
@@ -213,7 +258,7 @@ function HeroEditForm({
           />
           <AdminImageUpload
             label="手機版 Banner"
-            hint="未設定則使用桌機圖；建議 ≤450KB"
+            hint="建議約 5:4 或 1125×900；未設定則用桌機圖"
             images={editing.mobile_image_url ? [editing.mobile_image_url] : []}
             onChange={(urls) =>
               setEditing({ ...editing, mobile_image_url: urls[0] ?? null })
@@ -224,7 +269,19 @@ function HeroEditForm({
             aspectRatio="video"
           />
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <HeroPreview
+            label="Desktop Preview"
+            src={editing.desktop_image_url}
+            aspectClass="aspect-[1.84/1]"
+          />
+          <HeroPreview
+            label="Mobile Preview"
+            src={editing.mobile_image_url || editing.desktop_image_url}
+            aspectClass="aspect-[5/4]"
+          />
+        </div>
+        <div className="grid gap-2 sm:grid-cols-3">
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">圖片替代文字（Alt）</label>
             <Input
@@ -236,20 +293,40 @@ function HeroEditForm({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">圖片焦點位置</label>
+            <label className="text-xs text-muted-foreground">桌機 object-position</label>
             <select
               className="h-9 w-full rounded-md border border-input bg-white px-3 text-sm"
-              value={editing.image_position}
+              value={editing.desktop_object_position ?? "center"}
+              onChange={(e) => {
+                const desktop_object_position = e.target.value;
+                setEditing({
+                  ...editing,
+                  desktop_object_position,
+                  image_position: desktopPosToLegacy(desktop_object_position),
+                });
+              }}
+            >
+              <option value="center">center</option>
+              <option value="center left">center left</option>
+              <option value="center right">center right</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">手機 object-position</label>
+            <select
+              className="h-9 w-full rounded-md border border-input bg-white px-3 text-sm"
+              value={editing.mobile_object_position ?? "center"}
               onChange={(e) =>
                 setEditing({
                   ...editing,
-                  image_position: e.target.value as HeroRow["image_position"],
+                  mobile_object_position: e.target.value,
                 })
               }
             >
-              <option value="left">靠左</option>
-              <option value="center">置中</option>
-              <option value="right">靠右</option>
+              <option value="center">center</option>
+              <option value="top">top</option>
+              <option value="center top">center top</option>
+              <option value="center right">center right</option>
             </select>
           </div>
         </div>

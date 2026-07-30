@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Clock3, Heart, Play } from "lucide-react";
-import { BrandHero } from "@/components/brand/hero/BrandHero";
+import { HomeHeroSection } from "@/components/home/HomeHeroSection";
 import { HomeStoreNews } from "@/components/home/HomeStoreNews";
 import { HomeServiceShortcuts } from "@/components/home/HomeServiceShortcuts";
 import { HomeIngredientCategories } from "@/components/home/HomeIngredientCategories";
@@ -161,7 +161,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       );
     }
     case "hero":
-      return <BrandHero key={reactKey} heroKey="home" />;
+      return <HomeHeroSection key={reactKey} />;
     case "store_news":
       return (
         <HomeStoreNews

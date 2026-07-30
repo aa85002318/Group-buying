@@ -136,6 +136,8 @@ export async function POST(request: Request) {
       mobile_image_url: body.mobile_image_url ?? null,
       image_alt: body.image_alt ?? null,
       image_position: body.image_position ?? "center",
+      desktop_object_position: body.desktop_object_position ?? "center",
+      mobile_object_position: body.mobile_object_position ?? "center",
       search_placeholder: body.search_placeholder ?? null,
       search_scope: body.search_scope ?? "global",
       show_popular_tags: body.show_popular_tags !== false,
@@ -192,6 +194,8 @@ export async function PUT(request: Request) {
     "mobile_image_url",
     "image_alt",
     "image_position",
+    "desktop_object_position",
+    "mobile_object_position",
     "search_placeholder",
     "search_scope",
     "show_popular_tags",
@@ -211,7 +215,7 @@ export async function PUT(request: Request) {
     .single();
 
   // Staging/prod may not have V2 columns yet — retry without them
-  if (error && /capsule_label|show_ctas|primary_cta|secondary_cta|column/i.test(error.message)) {
+  if (error && /capsule_label|show_ctas|primary_cta|secondary_cta|desktop_object|mobile_object|column/i.test(error.message)) {
     const v2Keys = [
       "capsule_label",
       "show_ctas",
@@ -219,6 +223,8 @@ export async function PUT(request: Request) {
       "primary_cta_href",
       "secondary_cta_label",
       "secondary_cta_href",
+      "desktop_object_position",
+      "mobile_object_position",
     ];
     for (const k of v2Keys) delete updates[k];
     ({ data, error } = await admin
