@@ -591,6 +591,12 @@ function SectionCard({
   const [seriesCategoryId, setSeriesCategoryId] = useState("");
   const [seriesBadge, setSeriesBadge] = useState("");
   const [bannerPlacement, setBannerPlacement] = useState("home_custom");
+  const [shopEnabled, setShopEnabled] = useState(true);
+  const [shopSource, setShopSource] = useState("automatic");
+  const [shopSort, setShopSort] = useState("hot");
+  const [moreCardTitle, setMoreCardTitle] = useState("更多商品");
+  const [moreCardSubtitle, setMoreCardSubtitle] = useState("查看更多烘焙材料");
+  const [moreCardLink, setMoreCardLink] = useState("/baking-materials");
 
   useEffect(() => {
     setTitle(block?.title ?? section.label);
@@ -632,6 +638,15 @@ function SectionCard({
     if (section.hasBannerPlacement) {
       const cfg = block?.config ?? {};
       setBannerPlacement(String(cfg.placement ?? "home_custom"));
+    }
+    if (section.hasIngredientShopSettings) {
+      const cfg = block?.config ?? {};
+      setShopEnabled(cfg.enabled !== false);
+      setShopSource(String(cfg.product_source ?? "automatic"));
+      setShopSort(String(cfg.sort_type ?? "hot"));
+      setMoreCardTitle(String(cfg.more_card_title ?? "更多商品"));
+      setMoreCardSubtitle(String(cfg.more_card_subtitle ?? "查看更多烘焙材料"));
+      setMoreCardLink(String(cfg.more_card_link ?? "/baking-materials"));
     }
   }, [block, section]);
 
@@ -898,6 +913,81 @@ function SectionCard({
                 }
               >
                 儲存系列設定
+              </Button>
+            </div>
+          ) : null}
+
+          {section.hasIngredientShopSettings ? (
+            <div className="space-y-2 rounded-xl border border-border bg-white p-3">
+              <p className="text-xs font-medium text-muted-foreground">一鍵買齊材料區塊設定</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={shopEnabled}
+                    onChange={(e) => setShopEnabled(e.target.checked)}
+                  />
+                  啟用區塊
+                </label>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">商品來源</label>
+                  <select
+                    className="input-field w-full"
+                    value={shopSource}
+                    onChange={(e) => setShopSource(e.target.value)}
+                  >
+                    <option value="automatic">automatic</option>
+                    <option value="manual">manual</option>
+                    <option value="category">category</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">排序</label>
+                  <select
+                    className="input-field w-full"
+                    value={shopSort}
+                    onChange={(e) => setShopSort(e.target.value)}
+                  >
+                    <option value="hot">hot</option>
+                    <option value="newest">newest</option>
+                    <option value="sales">sales</option>
+                    <option value="custom">custom</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">更多商品卡標題</label>
+                  <Input value={moreCardTitle} onChange={(e) => setMoreCardTitle(e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">更多商品卡副標</label>
+                  <Input value={moreCardSubtitle} onChange={(e) => setMoreCardSubtitle(e.target.value)} />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-xs text-muted-foreground">更多商品卡連結</label>
+                  <Input value={moreCardLink} onChange={(e) => setMoreCardLink(e.target.value)} />
+                </div>
+              </div>
+              <Button
+                size="sm"
+                disabled={saving}
+                onClick={() =>
+                  onPatch(block.id, {
+                    config: {
+                      ...(block.config ?? {}),
+                      enabled: shopEnabled,
+                      product_source: shopSource,
+                      sort_type: shopSort,
+                      more_card_title: moreCardTitle.trim(),
+                      more_card_subtitle: moreCardSubtitle.trim(),
+                      more_card_link: moreCardLink.trim(),
+                      subtitle: subtitle.trim() || null,
+                    },
+                    manual_ids: manualIds,
+                    source_mode: sourceMode,
+                  })
+                }
+              >
+                儲存商品區設定
               </Button>
             </div>
           ) : null}

@@ -27,7 +27,8 @@ export type HomeSectionKey =
   | "seasonal_themes"
   | "store_information"
   | "latest_articles"
-  | "ingredient_categories";
+  | "ingredient_categories"
+  | "ingredient_shop";
 
 /** Primary homepage architecture (spec order 1–8). */
 export const PRIMARY_HOME_SECTION_KEYS: HomeSectionKey[] = [
@@ -37,6 +38,7 @@ export const PRIMARY_HOME_SECTION_KEYS: HomeSectionKey[] = [
   "recipe_kits",
   "popular_categories",
   "ingredient_categories",
+  "ingredient_shop",
   "popular_baking_products",
   "closing_group_buys",
   "service_shortcuts",
@@ -109,6 +111,7 @@ export const HOME_SECTION_SORT_DEFAULT: Record<HomeSectionKey, number> = {
   store_information: 230,
   latest_articles: 240,
   ingredient_categories: 45,
+  ingredient_shop: 48,
 };
 
 export function isHomeSectionKey(value: string): value is HomeSectionKey {

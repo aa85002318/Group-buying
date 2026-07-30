@@ -15,6 +15,7 @@ import { HeroBottomTransition } from "./HeroBottomTransition";
 import { HeroTextContent } from "./HeroTextContent";
 import { ResponsiveHeroImage } from "./ResponsiveHeroImage";
 import { WeeklyPopularRecipesSection } from "./weekly-recipes/WeeklyPopularRecipesSection";
+import { HomeIngredientShopSection } from "./HomeIngredientShopSection";
 
 function normalizePosition(
   value: unknown,
@@ -185,6 +186,7 @@ export function HomeHeroSection() {
       </div>
     </section>
     <WeeklyPopularRecipesSection />
+    <HomeIngredientShopSection />
     </>
   );
 }

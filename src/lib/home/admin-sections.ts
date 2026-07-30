@@ -25,6 +25,8 @@ export type HomeAdminSectionMeta = {
   hasNewDays?: boolean;
   /** Series product exposure: category + badge + scope */
   hasProductSeriesSettings?: boolean;
+  /** Ingredient shop: source, sort, more card */
+  hasIngredientShopSettings?: boolean;
   /** Banner strip: custom placement */
   hasBannerPlacement?: boolean;
   /** Shown in "add block" catalog */
@@ -77,13 +79,25 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   },
   {
     id: "recipe_kits",
-    label: "一鍵買齊材料",
+    label: "一鍵買齊材料（材料包）",
     description: "材料包綁定食譜與商品 SKU，前台一鍵加入購物車。",
     contentMode: "cms_items",
     manageHref: "/admin/home/recipe-kits",
     manageLabel: "管理材料包",
     hasDisplayCount: true,
     hasViewAllUrl: true,
+    catalog: true,
+  },
+  {
+    id: "ingredient_shop",
+    label: "一鍵買齊材料",
+    description: "清爽卡片風商品橫滑區：分類、收藏、數量與加入購物車。",
+    contentMode: "mixed",
+    hasProductPicker: true,
+    productScope: "baking",
+    hasDisplayCount: true,
+    hasViewAllUrl: true,
+    hasIngredientShopSettings: true,
     catalog: true,
   },
   {

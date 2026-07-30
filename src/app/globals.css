@@ -105,6 +105,39 @@
     padding-inline: max(16px, 15%);
   }
 
+  .ingredient-shop-tabs {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .ingredient-shop-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ingredient-shop-scroll {
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor: grab;
+    touch-action: pan-x;
+  }
+
+  .ingredient-shop-scroll:active {
+    cursor: grabbing;
+  }
+
+  .ingredient-shop-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ingredient-shop-card {
+    scroll-snap-align: start;
+  }
+
+  .ingredient-shop-more-card {
+    min-height: 420px;
+  }
+
   @media (min-width: 768px) {
     .recipe-weekly-track {
       padding-inline: max(16px, 20%);

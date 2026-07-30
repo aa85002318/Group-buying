@@ -45,9 +45,27 @@ export const SECTION_DEFAULTS: Record<
   recipe_kits: {
     title: "一鍵買齊材料",
     displayCount: 4,
-    visible: true,
+    visible: false,
     viewAllUrl: "/recipes",
     config: { subtitle: "跟著食譜，一次買齊所有材料" },
+  },
+  ingredient_shop: {
+    title: "一鍵買齊材料",
+    displayCount: 12,
+    visible: true,
+    viewAllUrl: "/baking-materials",
+    config: {
+      enabled: true,
+      subtitle: "完整食材一次購足，讓烘焙更輕鬆！",
+      product_source: "automatic",
+      category_slugs: ["flour", "dairy", "sugar", "butter"],
+      category_labels: { flour: "烘焙粉類", butter: "油脂類" },
+      sort_type: "hot",
+      product_limit: 12,
+      more_card_title: "更多商品",
+      more_card_subtitle: "查看更多烘焙材料",
+      more_card_link: "/baking-materials",
+    },
   },
   popular_categories: {
     title: "找材料",
