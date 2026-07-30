@@ -1,26 +1,9 @@
 "use client";
 
 import {
-  HOME_HERO_MOBILE_ASPECT,
+  HOME_HERO_DESKTOP_ASPECT,
   type HomeHeroObjectPosition,
 } from "@/types/home-hero";
-
-function toBackgroundPosition(pos?: string | null): string {
-  switch (pos) {
-    case "left center":
-    case "center left":
-      return "left top";
-    case "right center":
-    case "center right":
-      return "right top";
-    case "center top":
-      return "center top";
-    case "top":
-      return "center top";
-    default:
-      return "center top";
-  }
-}
 
 function toObjectPosition(pos?: string | null): string {
   switch (pos) {
@@ -38,8 +21,9 @@ function toObjectPosition(pos?: string | null): string {
 }
 
 /**
- * Mobile: background-size 100% auto — guaranteed no left/right crop on any browser.
- * Desktop: img + object-contain inside height clamp.
+ * Full-bleed hero — edge-to-edge width, no side gutters.
+ * Mobile: img scales to 100% viewport width (height auto, no side crop).
+ * Desktop: cover fills clamp height at full width.
  */
 export function ResponsiveHeroImage({
   desktopUrl,
@@ -55,34 +39,36 @@ export function ResponsiveHeroImage({
   mobileObjectPosition?: string | null;
 }) {
   const desktopPos = toObjectPosition(desktopObjectPosition);
-  const mobileBgPos = toBackgroundPosition(toObjectPosition(mobileObjectPosition));
+  const mobilePos = toObjectPosition(mobileObjectPosition);
 
   return (
-    <div className="relative z-0 w-full bg-[#FFD454]">
-      {/* Mobile — background paint avoids img/object-fit cropping bugs (incl. iOS Safari) */}
-      <div
-        className="home-hero-mobile-bg w-full md:hidden"
-        style={{
-          aspectRatio: HOME_HERO_MOBILE_ASPECT,
-          backgroundImage: `url("${mobileUrl}")`,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "100% auto",
-          backgroundPosition: mobileBgPos,
-        }}
-        role="img"
-        aria-label={alt}
+    <div className="home-hero-fullbleed relative z-0 w-full bg-[#FFD454]">
+      {/* Mobile — full viewport width, intrinsic height */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={mobileUrl}
+        alt={alt}
+        className="home-hero-fullbleed__img block w-full md:hidden"
+        style={{ objectPosition: mobilePos }}
+        decoding="async"
+        fetchPriority="high"
       />
 
+      {/* Desktop — full width cover */}
       <div
-        className="relative hidden w-full md:block"
-        style={{ height: "clamp(420px, 48vw, 720px)" }}
+        className="relative hidden w-full overflow-hidden md:block"
+        style={{
+          height: "clamp(420px, 48vw, 720px)",
+          aspectRatio: HOME_HERO_DESKTOP_ASPECT,
+          maxHeight: "720px",
+        }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={desktopUrl}
           alt={alt}
-          className="h-full w-full"
-          style={{ objectFit: "contain", objectPosition: desktopPos }}
+          className="home-hero-fullbleed__img h-full w-full"
+          style={{ objectFit: "cover", objectPosition: desktopPos }}
           decoding="async"
           fetchPriority="high"
         />

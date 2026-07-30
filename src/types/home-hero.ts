@@ -32,15 +32,16 @@ export type HomeHeroData = {
   enabled?: boolean;
 };
 
-export const HOME_HERO_DESKTOP_IMAGE = "/brand/hero-home-desktop.png?v=20260730h";
-export const HOME_HERO_MOBILE_IMAGE = "/brand/hero-home-mobile.png?v=20260730h";
+/** Mobile full-bleed asset — 5:4 (1125×900 family) */
+export const HOME_HERO_MOBILE_ASPECT = "5 / 4";
+export const HOME_HERO_MOBILE_WIDTH = 1125;
+export const HOME_HERO_MOBILE_HEIGHT = 900;
 
 /** Trimmed desktop asset ≈ 1024×479 */
 export const HOME_HERO_DESKTOP_ASPECT = "1024 / 479";
-/** Mobile asset (wave trimmed) ≈ 1024×701 */
-export const HOME_HERO_MOBILE_ASPECT = "1024 / 701";
-export const HOME_HERO_MOBILE_WIDTH = 1024;
-export const HOME_HERO_MOBILE_HEIGHT = 701;
+
+export const HOME_HERO_DESKTOP_IMAGE = "/brand/hero-home-desktop.png?v=20260730i";
+export const HOME_HERO_MOBILE_IMAGE = "/brand/hero-home-mobile.png?v=20260730i";
 
 export const HOME_HERO_DEFAULTS: HomeHeroData = {
   title: "今天想做點什麼？",

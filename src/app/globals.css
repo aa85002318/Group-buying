@@ -77,13 +77,24 @@
     max-width: 100%;
   }
 
-  /* Home hero mobile — background paint; no horizontal crop */
-  .home-hero-mobile-bg {
-    width: 100% !important;
-    max-width: 100% !important;
-    background-repeat: no-repeat !important;
-    background-size: 100% auto !important;
-    overflow: visible !important;
+  /* Home hero — full-bleed edge-to-edge banner */
+  .home-hero-fullbleed {
+    width: 100%;
+    max-width: 100vw;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .home-hero-fullbleed__img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .home-hero-section {
+    margin-inline: 0;
+    padding-inline: 0;
   }
 
   /* Tables / pre that could force page width */

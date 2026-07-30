@@ -136,12 +136,12 @@ export function HomeHeroSection() {
   const alt = data.imageAlt || "CHIMEiDIY Lifestyle 首頁主視覺";
 
   return (
-    <section className="relative w-full bg-[#FFFEFA]" aria-label="首頁主視覺">
-      {/* Yellow canvas + image + overlays */}
-      <div
-        className="relative w-full bg-[#FFD454]"
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-      >
+    <section
+      className="home-hero-section relative w-full max-w-[100vw] bg-[#FFFEFA]"
+      aria-label="首頁主視覺"
+    >
+      {/* Full-bleed yellow canvas — image extends to viewport edges */}
+      <div className="relative w-full max-w-[100vw] bg-[#FFD454]">
         <ResponsiveHeroImage
           desktopUrl={desktopUrl}
           mobileUrl={mobileUrl}
