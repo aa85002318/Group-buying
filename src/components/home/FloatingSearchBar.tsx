@@ -28,11 +28,9 @@ export function FloatingSearchBar({
     <form
       onSubmit={submit}
       role="search"
-      className="relative z-10 mx-auto flex h-[54px] w-[calc(100%-32px)] max-w-[1280px] -mt-[26px] items-center gap-3 border border-[#E9EDF2] bg-white md:h-16 md:w-[calc(100%-48px)] md:-mt-[38px]"
+      className="relative z-10 mx-auto flex h-[54px] w-full max-w-[1280px] -mt-[26px] min-w-0 items-center gap-2 border border-[#E9EDF2] bg-white px-4 pr-2.5 md:h-16 md:-mt-[38px] md:gap-3 md:px-[18px] md:pr-2.5"
       style={{
         borderRadius: "999px",
-        paddingLeft: "18px",
-        paddingRight: "10px",
         boxShadow:
           "0 12px 30px rgba(21, 62, 115, 0.10), 0 3px 8px rgba(21, 62, 115, 0.04)",
       }}
@@ -45,8 +43,8 @@ export function FloatingSearchBar({
         id="home-hero-search-input"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder={placeholder || "今天想做什麼？搜尋食譜、商品、團購、生鮮…"}
-        className="min-w-0 flex-1 bg-transparent text-[15px] text-[#153E73] outline-none placeholder:text-[#687386]"
+        placeholder={placeholder || "今天想做什麼？搜尋食譜、商品…"}
+        className="min-w-0 flex-1 bg-transparent text-[14px] text-[#153E73] outline-none placeholder:text-[#687386] sm:text-[15px]"
         autoComplete="off"
         style={{ height: "100%" }}
       />

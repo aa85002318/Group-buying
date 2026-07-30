@@ -32,13 +32,13 @@ export type HomeHeroData = {
   enabled?: boolean;
 };
 
-export const HOME_HERO_DESKTOP_IMAGE = "/brand/hero-home-desktop.png?v=20260730c";
-export const HOME_HERO_MOBILE_IMAGE = "/brand/hero-home-mobile.png?v=20260730c";
+export const HOME_HERO_DESKTOP_IMAGE = "/brand/hero-home-desktop.png?v=20260730e";
+export const HOME_HERO_MOBILE_IMAGE = "/brand/hero-home-mobile.png?v=20260730e";
 
 /** Cropped desktop asset ≈ 998×502 */
 export const HOME_HERO_DESKTOP_ASPECT = "998 / 502";
-/** Cropped mobile asset ≈ 1012×718 (~5:4 family) */
-export const HOME_HERO_MOBILE_ASPECT = "1012 / 718";
+/** Cropped mobile asset ≈ 1024×689 (5:4 family, wave trimmed) */
+export const HOME_HERO_MOBILE_ASPECT = "1024 / 689";
 
 export const HOME_HERO_DEFAULTS: HomeHeroData = {
   title: "今天想做點什麼？",
@@ -47,7 +47,7 @@ export const HOME_HERO_DEFAULTS: HomeHeroData = {
   mobileImageUrl: HOME_HERO_MOBILE_IMAGE,
   imageAlt: "CHIMEiDIY Lifestyle 首頁主視覺",
   desktopObjectPosition: "center",
-  mobileObjectPosition: "center",
+  mobileObjectPosition: "center top",
   searchPlaceholder: "今天想做什麼？搜尋食譜、商品、團購、生鮮…",
   searchScope: "global",
   showPopularTags: true,

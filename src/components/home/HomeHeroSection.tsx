@@ -139,7 +139,10 @@ export function HomeHeroSection() {
   return (
     <section className="relative w-full overflow-x-hidden bg-[#FFFEFA]" aria-label="首頁主視覺">
       {/* Yellow canvas + image + overlays */}
-      <div className="relative w-full overflow-hidden bg-[#FFD454]">
+      <div
+        className="relative w-full overflow-hidden bg-[#FFD454]"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
         <ResponsiveHeroImage
           desktopUrl={desktopUrl}
           mobileUrl={mobileUrl}
@@ -156,14 +159,14 @@ export function HomeHeroSection() {
         <HeroBottomTransition />
       </div>
 
-      {/* Search floats above wave; popular tags stay in this hero zone */}
-      <div className="relative z-10 bg-[#FFFEFA] pb-2 pt-0">
+      {/* Search floats above wave; reserve space so IP isn't covered */}
+      <div className="relative z-10 bg-[#FFFEFA] px-4 pb-2 pt-0 md:px-6">
         <FloatingSearchBar
           placeholder={data.searchPlaceholder}
           scope={(data.searchScope as SearchScope) || "global"}
         />
         {data.showPopularTags !== false && data.tags?.length ? (
-          <div className="mx-auto mt-4 w-[calc(100%-32px)] max-w-[1280px] md:w-[calc(100%-48px)]">
+          <div className="mx-auto mt-4 w-full max-w-[1280px]">
             <BrandHeroTags
               tags={data.tags.map((t) => ({
                 id: t.id,

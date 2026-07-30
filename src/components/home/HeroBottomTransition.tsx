@@ -2,10 +2,9 @@
 export function HeroBottomTransition() {
   return (
     <div
-      className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] w-full overflow-hidden"
+      className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] w-full max-w-full overflow-hidden"
       aria-hidden
     >
-      {/* Soft fade into warm white — no heavy blur */}
       <div
         className="absolute inset-x-0 bottom-0 h-[48px] md:h-[80px]"
         style={{
@@ -17,8 +16,8 @@ export function HeroBottomTransition() {
       <svg
         viewBox="0 0 1440 100"
         preserveAspectRatio="none"
-        className="relative z-[2] block h-[52px] w-full md:h-[80px]"
-        style={{ filter: "blur(1.5px)" }}
+        className="relative z-[2] block h-[52px] w-full max-w-full md:h-[80px]"
+        style={{ filter: "blur(1px)" }}
       >
         <path
           fill="#FFFEFA"
