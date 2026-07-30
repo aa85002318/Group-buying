@@ -7,8 +7,13 @@ export function BrandHeroImage({
   alt,
   position = "center",
   fallbackYellow = true,
-  /** contain keeps IP/halo/wings intact; cover fills the panel. */
+  /** contain keeps IP intact; cover fills the plane edge-to-edge. */
   fit = "cover",
+  /**
+   * Home banner art ships with baked-in rounded white corners.
+   * Slight scale crops that frame so yellow goes edge-to-edge.
+   */
+  cropArtFrame = false,
 }: {
   desktopUrl?: string | null;
   mobileUrl?: string | null;
@@ -16,12 +21,17 @@ export function BrandHeroImage({
   position?: "left" | "center" | "right";
   fallbackYellow?: boolean;
   fit?: "cover" | "contain";
+  cropArtFrame?: boolean;
 }) {
   const desktop = desktopUrl || mobileUrl;
   const mobile = mobileUrl || desktopUrl;
 
   const objectPos =
-    position === "left" ? "left center" : position === "right" ? "right center" : "center";
+    position === "left"
+      ? "left center"
+      : position === "right"
+        ? "right center"
+        : "center center";
 
   if (!desktop && !mobile) {
     if (!fallbackYellow) return null;
@@ -38,7 +48,7 @@ export function BrandHeroImage({
   }
 
   return (
-    <picture className="absolute inset-0 block h-full w-full">
+    <picture className="absolute inset-0 block h-full w-full overflow-hidden">
       {mobile && mobile !== desktop ? (
         <source media="(max-width: 767px)" srcSet={mobile} />
       ) : null}
@@ -49,7 +59,13 @@ export function BrandHeroImage({
           fill
           priority
           className={fit === "contain" ? "object-contain" : "object-cover"}
-          style={{ objectPosition: objectPos }}
+          style={{
+            objectPosition: objectPos,
+            // Crop baked white rounded corners from banner artwork
+            ...(cropArtFrame
+              ? { transform: "scale(1.12)", transformOrigin: "center center" }
+              : null),
+          }}
           sizes="100vw"
           unoptimized
         />

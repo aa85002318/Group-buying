@@ -83,7 +83,6 @@ export function BrandHero({
   const scope = (hero.searchScope || "global") as SearchScope;
   const showPopularTags = showTags && hero.showPopularTags !== false;
 
-  // Homepage: always use bundled banner + curated chips this phase
   const imageUrl = isHome
     ? BRAND_HERO_DEFAULTS.home.desktopImageUrl
     : hero.desktopImageUrl || hero.mobileImageUrl;
@@ -95,10 +94,16 @@ export function BrandHero({
   if (isHome) {
     return (
       <section
-        className={cn("w-full max-w-full overflow-x-hidden bg-[#FFFEFA]", className)}
+        className={cn(
+          "w-full max-w-full overflow-x-hidden bg-[#FFFEFA]",
+          className
+        )}
         aria-label={hero.name || hero.title || "品牌主視覺"}
       >
-        {/* Full-bleed yellow hero — starts at top of page (header hidden on home) */}
+        {/*
+          Full-bleed yellow plane — no card radius, no side inset, no max-width.
+          Background yellow always fills the shell width; artwork uses cover.
+        */}
         <div
           className="relative w-full overflow-hidden"
           style={{
@@ -108,20 +113,28 @@ export function BrandHero({
           }}
         >
           <div
-            className="relative mx-auto w-full max-w-[1440px]"
-            style={{
-              minHeight: "clamp(430px, 62vh, 540px)",
-            }}
+            className={cn(
+              "relative w-full overflow-hidden",
+              // Phone: cover width, responsive height — no fixed left/right
+              "h-[clamp(260px,68vw,400px)]",
+              // Large phone / small tablet
+              "min-[480px]:h-[clamp(300px,56vw,420px)]",
+              // Tablet
+              "md:h-[clamp(340px,46vw,460px)]",
+              // Desktop — keep height stable as width grows
+              "lg:h-[clamp(380px,32vw,500px)]",
+              "xl:h-[min(480px,28vw)]"
+            )}
           >
             <BrandHeroImage
               desktopUrl={imageUrl}
               mobileUrl={mobileUrl}
               alt={hero.imageAlt || "CHIMEiDIY Lifestyle 首頁主視覺"}
               position="center"
-              fit="contain"
+              fit="cover"
+              cropArtFrame
             />
 
-            {/* Text overlays off when banner art includes copy; keep hooks for later */}
             <BrandHeroContent
               title={hero.title}
               subtitle={hero.subtitle}
@@ -135,8 +148,8 @@ export function BrandHero({
           </div>
         </div>
 
-        {/* Search + popular — white area below wave */}
-        <div className="relative z-[6] mx-auto w-full max-w-[1440px] px-5 pb-2 pt-1 md:px-8 lg:px-10">
+        {/* Search + popular — inset content, not the yellow plane */}
+        <div className="relative z-[6] mx-auto w-full max-w-[960px] px-5 pb-2 pt-3 md:max-w-[1100px] md:px-8 lg:max-w-[1280px] lg:px-10">
           {showSearch ? (
             <BrandHeroSearch
               placeholder={
@@ -154,7 +167,6 @@ export function BrandHero({
     );
   }
 
-  // Non-home pages: compact panel hero (unchanged behavior)
   return (
     <section
       className={cn("w-full bg-[#FFFEFA] px-[15px] pt-2", className)}

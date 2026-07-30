@@ -15,15 +15,20 @@ export function BrandHeroSkeleton({
         aria-label="載入中"
       >
         <div
-          className="w-full animate-pulse"
+          className={cn(
+            "w-full animate-pulse",
+            "h-[clamp(260px,68vw,400px)]",
+            "min-[480px]:h-[clamp(300px,56vw,420px)]",
+            "md:h-[clamp(340px,46vw,460px)]",
+            "lg:h-[clamp(380px,32vw,500px)]"
+          )}
           style={{
             background:
               "linear-gradient(135deg, #FFD454 0%, #FFE483 55%, #FFF0B8 100%)",
             paddingTop: "env(safe-area-inset-top, 0px)",
-            minHeight: "clamp(430px, 62vh, 540px)",
           }}
         />
-        <div className="mx-auto w-full max-w-[1440px] px-5 pt-1 md:px-8">
+        <div className="mx-auto w-full max-w-[960px] px-5 pt-3 md:max-w-[1100px] md:px-8 lg:max-w-[1280px]">
           <div
             className="h-[60px] animate-pulse rounded-full bg-white"
             style={{ boxShadow: "0 12px 30px rgba(21, 62, 115, 0.08)" }}
