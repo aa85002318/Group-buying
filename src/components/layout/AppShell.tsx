@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * App-first shell: phone full-bleed, tablet/desktop centered container.
+ * Homepage hides AppHeader so BrandHero yellow can start at the viewport top.
  * Main has no horizontal padding so color sections can go edge-to-edge.
  * Content inset (--page-padding-x) lives on .site-container inside each section.
  * Non-home pages wrap children once in .site-container; homepage manages its own.
