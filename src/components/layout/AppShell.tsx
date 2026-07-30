@@ -19,8 +19,15 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const showChrome = !isMinimalChromePath(pathname);
 
   return (
-    <div className="min-h-dvh w-full overflow-x-clip bg-background">
-      <div className="app-shell relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip bg-background md:shadow-lift">
+    <div className={cn("min-h-dvh w-full overflow-x-clip", isHome ? "bg-[#FFD454]" : "bg-background")}>
+      <div
+        className={cn(
+          "relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip",
+          isHome
+            ? "max-w-none bg-[#FFFEFA]"
+            : "app-shell bg-background md:shadow-lift"
+        )}
+      >
         {!isHome ? <AppHeader /> : null}
         <main
           className={cn(
