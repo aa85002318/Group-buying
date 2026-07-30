@@ -32,13 +32,13 @@ export type HomeHeroData = {
   enabled?: boolean;
 };
 
-export const HOME_HERO_DESKTOP_IMAGE = "/brand/hero-home-desktop.png?v=20260730e";
-export const HOME_HERO_MOBILE_IMAGE = "/brand/hero-home-mobile.png?v=20260730e";
+export const HOME_HERO_DESKTOP_IMAGE = "/brand/hero-home-desktop.png?v=20260730f";
+export const HOME_HERO_MOBILE_IMAGE = "/brand/hero-home-mobile.png?v=20260730f";
 
-/** Cropped desktop asset ≈ 998×502 */
-export const HOME_HERO_DESKTOP_ASPECT = "998 / 502";
-/** Cropped mobile asset ≈ 1024×689 (5:4 family, wave trimmed) */
-export const HOME_HERO_MOBILE_ASPECT = "1024 / 689";
+/** Trimmed desktop asset ≈ 1024×479 */
+export const HOME_HERO_DESKTOP_ASPECT = "1024 / 479";
+/** Trimmed mobile asset ≈ 1024×682 */
+export const HOME_HERO_MOBILE_ASPECT = "1024 / 682";
 
 export const HOME_HERO_DEFAULTS: HomeHeroData = {
   title: "今天想做點什麼？",

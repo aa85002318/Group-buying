@@ -60,5 +60,5 @@ export type BrandHeroProps = {
 /** Default home banner — rectangular full-bleed art (no rounded white frame). */
 export const DEFAULT_HOME_HERO_IMAGE = "/brand/hero-home-desktop.png?v=20260730c";
 
-/** Intrinsic aspect of the cropped home desktop banner asset (998×502). */
-export const HOME_HERO_ASPECT = "998 / 502";
+/** Intrinsic aspect of the home desktop banner asset (1024×479). */
+export const HOME_HERO_ASPECT = "1024 / 479";

@@ -140,7 +140,7 @@ export function HomeHeroSection() {
     <section className="relative w-full overflow-x-hidden bg-[#FFFEFA]" aria-label="首頁主視覺">
       {/* Yellow canvas + image + overlays */}
       <div
-        className="relative w-full overflow-hidden bg-[#FFD454]"
+        className="relative w-full bg-[#FFD454]"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <ResponsiveHeroImage
