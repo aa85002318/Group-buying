@@ -37,7 +37,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   {
     id: "hero",
     label: "Hero 搜尋區",
-    description: "BrandHero 主視覺、搜尋與熱門標籤。樣式固定，內容由品牌體驗系統管理。",
+    description: "BrandHero 主視覺與搜尋。樣式固定，內容由品牌體驗系統管理。",
     contentMode: "external",
     manageHref: "/admin/brand-system/heroes",
     manageLabel: "管理 Brand Hero",
@@ -56,13 +56,21 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   },
   {
     id: "hot_searches",
-    label: "熱門搜尋",
-    description: "熱門標籤：名稱、關鍵字、連結類型與目標。",
+    label: "熱門搜尋（已停用）",
+    description: "已由功能入口取代；預設不顯示。",
     contentMode: "manual",
     hasKeywords: true,
     hasDisplayCount: true,
     manageHref: "/admin/home/search-tags",
     manageLabel: "熱門搜尋專頁",
+    catalog: false,
+  },
+  {
+    id: "quick_entry",
+    label: "功能入口",
+    description: "首頁 Quick Entry 卡片：圖示、標題、副標、背景色、排序、導向與 Badge。",
+    contentMode: "manual",
+    hasDisplayCount: false,
     catalog: true,
   },
   {

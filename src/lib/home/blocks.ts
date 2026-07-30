@@ -7,6 +7,10 @@ import {
 } from "@/lib/home/section-keys";
 import { DEFAULT_SERVICE_SHORTCUTS } from "@/lib/home/service-shortcuts";
 import { DEFAULT_STORE_NEWS_CARDS } from "@/lib/home/store-news";
+import {
+  DEFAULT_MEMBER_SHORTCUTS,
+  DEFAULT_QUICK_ENTRY_CARDS,
+} from "@/types/home-quick-entry";
 
 export type HomeBlockKey = HomeSectionKey;
 
@@ -35,6 +39,16 @@ export const SECTION_DEFAULTS: Record<
     displayCount: 10,
     visible: false,
     sourceMode: "manual",
+  },
+  quick_entry: {
+    title: "功能入口",
+    displayCount: 8,
+    visible: true,
+    config: {
+      enabled: true,
+      cards: DEFAULT_QUICK_ENTRY_CARDS,
+      memberShortcuts: DEFAULT_MEMBER_SHORTCUTS,
+    },
   },
   latest_recipes: {
     title: "熱門食譜",

@@ -10,7 +10,6 @@ import { HomeIngredientCategories } from "@/components/home/HomeIngredientCatego
 import { HomeContentArea } from "@/components/home/HomeContentArea";
 import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
 import { PopularCategories } from "@/components/home/PopularCategories";
-import { HotSearchChips } from "@/components/home/HotSearchChips";
 import { HorizontalProductRail } from "@/components/home/HorizontalProductRail";
 import { GroupBuyClosingSection } from "@/components/home/GroupBuyClosingSection";
 import { PromoBannerStrip } from "@/components/home/PromoBannerStrip";
@@ -45,7 +44,6 @@ import {
   type ResolvedHomeBlock,
 } from "@/lib/home/blocks";
 import { CREAM_ZONE_KEYS, type HomeSectionKey } from "@/lib/home/section-keys";
-import { resolveHotSearchKeywords } from "@/lib/home/hot-search";
 import { parsePopularCategories } from "@/lib/home/admin-sections";
 import { mockProducts } from "@/lib/mock-data";
 import type { RecipeSummary } from "@/lib/consumer-hub";
@@ -149,17 +147,13 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
   const { key } = block;
   const reactKey = block.id;
   switch (key) {
-    case "hot_searches": {
-      const keywords = resolveHotSearchKeywords(block.config);
-      return (
-        <HotSearchChips
-          key={reactKey}
-          title={block.title || "熱門搜尋"}
-          keywords={keywords}
-          loading={ctx.cmsLoading}
-        />
-      );
-    }
+    case "hot_searches":
+      // Replaced by Quick Entry — never render 熱門搜尋 on homepage
+      return null;
+    case "quick_entry":
+    case "ingredient_shop":
+      // Rendered inside HomeHeroSection band (after search / recipes)
+      return null;
     case "hero":
       return <HomeHeroSection key={reactKey} />;
     case "store_news":

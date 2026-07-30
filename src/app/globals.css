@@ -100,6 +100,27 @@
     border-radius: 0;
   }
 
+  @keyframes quick-entry-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .quick-entry-animate {
+    animation: quick-entry-fade-up 0.4s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .quick-entry-animate {
+      animation: none;
+    }
+  }
+
   .recipe-weekly-header {
     gap: 14px;
   }

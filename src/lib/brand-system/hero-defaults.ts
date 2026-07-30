@@ -23,7 +23,7 @@ export const BRAND_HERO_DEFAULTS: Record<BrandHeroKey, BrandHeroData> = {
     imagePosition: "center",
     searchPlaceholder: "今天想做什麼？搜尋食譜、商品、團購、生鮮…",
     searchScope: "global",
-    showPopularTags: true,
+    showPopularTags: false,
     tags: [
       { id: "t1", label: "🥐 佛卡夏", keyword: "佛卡夏", sortOrder: 10 },
       { id: "t2", label: "🍪 餅乾", keyword: "餅乾", sortOrder: 20 },

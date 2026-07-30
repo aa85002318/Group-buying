@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BrandHeroTags } from "@/components/brand/hero/BrandHeroTags";
 import type { SearchScope } from "@/components/brand/search/types";
 import {
   HOME_HERO_DEFAULTS,
@@ -17,6 +16,7 @@ import { ResponsiveHeroImage } from "./ResponsiveHeroImage";
 import { WeeklyPopularRecipesSection } from "./weekly-recipes/WeeklyPopularRecipesSection";
 import { HomeIngredientShopSection } from "./HomeIngredientShopSection";
 import { HomeWaveDividerBanner } from "./HomeWaveDividerBanner";
+import { HomeQuickEntrySection } from "./quick-entry/HomeQuickEntrySection";
 
 function normalizePosition(
   value: unknown,
@@ -162,30 +162,15 @@ export function HomeHeroSection() {
         <HeroBottomTransition />
       </div>
 
-      {/* Search floats above wave; reserve space so IP isn't covered */}
+      {/* Search floats above wave */}
       <div className="relative z-10 bg-[#FFFEFA] px-4 pb-2 pt-0 md:px-6">
         <FloatingSearchBar
           placeholder={data.searchPlaceholder}
           scope={(data.searchScope as SearchScope) || "global"}
         />
-        {data.showPopularTags !== false && data.tags?.length ? (
-          <div className="mx-auto mt-4 w-full max-w-[1280px]">
-            <BrandHeroTags
-              tags={data.tags.map((t) => ({
-                id: t.id,
-                label: t.label,
-                keyword: t.keyword,
-                linkType: t.linkType,
-                targetUrl: t.targetUrl,
-                enabled: t.enabled,
-                sortOrder: t.sortOrder,
-              }))}
-              searchScope={(data.searchScope as SearchScope) || "global"}
-            />
-          </div>
-        ) : null}
       </div>
     </section>
+    <HomeQuickEntrySection />
     <WeeklyPopularRecipesSection />
     <HomeIngredientShopSection />
     <HomeWaveDividerBanner />

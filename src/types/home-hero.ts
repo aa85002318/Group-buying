@@ -55,7 +55,7 @@ export const HOME_HERO_DEFAULTS: HomeHeroData = {
   mobileObjectPosition: "center top",
   searchPlaceholder: "今天想做什麼？搜尋食譜、商品、團購、生鮮…",
   searchScope: "global",
-  showPopularTags: true,
+  showPopularTags: false,
   // Banner art already includes copy — hide overlays by default
   showTitle: false,
   showDescription: false,
