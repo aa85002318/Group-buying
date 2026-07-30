@@ -37,10 +37,12 @@ export const HOME_HERO_MOBILE_ASPECT = "885 / 917";
 export const HOME_HERO_MOBILE_WIDTH = 885;
 export const HOME_HERO_MOBILE_HEIGHT = 917;
 
-/** Trimmed desktop asset ≈ 1024×479 */
+/** Desktop full-bleed asset — 1024×479, rectangular (no rounded frame) */
 export const HOME_HERO_DESKTOP_ASPECT = "1024 / 479";
+export const HOME_HERO_DESKTOP_WIDTH = 1024;
+export const HOME_HERO_DESKTOP_HEIGHT = 479;
 
-export const HOME_HERO_DESKTOP_IMAGE = "/brand/hero-home-desktop.png?v=20260730j";
+export const HOME_HERO_DESKTOP_IMAGE = "/brand/hero-home-desktop.png?v=20260730k";
 export const HOME_HERO_MOBILE_IMAGE = "/brand/hero-home-mobile.png?v=20260730j";
 
 export const HOME_HERO_DEFAULTS: HomeHeroData = {

@@ -14,6 +14,7 @@ import { FloatingSearchBar } from "./FloatingSearchBar";
 import { HeroBottomTransition } from "./HeroBottomTransition";
 import { HeroTextContent } from "./HeroTextContent";
 import { ResponsiveHeroImage } from "./ResponsiveHeroImage";
+import { WeeklyPopularRecipesSection } from "./weekly-recipes/WeeklyPopularRecipesSection";
 
 function normalizePosition(
   value: unknown,
@@ -136,10 +137,11 @@ export function HomeHeroSection() {
   const alt = data.imageAlt || "CHIMEiDIY Lifestyle 首頁主視覺";
 
   return (
-    <section
-      className="home-hero-section relative w-full max-w-[100vw] bg-[#FFFEFA]"
-      aria-label="首頁主視覺"
-    >
+    <>
+      <section
+        className="home-hero-section relative w-full max-w-[100vw] rounded-none bg-[#FFFEFA]"
+        aria-label="首頁主視覺"
+      >
       {/* Full-bleed yellow canvas — image extends to viewport edges */}
       <div className="relative w-full max-w-[100vw] bg-[#FFD454]">
         <ResponsiveHeroImage
@@ -182,5 +184,7 @@ export function HomeHeroSection() {
         ) : null}
       </div>
     </section>
+    <WeeklyPopularRecipesSection />
+    </>
   );
 }

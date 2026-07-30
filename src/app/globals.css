@@ -83,6 +83,7 @@
     max-width: 100vw;
     margin-inline: 0;
     padding-inline: 0;
+    border-radius: 0;
   }
 
   .home-hero-fullbleed__img {
@@ -90,11 +91,30 @@
     width: 100%;
     max-width: 100%;
     height: auto;
+    border-radius: 0;
   }
 
   .home-hero-section {
     margin-inline: 0;
     padding-inline: 0;
+    border-radius: 0;
+  }
+
+  .recipe-weekly-track {
+    scroll-snap-type: x mandatory;
+    padding-inline: max(16px, 15%);
+  }
+
+  @media (min-width: 768px) {
+    .recipe-weekly-track {
+      padding-inline: max(16px, 20%);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .recipe-weekly-track {
+      padding-inline: max(16px, 25%);
+    }
   }
 
   /* Tables / pre that could force page width */
