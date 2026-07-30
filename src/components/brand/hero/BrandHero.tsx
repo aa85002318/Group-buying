@@ -115,15 +115,15 @@ export function BrandHero({
           <div
             className={cn(
               "relative w-full overflow-hidden",
-              // Phone: cover width, responsive height — no fixed left/right
-              "h-[clamp(260px,68vw,400px)]",
+              // Phone: edge-to-edge cover; keep IP/text readable
+              "h-[clamp(300px,78vw,440px)]",
               // Large phone / small tablet
-              "min-[480px]:h-[clamp(300px,56vw,420px)]",
+              "min-[480px]:h-[clamp(320px,58vw,440px)]",
               // Tablet
-              "md:h-[clamp(340px,46vw,460px)]",
-              // Desktop — keep height stable as width grows
-              "lg:h-[clamp(380px,32vw,500px)]",
-              "xl:h-[min(480px,28vw)]"
+              "md:h-[clamp(360px,48vw,480px)]",
+              // Desktop — stable height as width grows
+              "lg:h-[clamp(400px,34vw,520px)]",
+              "xl:h-[min(500px,30vw)]"
             )}
           >
             <BrandHeroImage

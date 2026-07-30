@@ -63,7 +63,7 @@ export function BrandHeroImage({
             objectPosition: objectPos,
             // Crop baked white rounded corners from banner artwork
             ...(cropArtFrame
-              ? { transform: "scale(1.12)", transformOrigin: "center center" }
+              ? { transform: "scale(1.22)", transformOrigin: "center center" }
               : null),
           }}
           sizes="100vw"
