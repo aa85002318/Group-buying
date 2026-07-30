@@ -45,7 +45,6 @@ function mapApiToHomeHero(raw: Record<string, unknown> | null): HomeHeroData {
   const mobile =
     (typeof raw.mobileImageUrl === "string" && raw.mobileImageUrl) ||
     (typeof raw.mobile_image_url === "string" && raw.mobile_image_url) ||
-    desktop ||
     base.mobileImageUrl;
 
   const imagePosition =
@@ -133,11 +132,11 @@ export function HomeHeroSection() {
   }, []);
 
   const desktopUrl = data.desktopImageUrl || HOME_HERO_DESKTOP_IMAGE;
-  const mobileUrl = data.mobileImageUrl || desktopUrl || HOME_HERO_MOBILE_IMAGE;
+  const mobileUrl = data.mobileImageUrl || HOME_HERO_MOBILE_IMAGE;
   const alt = data.imageAlt || "CHIMEiDIY Lifestyle 首頁主視覺";
 
   return (
-    <section className="relative w-full overflow-x-hidden bg-[#FFFEFA]" aria-label="首頁主視覺">
+    <section className="relative w-full bg-[#FFFEFA]" aria-label="首頁主視覺">
       {/* Yellow canvas + image + overlays */}
       <div
         className="relative w-full bg-[#FFD454]"

@@ -77,6 +77,15 @@
     max-width: 100%;
   }
 
+  /* Home hero mobile — never crop banner art horizontally */
+  .home-hero-mobile-img {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    object-fit: contain;
+    object-position: center top;
+  }
+
   /* Tables / pre that could force page width */
   table {
     max-width: 100%;
