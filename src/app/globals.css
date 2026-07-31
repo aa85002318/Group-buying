@@ -169,7 +169,7 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    min-height: 44px;
+    min-height: 40px;
     max-width: 1440px;
     margin-inline: auto;
   }
@@ -1465,7 +1465,7 @@
   .mall-hero-frame {
     position: relative;
     width: 100%;
-    aspect-ratio: 6 / 5;
+    aspect-ratio: 2 / 1;
     overflow: hidden;
     border-radius: 20px;
     background: #ffd454;
@@ -1482,18 +1482,17 @@
     pointer-events: none;
   }
 
-  /* Hotspots over baked-in shortcut strip — mobile full-width bottom */
+  /* Hotspots over the baked-in shortcut strip (bottom-left) */
   .mall-hero-shortcuts {
     position: absolute;
-    left: 3.5%;
-    right: 3.5%;
-    bottom: 3.5%;
+    left: 3.2%;
+    bottom: 6.5%;
     z-index: 2;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    width: auto;
-    height: 13%;
-    max-width: none;
+    width: 45%;
+    height: 20%;
+    max-width: 420px;
   }
 
   .mall-hero-shortcut {
@@ -1515,21 +1514,12 @@
     .mall-hero-frame {
       border-radius: 24px;
     }
-  }
 
-  @media (min-width: 1024px) {
-    .mall-hero-frame {
-      aspect-ratio: 5 / 2;
-    }
-
-    /* Desktop art: shortcuts sit bottom-left */
     .mall-hero-shortcuts {
       left: 3.5%;
-      right: auto;
       bottom: 7%;
       width: 43%;
       height: 18%;
-      max-width: 420px;
     }
   }
 
