@@ -46,11 +46,13 @@ function RecipeCarouselArcs() {
       >
         <path
           className="recipe-carousel-arc-blue"
-          d="M0 50 Q195 4 390 50"
+          d="M0 48 Q195 14 390 48"
+          fill="none"
         />
         <path
           className="recipe-carousel-arc-yellow"
-          d="M0 63 Q195 17 390 63"
+          d="M0 61 Q195 27 390 61"
+          fill="none"
         />
       </svg>
     </div>
@@ -157,7 +159,7 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
 
   return (
     <div
-      className="recipe-weekly-carousel recipe-coverflow relative mx-auto w-full max-w-full"
+      className="recipe-weekly-carousel recipe-coverflow relative mx-auto w-full max-w-full bg-white md:max-w-[900px] lg:max-w-[1100px]"
       onKeyDown={onKeyDown}
       tabIndex={0}
       role="region"

@@ -27,7 +27,7 @@ export function getCoverflowStyle(
 
   if (distance === 0) {
     return {
-      transform: "translateY(0) scale(1.04) rotateY(0deg) rotateZ(0deg)",
+      transform: "translateY(0) scale(1) rotateY(0deg) rotateZ(0deg)",
       opacity: 1,
       zIndex: 20,
       filter: "none",
@@ -38,17 +38,17 @@ export function getCoverflowStyle(
     const isPrevious = distance === -1;
     return {
       transform: isPrevious
-        ? "translateY(40px) scale(0.84) rotateY(9deg) rotateZ(-2deg)"
-        : "translateY(40px) scale(0.84) rotateY(-9deg) rotateZ(2deg)",
-      opacity: 0.72,
-      zIndex: 10,
-      filter: "saturate(0.85) brightness(0.96)",
+        ? "translateY(38px) scale(0.82) rotateY(8deg) rotateZ(-2deg)"
+        : "translateY(38px) scale(0.82) rotateY(-8deg) rotateZ(2deg)",
+      opacity: 0.65,
+      zIndex: 8,
+      filter: "saturate(0.82) brightness(0.97)",
     };
   }
 
   return {
-    transform: "translateY(64px) scale(0.74)",
-    opacity: 0.38,
+    transform: "translateY(56px) scale(0.74)",
+    opacity: 0.34,
     zIndex: 2,
     filter: "saturate(0.7) brightness(0.94)",
   };
@@ -95,7 +95,7 @@ export function RecipeWeeklyCard({
       onClick={handleCardClick}
     >
       <div className="recipe-card-inner flex h-full flex-col overflow-hidden rounded-[20px] border border-[#E9EDF2] bg-white">
-        <div className="recipe-card-image relative aspect-[4/3] shrink-0 overflow-hidden">
+        <div className="recipe-card-image relative aspect-[4/3] shrink-0 overflow-hidden max-[389px]:aspect-[16/11]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={recipe.image}
@@ -115,14 +115,14 @@ export function RecipeWeeklyCard({
           </span>
         </div>
 
-        <div className="recipe-card-content flex min-h-0 flex-1 flex-col px-[18px] pb-5 pt-[18px]">
+        <div className="recipe-card-content flex min-h-0 flex-1 flex-col px-4 pb-[18px] pt-4">
           <h3 className="recipe-card-title line-clamp-2 font-extrabold text-[#123B73]">
             {recipe.title}
           </h3>
 
           <p
             className={cn(
-              "mt-1 truncate text-[15px] leading-normal text-[#687386] transition-opacity",
+              "mt-1 truncate text-sm leading-normal text-[#687386] transition-opacity",
               !isActive && "pointer-events-none opacity-0"
             )}
           >
@@ -131,7 +131,7 @@ export function RecipeWeeklyCard({
 
           <div
             className={cn(
-              "recipe-card-actions mt-[18px] grid grid-cols-[52px_minmax(0,1fr)] items-center gap-3 transition-opacity",
+              "recipe-card-actions mt-4 grid grid-cols-[50px_minmax(0,1fr)] items-center gap-3 transition-opacity",
               !isActive && "pointer-events-none opacity-0"
             )}
           >
@@ -145,7 +145,7 @@ export function RecipeWeeklyCard({
                 if (!isActive) return;
                 setFavorited((v) => !v);
               }}
-              className="favorite-button inline-flex h-[52px] w-[52px] items-center justify-center rounded-full border border-[#E9EDF2] bg-white text-[#F15B52] transition hover:scale-105"
+              className="favorite-button inline-flex h-[50px] w-[50px] items-center justify-center rounded-full border border-[#E9EDF2] bg-white text-[#F15B52] transition hover:scale-105"
             >
               <Heart
                 className="h-5 w-5"
@@ -166,10 +166,10 @@ export function RecipeWeeklyCard({
                 }
                 e.stopPropagation();
               }}
-              className="recipe-view-button relative inline-flex h-[52px] items-center justify-center rounded-full bg-[#123B73] pr-12 text-base font-bold text-white transition hover:bg-[#0e2f5c]"
+              className="recipe-view-button relative inline-flex h-[50px] items-center justify-center rounded-full bg-[#123B73] pr-12 text-[15px] font-bold text-white transition hover:bg-[#0e2f5c]"
             >
               查看食譜
-              <span className="recipe-view-button-arrow absolute right-[7px] inline-flex h-[38px] w-[38px] items-center justify-center rounded-full bg-[#FFD34E] text-[#123B73]">
+              <span className="recipe-view-button-arrow absolute right-[7px] inline-flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FFD34E] text-[#123B73]">
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </span>
             </Link>

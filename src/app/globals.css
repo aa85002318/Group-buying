@@ -123,11 +123,43 @@
 
   /* ── Featured recipes (pure white coverflow) ── */
   .featured-recipes-section {
-    background: #ffffff;
-    box-sizing: border-box;
+    position: relative;
+    width: 100%;
     max-width: 100%;
-    padding-bottom: 32px;
-    overflow: visible;
+    padding: 24px 0 32px;
+    margin: 0;
+    background: #ffffff;
+    background-image: none;
+    overflow-x: hidden;
+    overflow-y: visible;
+    box-sizing: border-box;
+  }
+
+  .featured-recipes-section::before,
+  .featured-recipes-section::after,
+  .coverflow-viewport::before,
+  .coverflow-viewport::after,
+  .coverflow-track::before,
+  .coverflow-track::after,
+  .recipe-weekly-track::before,
+  .recipe-weekly-track::after,
+  .recipe-weekly-carousel::before,
+  .recipe-weekly-carousel::after,
+  .recipe-coverflow::before,
+  .recipe-coverflow::after {
+    content: none !important;
+    display: none !important;
+    background: none !important;
+    background-image: none !important;
+  }
+
+  .featured-recipes-header,
+  .coverflow-viewport,
+  .recipe-weekly-carousel,
+  .recipe-coverflow,
+  .carousel-pagination {
+    background: #ffffff;
+    background-image: none;
   }
 
   .featured-recipes-header {
@@ -138,7 +170,8 @@
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 24px 20px 0;
+    padding: 0 20px;
+    margin-bottom: 24px;
   }
 
   .featured-recipes-heading {
@@ -152,8 +185,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    height: 32px;
     min-height: 32px;
-    padding: 5px 13px;
+    padding-inline: 13px;
     margin-bottom: 10px;
     color: #123b73;
     background: #ffffff;
@@ -169,7 +203,7 @@
     margin: 0;
     color: #123b73;
     font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-    font-size: clamp(26px, 7vw, 32px);
+    font-size: clamp(27px, 7vw, 32px);
     font-weight: 800;
     line-height: 1.2;
     letter-spacing: 0.03em;
@@ -215,11 +249,11 @@
     position: relative;
     width: 100%;
     max-width: 100%;
-    /* Horizontal clip only; keep vertical room for scaled active card */
-    overflow-x: clip;
+    padding-top: 16px;
+    padding-bottom: 72px;
+    overflow-x: hidden;
     overflow-y: visible;
-    padding-block: 28px 76px;
-    margin-top: 24px;
+    background: #ffffff;
     perspective: 1100px;
     perspective-origin: center center;
     box-sizing: border-box;
@@ -227,10 +261,13 @@
 
   .coverflow-track,
   .recipe-weekly-track {
+    --recipe-card-width: clamp(260px, 70vw, 304px);
+
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 18px;
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     overflow-y: visible;
     scroll-snap-type: x mandatory;
@@ -241,9 +278,12 @@
     touch-action: pan-x;
     transform-style: preserve-3d;
     cursor: grab;
+    background: transparent;
     box-sizing: border-box;
-    padding-inline: calc((100% - clamp(272px, 74vw, 316px)) / 2);
-    scroll-padding-inline: calc((100% - clamp(272px, 74vw, 316px)) / 2);
+    padding-left: calc((100% - var(--recipe-card-width)) / 2);
+    padding-right: calc((100% - var(--recipe-card-width)) / 2);
+    scroll-padding-left: calc((100% - var(--recipe-card-width)) / 2);
+    scroll-padding-right: calc((100% - var(--recipe-card-width)) / 2);
   }
 
   .coverflow-track:active,
@@ -258,14 +298,15 @@
 
   .recipe-coverflow-card,
   .recipe-card {
-    flex: 0 0 clamp(272px, 74vw, 316px);
-    width: clamp(272px, 74vw, 316px);
-    max-width: min(316px, 88vw);
+    flex: 0 0 var(--recipe-card-width, clamp(260px, 70vw, 304px));
+    width: var(--recipe-card-width, clamp(260px, 70vw, 304px));
+    max-width: calc(100vw - 72px);
     scroll-snap-align: center;
     scroll-snap-stop: always;
     transform-style: preserve-3d;
     transform-origin: center bottom;
     box-sizing: border-box;
+    background: transparent;
     transition:
       transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
       opacity 300ms ease,
@@ -275,6 +316,8 @@
   }
 
   .recipe-card-inner {
+    width: 100%;
+    max-width: 100%;
     background: #ffffff;
     border: 1px solid #e9edf2;
     border-radius: 20px;
@@ -284,7 +327,7 @@
   }
 
   .recipe-card[data-active="true"] .recipe-card-inner {
-    box-shadow: 0 22px 48px rgba(18, 59, 115, 0.17);
+    box-shadow: 0 20px 44px rgba(18, 59, 115, 0.16);
   }
 
   .recipe-card-badge {
@@ -300,8 +343,8 @@
   }
 
   .recipe-card-title {
-    font-size: clamp(21px, 6vw, 27px);
-    line-height: 1.3;
+    font-size: clamp(21px, 5.8vw, 26px);
+    line-height: 1.25;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -312,9 +355,10 @@
     position: relative;
     width: 100%;
     max-width: 100%;
-    height: clamp(54px, 14vw, 72px);
-    margin-top: -40px;
+    height: clamp(56px, 14vw, 72px);
+    margin-top: 0;
     overflow: hidden;
+    background: #ffffff;
     pointer-events: none;
     user-select: none;
     z-index: 1;
@@ -349,8 +393,9 @@
     justify-content: center;
     gap: 12px;
     min-height: 44px;
-    margin-top: 4px;
-    margin-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 24px;
+    background: #ffffff;
   }
 
   @media (min-width: 768px) {
@@ -361,21 +406,21 @@
     }
 
     .coverflow-viewport {
-      margin-top: 28px;
+      max-width: 900px;
+      margin-inline: auto;
+      padding-top: 20px;
+      padding-bottom: 76px;
     }
 
     .coverflow-track,
     .recipe-weekly-track {
-      padding-inline: calc((100% - min(420px, 56vw)) / 2);
-      scroll-padding-inline: calc((100% - min(420px, 56vw)) / 2);
-      gap: 16px;
+      --recipe-card-width: clamp(320px, 46vw, 400px);
+      gap: 18px;
     }
 
     .recipe-coverflow-card,
     .recipe-card {
-      flex-basis: min(420px, 56vw);
-      width: min(420px, 56vw);
-      max-width: 420px;
+      max-width: 400px;
     }
 
     .recipe-carousel-arcs {
@@ -389,17 +434,18 @@
       max-width: 1100px;
     }
 
+    .coverflow-viewport {
+      max-width: 1100px;
+    }
+
     .coverflow-track,
     .recipe-weekly-track {
-      padding-inline: calc((100% - min(460px, 42vw)) / 2);
-      scroll-padding-inline: calc((100% - min(460px, 42vw)) / 2);
+      --recipe-card-width: clamp(360px, 32vw, 440px);
     }
 
     .recipe-coverflow-card,
     .recipe-card {
-      flex-basis: min(460px, 42vw);
-      width: min(460px, 42vw);
-      max-width: 460px;
+      max-width: 440px;
     }
 
     .recipe-carousel-arcs {

@@ -44,7 +44,7 @@ export function HomeQuickServicesSection() {
 
   return (
     <section
-      className="home-quick-services-section w-full bg-[#FFFEFA] px-4 py-6 md:px-6 md:py-8"
+      className="home-quick-services-section w-full bg-white px-4 py-6 md:px-6 md:py-8"
       aria-label={settings.title}
     >
       <div className="mx-auto w-full max-w-[1440px]">
