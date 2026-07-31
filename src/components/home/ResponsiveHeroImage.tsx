@@ -23,7 +23,7 @@ export function ResponsiveHeroImage({
   mobileObjectPosition?: string | null;
 }) {
   return (
-    <div className="home-hero-fullbleed relative z-0 w-full rounded-none bg-[#FFD454]">
+    <div className="home-hero-fullbleed relative z-0 w-full rounded-none bg-[#FDE045] md:bg-[#FFD454]">
       {/* Mobile — portrait full-bleed */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

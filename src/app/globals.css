@@ -107,7 +107,8 @@
     max-width: 100vw;
     margin: 0;
     padding: 0;
-    background: #ffd454;
+    /* Match mobile hero top edge — no artificial color band */
+    background: #fde045;
     overflow: hidden;
   }
 
@@ -115,19 +116,22 @@
     position: relative;
     width: 100%;
     min-height: 430px;
-    background: #ffd454;
+    background: #fde045;
     overflow: hidden;
   }
 
-  /* Reserve top safe band so floating icons don't cover IP / title art */
+  /* Banner art goes edge-to-edge — no solid strip above the illustration */
   .home-hero-canvas .home-hero-fullbleed {
-    padding-top: 52px;
+    padding-top: 0;
     box-sizing: border-box;
+    background: #fde045;
   }
 
   @media (min-width: 768px) {
+    .home-hero,
+    .home-hero-canvas,
     .home-hero-canvas .home-hero-fullbleed {
-      padding-top: 56px;
+      background: #ffd454;
     }
   }
 
