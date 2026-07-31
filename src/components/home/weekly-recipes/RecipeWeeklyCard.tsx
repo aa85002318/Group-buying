@@ -38,8 +38,8 @@ export function getCoverflowStyle(
     const isPrevious = distance === -1;
     return {
       transform: isPrevious
-        ? "translateY(34px) scale(0.80) rotateY(8deg) rotateZ(-2deg)"
-        : "translateY(34px) scale(0.80) rotateY(-8deg) rotateZ(2deg)",
+        ? "translateY(28px) scale(0.80) rotateY(8deg) rotateZ(-2deg)"
+        : "translateY(28px) scale(0.80) rotateY(-8deg) rotateZ(2deg)",
       opacity: 0.6,
       zIndex: 8,
       filter: "none",
@@ -47,7 +47,7 @@ export function getCoverflowStyle(
   }
 
   return {
-    transform: "translateY(48px) scale(0.72)",
+    transform: "translateY(40px) scale(0.72)",
     opacity: 0.32,
     zIndex: 2,
     filter: "none",
@@ -95,7 +95,7 @@ export function RecipeWeeklyCard({
       onClick={handleCardClick}
     >
       <div className="recipe-card-inner flex h-auto min-h-0 w-full max-w-full flex-col overflow-hidden rounded-[20px] border border-[#E9EDF2] bg-white">
-        <div className="recipe-card-image relative aspect-[4/3] w-full shrink-0 overflow-hidden">
+        <div className="recipe-card-image relative aspect-[16/11] w-full shrink-0 overflow-hidden md:aspect-[4/3]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={recipe.image}

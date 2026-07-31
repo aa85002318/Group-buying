@@ -125,17 +125,19 @@
   .featured-recipes-section {
     position: relative;
     width: 100%;
-    height: auto;
-    min-height: 0;
-    max-height: none;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     max-width: 100%;
     padding: 24px 0 0;
     margin: 0;
     background: #ffffff;
     background-color: #ffffff;
     background-image: none;
-    overflow-x: hidden;
+    /* clip (not hidden) so overflow-y stays visible — avoids nested Y scroll */
+    overflow-x: clip;
     overflow-y: visible;
+    overscroll-behavior: auto;
     box-sizing: border-box;
   }
 
@@ -262,14 +264,15 @@
   .coverflow-viewport {
     position: relative;
     width: 100%;
-    height: auto;
-    min-height: 0;
-    max-height: none;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     max-width: 100%;
-    padding-top: 16px;
-    padding-bottom: 28px;
-    overflow-x: hidden;
+    padding-top: 12px;
+    padding-bottom: 20px;
+    overflow-x: clip;
     overflow-y: visible;
+    overscroll-behavior: auto;
     background: #ffffff;
     background-image: none;
     perspective: 1100px;
@@ -287,8 +290,9 @@
     width: 100%;
     max-width: 100%;
     height: auto;
+    /* auto + visible → both auto (nested Y scroll). Hide Y; pad for side-card translateY. */
     overflow-x: auto;
-    overflow-y: visible;
+    overflow-y: hidden;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
     overscroll-behavior-x: contain;
@@ -303,7 +307,8 @@
     box-sizing: border-box;
     padding-left: calc((100% - var(--recipe-card-width)) / 2);
     padding-right: calc((100% - var(--recipe-card-width)) / 2);
-    padding-bottom: 34px;
+    padding-top: 4px;
+    padding-bottom: 48px;
     scroll-padding-left: calc((100% - var(--recipe-card-width)) / 2);
     scroll-padding-right: calc((100% - var(--recipe-card-width)) / 2);
   }
@@ -371,7 +376,7 @@
   .recipe-card-image {
     position: relative;
     width: 100%;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 16 / 11;
     overflow: hidden;
   }
 
@@ -381,9 +386,15 @@
     object-fit: cover;
   }
 
+  @media (min-width: 768px) {
+    .recipe-card-image {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
   @media (max-height: 820px) and (max-width: 767px) {
     .recipe-card-image {
-      aspect-ratio: 16 / 10;
+      aspect-ratio: 16 / 11;
     }
   }
 

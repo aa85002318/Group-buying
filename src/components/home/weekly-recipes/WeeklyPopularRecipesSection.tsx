@@ -9,7 +9,7 @@ import {
 export function WeeklyPopularRecipesSection() {
   return (
     <section
-      className="featured-recipes-section recipe-weekly box-border w-full max-w-full overflow-x-hidden bg-white"
+      className="featured-recipes-section recipe-weekly box-border w-full max-w-full overflow-x-clip bg-white"
       aria-labelledby={RECIPE_WEEKLY_TITLE_ID}
       aria-label={RECIPE_WEEKLY_TITLE}
     >

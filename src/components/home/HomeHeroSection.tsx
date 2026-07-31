@@ -16,7 +16,6 @@ import { ResponsiveHeroImage } from "./ResponsiveHeroImage";
 import { HomeQuickServicesSection } from "./HomeQuickServicesSection";
 import { WeeklyPopularRecipesSection } from "./weekly-recipes/WeeklyPopularRecipesSection";
 import { HomeIngredientShopSection } from "./HomeIngredientShopSection";
-import { HomeWaveDividerBanner } from "./HomeWaveDividerBanner";
 
 function normalizePosition(
   value: unknown,
@@ -173,7 +172,6 @@ export function HomeHeroSection() {
     <HomeQuickServicesSection />
     <WeeklyPopularRecipesSection />
     <HomeIngredientShopSection />
-    <HomeWaveDividerBanner />
     </>
   );
 }
