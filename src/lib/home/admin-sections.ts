@@ -193,8 +193,9 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   },
   {
     id: "service_shortcuts",
-    label: "服務快捷入口",
-    description: "四格服務 Icon：安心食材、快速出貨、門市自取、專業客服。",
+    label: "快捷服務入口",
+    description:
+      "固定 1:1 按鈕（圖片／標題／副標題／連結／排序／啟用／背景色）。圖片建議 512×512 或 1024×1024、PNG／WebP／SVG、透明底；一律 object-fit:contain，不裁切、不拉伸。",
     contentMode: "manual",
     manageHref: "/admin/home/service-shortcuts",
     manageLabel: "服務快捷專頁",

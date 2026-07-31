@@ -135,7 +135,7 @@ export const SECTION_DEFAULTS: Record<
     viewAllUrl: "/videos",
   },
   service_shortcuts: {
-    title: "服務快捷入口",
+    title: "快捷服務入口",
     displayCount: 4,
     visible: true,
     config: { items: DEFAULT_SERVICE_SHORTCUTS },
