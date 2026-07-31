@@ -13,10 +13,10 @@ import { FloatingSearchBar } from "./FloatingSearchBar";
 import { HeroBottomTransition } from "./HeroBottomTransition";
 import { HeroTextContent } from "./HeroTextContent";
 import { ResponsiveHeroImage } from "./ResponsiveHeroImage";
+import { HomeQuickServicesSection } from "./HomeQuickServicesSection";
 import { WeeklyPopularRecipesSection } from "./weekly-recipes/WeeklyPopularRecipesSection";
 import { HomeIngredientShopSection } from "./HomeIngredientShopSection";
 import { HomeWaveDividerBanner } from "./HomeWaveDividerBanner";
-import { HomeQuickEntrySection } from "./quick-entry/HomeQuickEntrySection";
 
 function normalizePosition(
   value: unknown,
@@ -170,7 +170,7 @@ export function HomeHeroSection() {
         />
       </div>
     </section>
-    <HomeQuickEntrySection />
+    <HomeQuickServicesSection />
     <WeeklyPopularRecipesSection />
     <HomeIngredientShopSection />
     <HomeWaveDividerBanner />

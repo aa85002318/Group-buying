@@ -67,8 +67,9 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   },
   {
     id: "quick_entry",
-    label: "功能入口",
-    description: "首頁 Quick Entry 卡片：圖示、標題、副標、背景色、排序、導向與 Badge。",
+    label: "常用服務",
+    description:
+      "圓形橫滑常用服務＋會員中心：素材圖、標題、連結、背景色、排序、顯示與會員快捷項目。",
     contentMode: "manual",
     hasDisplayCount: false,
     catalog: true,
