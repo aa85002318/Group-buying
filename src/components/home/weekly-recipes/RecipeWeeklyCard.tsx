@@ -38,17 +38,17 @@ export function getCoverflowStyle(
     const isPrevious = distance === -1;
     return {
       transform: isPrevious
-        ? "translateY(38px) scale(0.82) rotateY(8deg) rotateZ(-2deg)"
-        : "translateY(38px) scale(0.82) rotateY(-8deg) rotateZ(2deg)",
-      opacity: 0.65,
+        ? "translateY(34px) scale(0.80) rotateY(8deg) rotateZ(-2deg)"
+        : "translateY(34px) scale(0.80) rotateY(-8deg) rotateZ(2deg)",
+      opacity: 0.6,
       zIndex: 8,
       filter: "saturate(0.82) brightness(0.97)",
     };
   }
 
   return {
-    transform: "translateY(56px) scale(0.74)",
-    opacity: 0.34,
+    transform: "translateY(48px) scale(0.72)",
+    opacity: 0.32,
     zIndex: 2,
     filter: "saturate(0.7) brightness(0.94)",
   };
@@ -94,8 +94,8 @@ export function RecipeWeeklyCard({
       aria-label={`第 ${index + 1} 張，共 ${total} 張：${recipe.title}`}
       onClick={handleCardClick}
     >
-      <div className="recipe-card-inner flex h-full flex-col overflow-hidden rounded-[20px] border border-[#E9EDF2] bg-white">
-        <div className="recipe-card-image relative aspect-[4/3] shrink-0 overflow-hidden max-[389px]:aspect-[16/11]">
+      <div className="recipe-card-inner flex h-auto min-h-0 w-full max-w-full flex-col overflow-hidden rounded-[20px] border border-[#E9EDF2] bg-white">
+        <div className="recipe-card-image relative aspect-[4/3] w-full shrink-0 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={recipe.image}
@@ -115,14 +115,14 @@ export function RecipeWeeklyCard({
           </span>
         </div>
 
-        <div className="recipe-card-content flex min-h-0 flex-1 flex-col px-4 pb-[18px] pt-4">
-          <h3 className="recipe-card-title line-clamp-2 font-extrabold text-[#123B73]">
+        <div className="recipe-card-content flex h-auto min-h-0 flex-col overflow-visible px-4 pb-[17px] pt-[15px]">
+          <h3 className="recipe-card-title m-0 line-clamp-2 font-extrabold text-[#123B73]">
             {recipe.title}
           </h3>
 
           <p
             className={cn(
-              "mt-1 truncate text-sm leading-normal text-[#687386] transition-opacity",
+              "mt-2 truncate text-sm leading-[1.45] text-[#687386] transition-opacity",
               !isActive && "pointer-events-none opacity-0"
             )}
           >
@@ -131,7 +131,7 @@ export function RecipeWeeklyCard({
 
           <div
             className={cn(
-              "recipe-card-actions mt-4 grid grid-cols-[50px_minmax(0,1fr)] items-center gap-3 transition-opacity",
+              "recipe-card-actions mt-[15px] grid grid-cols-[50px_minmax(0,1fr)] items-center gap-3 transition-opacity",
               !isActive && "pointer-events-none opacity-0"
             )}
           >

@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import { ChevronLeft, ChevronRight, Hand } from "lucide-react";
 import type { DemoRecipe } from "@/lib/home/recipe-demo";
@@ -59,10 +60,28 @@ function RecipeCarouselArcs() {
   );
 }
 
+type DragState = {
+  active: boolean;
+  axis: "undecided" | "horizontal" | "vertical";
+  startX: number;
+  startY: number;
+  scrollLeft: number;
+  moved: boolean;
+  pointerId: number | null;
+};
+
 export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: DemoRecipe[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
-  const drag = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false });
+  const drag = useRef<DragState>({
+    active: false,
+    axis: "undecided",
+    startX: 0,
+    startY: 0,
+    scrollLeft: 0,
+    moved: false,
+    pointerId: null,
+  });
   const [active, setActive] = useState(0);
   const [showHint, setShowHint] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -119,32 +138,97 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
     [reducedMotion]
   );
 
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     const el = trackRef.current;
     if (!el) return;
+    // Only primary button / touch — never block page scroll yet
+    if (e.pointerType === "mouse" && e.button !== 0) return;
     drag.current = {
       active: true,
+      axis: "undecided",
       startX: e.clientX,
+      startY: e.clientY,
       scrollLeft: el.scrollLeft,
       moved: false,
+      pointerId: e.pointerId,
     };
-    el.setPointerCapture(e.pointerId);
   };
 
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const el = trackRef.current;
-    if (!el || !drag.current.active) return;
-    const dx = e.clientX - drag.current.startX;
-    if (Math.abs(dx) > 6) drag.current.moved = true;
-    el.scrollLeft = drag.current.scrollLeft - dx;
+    const state = drag.current;
+    if (!el || !state.active) return;
+
+    const deltaX = e.clientX - state.startX;
+    const deltaY = e.clientY - state.startY;
+
+    if (state.axis === "undecided") {
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+      if (absX < 8 && absY < 8) return;
+
+      // Vertical page scroll — do not capture or preventDefault
+      if (absY >= absX) {
+        state.axis = "vertical";
+        state.active = false;
+        return;
+      }
+
+      // Confirmed horizontal carousel drag
+      state.axis = "horizontal";
+      if (state.pointerId != null) {
+        try {
+          el.setPointerCapture(state.pointerId);
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    if (state.axis !== "horizontal") return;
+
+    if (Math.abs(deltaX) > 6) state.moved = true;
+    el.scrollLeft = state.scrollLeft - deltaX;
   };
 
-  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!drag.current.active) return;
-    drag.current.active = false;
-    trackRef.current?.releasePointerCapture(e.pointerId);
-    if (drag.current.moved) setShowHint(false);
-    scheduleUpdate();
+  const endDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const state = drag.current;
+    if (!state.active && state.axis !== "horizontal") {
+      drag.current = {
+        active: false,
+        axis: "undecided",
+        startX: 0,
+        startY: 0,
+        scrollLeft: 0,
+        moved: false,
+        pointerId: null,
+      };
+      return;
+    }
+
+    const wasHorizontal = state.axis === "horizontal";
+    const moved = state.moved;
+    if (wasHorizontal && state.pointerId != null) {
+      try {
+        trackRef.current?.releasePointerCapture(state.pointerId);
+      } catch {
+        // ignore
+      }
+    }
+
+    drag.current = {
+      active: false,
+      axis: "undecided",
+      startX: 0,
+      startY: 0,
+      scrollLeft: 0,
+      moved: false,
+      pointerId: null,
+    };
+
+    if (wasHorizontal && moved) setShowHint(false);
+    if (wasHorizontal) scheduleUpdate();
+    void e;
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -213,48 +297,49 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
             );
           })}
         </div>
-
-        {showHint ? (
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-x-0 bottom-8 z-[5] flex items-center justify-center gap-2 text-[#123B73]/70",
-              reducedMotion ? "opacity-80" : "animate-pulse"
-            )}
-            aria-hidden
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <Hand className="h-4 w-4" />
-            <span className="text-xs font-medium">左右滑動挑選</span>
-            <ChevronRight className="h-4 w-4" />
-          </div>
-        ) : null}
       </div>
 
-      <RecipeCarouselArcs />
+      {showHint ? (
+        <div
+          className={cn(
+            "pointer-events-none z-[5] flex items-center justify-center gap-2 pb-1 text-[#123B73]/70",
+            reducedMotion ? "opacity-80" : "animate-pulse"
+          )}
+          aria-hidden
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <Hand className="h-4 w-4" />
+          <span className="text-xs font-medium">左右滑動挑選</span>
+          <ChevronRight className="h-4 w-4" />
+        </div>
+      ) : null}
 
-      <div className="carousel-pagination" aria-label="輪播分頁">
-        {recipes.map((recipe, i) => {
-          const selected = active === i;
-          return (
-            <button
-              key={recipe.id}
-              type="button"
-              aria-label={`第 ${i + 1} 張食譜`}
-              aria-current={selected ? "true" : undefined}
-              onClick={() => scrollTo(i)}
-              className="inline-flex h-11 w-11 items-center justify-center"
-            >
-              <span
-                className="block rounded-full transition-all duration-300"
-                style={{
-                  width: selected ? 30 : 9,
-                  height: 9,
-                  background: selected ? "#123B73" : "#87C9E8",
-                }}
-              />
-            </button>
-          );
-        })}
+      <div className="recipe-carousel-footer">
+        <RecipeCarouselArcs />
+        <div className="carousel-pagination" aria-label="輪播分頁">
+          {recipes.map((recipe, i) => {
+            const selected = active === i;
+            return (
+              <button
+                key={recipe.id}
+                type="button"
+                aria-label={`第 ${i + 1} 張食譜`}
+                aria-current={selected ? "true" : undefined}
+                onClick={() => scrollTo(i)}
+                className="inline-flex h-11 w-11 items-center justify-center"
+              >
+                <span
+                  className="block rounded-full transition-all duration-300"
+                  style={{
+                    width: selected ? 30 : 9,
+                    height: 9,
+                    background: selected ? "#123B73" : "#87C9E8",
+                  }}
+                />
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

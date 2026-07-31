@@ -125,10 +125,14 @@
   .featured-recipes-section {
     position: relative;
     width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
     max-width: 100%;
-    padding: 24px 0 32px;
+    padding: 24px 0 0;
     margin: 0;
     background: #ffffff;
+    background-color: #ffffff;
     background-image: none;
     overflow-x: hidden;
     overflow-y: visible;
@@ -146,19 +150,29 @@
   .recipe-weekly-carousel::before,
   .recipe-weekly-carousel::after,
   .recipe-coverflow::before,
-  .recipe-coverflow::after {
+  .recipe-coverflow::after,
+  .recipe-carousel-footer::before,
+  .recipe-carousel-footer::after {
     content: none !important;
     display: none !important;
     background: none !important;
     background-image: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    mask-image: none !important;
   }
 
+  .featured-recipes-section,
   .featured-recipes-header,
   .coverflow-viewport,
+  .coverflow-track-wrapper,
   .recipe-weekly-carousel,
   .recipe-coverflow,
+  .recipe-carousel-footer,
+  .recipe-carousel-arcs,
   .carousel-pagination {
     background: #ffffff;
+    background-color: #ffffff;
     background-image: none;
   }
 
@@ -248,12 +262,16 @@
   .coverflow-viewport {
     position: relative;
     width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
     max-width: 100%;
     padding-top: 16px;
-    padding-bottom: 72px;
+    padding-bottom: 52px;
     overflow-x: hidden;
     overflow-y: visible;
     background: #ffffff;
+    background-image: none;
     perspective: 1100px;
     perspective-origin: center center;
     box-sizing: border-box;
@@ -261,27 +279,31 @@
 
   .coverflow-track,
   .recipe-weekly-track {
-    --recipe-card-width: clamp(260px, 70vw, 304px);
+    --recipe-card-width: clamp(258px, 68vw, 300px);
 
     display: flex;
     align-items: flex-start;
-    gap: 18px;
+    gap: 14px;
     width: 100%;
     max-width: 100%;
+    height: auto;
     overflow-x: auto;
     overflow-y: visible;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
-    overscroll-behavior-inline: contain;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    touch-action: pan-x;
+    touch-action: pan-x pan-y;
     transform-style: preserve-3d;
     cursor: grab;
     background: transparent;
+    background-image: none;
     box-sizing: border-box;
     padding-left: calc((100% - var(--recipe-card-width)) / 2);
     padding-right: calc((100% - var(--recipe-card-width)) / 2);
+    padding-bottom: 42px;
     scroll-padding-left: calc((100% - var(--recipe-card-width)) / 2);
     scroll-padding-right: calc((100% - var(--recipe-card-width)) / 2);
   }
@@ -298,15 +320,20 @@
 
   .recipe-coverflow-card,
   .recipe-card {
-    flex: 0 0 var(--recipe-card-width, clamp(260px, 70vw, 304px));
-    width: var(--recipe-card-width, clamp(260px, 70vw, 304px));
+    flex: 0 0 var(--recipe-card-width, clamp(258px, 68vw, 300px));
+    width: var(--recipe-card-width, clamp(258px, 68vw, 300px));
     max-width: calc(100vw - 72px);
+    height: auto;
+    min-height: 0;
+    max-height: none;
     scroll-snap-align: center;
     scroll-snap-stop: always;
     transform-style: preserve-3d;
     transform-origin: center bottom;
     box-sizing: border-box;
     background: transparent;
+    overflow: visible;
+    overscroll-behavior: auto;
     transition:
       transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
       opacity 300ms ease,
@@ -318,7 +345,11 @@
   .recipe-card-inner {
     width: 100%;
     max-width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
     background: #ffffff;
+    background-image: none;
     border: 1px solid #e9edf2;
     border-radius: 20px;
     overflow: hidden;
@@ -327,7 +358,33 @@
   }
 
   .recipe-card[data-active="true"] .recipe-card-inner {
-    box-shadow: 0 20px 44px rgba(18, 59, 115, 0.16);
+    box-shadow: 0 18px 40px rgba(18, 59, 115, 0.15);
+  }
+
+  .recipe-card-content {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .recipe-card-image {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+  }
+
+  .recipe-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (max-height: 820px) and (max-width: 767px) {
+    .recipe-card-image {
+      aspect-ratio: 16 / 10;
+    }
   }
 
   .recipe-card-badge {
@@ -343,7 +400,7 @@
   }
 
   .recipe-card-title {
-    font-size: clamp(21px, 5.8vw, 26px);
+    font-size: clamp(21px, 5.5vw, 25px);
     line-height: 1.25;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -351,17 +408,27 @@
     overflow: hidden;
   }
 
-  .recipe-carousel-arcs {
+  .recipe-carousel-footer {
     position: relative;
     width: 100%;
-    max-width: 100%;
-    height: clamp(56px, 14vw, 72px);
     margin-top: 0;
+    margin-bottom: -20px;
+    transform: translateY(-20px);
+    background: #ffffff;
+    background-image: none;
+    box-sizing: border-box;
+    z-index: 2;
+  }
+
+  .recipe-carousel-arcs {
+    width: 100%;
+    max-width: 100%;
+    height: clamp(52px, 13vw, 68px);
     overflow: hidden;
     background: #ffffff;
+    background-image: none;
     pointer-events: none;
     user-select: none;
-    z-index: 1;
     box-sizing: border-box;
   }
 
@@ -393,9 +460,10 @@
     justify-content: center;
     gap: 12px;
     min-height: 44px;
-    margin-top: 0;
-    margin-bottom: 24px;
+    margin-top: -4px;
+    margin-bottom: 0;
     background: #ffffff;
+    background-image: none;
   }
 
   @media (min-width: 768px) {
@@ -408,24 +476,26 @@
     .coverflow-viewport {
       max-width: 900px;
       margin-inline: auto;
-      padding-top: 20px;
-      padding-bottom: 76px;
+      padding-top: 16px;
+      padding-bottom: 52px;
     }
 
     .coverflow-track,
     .recipe-weekly-track {
-      --recipe-card-width: clamp(320px, 46vw, 400px);
-      gap: 18px;
+      --recipe-card-width: clamp(310px, 44vw, 390px);
+      gap: 14px;
     }
 
     .recipe-coverflow-card,
     .recipe-card {
-      max-width: 400px;
+      max-width: 390px;
     }
 
-    .recipe-carousel-arcs {
+    .recipe-carousel-arcs,
+    .recipe-carousel-footer {
       max-width: 900px;
-      margin-inline: auto;
+      margin-left: auto;
+      margin-right: auto;
     }
   }
 
@@ -440,16 +510,19 @@
 
     .coverflow-track,
     .recipe-weekly-track {
-      --recipe-card-width: clamp(360px, 32vw, 440px);
+      --recipe-card-width: clamp(350px, 30vw, 420px);
     }
 
     .recipe-coverflow-card,
     .recipe-card {
-      max-width: 440px;
+      max-width: 420px;
     }
 
-    .recipe-carousel-arcs {
+    .recipe-carousel-arcs,
+    .recipe-carousel-footer {
       max-width: 1100px;
+      margin-left: auto;
+      margin-right: auto;
     }
   }
 
@@ -462,6 +535,10 @@
     .recipe-coverflow-card,
     .recipe-card {
       transition-duration: 0ms;
+    }
+
+    .recipe-carousel-footer {
+      transform: translateY(-20px);
     }
   }
 
