@@ -17,13 +17,6 @@ import { HeroBottomTransition } from "./HeroBottomTransition";
 import { HeroTextContent } from "./HeroTextContent";
 import { HeroTopActions } from "./HeroTopActions";
 import { ResponsiveHeroImage } from "./ResponsiveHeroImage";
-import { HomeQuickServicesSection } from "./HomeQuickServicesSection";
-import { HomeLatestCampaignSection } from "./latest-campaign/HomeLatestCampaignSection";
-import { WeeklyPopularRecipesSection } from "./weekly-recipes/WeeklyPopularRecipesSection";
-import { HomeIngredientShopSection } from "./HomeIngredientShopSection";
-import { HomeGroupBuyBannerSection } from "./group-buy-banner/HomeGroupBuyBannerSection";
-import { HomeGroupBuyHubBand } from "./group-buy-hub/HomeGroupBuyHubBand";
-import { HomeServiceShortcutsSection } from "./HomeServiceShortcutsSection";
 
 function normalizePosition(
   value: unknown,
@@ -116,6 +109,7 @@ function mapApiToHomeHero(raw: Record<string, unknown> | null): HomeHeroData {
   };
 }
 
+/** Homepage hero chrome only — other sections render via CMS order on the home page. */
 export function HomeHeroSection() {
   const [data, setData] = useState<HomeHeroData>(HOME_HERO_DEFAULTS);
   const searchRef = useRef<HeroSearchBarHandle>(null);
@@ -147,47 +141,38 @@ export function HomeHeroSection() {
   }, []);
 
   const desktopUrl = data.desktopImageUrl || HOME_HERO_DESKTOP_IMAGE;
-  const mobileUrl = data.mobileImageUrl || HOME_HERO_MOBILE_IMAGE;
+  const mobileUrl = data.mobileImageUrl || HOME_HERO_MOBILE_IMAGE || desktopUrl;
   const alt = data.imageAlt || "CHIMEiDIY Lifestyle 首頁主視覺";
 
   return (
-    <>
-      <section className="home-hero home-hero-section" aria-label="首頁主視覺">
-        <div className="home-hero-top-bar">
-          <HeroTopActions onSearchClick={focusSearch} />
-        </div>
-        <div className="home-hero-canvas">
-          <ResponsiveHeroImage
-            desktopUrl={desktopUrl}
-            mobileUrl={mobileUrl}
-            alt={alt}
-            desktopObjectPosition={data.desktopObjectPosition}
-            mobileObjectPosition={data.mobileObjectPosition}
-          />
-          <HeroTextContent
-            title={data.title}
-            description={data.description}
-            showTitle={data.showTitle}
-            showDescription={data.showDescription}
-          />
-          <HeroBottomTransition />
-        </div>
+    <section className="home-hero home-hero-section" aria-label="首頁主視覺">
+      <div className="home-hero-top-bar">
+        <HeroTopActions onSearchClick={focusSearch} />
+      </div>
+      <div className="home-hero-canvas">
+        <ResponsiveHeroImage
+          desktopUrl={desktopUrl}
+          mobileUrl={mobileUrl}
+          alt={alt}
+          desktopObjectPosition={data.desktopObjectPosition}
+          mobileObjectPosition={data.mobileObjectPosition}
+        />
+        <HeroTextContent
+          title={data.title}
+          description={data.description}
+          showTitle={data.showTitle}
+          showDescription={data.showDescription}
+        />
+        <HeroBottomTransition />
+      </div>
 
-        <div className="home-hero-search-wrap">
-          <FloatingSearchBar
-            ref={searchRef}
-            placeholder={data.searchPlaceholder}
-            scope={(data.searchScope as SearchScope) || "global"}
-          />
-        </div>
-      </section>
-      <HomeLatestCampaignSection />
-      <HomeQuickServicesSection />
-      <WeeklyPopularRecipesSection />
-      <HomeIngredientShopSection />
-      <HomeGroupBuyBannerSection />
-      <HomeGroupBuyHubBand />
-      <HomeServiceShortcutsSection />
-    </>
+      <div className="home-hero-search-wrap">
+        <FloatingSearchBar
+          ref={searchRef}
+          placeholder={data.searchPlaceholder}
+          scope={(data.searchScope as SearchScope) || "global"}
+        />
+      </div>
+    </section>
   );
 }

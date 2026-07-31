@@ -20,6 +20,7 @@ import {
   type FeaturedTabId,
   type GroupBuyHubEvent,
 } from "./types";
+import type { HomeCategoryMenuItem } from "@/lib/home/category-menu";
 
 const CARD_WIDTH =
   "w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]";
@@ -31,9 +32,17 @@ const tabBase =
 export function FeaturedGroupBuySection({
   events,
   loading = false,
+  title = "CHIMEIDIY 團購精選",
+  subtitle = "精選團購好物，一起買更划算",
+  viewAllHref = "/group-buy",
+  categoryMenu,
 }: {
   events: GroupBuyHubEvent[];
   loading?: boolean;
+  title?: string;
+  subtitle?: string;
+  viewAllHref?: string;
+  categoryMenu?: HomeCategoryMenuItem[];
 }) {
   const [tab, setTab] = useState<FeaturedTabId>("all");
   const visible = useMemo(
@@ -41,13 +50,14 @@ export function FeaturedGroupBuySection({
     [events, tab]
   );
 
+  const menuTabs =
+    categoryMenu && categoryMenu.length > 0
+      ? categoryMenu.map((m) => ({ id: m.id, label: m.label, href: m.href }))
+      : FEATURED_TABS.map((t) => ({ id: t.id, label: t.label, href: null as string | null }));
+
   return (
-    <section className="gb-hub-section gb-hub-featured" aria-label="CHIMEIDIY 團購精選">
-      <GroupBuyHubHeader
-        title="CHIMEIDIY 團購精選"
-        subtitle="精選團購好物，一起買更划算"
-        href="/group-buy"
-      />
+    <section className="gb-hub-section gb-hub-featured" aria-label={title}>
+      <GroupBuyHubHeader title={title} subtitle={subtitle} href={viewAllHref} />
 
       <div className="mb-3.5 md:mb-[18px]">
         <div
@@ -55,15 +65,29 @@ export function FeaturedGroupBuySection({
           role="tablist"
           aria-label="團購分類"
         >
-          {FEATURED_TABS.map((t) => {
-            const selected = tab === t.id;
+          {menuTabs.map((t) => {
+            if (t.href) {
+              return (
+                <Link
+                  key={t.id}
+                  href={t.href}
+                  className={cn(
+                    tabBase,
+                    "border-[#E9EDF2] bg-white text-[#153E73] hover:border-[#d5dde6]"
+                  )}
+                >
+                  {t.label}
+                </Link>
+              );
+            }
+            const selected = tab === (t.id as FeaturedTabId);
             return (
               <button
                 key={t.id}
                 type="button"
                 role="tab"
                 aria-selected={selected}
-                onClick={() => setTab(t.id)}
+                onClick={() => setTab(t.id as FeaturedTabId)}
                 className={cn(
                   tabBase,
                   selected
@@ -76,7 +100,7 @@ export function FeaturedGroupBuySection({
             );
           })}
           <Link
-            href="/group-buy"
+            href={viewAllHref}
             className={cn(tabBase, "border-[#E9EDF2] bg-white text-[#153E73] hover:border-[#d5dde6]")}
           >
             <Filter className="h-4 w-4 md:h-[18px] md:w-[18px]" aria-hidden />

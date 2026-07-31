@@ -2,6 +2,7 @@
 
 export type HomeSectionKey =
   | "hero"
+  | "latest_campaigns"
   | "store_news"
   | "hot_searches"
   | "latest_recipes"
@@ -10,6 +11,7 @@ export type HomeSectionKey =
   | "popular_baking_products"
   | "product_series"
   | "featured_courses"
+  | "weekly_group_buys"
   | "closing_group_buys"
   | "latest_videos"
   | "service_shortcuts"
@@ -32,24 +34,31 @@ export type HomeSectionKey =
   | "quick_entry"
   | "group_buy_banner";
 
-/** Primary homepage architecture (spec order 1–8). */
+/**
+ * Canonical live homepage stack (admin catalog order).
+ * Matches front-of-house composition under Hero.
+ */
 export const PRIMARY_HOME_SECTION_KEYS: HomeSectionKey[] = [
   "hero",
-  "store_news",
-  "latest_recipes",
-  "recipe_kits",
-  "popular_categories",
-  "ingredient_categories",
-  "ingredient_shop",
+  "latest_campaigns",
   "quick_entry",
+  "latest_recipes",
+  "ingredient_shop",
   "group_buy_banner",
-  "popular_baking_products",
+  "weekly_group_buys",
   "closing_group_buys",
+  "weekly_live_streams",
+  "chime_select",
   "service_shortcuts",
 ];
 
 export const HOME_SECTION_KEYS: HomeSectionKey[] = [
   ...PRIMARY_HOME_SECTION_KEYS,
+  "store_news",
+  "recipe_kits",
+  "popular_categories",
+  "ingredient_categories",
+  "popular_baking_products",
   "hot_searches",
   "product_series",
   "featured_courses",
@@ -60,8 +69,6 @@ export const HOME_SECTION_KEYS: HomeSectionKey[] = [
   "ai_assistant",
   "baking_inspiration",
   "weekly_new_products",
-  "chime_select",
-  "weekly_live_streams",
   "weekly_promotions",
   "banner_strip",
   "monthly_challenge",
@@ -73,6 +80,7 @@ export const HOME_SECTION_KEYS: HomeSectionKey[] = [
 /** At most one instance of these types on the homepage. */
 export const HOME_SECTION_SINGLETONS = new Set<HomeSectionKey>([
   "hero",
+  "latest_campaigns",
   "store_news",
   "hot_searches",
   "quick_entry",
@@ -84,43 +92,53 @@ export const HOME_SECTION_SINGLETONS = new Set<HomeSectionKey>([
   "store_information",
   "ingredient_shop",
   "group_buy_banner",
+  "weekly_group_buys",
+  "closing_group_buys",
+  "weekly_live_streams",
+  "chime_select",
+  "latest_recipes",
 ]);
 
-/** Cream top band — Hero only (search lives inside BrandHero). */
-export const CREAM_ZONE_KEYS: HomeSectionKey[] = ["hero"];
+/**
+ * Full-bleed / edge-to-edge zone — rendered outside padded HomeContentArea.
+ * Includes hero + primary stack so CMS order controls the main page.
+ */
+export const CREAM_ZONE_KEYS: HomeSectionKey[] = [...PRIMARY_HOME_SECTION_KEYS];
 
 /** Spec default order for the primary architecture. */
 export const HOME_SECTION_SORT_DEFAULT: Record<HomeSectionKey, number> = {
   hero: 10,
-  store_news: 20,
+  latest_campaigns: 15,
+  quick_entry: 20,
   latest_recipes: 30,
-  recipe_kits: 40,
-  popular_categories: 50,
-  popular_baking_products: 60,
+  ingredient_shop: 40,
+  group_buy_banner: 50,
+  weekly_group_buys: 60,
   closing_group_buys: 70,
-  service_shortcuts: 80,
-  hot_searches: 90,
-  quick_entry: 25,
-  product_series: 95,
-  featured_courses: 100,
-  latest_videos: 110,
-  trust_services: 120,
-  brand_statement: 130,
-  quick_menu: 140,
-  ai_assistant: 150,
-  baking_inspiration: 160,
-  weekly_new_products: 170,
-  chime_select: 180,
-  weekly_live_streams: 190,
-  weekly_promotions: 200,
-  banner_strip: 205,
-  monthly_challenge: 210,
-  seasonal_themes: 220,
-  store_information: 230,
-  latest_articles: 240,
-  ingredient_categories: 45,
-  ingredient_shop: 48,
-  group_buy_banner: 55,
+  weekly_live_streams: 80,
+  chime_select: 90,
+  service_shortcuts: 100,
+  store_news: 110,
+  recipe_kits: 120,
+  popular_categories: 130,
+  ingredient_categories: 140,
+  popular_baking_products: 150,
+  hot_searches: 160,
+  product_series: 170,
+  featured_courses: 180,
+  latest_videos: 190,
+  trust_services: 200,
+  brand_statement: 210,
+  quick_menu: 220,
+  ai_assistant: 230,
+  baking_inspiration: 240,
+  weekly_new_products: 250,
+  weekly_promotions: 260,
+  banner_strip: 270,
+  monthly_challenge: 280,
+  seasonal_themes: 290,
+  store_information: 300,
+  latest_articles: 310,
 };
 
 export function isHomeSectionKey(value: string): value is HomeSectionKey {

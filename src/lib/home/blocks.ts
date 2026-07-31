@@ -13,6 +13,9 @@ import {
 import {
   DEFAULT_GROUP_BUY_BANNER_SETTINGS,
 } from "@/types/home-group-buy-banner";
+import {
+  DEFAULT_LATEST_CAMPAIGN_SETTINGS,
+} from "@/types/home-latest-campaign";
 
 export type HomeBlockKey = HomeSectionKey;
 
@@ -28,7 +31,14 @@ export const SECTION_DEFAULTS: Record<
     config?: Record<string, unknown>;
   }
 > = {
-  hero: { title: "Hero 搜尋區", displayCount: 5, visible: true, dataSource: "banners" },
+  hero: { title: "Hero Banner", displayCount: 5, visible: true, dataSource: "brand_heroes" },
+  latest_campaigns: {
+    title: "最新活動",
+    displayCount: 6,
+    visible: true,
+    viewAllUrl: "/group-buy",
+    config: { ...DEFAULT_LATEST_CAMPAIGN_SETTINGS },
+  },
   store_news: {
     title: "門市最新資訊",
     displayCount: 2,
@@ -49,13 +59,14 @@ export const SECTION_DEFAULTS: Record<
     config: { ...DEFAULT_QUICK_SERVICES_SETTINGS },
   },
   latest_recipes: {
-    title: "熱門食譜",
+    title: "精選食譜",
     displayCount: 8,
     visible: true,
+    sourceMode: "auto",
     viewAllUrl: "/recipes",
   },
   recipe_kits: {
-    title: "一鍵買齊材料",
+    title: "一鍵買齊材料（材料包）",
     displayCount: 4,
     visible: false,
     viewAllUrl: "/recipes",
@@ -77,32 +88,49 @@ export const SECTION_DEFAULTS: Record<
       more_card_title: "更多商品",
       more_card_subtitle: "查看更多烘焙材料",
       more_card_link: "/baking-materials",
+      category_menu: [
+        { id: "all", label: "全部", href: "/baking-materials", enabled: true, sortOrder: 10 },
+        { id: "flour", label: "麵粉", href: "/baking-materials/flour", enabled: true, sortOrder: 20 },
+        { id: "tools", label: "器具", href: "/baking-materials/tools", enabled: true, sortOrder: 30 },
+        { id: "packaging", label: "包裝", href: "/baking-materials/packaging", enabled: true, sortOrder: 40 },
+      ],
     },
   },
   group_buy_banner: {
-    title: "團購 Banner 輪播",
+    title: "團購輪播 Banner",
     displayCount: 5,
     visible: true,
     viewAllUrl: "/group-buy",
     config: { ...DEFAULT_GROUP_BUY_BANNER_SETTINGS },
   },
+  weekly_group_buys: {
+    title: "本週開團",
+    displayCount: 12,
+    visible: true,
+    viewAllUrl: "/group-buy",
+    config: {
+      subtitle: "本週熱門開團，一起買更划算",
+      source: "group_buy_events",
+      manageHref: "/admin/group-buy-events",
+    },
+  },
   popular_categories: {
     title: "找材料",
     displayCount: 8,
-    visible: true,
+    visible: false,
     viewAllUrl: "/baking-materials",
   },
   ingredient_categories: {
     title: "找材料",
     displayCount: 10,
-    visible: true,
+    visible: false,
     viewAllUrl: "/products",
     config: { view_all_label: "查看全部", view_all_href: "/products", desktop_cols: 10, mobile_cols: 5 },
   },
   popular_baking_products: {
     title: "本週熱門商品",
     displayCount: 8,
-    visible: true,
+    visible: false,
     sourceMode: "manual",
     viewAllUrl: "/baking-materials",
     config: { product_scope: "baking" },
@@ -122,11 +150,17 @@ export const SECTION_DEFAULTS: Record<
     viewAllUrl: "/courses",
   },
   closing_group_buys: {
-    title: "團購優惠中",
-    displayCount: 4,
+    title: "即將結單",
+    displayCount: 12,
     visible: true,
     viewAllUrl: "/group-buy",
-    config: { show_countdown: true, show_progress: true },
+    config: {
+      subtitle: "倒數中的團購，把握最後機會",
+      show_countdown: true,
+      show_progress: true,
+      source: "group_buy_events",
+      manageHref: "/admin/group-buy-events",
+    },
   },
   latest_videos: {
     title: "最新影音",
@@ -135,7 +169,7 @@ export const SECTION_DEFAULTS: Record<
     viewAllUrl: "/videos",
   },
   service_shortcuts: {
-    title: "快捷服務入口",
+    title: "服務快捷入口",
     displayCount: 4,
     visible: true,
     config: { items: DEFAULT_SERVICE_SHORTCUTS },
@@ -153,17 +187,31 @@ export const SECTION_DEFAULTS: Record<
     config: { new_days: 7, product_scope: "baking" },
   },
   chime_select: {
-    title: "CHIME 精選",
-    displayCount: 8,
-    visible: false,
-    viewAllUrl: "/shop?scope=chime_select",
-    config: { product_scope: "chime_select" },
+    title: "CHIMEIDIY 團購精選",
+    displayCount: 24,
+    visible: true,
+    viewAllUrl: "/group-buy",
+    config: {
+      subtitle: "精選團購好物，一起買更划算",
+      source: "group_buy_events",
+      category_menu: [
+        { id: "all", label: "全部", href: "/group-buy", enabled: true, sortOrder: 10 },
+        { id: "baking", label: "烘焙材料", href: "/group-buy?tag=baking", enabled: true, sortOrder: 20 },
+        { id: "tools", label: "器具", href: "/group-buy?tag=tools", enabled: true, sortOrder: 30 },
+        { id: "fresh", label: "生鮮", href: "/group-buy?tag=fresh", enabled: true, sortOrder: 40 },
+      ],
+    },
   },
   weekly_live_streams: {
-    title: "本週團購直播",
-    displayCount: 4,
-    visible: false,
+    title: "LIVE 團購直播",
+    displayCount: 8,
+    visible: true,
     viewAllUrl: "/live",
+    config: {
+      subtitle: "鎖定直播檔期，不錯過限時優惠",
+      source: "livestreams",
+      manageHref: "/admin/livestreams",
+    },
   },
   weekly_promotions: {
     title: "本週優惠",

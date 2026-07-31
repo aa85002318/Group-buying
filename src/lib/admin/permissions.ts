@@ -19,6 +19,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/news",
   "/admin/banners",
   "/admin/home",
+  "/admin/shop",
   "/admin/content",
   "/admin/faqs",
   "/admin/cms",
@@ -31,6 +32,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/navigation",
   "/admin/settings",
   "/admin/brand-system",
+  "/admin/group-buy",
 ] as const;
 
 export const CUSTOMER_SERVICE_ADMIN_PATHS = [
@@ -161,17 +163,26 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     ],
   },
   {
+    id: "frontend-cms",
+    label: "前台內容管理",
+    roles: ["admin", "content_editor"],
+    items: [
+      { href: "/admin/home", label: "首頁 CMS", roles: ["admin", "content_editor"] },
+      { href: "/admin/shop", label: "商城頁面 CMS", roles: ["admin", "content_editor"] },
+      { href: "/admin/recipes", label: "食譜頁面 CMS", roles: ["admin", "content_editor"] },
+      { href: "/admin/group-buy/settings", label: "團購頁面 CMS", roles: ["admin"] },
+      { href: "/admin/members", label: "會員頁面 CMS", roles: ["admin", "customer_service"] },
+      { href: "/admin/navigation", label: "導覽列與選單", roles: ["admin", "content_editor"] },
+      { href: "/admin/banners", label: "共用素材庫", roles: ["admin", "content_editor"] },
+      { href: "/admin/home/preview", label: "首頁預覽", roles: ["admin", "content_editor"] },
+      { href: "/admin/content/popups", label: "首頁彈跳公告", roles: ["admin", "content_editor"] },
+    ],
+  },
+  {
     id: "content",
     label: "內容管理",
     roles: ["admin", "content_editor", "customer_service"],
     items: [
-      { href: "/admin/home", label: "首頁設定", roles: ["admin", "content_editor"] },
-      { href: "/admin/brand-system", label: "品牌體驗系統", roles: ["admin", "content_editor"] },
-      { href: "/admin/home/preview", label: "首頁預覽", roles: ["admin", "content_editor"] },
-      { href: "/admin/home/recipe-kits", label: "材料包", roles: ["admin", "content_editor"] },
-      { href: "/admin/content/popups", label: "首頁彈跳公告", roles: ["admin", "content_editor"] },
-      { href: "/admin/banners", label: "Banner", roles: ["admin", "content_editor"] },
-      { href: "/admin/settings/branding", label: "品牌設定", roles: ["admin", "content_editor"] },
       { href: "/admin/news", label: "公告／最新資訊", roles: ["admin", "content_editor"] },
       { href: "/admin/articles", label: "文章管理", roles: ["admin", "content_editor"] },
       { href: "/admin/videos", label: "影音", roles: ["admin", "content_editor"] },
@@ -179,8 +190,9 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/themes", label: "季節主題", roles: ["admin", "content_editor"] },
       { href: "/admin/faqs", label: "FAQ", roles: ["admin", "content_editor", "customer_service"] },
       { href: "/admin/side-menu", label: "側邊選單", roles: ["admin", "content_editor"] },
-      { href: "/admin/navigation", label: "前台導覽", roles: ["admin", "content_editor"] },
       { href: "/admin/courses", label: "課程", roles: ["admin"] },
+      { href: "/admin/home/recipe-kits", label: "材料包", roles: ["admin", "content_editor"] },
+      { href: "/admin/settings/branding", label: "品牌設定", roles: ["admin", "content_editor"] },
     ],
   },
   {

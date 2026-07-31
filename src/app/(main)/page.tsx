@@ -15,7 +15,6 @@ import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 import { BrandStatementSection } from "@/components/home/BrandStatementSection";
 import { AiAssistantSection } from "@/components/home/AiAssistantSection";
 import { BakingInspirationSection } from "@/components/home/BakingInspirationSection";
-import { ChimeSelectSection } from "@/components/home/ChimeSelectSection";
 import { MonthlyChallengeSection } from "@/components/home/MonthlyChallengeSection";
 import { SeasonalThemesSection } from "@/components/home/SeasonalThemesSection";
 import { StoreInformationSection } from "@/components/home/StoreInformationSection";
@@ -24,6 +23,18 @@ import {
   TrustServicesSection,
   parseTrustServices,
 } from "@/components/home/TrustServicesSection";
+import { HomeLatestCampaignSection } from "@/components/home/latest-campaign/HomeLatestCampaignSection";
+import { HomeQuickServicesSection } from "@/components/home/HomeQuickServicesSection";
+import { WeeklyPopularRecipesSection } from "@/components/home/weekly-recipes/WeeklyPopularRecipesSection";
+import { HomeIngredientShopSection } from "@/components/home/HomeIngredientShopSection";
+import { HomeGroupBuyBannerSection } from "@/components/home/group-buy-banner/HomeGroupBuyBannerSection";
+import { HomeServiceShortcutsSection } from "@/components/home/HomeServiceShortcutsSection";
+import {
+  ChimeSelectGroupBuySection,
+  ClosingGroupBuysSection,
+  WeeklyGroupBuysSection,
+  WeeklyLiveStreamsSection,
+} from "@/components/home/group-buy-hub/HomeGroupBuySections";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import {
   filterProductsByScope,
@@ -36,6 +47,7 @@ import {
   warnUnknownHomeSection,
   type ResolvedHomeBlock,
 } from "@/lib/home/blocks";
+import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
 import { CREAM_ZONE_KEYS, type HomeSectionKey } from "@/lib/home/section-keys";
 import { mockProducts } from "@/lib/mock-data";
 import type { RecipeSummary } from "@/lib/consumer-hub";
@@ -142,24 +154,58 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "hot_searches":
       // Replaced by Quick Entry — never render 熱門搜尋 on homepage
       return null;
+    case "hero":
+      return <HomeHeroSection key={reactKey} />;
+    case "latest_campaigns": {
+      const settings = parseLatestCampaignSettings(block.config);
+      return (
+        <HomeLatestCampaignSection
+          key={reactKey}
+          settings={{
+            ...settings,
+            title: block.title || settings.title,
+            viewAllHref: block.viewAllUrl || settings.viewAllHref,
+            enabled: block.visible && settings.enabled !== false,
+          }}
+        />
+      );
+    }
     case "quick_entry":
-    case "ingredient_shop":
-    case "group_buy_banner":
-    case "closing_group_buys":
-    case "weekly_live_streams":
-      // Band sections: hero / materials / group-buy banner+hub (avoid duplicate rails)
-      return null;
-    case "store_news":
+      return <HomeQuickServicesSection key={reactKey} />;
     case "latest_recipes":
+      return (
+        <WeeklyPopularRecipesSection
+          key={reactKey}
+          title={block.title}
+          recipes={ctx.recipes}
+          manualIds={block.manualIds}
+          sourceMode={block.sourceMode}
+          limit={block.displayCount}
+          loading={ctx.recipesLoading}
+        />
+      );
+    case "ingredient_shop":
+      return <HomeIngredientShopSection key={reactKey} />;
+    case "group_buy_banner":
+      return <HomeGroupBuyBannerSection key={reactKey} />;
+    case "weekly_group_buys":
+      return <WeeklyGroupBuysSection key={reactKey} block={block} />;
+    case "closing_group_buys":
+      return <ClosingGroupBuysSection key={reactKey} block={block} />;
+    case "weekly_live_streams":
+      return <WeeklyLiveStreamsSection key={reactKey} block={block} />;
+    case "chime_select":
+      return <ChimeSelectGroupBuySection key={reactKey} block={block} />;
+    case "service_shortcuts":
+      return <HomeServiceShortcutsSection key={reactKey} />;
     case "recipe_kits":
     case "popular_categories":
     case "ingredient_categories":
     case "popular_baking_products":
-    case "service_shortcuts":
-      // Removed from homepage below 團購精選 (kept in CMS for possible future reuse)
+      // Legacy optional sections — keep available if re-enabled in CMS
       return null;
-    case "hero":
-      return <HomeHeroSection key={reactKey} />;
+    case "store_news":
+      return null;
     case "brand_statement":
       return <BrandStatementSection key={reactKey} config={block.config} />;
     case "quick_menu":
@@ -282,18 +328,6 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
         />
       );
     }
-    case "chime_select":
-      return (
-        <ChimeSelectSection
-          key={reactKey}
-          title={block.title}
-          subtitle={block.subtitle || "每天發現值得買的生活好物"}
-          viewAllHref={block.viewAllUrl || "/shop?scope=chime_select"}
-          config={block.config}
-          manualIds={block.manualIds}
-          limit={block.displayCount}
-        />
-      );
     case "weekly_promotions":
       return (
         <PromoBannerStrip

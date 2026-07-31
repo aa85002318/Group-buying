@@ -16,12 +16,26 @@ const DEVICES = [
 export default function AdminHomePreviewPage() {
   const [device, setDevice] = useState<(typeof DEVICES)[number]["id"]>("390");
   const active = useMemo(() => DEVICES.find((d) => d.id === device) ?? DEVICES[0], [device]);
+  const [embed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("embed") === "1";
+  });
+
+  if (embed) {
+    return (
+      <iframe
+        title="homepage-draft-preview-embed"
+        src="/?preview=draft"
+        className="h-screen w-full border-0 bg-white"
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
       <AdminPageHeader
         title="首頁草稿預覽"
-        description="以 390／768／1440 寬度預覽草稿版面。訪客看不到此內容，需在首頁設定按「發布」才會上線。"
+        description="以 390／768／1440 寬度預覽草稿版面。訪客看不到此內容，需在首頁 CMS 按「發布」才會上線。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
@@ -29,7 +43,7 @@ export default function AdminHomePreviewPage() {
               className={buttonVariants({ size: "sm", variant: "outline" })}
             >
               <ArrowLeft className="mr-1.5 h-4 w-4" />
-              返回編輯
+              返回首頁 CMS
             </Link>
             <Link href="/admin/home" className={buttonVariants({ size: "sm" })}>
               前往發布
