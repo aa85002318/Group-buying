@@ -29,7 +29,8 @@ export type HomeSectionKey =
   | "latest_articles"
   | "ingredient_categories"
   | "ingredient_shop"
-  | "quick_entry";
+  | "quick_entry"
+  | "group_buy_banner";
 
 /** Primary homepage architecture (spec order 1–8). */
 export const PRIMARY_HOME_SECTION_KEYS: HomeSectionKey[] = [
@@ -41,6 +42,7 @@ export const PRIMARY_HOME_SECTION_KEYS: HomeSectionKey[] = [
   "ingredient_categories",
   "ingredient_shop",
   "quick_entry",
+  "group_buy_banner",
   "popular_baking_products",
   "closing_group_buys",
   "service_shortcuts",
@@ -81,6 +83,7 @@ export const HOME_SECTION_SINGLETONS = new Set<HomeSectionKey>([
   "trust_services",
   "store_information",
   "ingredient_shop",
+  "group_buy_banner",
 ]);
 
 /** Cream top band — Hero only (search lives inside BrandHero). */
@@ -117,6 +120,7 @@ export const HOME_SECTION_SORT_DEFAULT: Record<HomeSectionKey, number> = {
   latest_articles: 240,
   ingredient_categories: 45,
   ingredient_shop: 48,
+  group_buy_banner: 55,
 };
 
 export function isHomeSectionKey(value: string): value is HomeSectionKey {

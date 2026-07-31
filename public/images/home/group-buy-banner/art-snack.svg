@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" fill="none">
+  <!-- snack bag -->
+  <path d="M78 48h44l8 78H70l8-78Z" fill="#C4A574" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M86 48c0-10 7-18 14-18s14 8 14 18" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+  <rect x="92" y="72" width="28" height="14" rx="3" fill="#fff" fill-opacity=".9"/>
+  <text x="106" y="83" text-anchor="middle" font-size="8" font-weight="700" fill="#8B6914" font-family="system-ui,sans-serif">SNACK</text>
+  <path d="M106 58c2-6 8-8 10-4 1 3-2 6-10 10-8-4-11-7-10-10 2-4 8-2 10 4Z" fill="#E8F5C8" stroke="#fff" stroke-width="1"/>
+  <!-- cookie -->
+  <circle cx="58" cy="118" r="22" fill="#E8B86D" stroke="#fff" stroke-width="2"/>
+  <circle cx="50" cy="112" r="2.2" fill="#6B3F1A"/>
+  <circle cx="64" cy="110" r="2.5" fill="#6B3F1A"/>
+  <circle cx="56" cy="124" r="2" fill="#6B3F1A"/>
+  <circle cx="68" cy="122" r="1.8" fill="#6B3F1A"/>
+  <!-- pretzel -->
+  <path d="M140 108c8-14 28-12 30 4 2 12-8 20-18 18-6-1-8-6-6-10 2-4 8-4 10-1" stroke="#D4924A" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path d="M140 108c8-14 28-12 30 4 2 12-8 20-18 18-6-1-8-6-6-10 2-4 8-4 10-1" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <circle cx="148" cy="104" r="1.4" fill="#fff"/>
+  <circle cx="162" cy="112" r="1.4" fill="#fff"/>
+  <!-- sparkles -->
+  <path d="M48 70l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" fill="#fff" fill-opacity=".85"/>
+  <path d="M150 58l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5 1.5-4Z" fill="#fff" fill-opacity=".8"/>
+  <path d="M158 92c0-1 .5-2 1.5-2s1.5 1 1.5 2-.5 2-1.5 2-1.5-1-1.5-2Z" fill="#FFE27A"/>
+</svg>

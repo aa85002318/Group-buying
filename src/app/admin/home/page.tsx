@@ -35,6 +35,11 @@ import {
 import type { HomepageBlock } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 import { HomeLayoutPublishBar } from "@/components/admin/HomeLayoutPublishBar";
+import {
+  DEFAULT_GROUP_BUY_BANNER_SETTINGS,
+  parseGroupBuyBannerSettings,
+  type HomeGroupBuyBannerSettings,
+} from "@/types/home-group-buy-banner";
 
 type ProductOption = {
   id: string;
@@ -597,6 +602,7 @@ function SectionCard({
   const [moreCardTitle, setMoreCardTitle] = useState("更多商品");
   const [moreCardSubtitle, setMoreCardSubtitle] = useState("查看更多烘焙材料");
   const [moreCardLink, setMoreCardLink] = useState("/baking-materials");
+  const [gbb, setGbb] = useState<HomeGroupBuyBannerSettings>(DEFAULT_GROUP_BUY_BANNER_SETTINGS);
 
   useEffect(() => {
     setTitle(block?.title ?? section.label);
@@ -647,6 +653,9 @@ function SectionCard({
       setMoreCardTitle(String(cfg.more_card_title ?? "更多商品"));
       setMoreCardSubtitle(String(cfg.more_card_subtitle ?? "查看更多烘焙材料"));
       setMoreCardLink(String(cfg.more_card_link ?? "/baking-materials"));
+    }
+    if (section.hasGroupBuyBannerSettings) {
+      setGbb(parseGroupBuyBannerSettings(block?.config ?? null));
     }
   }, [block, section]);
 
@@ -988,6 +997,224 @@ function SectionCard({
                 }
               >
                 儲存商品區設定
+              </Button>
+            </div>
+          ) : null}
+
+          {section.hasGroupBuyBannerSettings ? (
+            <div className="space-y-3 rounded-xl border border-border bg-white p-3">
+              <p className="text-xs font-medium text-muted-foreground">團購四格 Banner 設定</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={gbb.enabled}
+                    onChange={(e) => setGbb({ ...gbb, enabled: e.target.checked })}
+                  />
+                  啟用 Banner
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={gbb.ip.enabled}
+                    onChange={(e) =>
+                      setGbb({ ...gbb, ip: { ...gbb.ip, enabled: e.target.checked } })
+                    }
+                  />
+                  顯示 IP
+                </label>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">季節模式</label>
+                  <select
+                    className="input-field w-full"
+                    value={gbb.seasonMode}
+                    onChange={(e) =>
+                      setGbb({
+                        ...gbb,
+                        seasonMode: e.target.value as HomeGroupBuyBannerSettings["seasonMode"],
+                      })
+                    }
+                  >
+                    <option value="auto">auto（依月份）</option>
+                    <option value="spring">spring</option>
+                    <option value="summer">summer</option>
+                    <option value="autumn">autumn</option>
+                    <option value="winter">winter</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">IP 圖片 URL</label>
+                  <Input
+                    value={gbb.ip.imageUrl}
+                    onChange={(e) =>
+                      setGbb({ ...gbb, ip: { ...gbb.ip, imageUrl: e.target.value } })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">IP 水平位置 %</label>
+                  <Input
+                    type="number"
+                    value={gbb.ip.positionPercent}
+                    onChange={(e) =>
+                      setGbb({
+                        ...gbb,
+                        ip: { ...gbb.ip, positionPercent: Number(e.target.value) || 50 },
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">IP 高度 %</label>
+                  <Input
+                    type="number"
+                    value={gbb.ip.heightPercent}
+                    onChange={(e) =>
+                      setGbb({
+                        ...gbb,
+                        ip: { ...gbb.ip, heightPercent: Number(e.target.value) || 58 },
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">四格分類</p>
+                {gbb.tiles.map((tile, index) => (
+                  <div
+                    key={tile.id}
+                    className="grid gap-2 rounded-lg border border-border/70 p-2 sm:grid-cols-2"
+                  >
+                    <Input
+                      value={tile.title}
+                      onChange={(e) => {
+                        const tiles = [...gbb.tiles];
+                        tiles[index] = { ...tile, title: e.target.value };
+                        setGbb({ ...gbb, tiles });
+                      }}
+                      placeholder="分類名稱"
+                    />
+                    <Input
+                      value={tile.subtitle}
+                      onChange={(e) => {
+                        const tiles = [...gbb.tiles];
+                        tiles[index] = { ...tile, subtitle: e.target.value };
+                        setGbb({ ...gbb, tiles });
+                      }}
+                      placeholder="副標"
+                    />
+                    <Input
+                      value={tile.backgroundColor}
+                      onChange={(e) => {
+                        const tiles = [...gbb.tiles];
+                        tiles[index] = { ...tile, backgroundColor: e.target.value };
+                        setGbb({ ...gbb, tiles });
+                      }}
+                      placeholder="背景色 #HEX"
+                    />
+                    <Input
+                      value={tile.href}
+                      onChange={(e) => {
+                        const tiles = [...gbb.tiles];
+                        tiles[index] = { ...tile, href: e.target.value };
+                        setGbb({ ...gbb, tiles });
+                      }}
+                      placeholder="連結"
+                    />
+                    <Input
+                      className="sm:col-span-2"
+                      value={tile.imageUrl}
+                      onChange={(e) => {
+                        const tiles = [...gbb.tiles];
+                        tiles[index] = { ...tile, imageUrl: e.target.value };
+                        setGbb({ ...gbb, tiles });
+                      }}
+                      placeholder="插畫 URL"
+                    />
+                    <Input
+                      className="sm:col-span-2"
+                      value={tile.backgroundImageUrl}
+                      onChange={(e) => {
+                        const tiles = [...gbb.tiles];
+                        tiles[index] = { ...tile, backgroundImageUrl: e.target.value };
+                        setGbb({ ...gbb, tiles });
+                      }}
+                      placeholder="粉筆底圖 URL"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <p className="sm:col-span-2 text-xs font-medium text-muted-foreground">
+                  季節限定插畫（CMS 可改）
+                </p>
+                {(["spring", "summer", "autumn", "winter"] as const).map((key) => (
+                  <div key={key}>
+                    <label className="mb-1 block text-xs text-muted-foreground">{key}</label>
+                    <Input
+                      value={gbb.seasonImages[key]}
+                      onChange={(e) =>
+                        setGbb({
+                          ...gbb,
+                          seasonImages: { ...gbb.seasonImages, [key]: e.target.value },
+                        })
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">品牌優勢文案</p>
+                {gbb.benefits.map((benefit, index) => (
+                  <div
+                    key={benefit.id}
+                    className="grid gap-2 rounded-lg border border-border/70 p-2 sm:grid-cols-3"
+                  >
+                    <Input
+                      value={benefit.title}
+                      onChange={(e) => {
+                        const benefits = [...gbb.benefits];
+                        benefits[index] = { ...benefit, title: e.target.value };
+                        setGbb({ ...gbb, benefits });
+                      }}
+                      placeholder="標題"
+                    />
+                    <Input
+                      value={benefit.subtitle}
+                      onChange={(e) => {
+                        const benefits = [...gbb.benefits];
+                        benefits[index] = { ...benefit, subtitle: e.target.value };
+                        setGbb({ ...gbb, benefits });
+                      }}
+                      placeholder="副標"
+                    />
+                    <Input
+                      value={benefit.iconUrl}
+                      onChange={(e) => {
+                        const benefits = [...gbb.benefits];
+                        benefits[index] = { ...benefit, iconUrl: e.target.value };
+                        setGbb({ ...gbb, benefits });
+                      }}
+                      placeholder="Icon URL"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                size="sm"
+                disabled={saving}
+                onClick={() =>
+                  onPatch(block.id, {
+                    config: { ...(block.config ?? {}), ...gbb },
+                    is_visible: gbb.enabled,
+                  })
+                }
+              >
+                儲存團購 Banner
               </Button>
             </div>
           ) : null}

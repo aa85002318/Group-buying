@@ -10,6 +10,9 @@ import { DEFAULT_STORE_NEWS_CARDS } from "@/lib/home/store-news";
 import {
   DEFAULT_QUICK_SERVICES_SETTINGS,
 } from "@/types/home-quick-service";
+import {
+  DEFAULT_GROUP_BUY_BANNER_SETTINGS,
+} from "@/types/home-group-buy-banner";
 
 export type HomeBlockKey = HomeSectionKey;
 
@@ -75,6 +78,13 @@ export const SECTION_DEFAULTS: Record<
       more_card_subtitle: "查看更多烘焙材料",
       more_card_link: "/baking-materials",
     },
+  },
+  group_buy_banner: {
+    title: "團購四格 Banner",
+    displayCount: 4,
+    visible: true,
+    viewAllUrl: "/group-buy",
+    config: { ...DEFAULT_GROUP_BUY_BANNER_SETTINGS },
   },
   popular_categories: {
     title: "找材料",

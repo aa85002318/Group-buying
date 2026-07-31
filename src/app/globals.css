@@ -423,7 +423,7 @@
     position: relative;
     width: 100%;
     margin-top: 0;
-    margin-bottom: -35px;
+    margin-bottom: 0;
     transform: translateY(-35px);
     background: #ffffff;
     background-image: none;
@@ -560,6 +560,236 @@
 
   .ingredient-shop-tabs::-webkit-scrollbar {
     display: none;
+  }
+
+  /* ── Group-buy 4-tile chalk banner ── */
+  .group-buy-banner-section {
+    width: 100%;
+    max-width: 100%;
+    padding-inline: 15px;
+    padding-block: 12px 8px;
+    margin: 0;
+    background: #ffffff;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .group-buy-banner-inner {
+    width: 100%;
+    max-width: 1100px;
+    margin-inline: auto;
+    background: #ffffff;
+  }
+
+  .group-buy-banner-stage {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .group-buy-banner-track {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+
+  .group-buy-banner-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .group-buy-banner-row {
+    position: relative;
+    display: flex;
+    gap: 0;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .group-buy-banner-tile {
+    position: relative;
+    flex: 0 0 78%;
+    width: 78%;
+    aspect-ratio: 1 / 1;
+    border-radius: 0;
+    overflow: hidden;
+    scroll-snap-align: center;
+    text-decoration: none;
+    color: #ffffff;
+    box-shadow: none;
+    isolation: isolate;
+  }
+
+  .group-buy-banner-tile-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .group-buy-banner-tile-copy {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12% 8% 0;
+    text-align: center;
+  }
+
+  .group-buy-banner-tile-title {
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-size: clamp(16px, 4.2vw, 22px);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+    text-shadow: 0 1px 0 rgba(18, 59, 115, 0.12);
+  }
+
+  .group-buy-banner-tile-subtitle {
+    font-size: clamp(11px, 2.8vw, 13px);
+    font-weight: 500;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .group-buy-banner-tile-art {
+    position: absolute;
+    left: 50%;
+    bottom: 4%;
+    z-index: 2;
+    width: 78%;
+    height: auto;
+    max-height: 52%;
+    transform: translateX(-50%);
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .group-buy-banner-ip {
+    position: absolute;
+    bottom: 2%;
+    z-index: 5;
+    width: auto;
+    max-width: 28%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .group-buy-banner-ip img {
+    display: block;
+    width: auto;
+    height: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .group-buy-banner-benefits {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    width: 100%;
+    margin: 8px 0 0;
+    padding: 6px 0 2px;
+    list-style: none;
+    background: #ffffff;
+  }
+
+  .group-buy-banner-benefit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 4px 4px;
+    text-align: center;
+    border-right: 1px solid #e6ebf0;
+  }
+
+  .group-buy-banner-benefit:last-child {
+    border-right: none;
+  }
+
+  .group-buy-banner-benefit img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+
+  .group-buy-banner-benefit-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .group-buy-banner-benefit-text strong {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #123b73;
+  }
+
+  .group-buy-banner-benefit-text span {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.25;
+    color: #6b7c93;
+  }
+
+  @media (min-width: 640px) {
+    .group-buy-banner-row {
+      width: 100%;
+    }
+
+    .group-buy-banner-tile {
+      flex: 0 0 25%;
+      width: 25%;
+      scroll-snap-align: start;
+    }
+
+    .group-buy-banner-track {
+      overflow: hidden;
+      scroll-snap-type: none;
+    }
+
+    .group-buy-banner-tile-title {
+      font-size: clamp(18px, 2vw, 24px);
+    }
+
+    .group-buy-banner-benefit {
+      flex-direction: row;
+      gap: 8px;
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    .group-buy-banner-benefit-text span {
+      font-size: 12px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .group-buy-banner-section {
+      padding-block: 16px 10px;
+    }
+
+    .group-buy-banner-ip {
+      max-width: 22%;
+    }
   }
 
   .ingredient-shop-scroll {

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" fill="none">
+  <!-- snowman -->
+  <circle cx="70" cy="118" r="22" fill="#F5F8FC" stroke="#fff" stroke-width="2"/>
+  <circle cx="70" cy="86" r="16" fill="#F5F8FC" stroke="#fff" stroke-width="2"/>
+  <circle cx="65" cy="84" r="1.8" fill="#123B73"/>
+  <circle cx="75" cy="84" r="1.8" fill="#123B73"/>
+  <path d="M66 90h8" stroke="#F16458" stroke-width="2" stroke-linecap="round"/>
+  <path d="M54 96c-8 4-10 12-4 14 10 0 20-2 28-2 6 0 8-8 2-12" fill="#F16458" stroke="#fff" stroke-width="1.2"/>
+  <path d="M58 70h24l-4-14H62l-4 14Z" fill="#F16458" stroke="#fff" stroke-width="1.5"/>
+  <circle cx="82" cy="56" r="4" fill="#F5F8FC"/>
+  <!-- tree -->
+  <path d="M130 128l18-40 18 40H130Z" fill="#6BBF6B" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M136 108l12-26 12 26H136Z" fill="#7DCF7D" stroke="#fff" stroke-width="1.5"/>
+  <path d="M148 68l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7Z" fill="#FFE27A"/>
+  <path d="M148 128v10" stroke="#C4A574" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="48" cy="60" r="2" fill="#fff"/>
+  <circle cx="168" cy="72" r="2" fill="#fff"/>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <!-- wings -->
+  <ellipse cx="48" cy="118" rx="28" ry="18" fill="#fff" stroke="#E8EEF5" stroke-width="2" transform="rotate(-18 48 118)"/>
+  <ellipse cx="152" cy="118" rx="28" ry="18" fill="#fff" stroke="#E8EEF5" stroke-width="2" transform="rotate(18 152 118)"/>
+  <!-- halo -->
+  <ellipse cx="100" cy="42" rx="28" ry="8" stroke="#FFD454" stroke-width="4" fill="none"/>
+  <!-- head -->
+  <circle cx="100" cy="88" r="36" fill="#FFE6D2"/>
+  <!-- hair -->
+  <path d="M64 88c2-34 28-48 36-48 10 0 34 12 38 44 2 14-8 18-16 12-6 10-18 14-28 12-12 4-28-2-30-20Z" fill="#123B73"/>
+  <path d="M72 78c8-18 24-24 36-22" stroke="#1B4F8A" stroke-width="3" stroke-linecap="round" opacity=".35"/>
+  <!-- face -->
+  <circle cx="88" cy="90" r="3.2" fill="#123B73"/>
+  <circle cx="112" cy="90" r="3.2" fill="#123B73"/>
+  <path d="M92 102c4 6 12 6 16 0" stroke="#E85A4F" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <circle cx="80" cy="96" r="4" fill="#FFB7C5" opacity=".55"/>
+  <circle cx="120" cy="96" r="4" fill="#FFB7C5" opacity=".55"/>
+  <!-- body / apron -->
+  <path d="M74 124c6 40 20 56 26 56s20-16 26-56c-10 8-20 10-26 10s-16-2-26-10Z" fill="#FFD454" stroke="#E8B84A" stroke-width="2"/>
+  <path d="M86 128h28" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  <!-- collar -->
+  <path d="M88 124h24v8H88z" fill="#fff"/>
+  <!-- bowl -->
+  <ellipse cx="132" cy="168" rx="28" ry="14" fill="#A7D8F0" stroke="#5BAFCF" stroke-width="2"/>
+  <path d="M108 168c4 12 20 18 40 10" stroke="#5BAFCF" stroke-width="2" fill="none"/>
+  <!-- whisk hand -->
+  <path d="M58 150c8 4 18 2 24-6" stroke="#FFE6D2" stroke-width="7" stroke-linecap="round"/>
+  <path d="M78 140c-2-18 4-34 10-40" stroke="#C4A574" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M84 96c8 2 14 10 12 18M90 94c10 4 14 12 10 20M96 94c8 6 10 14 6 20" stroke="#9AA8B8" stroke-width="2" stroke-linecap="round"/>
+  <!-- hearts -->
+  <path d="M148 58c2-4 8-4 8 2 0 6-8 10-8 10s-8-4-8-10c0-6 6-6 8-2Z" fill="#FF8FAB"/>
+  <path d="M164 72c1.5-3 6-3 6 1.5 0 4.5-6 8-6 8s-6-3.5-6-8c0-4.5 4.5-4.5 6-1.5Z" fill="#FFB7C5"/>
+</svg>

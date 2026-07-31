@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" fill="none">
+  <!-- cupcake -->
+  <path d="M70 78h36l-4 42H74l-4-42Z" fill="#F4E4C8" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M66 78c4-18 16-28 22-28s18 10 22 28" fill="#FFF8F0" stroke="#fff" stroke-width="2"/>
+  <ellipse cx="88" cy="78" rx="24" ry="8" fill="#FFE4EC" stroke="#fff" stroke-width="1.5"/>
+  <circle cx="88" cy="48" r="7" fill="#F16458"/>
+  <path d="M88 42c0-4 3-6 5-4" stroke="#2F9E44" stroke-width="2" stroke-linecap="round"/>
+  <!-- cake slice -->
+  <path d="M118 96l36 10v34l-36-12V96Z" fill="#FFF5F8" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M118 96l36 10-8-18-28 8Z" fill="#FFB7C5" stroke="#fff" stroke-width="1.5"/>
+  <circle cx="132" cy="118" r="3" fill="#F16458"/>
+  <circle cx="142" cy="126" r="2.5" fill="#F16458"/>
+  <!-- donut -->
+  <circle cx="58" cy="128" r="20" fill="#FF8FAB" stroke="#fff" stroke-width="2"/>
+  <circle cx="58" cy="128" r="8" fill="#F7A9B8"/>
+  <circle cx="50" cy="120" r="1.6" fill="#FFE27A"/>
+  <circle cx="66" cy="122" r="1.6" fill="#87C9E8"/>
+  <circle cx="54" cy="134" r="1.4" fill="#fff"/>
+  <path d="M44 70l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4Z" fill="#fff" fill-opacity=".85"/>
+</svg>

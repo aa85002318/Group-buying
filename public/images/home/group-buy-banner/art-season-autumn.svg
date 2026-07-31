@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" fill="none">
+  <!-- pumpkin -->
+  <ellipse cx="78" cy="108" rx="34" ry="28" fill="#F4A261" stroke="#fff" stroke-width="2.2"/>
+  <path d="M78 80c0 56 0 56 0 56" stroke="#E76F51" stroke-width="2"/>
+  <path d="M60 84c-2 24-2 40 0 48" stroke="#E76F51" stroke-width="1.6" stroke-opacity=".7"/>
+  <path d="M96 84c2 24 2 40 0 48" stroke="#E76F51" stroke-width="1.6" stroke-opacity=".7"/>
+  <path d="M78 80c-2-12 8-16 12-8" stroke="#2F9E44" stroke-width="3" stroke-linecap="round"/>
+  <!-- chestnut -->
+  <ellipse cx="140" cy="112" rx="18" ry="22" fill="#C4A574" stroke="#fff" stroke-width="2"/>
+  <path d="M128 100c8-16 24-16 28 0" fill="#8B6914" stroke="#fff" stroke-width="1.5"/>
+  <path d="M56 58l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" fill="#FFE27A"/>
+</svg>

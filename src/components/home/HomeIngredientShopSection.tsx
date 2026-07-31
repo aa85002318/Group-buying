@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, UtensilsCrossed } from "lucide-react";
 import type { HomepageBlock } from "@/lib/types/database";
 import type { Product, ProductCategory } from "@/lib/types/database";
 import { mockProducts } from "@/lib/mock-data";
@@ -79,16 +78,16 @@ export function HomeIngredientShopSection() {
 
   return (
     <section
-      className="ingredient-shop-section bg-white py-7 md:py-10"
+      className="ingredient-shop-section mt-[15px] bg-white pb-7 pt-0 md:pb-10"
       aria-label={cmsSection.title}
     >
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
         <header className="mb-3.5 md:mb-[18px]">
-          <div className="flex items-start gap-1.5">
-            <span className="mt-0.5 inline-flex items-center gap-0.5 text-[#FFD454]" aria-hidden>
-              <Sparkles className="h-4 w-4 fill-[#FFD454] text-[#FFD454]" />
-              <UtensilsCrossed className="h-3.5 w-3.5 text-[#153E73]" />
-            </span>
+          <div className="flex items-start gap-2">
+            <span
+              className="mt-[5px] h-7 w-1.5 shrink-0 rounded-full bg-[#FFD454]"
+              aria-hidden
+            />
             <div className="min-w-0">
               <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">
                 {cmsSection.title}

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" fill="none">
+  <!-- stand mixer -->
+  <rect x="78" y="108" width="52" height="10" rx="3" fill="#F0E6D0" stroke="#fff" stroke-width="1.8"/>
+  <path d="M92 108V72h10c14 0 24 8 24 20v16H102" fill="#FFD454" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="112" cy="78" r="5" fill="#fff" stroke="#E8B84A" stroke-width="1.5"/>
+  <ellipse cx="102" cy="108" rx="16" ry="7" fill="#D9E2EC" stroke="#fff" stroke-width="1.8"/>
+  <path d="M102 72V58" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="102" cy="54" r="5" fill="#87C9E8" stroke="#fff" stroke-width="1.5"/>
+  <!-- spatula -->
+  <path d="M48 128l8-46" stroke="#C4A574" stroke-width="4" stroke-linecap="round"/>
+  <path d="M48 82c-6-2-10 4-8 12l10 22c4-14 8-24 6-32Z" fill="#F16458" stroke="#fff" stroke-width="1.8"/>
+  <!-- measuring cup -->
+  <path d="M148 88h22l-4 44h-18l-0-44Z" fill="#E8F6FC" fill-opacity=".85" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M150 104h16" stroke="#87C9E8" stroke-width="2"/>
+  <path d="M150 114h16" stroke="#87C9E8" stroke-width="2"/>
+  <path d="M170 96h10v12h-8" stroke="#fff" stroke-width="2" stroke-linejoin="round" fill="none"/>
+  <path d="M60 58l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5 1.5-4Z" fill="#fff" fill-opacity=".85"/>
+</svg>

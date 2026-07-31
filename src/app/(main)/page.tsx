@@ -152,7 +152,8 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       return null;
     case "quick_entry":
     case "ingredient_shop":
-      // Rendered inside HomeHeroSection band (after search / recipes)
+    case "group_buy_banner":
+      // Rendered inside HomeHeroSection band (after search / recipes / materials)
       return null;
     case "hero":
       return <HomeHeroSection key={reactKey} />;

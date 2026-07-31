@@ -27,6 +27,8 @@ export type HomeAdminSectionMeta = {
   hasProductSeriesSettings?: boolean;
   /** Ingredient shop: source, sort, more card */
   hasIngredientShopSettings?: boolean;
+  /** Group-buy 4-tile chalk banner */
+  hasGroupBuyBannerSettings?: boolean;
   /** Banner strip: custom placement */
   hasBannerPlacement?: boolean;
   /** Shown in "add block" catalog */
@@ -107,6 +109,16 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     hasDisplayCount: true,
     hasViewAllUrl: true,
     hasIngredientShopSettings: true,
+    catalog: true,
+  },
+  {
+    id: "group_buy_banner",
+    label: "團購四格 Banner",
+    description:
+      "一鍵買齊材料下方：四格粉筆分類、IP、品牌優勢。可改分類名／色／插畫、季節圖、IP 與優勢文案。",
+    contentMode: "manual",
+    hasViewAllUrl: true,
+    hasGroupBuyBannerSettings: true,
     catalog: true,
   },
   {
