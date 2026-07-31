@@ -153,7 +153,9 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "quick_entry":
     case "ingredient_shop":
     case "group_buy_banner":
-      // Rendered inside HomeHeroSection band (after search / recipes / materials)
+    case "closing_group_buys":
+    case "weekly_live_streams":
+      // Band sections: hero / materials / group-buy banner+hub (avoid duplicate rails)
       return null;
     case "hero":
       return <HomeHeroSection key={reactKey} />;

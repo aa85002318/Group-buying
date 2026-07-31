@@ -17,6 +17,7 @@ import { HomeQuickServicesSection } from "./HomeQuickServicesSection";
 import { WeeklyPopularRecipesSection } from "./weekly-recipes/WeeklyPopularRecipesSection";
 import { HomeIngredientShopSection } from "./HomeIngredientShopSection";
 import { HomeGroupBuyBannerSection } from "./group-buy-banner/HomeGroupBuyBannerSection";
+import { HomeGroupBuyHubBand } from "./group-buy-hub/HomeGroupBuyHubBand";
 
 function normalizePosition(
   value: unknown,
@@ -174,6 +175,7 @@ export function HomeHeroSection() {
     <WeeklyPopularRecipesSection />
     <HomeIngredientShopSection />
     <HomeGroupBuyBannerSection />
+    <HomeGroupBuyHubBand />
     </>
   );
 }

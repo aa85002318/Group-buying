@@ -767,6 +767,35 @@
     }
   }
 
+  /* ── Group-buy hub band (after banner) ── */
+  .gb-hub-band {
+    width: 100%;
+    margin: 0;
+    padding: 32px 0 28px;
+    background: #fffefa;
+    box-sizing: border-box;
+  }
+
+  .gb-hub-band-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .gb-hub-section {
+    width: 100%;
+  }
+
+  .gb-hub-rail {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .gb-hub-rail > * {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
   .ingredient-shop-scroll {
     scroll-snap-type: x proximity;
     scrollbar-width: none;
