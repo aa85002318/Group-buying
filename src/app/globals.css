@@ -279,7 +279,7 @@
 
   .coverflow-track,
   .recipe-weekly-track {
-    --recipe-card-width: clamp(258px, 68vw, 300px);
+    --recipe-card-width: clamp(248px, 64vw, 292px);
 
     display: flex;
     align-items: flex-start;
@@ -320,9 +320,9 @@
 
   .recipe-coverflow-card,
   .recipe-card {
-    flex: 0 0 var(--recipe-card-width, clamp(258px, 68vw, 300px));
-    width: var(--recipe-card-width, clamp(258px, 68vw, 300px));
-    max-width: calc(100vw - 72px);
+    flex: 0 0 var(--recipe-card-width, clamp(248px, 64vw, 292px));
+    width: var(--recipe-card-width, clamp(248px, 64vw, 292px));
+    max-width: calc(100vw - 88px);
     height: auto;
     min-height: 0;
     max-height: none;

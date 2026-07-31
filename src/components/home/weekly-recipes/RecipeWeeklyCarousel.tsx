@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -33,6 +34,24 @@ function nearestIndex(container: HTMLDivElement, count: number) {
     }
   });
   return Math.min(best, count - 1);
+}
+
+/** Start on the middle card so both left and right peeks are visible. */
+function middleRecipeIndex(count: number) {
+  if (count <= 1) return 0;
+  return Math.floor((count - 1) / 2);
+}
+
+function scrollCardIntoCenter(
+  container: HTMLDivElement,
+  index: number,
+  behavior: ScrollBehavior = "auto"
+) {
+  const card = container.querySelectorAll<HTMLElement>(".recipe-weekly-card")[index];
+  if (!card) return;
+  const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+  const target = cardCenter - container.clientWidth / 2;
+  container.scrollTo({ left: Math.max(0, target), behavior });
 }
 
 /** Fixed dual arcs — outside the scroll track so they do not slide with cards. */
@@ -73,6 +92,7 @@ type DragState = {
 export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: DemoRecipe[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
+  const didInitCenter = useRef(false);
   const drag = useRef<DragState>({
     active: false,
     axis: "undecided",
@@ -82,7 +102,7 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
     moved: false,
     pointerId: null,
   });
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(() => middleRecipeIndex(recipes.length));
   const [showHint, setShowHint] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -109,29 +129,39 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
     return () => motion.removeEventListener("change", sync);
   }, []);
 
+  /** Center the middle recipe on first paint so left + right peeks both show. */
+  useLayoutEffect(() => {
+    const el = trackRef.current;
+    if (!el || recipes.length === 0) return;
+    const mid = middleRecipeIndex(recipes.length);
+    setActive(mid);
+    scrollCardIntoCenter(el, mid, "auto");
+    didInitCenter.current = true;
+  }, [recipes.length]);
+
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
     updateActive();
     el.addEventListener("scroll", scheduleUpdate, { passive: true });
-    window.addEventListener("resize", scheduleUpdate);
+    const onResize = () => {
+      const current = nearestIndex(el, recipes.length);
+      scrollCardIntoCenter(el, current, "auto");
+      scheduleUpdate();
+    };
+    window.addEventListener("resize", onResize);
     return () => {
       el.removeEventListener("scroll", scheduleUpdate);
-      window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("resize", onResize);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [scheduleUpdate, updateActive]);
+  }, [scheduleUpdate, updateActive, recipes.length]);
 
   const scrollTo = useCallback(
     (index: number) => {
       const el = trackRef.current;
       if (!el) return;
-      const card = el.querySelectorAll<HTMLElement>(".recipe-weekly-card")[index];
-      card?.scrollIntoView({
-        behavior: reducedMotion ? "auto" : "smooth",
-        inline: "center",
-        block: "nearest",
-      });
+      scrollCardIntoCenter(el, index, reducedMotion ? "auto" : "smooth");
       setActive(index);
       setShowHint(false);
     },
