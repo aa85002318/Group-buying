@@ -44,12 +44,13 @@ export function HomeCategoryDrawer({
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const focusReturn = returnFocusRef?.current;
     const t = window.setTimeout(() => closeRef.current?.focus(), 30);
     return () => {
       document.body.style.overflow = prev;
       window.clearTimeout(t);
       setQuery("");
-      returnFocusRef?.current?.focus();
+      focusReturn?.focus();
     };
   }, [open, returnFocusRef]);
 

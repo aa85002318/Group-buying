@@ -44,8 +44,10 @@ export async function GET(request: Request) {
   }
 
   const admin = createAdminClient();
-  let query = admin.from("cms_banners").select("*").order("sort_order", { ascending: true });
-  const { data, error } = await query;
+  const { data, error } = await admin
+    .from("cms_banners")
+    .select("*")
+    .order("sort_order", { ascending: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   let rows = data ?? [];
