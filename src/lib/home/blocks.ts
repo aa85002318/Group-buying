@@ -81,7 +81,7 @@ export const SECTION_DEFAULTS: Record<
   },
   group_buy_banner: {
     title: "團購 Banner 輪播",
-    displayCount: 4,
+    displayCount: 5,
     visible: true,
     viewAllUrl: "/group-buy",
     config: { ...DEFAULT_GROUP_BUY_BANNER_SETTINGS },
