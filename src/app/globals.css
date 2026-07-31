@@ -118,9 +118,9 @@
     width: 100%;
     margin: 0;
     padding:
-      calc(env(safe-area-inset-top, 0px) + 12px)
+      calc(env(safe-area-inset-top, 0px) + 8px)
       15px
-      12px;
+      6px;
     background: #fde045;
   }
 
@@ -152,7 +152,7 @@
 
     .home-hero-top-bar {
       padding-inline: 24px;
-      padding-bottom: 14px;
+      padding-bottom: 8px;
     }
   }
 
@@ -1465,7 +1465,7 @@
   .mall-hero-frame {
     position: relative;
     width: 100%;
-    aspect-ratio: 2 / 1;
+    aspect-ratio: 6 / 5;
     overflow: hidden;
     border-radius: 20px;
     background: #ffd454;
@@ -1482,17 +1482,18 @@
     pointer-events: none;
   }
 
-  /* Hotspots over the baked-in shortcut strip (bottom-left) */
+  /* Hotspots over baked-in shortcut strip — mobile full-width bottom */
   .mall-hero-shortcuts {
     position: absolute;
-    left: 3.2%;
-    bottom: 6.5%;
+    left: 3.5%;
+    right: 3.5%;
+    bottom: 3.5%;
     z-index: 2;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    width: 45%;
-    height: 20%;
-    max-width: 420px;
+    width: auto;
+    height: 13%;
+    max-width: none;
   }
 
   .mall-hero-shortcut {
@@ -1514,12 +1515,21 @@
     .mall-hero-frame {
       border-radius: 24px;
     }
+  }
 
+  @media (min-width: 1024px) {
+    .mall-hero-frame {
+      aspect-ratio: 5 / 2;
+    }
+
+    /* Desktop art: shortcuts sit bottom-left */
     .mall-hero-shortcuts {
       left: 3.5%;
+      right: auto;
       bottom: 7%;
       width: 43%;
       height: 18%;
+      max-width: 420px;
     }
   }
 

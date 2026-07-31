@@ -27,18 +27,18 @@ function BannerSlide({
   const mobile = banner.mobile_image || banner.desktop_image;
   const media = (
     <picture>
-      <source media="(max-width: 767px)" srcSet={mobile} />
+      <source media="(max-width: 1023px)" srcSet={mobile} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={desktop}
         alt={banner.title}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover object-center"
         draggable={false}
         decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : "auto"}
         onError={(e) => {
           const el = e.currentTarget;
-          if (el.src.includes("hero-default")) return;
+          if (el.src.includes("hero-desktop") || el.src.includes("hero-default")) return;
           el.src = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
         }}
       />

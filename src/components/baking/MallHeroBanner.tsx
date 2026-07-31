@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-const HERO_IMAGE = "/images/mall/hero-banner.jpg";
+const HERO_DESKTOP = "/images/shop/hero-desktop.jpg";
+const HERO_MOBILE = "/images/shop/hero-mobile.jpg";
 
 const SHORTCUTS = [
   {
@@ -28,21 +29,25 @@ const SHORTCUTS = [
 /**
  * 商城頁 Hero Banner — full-bleed art + tappable shortcut hotspots
  * over the baked-in shortcut strip (今日新品／團購／門市／AI).
+ * Desktop 1500×600 (5:2) · Mobile 1080×900 (6:5)
  */
 export function MallHeroBanner() {
   return (
     <section className="mall-hero-banner" aria-label="烘焙好物商城">
       <div className="mall-hero-frame">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={HERO_IMAGE}
-          alt="烘焙好物商城：精選超過 4,000 項商品，材料、器具、包裝一次購足"
-          className="mall-hero-img"
-          width={1000}
-          height={500}
-          fetchPriority="high"
-          decoding="async"
-        />
+        <picture>
+          <source media="(max-width: 1023px)" srcSet={HERO_MOBILE} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={HERO_DESKTOP}
+            alt="烘焙好物商城：精選超過 4,000 項商品，材料、器具、包裝一次購足"
+            className="mall-hero-img"
+            width={1500}
+            height={600}
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
 
         <nav className="mall-hero-shortcuts" aria-label="商城快捷入口">
           {SHORTCUTS.map((item) => (
