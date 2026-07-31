@@ -42,7 +42,7 @@ export function getCoverflowStyle(
         : "translateY(34px) scale(0.80) rotateY(-8deg) rotateZ(2deg)",
       opacity: 0.6,
       zIndex: 8,
-      filter: "saturate(0.82) brightness(0.97)",
+      filter: "none",
     };
   }
 
@@ -50,7 +50,7 @@ export function getCoverflowStyle(
     transform: "translateY(48px) scale(0.72)",
     opacity: 0.32,
     zIndex: 2,
-    filter: "saturate(0.7) brightness(0.94)",
+    filter: "none",
   };
 }
 
