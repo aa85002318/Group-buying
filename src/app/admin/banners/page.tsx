@@ -143,7 +143,7 @@ function AdminBannersClient() {
       return;
     }
     if (isShopHero && !form.image_url.trim()) {
-      alert("請上傳商城 Hero 桌面圖片（建議 1500×600、比例 5:2）");
+      alert("請上傳商城 Hero 桌面圖片（滿寬完整顯示、兩側不裁切）");
       return;
     }
     setSaving(true);
@@ -266,7 +266,7 @@ function AdminBannersClient() {
               form.placement === "home_weekly_promo"
                 ? "優惠圖片（建議 720×360 px）"
                 : form.placement === "shop_hero"
-                  ? "桌面圖（建議 1500×600、5:2）"
+                  ? "桌面圖（完整顯示、兩側不裁切；建議寬 1500px）"
                   : "桌機圖"
             }
             images={form.image_url ? [form.image_url] : []}
@@ -280,7 +280,7 @@ function AdminBannersClient() {
           <AdminImageUpload
             label={
               form.placement === "shop_hero"
-                ? "手機圖（建議 1080×900；未設定則使用桌面圖）"
+                ? "手機圖（完整顯示、兩側不裁切；未設定則使用桌面圖）"
                 : "手機版圖片（建議 750×700 px；未設定則使用桌機圖）"
             }
             images={form.mobile_image_url ? [form.mobile_image_url] : []}
@@ -293,7 +293,7 @@ function AdminBannersClient() {
           />
           {form.placement === "shop_hero" ? (
             <p className="text-xs text-muted-foreground">
-              商城 Hero 為滿版輪播（無圓角卡片）。桌面／手機可分開上傳；比例差異過大時仍可儲存。
+              商城 Hero 比照首頁：滿寬、高度隨圖片比例、兩側不裁切（object-contain）。底色 #FDE045。
             </p>
           ) : null}
           <div className="grid gap-3 sm:grid-cols-2">

@@ -446,30 +446,31 @@
   }
 
   /* ── Shop hero (full-bleed) + search ── */
+  /* Same model as homepage hero: width 100%, intrinsic height, no side crop */
   .shop-hero-banner {
     width: 100%;
     max-width: none;
     margin: 0;
     padding: 0;
-    background: #ffd54f;
+    background: #fde045;
   }
 
   .shop-hero-frame {
-    aspect-ratio: 6 / 5;
+    position: relative;
     width: 100%;
-    background: #ffe889;
+    background: #fde045;
   }
 
-  @media (min-width: 640px) {
-    .shop-hero-frame {
-      aspect-ratio: 16 / 7;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .shop-hero-frame {
-      aspect-ratio: 5 / 2;
-    }
+  .shop-hero-img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+    user-select: none;
+    pointer-events: none;
+    vertical-align: top;
   }
 
   .shop-hero-nav {
@@ -1457,42 +1458,44 @@
   }
 
   /* ── Mall (商城) hero banner ── */
+  /* Mall hero — same display model as homepage: full width, intrinsic height, no side crop */
   .mall-hero-banner {
     width: 100%;
     margin: 0 0 14px;
+    background: #fde045;
   }
 
   .mall-hero-frame {
     position: relative;
     width: 100%;
-    aspect-ratio: 2 / 1;
     overflow: hidden;
-    border-radius: 20px;
-    background: #ffd454;
-    box-shadow: 0 8px 20px rgba(21, 62, 115, 0.08);
+    background: #fde045;
   }
 
   .mall-hero-img {
     display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
     object-position: center;
     user-select: none;
     pointer-events: none;
+    vertical-align: top;
   }
 
-  /* Hotspots over the baked-in shortcut strip (bottom-left) */
+  /* Hotspots over the baked-in full-width shortcut strip */
   .mall-hero-shortcuts {
     position: absolute;
-    left: 3.2%;
-    bottom: 6.5%;
+    left: 50%;
+    bottom: 3.5%;
     z-index: 2;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    width: 45%;
-    height: 20%;
-    max-width: 420px;
+    width: 92%;
+    max-width: 720px;
+    height: 14%;
+    transform: translateX(-50%);
   }
 
   .mall-hero-shortcut {
@@ -1511,15 +1514,11 @@
       margin-bottom: 18px;
     }
 
-    .mall-hero-frame {
-      border-radius: 24px;
-    }
-
     .mall-hero-shortcuts {
-      left: 3.5%;
-      bottom: 7%;
-      width: 43%;
-      height: 18%;
+      bottom: 4%;
+      width: 70%;
+      max-width: 640px;
+      height: 12%;
     }
   }
 

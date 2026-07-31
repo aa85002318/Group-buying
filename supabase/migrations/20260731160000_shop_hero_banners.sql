@@ -32,8 +32,8 @@ INSERT INTO cms_banners (
 SELECT
   '烘焙好物商城',
   '精選超過 4,000 項商品，材料、器具、包裝一次購足',
-  '/images/shop/hero-desktop.jpg',
-  '/images/shop/hero-mobile.jpg',
+  '/images/shop/hero-default.jpg',
+  '/images/shop/hero-default.jpg',
   '/baking-materials',
   '立即逛商城',
   'shop_hero',

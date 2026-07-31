@@ -27,28 +27,33 @@ function BannerSlide({
   const mobile = banner.mobile_image || banner.desktop_image;
   const media = (
     <picture>
-      <source media="(max-width: 1023px)" srcSet={mobile} />
+      <source media="(max-width: 767px)" srcSet={mobile} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={desktop}
         alt={banner.title}
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        className="shop-hero-img"
         draggable={false}
         decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : "auto"}
         onError={(e) => {
           const el = e.currentTarget;
-          if (el.src.includes("hero-desktop") || el.src.includes("hero-default")) return;
+          if (el.src.includes("hero-default")) return;
           el.src = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
         }}
       />
     </picture>
   );
 
+  const className = cn(
+    "shop-hero-slide relative min-w-0 flex-[0_0_100%]",
+    banner.link ? "cursor-pointer" : "cursor-default"
+  );
+
   if (!banner.link) {
     return (
-      <div className="shop-hero-slide relative min-w-0 flex-[0_0_100%]">
-        <div className="shop-hero-frame relative w-full">{media}</div>
+      <div className={className}>
+        <div className="shop-hero-frame">{media}</div>
       </div>
     );
   }
@@ -59,27 +64,24 @@ function BannerSlide({
         href={banner.link}
         target="_blank"
         rel="noopener noreferrer"
-        className="shop-hero-slide relative min-w-0 flex-[0_0_100%] cursor-pointer"
+        className={className}
         aria-label={banner.title}
       >
-        <div className="shop-hero-frame relative w-full">{media}</div>
+        <div className="shop-hero-frame">{media}</div>
       </a>
     );
   }
 
   return (
-    <Link
-      href={banner.link}
-      className="shop-hero-slide relative min-w-0 flex-[0_0_100%] cursor-pointer"
-      aria-label={banner.title}
-    >
-      <div className="shop-hero-frame relative w-full">{media}</div>
+    <Link href={banner.link} className={className} aria-label={banner.title}>
+      <div className="shop-hero-frame">{media}</div>
     </Link>
   );
 }
 
 /**
- * Full-bleed shop hero carousel — outside page containers; CMS-backed.
+ * Full-bleed shop hero — same display model as homepage hero:
+ * width 100%, height auto, no side crop (object-fit not cover).
  */
 export function ShopHeroBanner() {
   const [banners, setBanners] = useState<ShopHeroBannerType[]>(DEFAULT_SHOP_HERO_BANNERS);
@@ -124,12 +126,12 @@ export function ShopHeroBanner() {
 
   return (
     <section
-      className="shop-hero-banner relative w-full overflow-hidden bg-[#FFD54F]"
+      className="shop-hero-banner relative w-full overflow-hidden bg-[#FDE045]"
       aria-label="商城主視覺"
       aria-busy={loading}
     >
       <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex touch-pan-y">
+        <div className="flex touch-pan-y items-start">
           {banners.map((banner, i) => (
             <BannerSlide key={banner.id} banner={banner} priority={i === 0} />
           ))}
@@ -170,7 +172,7 @@ export function ShopHeroBanner() {
       ) : null}
 
       {loading ? (
-        <div className="pointer-events-none absolute inset-0 animate-pulse bg-[#FFE889]/40" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 animate-pulse bg-[#FDE045]/50" aria-hidden />
       ) : null}
     </section>
   );
