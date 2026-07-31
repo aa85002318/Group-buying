@@ -31,7 +31,7 @@ export const SECTION_DEFAULTS: Record<
     config?: Record<string, unknown>;
   }
 > = {
-  hero: { title: "Hero Banner", displayCount: 5, visible: true, dataSource: "brand_heroes" },
+  hero: { title: "主視覺 Banner", displayCount: 5, visible: true, dataSource: "brand_heroes" },
   latest_campaigns: {
     title: "最新活動",
     displayCount: 6,

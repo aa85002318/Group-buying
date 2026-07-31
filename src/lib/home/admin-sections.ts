@@ -52,9 +52,9 @@ export type HomeAdminSectionMeta = {
 export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   {
     id: "hero",
-    label: "Hero Banner",
+    label: "主視覺 Banner",
     description:
-      "首頁主視覺。可上傳桌機／手機圖並調整標題與搜尋。建議桌機 1024×479、手機 885×917。",
+      "首頁最上方主視覺。可上傳桌機／手機圖並調整標題與搜尋。建議桌機 1500×600、手機 1080×900。",
     contentMode: "external",
     hasHeroEditor: true,
     catalog: true,
@@ -63,7 +63,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     id: "latest_campaigns",
     label: "最新活動",
     description:
-      "搜尋列下方活動輪播。可新增／刪除圖片，並指定文章、站內頁或商品連結。建議 1000×400（5:2）。",
+      "搜尋列下方活動輪播。可新增／刪除圖片，並指定文章、站內頁或商品連結。建議 1200×600（2:1）。",
     contentMode: "manual",
     hasLatestCampaignSettings: true,
     hasViewAllUrl: true,
@@ -71,9 +71,9 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   },
   {
     id: "quick_entry",
-    label: "常用服務",
+    label: "常用服務／會員中心",
     description:
-      "圓形常用服務＋會員中心。可指定連結、上傳素材、更換底色（內建色卡）。",
+      "圓形常用服務＋會員中心卡。可指定連結、上傳素材、更換底色（內建色卡）。",
     contentMode: "manual",
     hasQuickServicesSettings: true,
     catalog: true,
@@ -105,7 +105,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   {
     id: "group_buy_banner",
     label: "團購輪播 Banner",
-    description: "可上傳或刪除輪播圖（建議 1200×480／5:2）與下方優勢文案。",
+    description: "可上傳或刪除輪播圖（建議 1500×600／5:2）與下方優勢文案。",
     contentMode: "manual",
     hasViewAllUrl: true,
     hasGroupBuyBannerSettings: true,
@@ -164,7 +164,7 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
     id: "service_shortcuts",
     label: "服務快捷入口",
     description:
-      "固定 1:1 按鈕。可指定連結、上傳素材。圖片建議 512×512 或 1024×1024。",
+      "頁面底部 1:1 快捷按鈕。可指定連結、上傳素材。圖片建議 400×400。",
     contentMode: "manual",
     hasServiceShortcutsSettings: true,
     hasDisplayCount: true,

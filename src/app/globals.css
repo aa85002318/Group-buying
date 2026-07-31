@@ -535,13 +535,50 @@
     max-width: none;
     margin: 0;
     padding: 14px 16px 0;
-    background: #fffefa;
+    background: #ffffff;
   }
 
   @media (min-width: 768px) {
     .shop-search-bar-wrap {
       padding: 20px 24px 0;
     }
+  }
+
+  /* Shop category menu — 20px below search, 28px above promo */
+  .shop-category-menu {
+    padding-top: 20px;
+    padding-bottom: 28px;
+    background: #ffffff;
+  }
+
+  .shop-category-menu__track {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .shop-category-menu__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .shop-promo-carousel__frame {
+    aspect-ratio: 5 / 2;
+    min-height: 140px;
+  }
+
+  @media (max-width: 639px) {
+    .shop-promo-carousel__frame {
+      aspect-ratio: 16 / 9;
+      min-height: 148px;
+    }
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   .shop-search-bar {

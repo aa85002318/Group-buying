@@ -38,7 +38,7 @@ export function HomeServiceShortcutsSection() {
         const block = resolveHomeBlock(blocks, "service_shortcuts");
         const row = blocks.find((b) => b.block_key === "service_shortcuts");
         setVisible(row ? row.is_visible !== false : true);
-        setTitle(block.title || "快捷服務入口");
+        setTitle(block.title || "服務快捷入口");
         setItems(parseServiceShortcuts(block.config));
       } catch {
         // keep defaults

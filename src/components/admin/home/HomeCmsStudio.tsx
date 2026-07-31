@@ -32,6 +32,7 @@ import {
 import { parseCategoryMenu, type HomeCategoryMenuItem } from "@/lib/home/category-menu";
 import { parseServiceShortcuts, type ServiceShortcutItem } from "@/lib/home/service-shortcuts";
 import {
+  HOME_SECTION_SORT_DEFAULT,
   isSingletonHomeSection,
   PRIMARY_HOME_SECTION_KEYS,
   type HomeSectionKey,
@@ -63,7 +64,31 @@ const FIXED_FUNCTION_KEYS = new Set<HomeSectionKey>([
   "weekly_live_streams",
   "chime_select",
   "quick_entry",
+  "hero",
+  "service_shortcuts",
 ]);
+
+const PRIMARY_KEY_SET = new Set<string>(PRIMARY_HOME_SECTION_KEYS);
+
+function primaryRank(blockKey: string): number {
+  const idx = PRIMARY_HOME_SECTION_KEYS.indexOf(blockKey as HomeSectionKey);
+  return idx >= 0 ? idx : 999;
+}
+
+/** Sort like the live homepage: primary stack first (canonical order), then legacy. */
+function sortBlocksLikeHomepage(blocks: HomepageBlock[]): HomepageBlock[] {
+  return [...blocks].sort((a, b) => {
+    const aPrimary = PRIMARY_KEY_SET.has(a.block_key);
+    const bPrimary = PRIMARY_KEY_SET.has(b.block_key);
+    if (aPrimary && bPrimary) {
+      const rank = primaryRank(a.block_key) - primaryRank(b.block_key);
+      if (rank !== 0) return rank;
+    } else if (aPrimary !== bPrimary) {
+      return aPrimary ? -1 : 1;
+    }
+    return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+  });
+}
 
 export function HomeCmsStudio() {
   const [blocks, setBlocks] = useState<HomepageBlock[]>([]);
@@ -133,12 +158,55 @@ export function HomeCmsStudio() {
   };
 
   const moveSection = async (block: HomepageBlock, dir: -1 | 1) => {
-    const ordered = [...blocks].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    const ordered = sortBlocksLikeHomepage(blocks);
     const idx = ordered.findIndex((b) => b.id === block.id);
     const swap = ordered[idx + dir];
     if (!swap) return;
+    // Keep primary keys on canonical sort slots when both are primary
+    const aKey = block.block_key as HomeSectionKey;
+    const bKey = swap.block_key as HomeSectionKey;
+    if (PRIMARY_KEY_SET.has(aKey) && PRIMARY_KEY_SET.has(bKey)) {
+      await patch(block.id, {
+        sort_order: HOME_SECTION_SORT_DEFAULT[bKey] ?? swap.sort_order,
+      });
+      await patch(swap.id, {
+        sort_order: HOME_SECTION_SORT_DEFAULT[aKey] ?? block.sort_order,
+      });
+      return;
+    }
     await patch(block.id, { sort_order: swap.sort_order });
     await patch(swap.id, { sort_order: block.sort_order });
+  };
+
+  const syncPrimaryOrder = async () => {
+    if (!confirm("將右側核心區塊順序重設為與前台一致？")) return;
+    setCatalogBusy(true);
+    try {
+      for (const key of PRIMARY_HOME_SECTION_KEYS) {
+        const block = blocks.find((b) => b.block_key === key);
+        if (!block) continue;
+        const meta = getSectionMeta(key);
+        await fetch("/api/admin/cms", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            kind: "block",
+            id: block.id,
+            target: "draft",
+            sort_order: HOME_SECTION_SORT_DEFAULT[key],
+            title: meta?.label?.includes("／")
+              ? meta.label.split("／")[0]
+              : meta?.label || block.title,
+          }),
+        });
+      }
+      await load();
+      setPreviewKey((k) => k + 1);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "同步失敗");
+    } finally {
+      setCatalogBusy(false);
+    }
   };
 
   const addBlock = async (blockKey: HomeSectionKey) => {
@@ -194,9 +262,14 @@ export function HomeCmsStudio() {
     }
   };
 
-  const orderedBlocks = useMemo(
-    () => [...blocks].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-    [blocks]
+  const orderedBlocks = useMemo(() => sortBlocksLikeHomepage(blocks), [blocks]);
+  const primaryBlocks = useMemo(
+    () => orderedBlocks.filter((b) => PRIMARY_KEY_SET.has(b.block_key)),
+    [orderedBlocks]
+  );
+  const legacyBlocks = useMemo(
+    () => orderedBlocks.filter((b) => !PRIMARY_KEY_SET.has(b.block_key)),
+    [orderedBlocks]
   );
 
   const catalogItems = HOME_ADMIN_SECTIONS.filter((s) => {
@@ -210,7 +283,7 @@ export function HomeCmsStudio() {
   const previewSrc = `/admin/home/preview?embed=1&v=${previewKey}&device=${previewDevice}`;
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col gap-3">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col gap-2">
       <AdminPageHeader
         title="首頁 CMS"
         description="固定版型模組化管理：左側即時預覽、右側素材設定。草稿不影響正式前台，發布後才上線。"
@@ -251,6 +324,14 @@ export function HomeCmsStudio() {
           <Eye className="mr-1 h-3.5 w-3.5" />
           預覽變更
         </Link>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={catalogBusy}
+          onClick={() => void syncPrimaryOrder()}
+        >
+          對齊前台順序
+        </Button>
         {dirtyHint ? (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
             有未發布草稿變更
@@ -268,9 +349,10 @@ export function HomeCmsStudio() {
         </p>
       ) : null}
 
-      <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(320px,1fr)_minmax(420px,480px)]">
-        {/* Left preview */}
-        <div className="overflow-hidden rounded-xl border border-border bg-[#F3F5F8] shadow-card">
+      {/* Preview-first: ~70% left / ~30% right on large screens */}
+      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_380px]">
+        {/* Left preview — larger */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-[#F3F5F8] shadow-card">
           <div className="flex items-center justify-between border-b border-border bg-white px-3 py-2">
             <p className="text-sm font-semibold text-coffee">首頁即時預覽（草稿）</p>
             <button
@@ -281,11 +363,13 @@ export function HomeCmsStudio() {
               重新整理
             </button>
           </div>
-          <div className="flex justify-center overflow-auto p-3">
+          <div className="flex min-h-0 flex-1 justify-center overflow-auto p-2 md:p-4">
             <div
               className={cn(
                 "overflow-hidden rounded-xl border border-border bg-white shadow-lg",
-                previewDevice === "mobile" ? "w-[390px]" : "w-full max-w-[1100px]"
+                previewDevice === "mobile"
+                  ? "w-full max-w-[430px]"
+                  : "w-full max-w-[1280px]"
               )}
             >
               <iframe
@@ -293,34 +377,36 @@ export function HomeCmsStudio() {
                 title="首頁草稿預覽"
                 src={previewSrc}
                 className={cn(
-                  "w-full border-0",
-                  previewDevice === "mobile" ? "h-[720px]" : "h-[780px]"
+                  "w-full border-0 bg-white",
+                  previewDevice === "mobile"
+                    ? "h-[min(860px,calc(100vh-11rem))] min-h-[720px]"
+                    : "h-[min(920px,calc(100vh-11rem))] min-h-[760px]"
                 )}
               />
             </div>
           </div>
           <p className="border-t border-border bg-white px-3 py-2 text-[11px] text-muted-foreground">
-            點右側區塊「設定」可編輯；預覽依草稿資料顯示。正式前台需點「發布更新」。
+            預覽依草稿顯示。右側順序已對齊前台核心區塊；正式前台需「發布更新」。
           </p>
         </div>
 
-        {/* Right settings */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-white shadow-card">
+        {/* Right settings — narrower */}
+        <div className="flex max-h-[calc(100vh-10rem)] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-white shadow-card lg:sticky lg:top-2">
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
             <div>
               <p className="text-sm font-semibold text-coffee">區塊與素材設定</p>
               <p className="text-[11px] text-muted-foreground">
-                預設順序：{PRIMARY_HOME_SECTION_KEYS.length} 個核心區塊
+                依前台順序 · {PRIMARY_HOME_SECTION_KEYS.length} 個核心區塊
               </p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setShowCatalog((v) => !v)}>
               <Plus className="mr-1 h-3.5 w-3.5" />
-              新增區塊
+              新增
             </Button>
           </div>
 
           {showCatalog ? (
-            <div className="max-h-48 space-y-1 overflow-y-auto border-b border-border bg-surface-soft/50 p-2">
+            <div className="max-h-40 space-y-1 overflow-y-auto border-b border-border bg-surface-soft/50 p-2">
               {catalogItems.map((s) => (
                 <button
                   key={s.id}
@@ -343,33 +429,102 @@ export function HomeCmsStudio() {
             {loading ? (
               <p className="p-3 text-sm text-muted-foreground">載入中…</p>
             ) : (
-              orderedBlocks.map((block, index) => {
-                const meta =
-                  getSectionMeta(block.block_key) ||
-                  ({
-                    id: block.block_key as HomeSectionKey,
-                    label: block.title || block.block_key,
-                    description: "",
-                    contentMode: "manual",
-                  } as HomeAdminSectionMeta);
-                return (
-                  <SectionPanel
-                    key={block.id}
-                    section={meta}
-                    block={block}
-                    index={index}
-                    open={expanded === block.id}
-                    saving={savingId === block.id}
-                    onToggle={() =>
-                      setExpanded((cur) => (cur === block.id ? null : block.id))
-                    }
-                    onPatch={patch}
-                    onMove={moveSection}
-                    onRemove={removeBlock}
-                    canDelete={!FIXED_FUNCTION_KEYS.has(block.block_key as HomeSectionKey)}
-                  />
-                );
-              })
+              <>
+                <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[#153E73]/70">
+                  前台核心區塊
+                </p>
+                {primaryBlocks.map((block, index) => {
+                  const meta =
+                    getSectionMeta(block.block_key) ||
+                    ({
+                      id: block.block_key as HomeSectionKey,
+                      label: block.title || block.block_key,
+                      description: "",
+                      contentMode: "manual",
+                    } as HomeAdminSectionMeta);
+                  return (
+                    <SectionPanel
+                      key={block.id}
+                      section={meta}
+                      block={block}
+                      index={index}
+                      open={expanded === block.id}
+                      saving={savingId === block.id}
+                      displayLabel={meta.label}
+                      onToggle={() =>
+                        setExpanded((cur) => (cur === block.id ? null : block.id))
+                      }
+                      onPatch={patch}
+                      onMove={moveSection}
+                      onRemove={removeBlock}
+                      canDelete={!FIXED_FUNCTION_KEYS.has(block.block_key as HomeSectionKey)}
+                    />
+                  );
+                })}
+                {PRIMARY_HOME_SECTION_KEYS.filter(
+                  (key) => !primaryBlocks.some((b) => b.block_key === key)
+                ).map((key) => {
+                  const meta = getSectionMeta(key);
+                  return (
+                    <div
+                      key={`missing-${key}`}
+                      className="rounded-xl border border-dashed border-amber-300 bg-amber-50/70 p-3"
+                    >
+                      <p className="text-sm font-semibold text-coffee">
+                        {meta?.label || key}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        前台有此區塊，草稿尚未加入
+                      </p>
+                      <Button
+                        size="sm"
+                        className="mt-2"
+                        variant="outline"
+                        disabled={catalogBusy}
+                        onClick={() => void addBlock(key)}
+                      >
+                        加入草稿
+                      </Button>
+                    </div>
+                  );
+                })}
+
+                {legacyBlocks.length ? (
+                  <>
+                    <p className="mt-3 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      其他／舊區塊（不在目前前台主堆疊）
+                    </p>
+                    {legacyBlocks.map((block, index) => {
+                      const meta =
+                        getSectionMeta(block.block_key) ||
+                        ({
+                          id: block.block_key as HomeSectionKey,
+                          label: block.title || block.block_key,
+                          description: "",
+                          contentMode: "manual",
+                        } as HomeAdminSectionMeta);
+                      return (
+                        <SectionPanel
+                          key={block.id}
+                          section={meta}
+                          block={block}
+                          index={primaryBlocks.length + index}
+                          open={expanded === block.id}
+                          saving={savingId === block.id}
+                          displayLabel={meta.label}
+                          onToggle={() =>
+                            setExpanded((cur) => (cur === block.id ? null : block.id))
+                          }
+                          onPatch={patch}
+                          onMove={moveSection}
+                          onRemove={removeBlock}
+                          canDelete={!FIXED_FUNCTION_KEYS.has(block.block_key as HomeSectionKey)}
+                        />
+                      );
+                    })}
+                  </>
+                ) : null}
+              </>
             )}
           </div>
         </div>
@@ -384,6 +539,7 @@ function SectionPanel({
   index,
   open,
   saving,
+  displayLabel,
   onToggle,
   onPatch,
   onMove,
@@ -395,6 +551,7 @@ function SectionPanel({
   index: number;
   open: boolean;
   saving: boolean;
+  displayLabel?: string;
   onToggle: () => void;
   onPatch: (id: string, updates: Record<string, unknown>) => Promise<void>;
   onMove: (block: HomepageBlock, dir: -1 | 1) => Promise<void>;
@@ -469,6 +626,8 @@ function SectionPanel({
     });
   };
 
+  const cardTitle = displayLabel || section.label;
+
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-white">
       <div className="flex flex-wrap items-center gap-1.5 p-2.5">
@@ -476,10 +635,12 @@ function SectionPanel({
           {index + 1}
         </span>
         <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
-          <p className="truncate text-sm font-semibold text-coffee">
-            {title.trim() || section.label}
+          <p className="truncate text-sm font-semibold text-coffee">{cardTitle}</p>
+          <p className="truncate text-[11px] text-muted-foreground">
+            {block.title && block.title !== cardTitle
+              ? `前台標題：${block.title}`
+              : section.description}
           </p>
-          <p className="truncate text-[11px] text-muted-foreground">{section.label}</p>
         </button>
         <span
           className={cn(
