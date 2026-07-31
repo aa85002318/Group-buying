@@ -13,7 +13,7 @@ export function HeroTextContent({
   if (!showTitle && !showDescription) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[10] flex flex-col justify-start px-5 pt-[calc(env(safe-area-inset-top,0px)+72px)] md:justify-center md:px-[8%] md:pt-0 md:pb-24">
+    <div className="pointer-events-none absolute inset-0 z-[10] flex flex-col justify-start px-5 pt-6 md:justify-center md:px-[8%] md:pt-0 md:pb-24">
       <div className="max-w-[min(36rem,52%)]">
         {showTitle && title ? (
           <h1 className="text-[clamp(1.75rem,4vw,2.75rem)] font-bold leading-tight tracking-tight text-[#153E73]">

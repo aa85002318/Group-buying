@@ -153,6 +153,9 @@ export function HomeHeroSection() {
   return (
     <>
       <section className="home-hero home-hero-section" aria-label="首頁主視覺">
+        <div className="home-hero-top-bar">
+          <HeroTopActions onSearchClick={focusSearch} />
+        </div>
         <div className="home-hero-canvas">
           <ResponsiveHeroImage
             desktopUrl={desktopUrl}
@@ -161,9 +164,6 @@ export function HomeHeroSection() {
             desktopObjectPosition={data.desktopObjectPosition}
             mobileObjectPosition={data.mobileObjectPosition}
           />
-          <div className="home-hero-top-bar">
-            <HeroTopActions onSearchClick={focusSearch} />
-          </div>
           <HeroTextContent
             title={data.title}
             description={data.description}
