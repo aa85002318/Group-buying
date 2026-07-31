@@ -15,7 +15,7 @@ import { CONSUMER_BOTTOM_NAV } from "@/lib/consumer-hub";
 
 const ICONS = {
   "/": Home,
-  "/baking-materials": ShoppingBag,
+  "/shop": ShoppingBag,
   "/group-buy": Gift,
   "/ai": Sparkles,
   "/member": User,

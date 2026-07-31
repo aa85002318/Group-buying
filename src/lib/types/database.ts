@@ -199,6 +199,7 @@ export interface CmsBanner {
   button_text?: string | null;
   badge_text?: string | null;
   placement?: string;
+  banner_type?: string | null;
   status?: "draft" | "active" | "inactive";
   background_color?: string | null;
   text_color?: string | null;

@@ -219,11 +219,11 @@ export const CONSUMER_SECONDARY_NAV = [
 export const CONSUMER_BOTTOM_NAV = [
   { href: "/", label: "首頁", match: (p: string) => p === "/", accent: "primary" as const },
   {
-    href: "/baking-materials",
+    href: "/shop",
     label: "商城",
     match: (p: string) =>
-      p.startsWith("/baking-materials") ||
       p.startsWith("/shop") ||
+      p.startsWith("/baking-materials") ||
       p.startsWith("/products") ||
       p.startsWith("/categories"),
     accent: "primary" as const,

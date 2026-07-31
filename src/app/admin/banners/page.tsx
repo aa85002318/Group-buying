@@ -12,9 +12,10 @@ import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import type { CmsBanner } from "@/lib/types/database";
 
 const PLACEMENTS = [
+  { value: "shop_hero", label: "商城 Hero Banner" },
   { value: "home_weekly_promo", label: "首頁本週優惠" },
   { value: "home_secondary", label: "首頁次要 Banner" },
-  { value: "shop", label: "商城" },
+  { value: "shop", label: "商城（舊）" },
   { value: "group_buy", label: "團購" },
   { value: "recipes", label: "食譜" },
   { value: "news", label: "最新資訊" },
@@ -33,7 +34,7 @@ const emptyForm = {
   mobile_image_url: "",
   button_text: "了解更多",
   link_url: "",
-  placement: "home_weekly_promo",
+  placement: "shop_hero",
   sort_order: "0",
   status: "active",
   starts_at: "",
@@ -99,7 +100,7 @@ function AdminBannersClient() {
     setEditingId(null);
     setForm({
       ...emptyForm,
-      placement: placementFilter && placementFilter !== "home_hero" ? placementFilter : "home_weekly_promo",
+      placement: placementFilter && placementFilter !== "home_hero" ? placementFilter : "shop_hero",
     });
     setShowForm(true);
   };
@@ -132,12 +133,17 @@ function AdminBannersClient() {
 
   const save = async () => {
     const isWeekly = form.placement === "home_weekly_promo";
+    const isShopHero = form.placement === "shop_hero";
     if (!form.title.trim()) {
       alert(isWeekly ? "請填寫管理用名稱（僅後台辨識，不顯示於前台）" : "請填寫標題");
       return;
     }
     if (isWeekly && !form.image_url.trim()) {
       alert("請上傳本週優惠圖片（建議 720×360 px）");
+      return;
+    }
+    if (isShopHero && !form.image_url.trim()) {
+      alert("請上傳商城 Hero 桌面圖片（建議 1500×600、比例 5:2）");
       return;
     }
     setSaving(true);
@@ -151,6 +157,7 @@ function AdminBannersClient() {
         button_text: form.button_text || null,
         link_url: form.link_url || null,
         placement: form.placement,
+        banner_type: form.placement === "shop_hero" ? "shop_hero" : form.placement,
         sort_order: Number(form.sort_order),
         status: form.status,
         is_active: form.status === "active",
@@ -207,6 +214,17 @@ function AdminBannersClient() {
     load();
   };
 
+  const remove = async (b: CmsBanner) => {
+    if (!confirm(`確定刪除「${b.title}」？`)) return;
+    const res = await fetch(`/api/admin/banners/${b.id}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.error ?? "刪除失敗");
+      return;
+    }
+    load();
+  };
+
   return (
     <div className="space-y-4">
       <AdminPageHeader
@@ -247,22 +265,37 @@ function AdminBannersClient() {
             label={
               form.placement === "home_weekly_promo"
                 ? "優惠圖片（建議 720×360 px）"
-                : "桌機圖"
+                : form.placement === "shop_hero"
+                  ? "桌面圖（建議 1500×600、5:2）"
+                  : "桌機圖"
             }
             images={form.image_url ? [form.image_url] : []}
             onChange={(images) => setForm({ ...form, image_url: images[0] ?? "" })}
-            uploadFolder="banners"
+            uploadFolder={
+              form.placement === "shop_hero" ? "banners/shop/hero/desktop" : "banners"
+            }
             maxImages={1}
             multiple={false}
           />
           <AdminImageUpload
-            label="手機版圖片（建議 750×700 px；未設定則使用桌機圖）"
+            label={
+              form.placement === "shop_hero"
+                ? "手機圖（建議 1080×900；未設定則使用桌面圖）"
+                : "手機版圖片（建議 750×700 px；未設定則使用桌機圖）"
+            }
             images={form.mobile_image_url ? [form.mobile_image_url] : []}
             onChange={(images) => setForm({ ...form, mobile_image_url: images[0] ?? "" })}
-            uploadFolder="banners"
+            uploadFolder={
+              form.placement === "shop_hero" ? "banners/shop/hero/mobile" : "banners"
+            }
             maxImages={1}
             multiple={false}
           />
+          {form.placement === "shop_hero" ? (
+            <p className="text-xs text-muted-foreground">
+              商城 Hero 為滿版輪播（無圓角卡片）。桌面／手機可分開上傳；比例差異過大時仍可儲存。
+            </p>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
               placeholder={
@@ -399,6 +432,9 @@ function AdminBannersClient() {
                 <Button size="sm" variant="outline" onClick={() => move(b, 1)}>下移</Button>
                 <Button size="sm" variant="secondary" onClick={() => toggle(b)}>
                   {b.is_active ? "停用" : "啟用"}
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => remove(b)}>
+                  刪除
                 </Button>
               </div>
             ),

@@ -16,29 +16,39 @@ import { cn } from "@/lib/utils";
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const isShopHub =
+    pathname === "/shop" || pathname === "/shop/" || pathname.startsWith("/shop?");
+  const fullBleedPage = isHome || isShopHub;
   const showChrome = !isMinimalChromePath(pathname);
 
   return (
-    <div className={cn("min-h-dvh w-full overflow-x-clip", isHome ? "bg-[#FFD454]" : "bg-background")}>
+    <div
+      className={cn(
+        "min-h-dvh w-full overflow-x-clip",
+        isHome ? "bg-[#FFD454]" : "bg-background"
+      )}
+    >
       <div
         className={cn(
           "relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip",
           isHome
             ? "max-w-none bg-[#FFD454]"
-            : "app-shell bg-background md:shadow-lift"
+            : isShopHub
+              ? "max-w-none bg-background"
+              : "app-shell bg-background md:shadow-lift"
         )}
       >
         {!isHome ? <AppHeader /> : null}
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",
-            showChrome && !isHome && "site-main"
+            showChrome && !fullBleedPage && "site-main"
           )}
           style={{
             paddingBottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px))",
           }}
         >
-          {showChrome && !isHome ? (
+          {showChrome && !fullBleedPage ? (
             <div className="site-container mx-auto w-full min-w-0 max-w-full">
               {children}
             </div>
