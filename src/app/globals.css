@@ -127,6 +127,7 @@
     box-sizing: border-box;
     max-width: 100%;
     padding-bottom: 32px;
+    overflow: visible;
   }
 
   .featured-recipes-header {
@@ -214,8 +215,10 @@
     position: relative;
     width: 100%;
     max-width: 100%;
-    overflow: hidden;
-    padding-block: 8px 76px;
+    /* Horizontal clip only; keep vertical room for scaled active card */
+    overflow-x: clip;
+    overflow-y: visible;
+    padding-block: 28px 76px;
     margin-top: 24px;
     perspective: 1100px;
     perspective-origin: center center;

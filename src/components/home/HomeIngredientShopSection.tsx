@@ -79,7 +79,7 @@ export function HomeIngredientShopSection() {
 
   return (
     <section
-      className="ingredient-shop-section bg-[#FFFEFA] py-7 md:py-10"
+      className="ingredient-shop-section bg-white py-7 md:py-10"
       aria-label={cmsSection.title}
     >
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">

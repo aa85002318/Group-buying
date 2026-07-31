@@ -50,7 +50,7 @@ export function HomeQuickEntrySection() {
 
   return (
     <section
-      className="quick-entry-section w-full bg-[#FFFEFA] px-5 py-8 md:px-8 md:py-10"
+      className="quick-entry-section w-full bg-white px-5 py-8 md:px-8 md:py-10"
       aria-label="功能入口"
     >
       <div className="mx-auto grid w-full max-w-[1280px] grid-cols-2 gap-6 md:grid-cols-4">

@@ -798,7 +798,7 @@ export default function HomePage() {
           草稿預覽模式 — 尚未發布，訪客看不到此版面
         </div>
       ) : null}
-      <section className="w-full max-w-full overflow-x-hidden p-0">
+      <section className="w-full max-w-full overflow-x-clip p-0">
         {creamToRender.map((block) => renderHomeSection(block, ctx))}
       </section>
 

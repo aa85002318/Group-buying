@@ -1,4 +1,4 @@
-/** Single soft wave + gradient blend between Hero and search. */
+/** Soft wave + gradient blend from Hero yellow into pure white content. */
 export function HeroBottomTransition() {
   return (
     <div
@@ -9,7 +9,7 @@ export function HeroBottomTransition() {
         className="absolute inset-x-0 bottom-0 h-[48px] md:h-[80px]"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(255, 212, 84, 0) 0%, rgba(255, 254, 250, 0.72) 55%, #FFFEFA 100%)",
+            "linear-gradient(to bottom, rgba(255, 212, 84, 0) 0%, rgba(255, 255, 255, 0.72) 55%, #FFFFFF 100%)",
           zIndex: 1,
         }}
       />
@@ -20,7 +20,7 @@ export function HeroBottomTransition() {
         style={{ filter: "blur(1px)" }}
       >
         <path
-          fill="#FFFEFA"
+          fill="#FFFFFF"
           d="
             M0,44
             C180,28 320,64 500,54

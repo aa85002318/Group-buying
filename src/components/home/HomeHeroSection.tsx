@@ -141,7 +141,7 @@ export function HomeHeroSection() {
   return (
     <>
       <section
-        className="home-hero-section relative w-full max-w-[100vw] rounded-none bg-[#FFFEFA]"
+        className="home-hero-section relative w-full max-w-[100vw] rounded-none bg-white"
         aria-label="首頁主視覺"
       >
       {/* Full-bleed yellow canvas — image extends to viewport edges */}
@@ -163,7 +163,7 @@ export function HomeHeroSection() {
       </div>
 
       {/* Search floats above wave */}
-      <div className="relative z-10 bg-[#FFFEFA] px-4 pb-2 pt-0 md:px-6">
+      <div className="relative z-10 bg-white px-4 pb-2 pt-0 md:px-6">
         <FloatingSearchBar
           placeholder={data.searchPlaceholder}
           scope={(data.searchScope as SearchScope) || "global"}

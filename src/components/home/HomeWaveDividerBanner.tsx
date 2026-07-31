@@ -2,7 +2,7 @@
 export function HomeWaveDividerBanner() {
   return (
     <div
-      className="home-wave-divider relative w-full overflow-hidden bg-[#FFFEFA]"
+      className="home-wave-divider relative w-full overflow-hidden bg-white"
       aria-hidden
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}

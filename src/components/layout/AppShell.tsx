@@ -24,7 +24,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         className={cn(
           "relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip",
           isHome
-            ? "max-w-none bg-[#FFFEFA]"
+            ? "max-w-none bg-white"
             : "app-shell bg-background md:shadow-lift"
         )}
       >
