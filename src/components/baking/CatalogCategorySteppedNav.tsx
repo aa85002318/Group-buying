@@ -130,8 +130,8 @@ export function CatalogCategorySteppedNav({
           <Link
             href={
               stack.length > 0
-                ? `/baking-materials/${stack[stack.length - 1].slug}`
-                : "/baking-materials"
+                ? `/shop/category/${stack[stack.length - 1].slug}`
+                : "/shop/categories"
             }
             onClick={onNavigate}
             className={cn(
@@ -158,7 +158,7 @@ export function CatalogCategorySteppedNav({
                 )}
               >
                 <Link
-                  href={`/baking-materials/${node.slug}`}
+                  href={`/shop/category/${node.slug}`}
                   onClick={onNavigate}
                   className={cn(
                     "min-w-0 flex-1 truncate px-2 py-1.5 text-sm transition",

@@ -207,7 +207,7 @@ export const SERVICE_HUB_ITEMS: ServiceHubItem[] = [
 
 /** Desktop secondary nav (subset of hub — member/support in header) */
 export const CONSUMER_SECONDARY_NAV = [
-  { href: "/shop", label: "烘焙材料" },
+  { href: "/shop", label: "商城" },
   { href: "/recipes", label: "食譜影音" },
   { href: "/group-buy", label: "團購專區", accent: "groupBuy" as const },
   { href: "/news", label: "最新資訊" },
@@ -223,7 +223,6 @@ export const CONSUMER_BOTTOM_NAV = [
     label: "商城",
     match: (p: string) =>
       p.startsWith("/shop") ||
-      p.startsWith("/baking-materials") ||
       p.startsWith("/products") ||
       p.startsWith("/categories"),
     accent: "primary" as const,

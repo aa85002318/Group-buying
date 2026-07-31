@@ -10,8 +10,8 @@ function ShopSearchInner() {
   const q = (sp.get("q") ?? "").trim();
 
   const catalogHref = useMemo(() => {
-    if (!q) return "/baking-materials";
-    return `/baking-materials?q=${encodeURIComponent(q)}`;
+    if (!q) return "/shop/categories";
+    return `/shop/categories?q=${encodeURIComponent(q)}`;
   }, [q]);
 
   return (

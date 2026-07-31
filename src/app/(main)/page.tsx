@@ -319,7 +319,7 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
         <HorizontalProductRail
           key={reactKey}
           title={block.title || "系列商品曝光"}
-          href={block.viewAllUrl || "/baking-materials"}
+          href={block.viewAllUrl || "/shop/categories"}
           products={products}
           badge={badge}
           loading={ctx.productsLoading}

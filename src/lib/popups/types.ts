@@ -80,7 +80,7 @@ export const LINK_TYPE_OPTIONS: Array<{ value: HomepagePopupLinkType; label: str
   { value: "internal", label: "自訂 App 內路徑", pathHint: "/shop" },
   { value: "external", label: "外部網址", pathHint: "https://" },
   { value: "product", label: "商品頁", pathHint: "/products/{id}" },
-  { value: "category", label: "商品分類", pathHint: "/baking-materials/{slug}" },
+  { value: "category", label: "商品分類", pathHint: "/shop/category/{slug}" },
   { value: "group_buy", label: "團購活動", pathHint: "/group-buy/{id}" },
   { value: "recipe", label: "食譜", pathHint: "/recipes/{slug}" },
   { value: "article", label: "文章", pathHint: "/articles/{slug}" },
@@ -143,7 +143,7 @@ export function resolvePopupHref(popup: Pick<HomepagePopup, "link_type" | "link_
   if (type === "support") return "/support";
   if (id) {
     if (type === "product") return `/products/${id}`;
-    if (type === "category") return `/baking-materials/${id}`;
+    if (type === "category") return `/shop/category/${id}`;
     if (type === "group_buy") return `/group-buy/${id}`;
     if (type === "recipe") return `/recipes/${id}`;
     if (type === "article") return `/articles/${id}`;

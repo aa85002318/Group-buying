@@ -42,7 +42,7 @@ const LINK_TYPES: Array<{ id: CmsLinkType; label: string }> = [
 const INTERNAL_PAGES = [
   { id: "home", label: "首頁", href: "/" },
   { id: "shop", label: "商城", href: "/shop" },
-  { id: "baking", label: "烘焙材料", href: "/baking-materials" },
+  { id: "baking", label: "商城全部分類", href: "/shop/categories" },
   { id: "group-buy", label: "團購", href: "/group-buy" },
   { id: "recipes", label: "食譜", href: "/recipes" },
   { id: "live", label: "直播", href: "/live" },
@@ -256,7 +256,7 @@ async function searchByType(type: CmsLinkType, q: string): Promise<SearchHit[]> 
       const list = ((d.categories ?? []) as Array<Record<string, unknown>>).map((c) => ({
         id: String(c.id),
         title: String(c.name ?? "分類"),
-        href: `/baking-materials/${c.slug || c.id}`,
+        href: `/shop/category/${c.slug || c.id}`,
         thumb: null,
         status: null,
       }));

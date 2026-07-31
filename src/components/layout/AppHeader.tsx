@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
 import { APP_ROUTES } from "@/lib/site-links";
 import { isMinimalChromePath } from "@/lib/navigation";
+import { isShopCatalogPath, SHOP_HOME } from "@/lib/shop/paths";
 import { ChimeidiyLogo } from "@/components/branding/ChimeidiyLogo";
 import { AppHamburgerMenu } from "@/components/layout/AppHamburgerMenu";
 import { BakingCatalogSideMenu } from "@/components/baking/BakingCatalogSideMenu";
@@ -86,10 +87,6 @@ function resolveVariant(pathname: string, variant?: AppHeaderVariant): AppHeader
   return pathname === "/" ? "home" : "standard";
 }
 
-function isBakingMaterialsPath(pathname: string): boolean {
-  return pathname === "/baking-materials" || pathname.startsWith("/baking-materials/");
-}
-
 /** Sticky white header 64px — Logo left, notify / cart / member right (no full-bleed red) */
 export function AppHeader({
   variant,
@@ -100,9 +97,9 @@ export function AppHeader({
 }: AppHeaderProps) {
   const pathname = usePathname();
   const resolved = resolveVariant(pathname, variant);
-  const bakingMaterials = isBakingMaterialsPath(pathname);
-  const headerTitle = bakingMaterials
-    ? title ?? "烘焙材料"
+  const shopCatalog = isShopCatalogPath(pathname);
+  const headerTitle = shopCatalog
+    ? title ?? "商城"
     : title ?? "";
 
   if (isMinimalChromePath(pathname)) return null;
@@ -144,19 +141,19 @@ export function AppHeader({
           </>
         ) : (
           <>
-            <BackButton href={backHref ?? (bakingMaterials ? "/" : undefined)} />
+            <BackButton href={backHref ?? (shopCatalog ? SHOP_HOME : undefined)} />
             <div className="min-w-0 flex-1 px-2 text-center">
               <h1 className="truncate text-base font-bold text-brand-caramel">{headerTitle}</h1>
             </div>
             <div className="flex shrink-0 items-center justify-end gap-0.5">
-              {bakingMaterials ? <BakingCatalogSideMenu /> : <AppHamburgerMenu />}
+              {shopCatalog ? <BakingCatalogSideMenu /> : <AppHamburgerMenu />}
               {showCart ? <CartButton /> : null}
             </div>
           </>
         )}
       </div>
-      {/* 首頁與烘焙材料頁不顯示桌機第二層選單 */}
-      {resolved !== "home" && !bakingMaterials ? (
+      {/* 首頁與商城分類目錄頁不顯示桌機第二層選單 */}
+      {resolved !== "home" && !shopCatalog ? (
         <div className="site-container mx-auto hidden w-full max-w-[1280px] md:block">
           <ConsumerHubNav />
         </div>

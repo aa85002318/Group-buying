@@ -8,7 +8,7 @@ import {
   parseBakingFiltersFromSearchParams,
   searchBakingProducts,
 } from "@/lib/baking-materials/queries";
-import { BakingMaterialsClient } from "../BakingMaterialsClient";
+import { ShopCatalogClient } from "@/components/shop/ShopCatalogClient";
 
 type PageProps = {
   params: Promise<{ categorySlug: string }>;
@@ -20,12 +20,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const category = await getCategoryBySlug(categorySlug);
 
   if (!category) {
-    return { title: "烘焙材料" };
+    return { title: "商品分類｜商城" };
   }
 
   return {
-    title: `${category.name}｜烘焙材料`,
-    description: `瀏覽${category.name}相關烘焙材料，依品牌與價格篩選。`,
+    title: `${category.name}｜商城`,
+    description: `瀏覽${category.name}相關商品，依品牌與價格篩選。`,
   };
 }
 
@@ -37,7 +37,7 @@ function CatalogFallback() {
   );
 }
 
-export default async function BakingMaterialsCategoryPage({ params, searchParams }: PageProps) {
+export default async function ShopCategoryPage({ params, searchParams }: PageProps) {
   const { categorySlug } = await params;
   const rawSearchParams = await searchParams;
   const normalizedSearchParams = new URLSearchParams();
@@ -61,7 +61,7 @@ export default async function BakingMaterialsCategoryPage({ params, searchParams
 
   return (
     <Suspense fallback={<CatalogFallback />}>
-      <BakingMaterialsClient
+      <ShopCatalogClient
         categorySlug={categorySlug}
         initialMeta={{
           categories,

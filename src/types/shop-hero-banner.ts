@@ -22,7 +22,7 @@ export const DEFAULT_SHOP_HERO_BANNERS: ShopHeroBanner[] = [
     subtitle: "精選超過 4,000 項商品，材料、器具、包裝一次購足",
     desktop_image: "/images/shop/hero-default.jpg",
     mobile_image: "/images/shop/hero-default.jpg",
-    link: "/baking-materials",
+    link: "/shop/categories",
     button_text: "立即逛商城",
     sort_order: 0,
     is_active: true,

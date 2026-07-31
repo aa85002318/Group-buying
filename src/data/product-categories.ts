@@ -2,7 +2,7 @@ import type { ProductCategory } from "@/types/product-category";
 
 /**
  * Centralized category hrefs for home drawer.
- * Prefer existing /baking-materials/* and /group-buy routes used elsewhere in the app.
+ * Prefer /shop/* mall routes and /group-buy routes used elsewhere in the app.
  * Edit links here only — do not scatter hrefs across UI components.
  */
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
@@ -10,21 +10,21 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
     id: "baking-materials",
     name: "烘焙材料",
     slug: "baking-materials",
-    href: "/baking-materials",
+    href: "/shop/categories",
     icon: "Wheat",
     sortOrder: 10,
     enabled: true,
     children: [
-      { id: "flour", name: "麵粉", slug: "flour", href: "/baking-materials/flour", sortOrder: 10, enabled: true },
-      { id: "butter", name: "奶油", slug: "dairy", href: "/baking-materials/dairy", sortOrder: 20, enabled: true },
-      { id: "cream", name: "鮮奶油", slug: "dairy-cream", href: "/baking-materials/dairy", sortOrder: 30, enabled: true },
-      { id: "dairy", name: "乳製品", slug: "dairy-products", href: "/baking-materials/dairy", sortOrder: 40, enabled: true },
-      { id: "sugar", name: "糖類", slug: "ingredients-sugar", href: "/baking-materials/ingredients", sortOrder: 50, enabled: true },
-      { id: "eggs", name: "雞蛋與蛋製品", slug: "ingredients-egg", href: "/baking-materials/ingredients", sortOrder: 60, enabled: true },
-      { id: "chocolate", name: "巧克力", slug: "chocolate", href: "/baking-materials/chocolate", sortOrder: 70, enabled: true },
-      { id: "nuts", name: "堅果與果乾", slug: "ingredients-nuts", href: "/baking-materials/ingredients", sortOrder: 80, enabled: true },
-      { id: "tools", name: "烘焙工具", slug: "tools", href: "/baking-materials/tools", sortOrder: 90, enabled: true },
-      { id: "packaging", name: "包裝材料", slug: "packaging", href: "/baking-materials/packaging", sortOrder: 100, enabled: true },
+      { id: "flour", name: "麵粉", slug: "flour", href: "/shop/category/flour", sortOrder: 10, enabled: true },
+      { id: "butter", name: "奶油", slug: "dairy", href: "/shop/category/dairy", sortOrder: 20, enabled: true },
+      { id: "cream", name: "鮮奶油", slug: "dairy-cream", href: "/shop/category/dairy", sortOrder: 30, enabled: true },
+      { id: "dairy", name: "乳製品", slug: "dairy-products", href: "/shop/category/dairy", sortOrder: 40, enabled: true },
+      { id: "sugar", name: "糖類", slug: "ingredients-sugar", href: "/shop/category/ingredients", sortOrder: 50, enabled: true },
+      { id: "eggs", name: "雞蛋與蛋製品", slug: "ingredients-egg", href: "/shop/category/ingredients", sortOrder: 60, enabled: true },
+      { id: "chocolate", name: "巧克力", slug: "chocolate", href: "/shop/category/chocolate", sortOrder: 70, enabled: true },
+      { id: "nuts", name: "堅果與果乾", slug: "ingredients-nuts", href: "/shop/category/ingredients", sortOrder: 80, enabled: true },
+      { id: "tools", name: "烘焙工具", slug: "tools", href: "/shop/category/tools", sortOrder: 90, enabled: true },
+      { id: "packaging", name: "包裝材料", slug: "packaging", href: "/shop/category/packaging", sortOrder: 100, enabled: true },
     ],
   },
   {
@@ -50,19 +50,19 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
     id: "fresh-food",
     name: "食材生鮮",
     slug: "fresh-food",
-    href: "/baking-materials/chilled-goods",
+    href: "/shop/category/chilled-goods",
     sortOrder: 30,
     enabled: true,
     children: [
-      { id: "chilled", name: "冷藏食品", slug: "chilled-goods", href: "/baking-materials/chilled-goods", sortOrder: 10, enabled: true },
-      { id: "frozen-goods", name: "冷凍食品", slug: "frozen-goods", href: "/baking-materials/frozen-goods", sortOrder: 20, enabled: true },
+      { id: "chilled", name: "冷藏食品", slug: "chilled-goods", href: "/shop/category/chilled-goods", sortOrder: 10, enabled: true },
+      { id: "frozen-goods", name: "冷凍食品", slug: "frozen-goods", href: "/shop/category/frozen-goods", sortOrder: 20, enabled: true },
     ],
   },
   {
     id: "drinks",
     name: "飲品沖調",
     slug: "drinks",
-    href: "/baking-materials",
+    href: "/shop/categories",
     sortOrder: 40,
     enabled: true,
   },
@@ -78,7 +78,7 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
     id: "cooking",
     name: "料理食材",
     slug: "cooking",
-    href: "/baking-materials/ingredients",
+    href: "/shop/category/ingredients",
     sortOrder: 60,
     enabled: true,
   },
@@ -86,7 +86,7 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
     id: "kitchenware",
     name: "餐廚用品",
     slug: "kitchenware",
-    href: "/baking-materials/tools",
+    href: "/shop/category/tools",
     sortOrder: 70,
     enabled: true,
   },
@@ -94,7 +94,7 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
     id: "packaging-root",
     name: "包裝材料",
     slug: "packaging-root",
-    href: "/baking-materials/packaging",
+    href: "/shop/category/packaging",
     sortOrder: 80,
     enabled: true,
   },

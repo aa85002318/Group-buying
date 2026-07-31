@@ -105,7 +105,7 @@ export function hotSearchHref(item: HotSearchKeyword | string): string {
     case "product_category":
       return item.linkTarget?.startsWith("/")
         ? item.linkTarget
-        : `/baking-materials/${item.linkTarget || q}`;
+        : `/shop/category/${item.linkTarget || q}`;
     case "course":
       return item.linkTarget?.startsWith("/")
         ? item.linkTarget

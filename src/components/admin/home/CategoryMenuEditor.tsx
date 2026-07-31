@@ -10,7 +10,7 @@ export function CategoryMenuEditor({
   onChange,
   onSave,
   saving,
-  hint = "商品上方分類選單：可指定站內分類連結（如 /baking-materials/flour）。",
+  hint = "商品上方分類選單：可指定站內分類連結（如 /shop/category/flour）。",
 }: {
   items: HomeCategoryMenuItem[];
   onChange: (next: HomeCategoryMenuItem[]) => void;
@@ -73,7 +73,7 @@ export function CategoryMenuEditor({
               {
                 id: `cm-${Date.now()}`,
                 label: "新分類",
-                href: "/baking-materials",
+                href: "/shop/categories",
                 enabled: true,
                 sortOrder: (items.length + 1) * 10,
               },

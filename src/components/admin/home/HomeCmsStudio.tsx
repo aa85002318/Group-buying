@@ -579,7 +579,7 @@ function SectionPanel({
   const [showCountdown, setShowCountdown] = useState(true);
   const [shopSource, setShopSource] = useState("automatic");
   const [shopSort, setShopSort] = useState("hot");
-  const [moreCardLink, setMoreCardLink] = useState("/baking-materials");
+  const [moreCardLink, setMoreCardLink] = useState("/shop/categories");
 
   useEffect(() => {
     setTitle(block.title ?? section.label);
@@ -612,7 +612,7 @@ function SectionPanel({
       const cfg = block.config ?? {};
       setShopSource(String(cfg.product_source ?? "automatic"));
       setShopSort(String(cfg.sort_type ?? "hot"));
-      setMoreCardLink(String(cfg.more_card_link ?? "/baking-materials"));
+      setMoreCardLink(String(cfg.more_card_link ?? "/shop/categories"));
     }
   }, [block, section]);
 

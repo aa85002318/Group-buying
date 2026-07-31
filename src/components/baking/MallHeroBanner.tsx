@@ -8,7 +8,7 @@ const SHORTCUTS = [
   {
     id: "new",
     label: "今日新品",
-    href: "/baking-materials?sort=newest",
+    href: "/shop/categories?sort=newest",
   },
   {
     id: "group-buy",

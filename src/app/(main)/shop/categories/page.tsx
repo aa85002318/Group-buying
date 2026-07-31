@@ -7,17 +7,17 @@ import {
   parseBakingFiltersFromSearchParams,
   searchBakingProducts,
 } from "@/lib/baking-materials/queries";
-import { BakingMaterialsClient } from "./BakingMaterialsClient";
+import { ShopCatalogClient } from "@/components/shop/ShopCatalogClient";
 
 export const metadata: Metadata = {
-  title: "烘焙好物商城",
-  description: "精選超過 4,000 項商品。原料、器具、包裝一次購足。依分類、品牌與價格篩選烘焙材料。",
+  title: "全部分類｜烘焙好物商城",
+  description: "精選超過 4,000 項商品。原料、器具、包裝一次購足。依分類、品牌與價格篩選。",
 };
 
 function CatalogFallback() {
   return (
     <div className="baking-catalog-page mx-auto max-w-[1280px] px-4 py-8">
-      <p className="text-sm text-[#8C644A]">載入烘焙材料…</p>
+      <p className="text-sm text-[#8C644A]">載入商品分類…</p>
     </div>
   );
 }
@@ -26,7 +26,7 @@ type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function BakingMaterialsPage({ searchParams }: PageProps) {
+export default async function ShopCategoriesPage({ searchParams }: PageProps) {
   const rawSearchParams = await searchParams;
   const normalizedSearchParams = new URLSearchParams();
 
@@ -47,7 +47,7 @@ export default async function BakingMaterialsPage({ searchParams }: PageProps) {
 
   return (
     <Suspense fallback={<CatalogFallback />}>
-      <BakingMaterialsClient
+      <ShopCatalogClient
         initialMeta={{
           categories,
           tree: getCategoryTree(categories),

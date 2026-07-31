@@ -1,3 +1,5 @@
+import { SHOP_CATEGORIES, shopCategoryHref } from "@/lib/shop/paths";
+
 /** Shop home circular category menu item. */
 export type ShopCategoryItem = {
   id: string;
@@ -12,63 +14,63 @@ export type ShopCategoryItem = {
 
 /**
  * Default 8 product categories + frontend-appended「全部分類」.
- * Hrefs use existing /baking-materials/* routes (no duplicate /shop/category tree).
+ * Hrefs use /shop/category/* under the mall storefront.
  */
 export const DEFAULT_SHOP_CATEGORIES: ShopCategoryItem[] = [
   {
     id: "flour",
     name: "麵粉",
     image: "/images/shop/categories/flour.png",
-    href: "/baking-materials/flour",
+    href: shopCategoryHref("flour"),
     bgColor: "#FFF5D9",
   },
   {
     id: "butter",
     name: "奶油",
     image: "/images/shop/categories/butter.png",
-    href: "/baking-materials/dairy",
+    href: shopCategoryHref("dairy"),
     bgColor: "#FFF5D9",
   },
   {
     id: "chocolate",
     name: "巧克力",
     image: "/images/shop/categories/chocolate.png",
-    href: "/baking-materials/chocolate",
+    href: shopCategoryHref("chocolate"),
     bgColor: "#FFE8E8",
   },
   {
     id: "packaging",
     name: "包裝材料",
     image: "/images/shop/categories/packaging.png",
-    href: "/baking-materials/packaging",
+    href: shopCategoryHref("packaging"),
     bgColor: "#FFF0E2",
   },
   {
     id: "baking-mold",
     name: "烘焙模具",
     image: "/images/shop/categories/baking-mold.png",
-    href: "/baking-materials/tools",
+    href: shopCategoryHref("tools"),
     bgColor: "#EAF4DA",
   },
   {
     id: "baking-tools",
     name: "烘焙工具",
     image: "/images/shop/categories/baking-tools.png",
-    href: "/baking-materials/tools",
+    href: shopCategoryHref("tools"),
     bgColor: "#EEE9FF",
   },
   {
     id: "frozen",
     name: "冷凍冷藏",
     image: "/images/shop/categories/frozen.png",
-    href: "/baking-materials/frozen-goods",
+    href: shopCategoryHref("frozen-goods"),
     bgColor: "#DFF3FF",
   },
   {
     id: "food",
     name: "食品食材",
     image: "/images/shop/categories/food.png",
-    href: "/baking-materials/ingredients",
+    href: shopCategoryHref("ingredients"),
     bgColor: "#FFE5E5",
   },
 ];
@@ -77,7 +79,7 @@ export const SHOP_ALL_CATEGORIES_ITEM: ShopCategoryItem = {
   id: "all",
   name: "全部分類",
   icon: "grid",
-  href: "/baking-materials",
+  href: SHOP_CATEGORIES,
   bgColor: "#F1F2F7",
 };
 

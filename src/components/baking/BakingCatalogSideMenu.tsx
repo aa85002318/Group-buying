@@ -18,14 +18,11 @@ import {
 import { cn } from "@/lib/utils";
 
 function normalizeServiceHref(href: string): string {
-  if (href === "/shop" || href.startsWith("/shop?")) {
-    return href.replace(/^\/shop/, "/baking-materials");
-  }
   return href;
 }
 
 /**
- * 烘焙材料頁專用側面選單：
+ * 商城分類目錄專用側面選單：
  * - 商品分類（階梯式）
  * - 合併原 Hamburger 的主要服務／支援／會員
  */
@@ -38,8 +35,8 @@ export function BakingCatalogSideMenu({ className }: { className?: string }) {
   const [loading, setLoading] = useState(false);
 
   const activeSlug = useMemo(() => {
-    const m = pathname.match(/^\/baking-materials\/([^/?#]+)/);
-    return m?.[1];
+    const m = pathname.match(/^\/shop\/category\/([^/?#]+)/);
+    return m?.[1] ? decodeURIComponent(m[1]) : undefined;
   }, [pathname]);
 
   const serviceSections: SideMenuSection[] = useMemo(

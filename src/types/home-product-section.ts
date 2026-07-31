@@ -57,7 +57,7 @@ export const DEFAULT_INGREDIENT_SHOP_CONFIG: HomeIngredientShopConfig = {
   product_limit: 12,
   more_card_title: "更多商品",
   more_card_subtitle: "查看更多烘焙材料",
-  more_card_link: "/baking-materials",
+  more_card_link: "/shop/categories",
 };
 
 export const DEFAULT_CATEGORY_TAB: IngredientShopCategoryTab = {

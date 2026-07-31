@@ -76,7 +76,7 @@ export const SECTION_DEFAULTS: Record<
     title: "一鍵買齊材料",
     displayCount: 12,
     visible: true,
-    viewAllUrl: "/baking-materials",
+    viewAllUrl: "/shop/categories",
     config: {
       enabled: true,
       subtitle: "完整食材一次購足，讓烘焙更輕鬆！",
@@ -87,12 +87,12 @@ export const SECTION_DEFAULTS: Record<
       product_limit: 12,
       more_card_title: "更多商品",
       more_card_subtitle: "查看更多烘焙材料",
-      more_card_link: "/baking-materials",
+      more_card_link: "/shop/categories",
       category_menu: [
-        { id: "all", label: "全部", href: "/baking-materials", enabled: true, sortOrder: 10 },
-        { id: "flour", label: "麵粉", href: "/baking-materials/flour", enabled: true, sortOrder: 20 },
-        { id: "tools", label: "器具", href: "/baking-materials/tools", enabled: true, sortOrder: 30 },
-        { id: "packaging", label: "包裝", href: "/baking-materials/packaging", enabled: true, sortOrder: 40 },
+        { id: "all", label: "全部", href: "/shop/categories", enabled: true, sortOrder: 10 },
+        { id: "flour", label: "麵粉", href: "/shop/category/flour", enabled: true, sortOrder: 20 },
+        { id: "tools", label: "器具", href: "/shop/category/tools", enabled: true, sortOrder: 30 },
+        { id: "packaging", label: "包裝", href: "/shop/category/packaging", enabled: true, sortOrder: 40 },
       ],
     },
   },
@@ -118,7 +118,7 @@ export const SECTION_DEFAULTS: Record<
     title: "找材料",
     displayCount: 8,
     visible: false,
-    viewAllUrl: "/baking-materials",
+    viewAllUrl: "/shop/categories",
   },
   ingredient_categories: {
     title: "找材料",
@@ -132,7 +132,7 @@ export const SECTION_DEFAULTS: Record<
     displayCount: 8,
     visible: false,
     sourceMode: "manual",
-    viewAllUrl: "/baking-materials",
+    viewAllUrl: "/shop/categories",
     config: { product_scope: "baking" },
   },
   product_series: {
@@ -140,7 +140,7 @@ export const SECTION_DEFAULTS: Record<
     displayCount: 8,
     visible: false,
     sourceMode: "manual",
-    viewAllUrl: "/baking-materials",
+    viewAllUrl: "/shop/categories",
     config: { product_scope: "baking", badge: "hot" },
   },
   featured_courses: {

@@ -21,6 +21,20 @@ function parseAllowedDevOrigins() {
 
 const nextConfig = {
   allowedDevOrigins: parseAllowedDevOrigins(),
+  async redirects() {
+    return [
+      {
+        source: "/baking-materials",
+        destination: "/shop/categories",
+        permanent: true,
+      },
+      {
+        source: "/baking-materials/:slug",
+        destination: "/shop/category/:slug",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**" },

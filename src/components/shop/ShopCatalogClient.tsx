@@ -13,7 +13,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { ProductCard, type ProductBadge } from "@/components/products/ProductCard";
 import { CatalogCategorySteppedNav } from "@/components/baking/CatalogCategorySteppedNav";
-import { MallHeroBanner } from "@/components/baking/MallHeroBanner";
 import type {
   BakingBrand,
   BakingCategory,
@@ -23,9 +22,10 @@ import type {
   BakingProductFilters,
   BakingSortOption,
 } from "@/lib/baking-materials/types";
+import { SHOP_CATEGORIES, SHOP_HOME, shopCategoryHref } from "@/lib/shop/paths";
 import { cn } from "@/lib/utils";
 
-type BakingMaterialsClientProps = {
+type ShopCatalogClientProps = {
   categorySlug?: string;
   initialMeta?: CatalogMeta;
   initialProducts?: {
@@ -107,12 +107,12 @@ function productBadge(product: BakingListProduct): ProductBadge | undefined {
   return undefined;
 }
 
-export function BakingMaterialsClient({
+export function ShopCatalogClient({
   categorySlug,
   initialMeta,
   initialProducts,
   initialQueryString,
-}: BakingMaterialsClientProps) {
+}: ShopCatalogClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobileRef = useRef(false);
@@ -153,7 +153,9 @@ export function BakingMaterialsClient({
         merged.page = next.page ?? 1;
       }
       const params = buildSearchParams(merged);
-      const base = categorySlug ? `/baking-materials/${categorySlug}` : "/baking-materials";
+      const base = categorySlug
+        ? shopCategoryHref(categorySlug)
+        : SHOP_CATEGORIES;
       const query = params.toString();
       router.push(query ? `${base}?${query}` : base, { scroll: false });
     },
@@ -353,12 +355,18 @@ export function BakingMaterialsClient({
             </li>
             <li aria-hidden>&gt;</li>
             <li>
+              <Link href={SHOP_HOME} className="hover:text-[#FF5A5F]">
+                商城
+              </Link>
+            </li>
+            <li aria-hidden>&gt;</li>
+            <li>
               {categorySlug ? (
-                <Link href="/baking-materials" className="hover:text-[#FF5A5F]">
-                  烘焙好物商城
+                <Link href={SHOP_CATEGORIES} className="hover:text-[#FF5A5F]">
+                  全部分類
                 </Link>
               ) : (
-                <span className="font-medium text-[#6B3F24]">烘焙好物商城</span>
+                <span className="font-medium text-[#6B3F24]">全部分類</span>
               )}
             </li>
             {activeCategory && (
@@ -370,15 +378,13 @@ export function BakingMaterialsClient({
           </ol>
         </nav>
 
-        {!categorySlug ? <MallHeroBanner /> : null}
-
         <header className="mb-4 space-y-3">
           {categorySlug ? (
             <h1 className="text-xl font-bold text-[#6B3F24] md:text-2xl">
-              {activeCategory?.name ?? "烘焙材料"}
+              {activeCategory?.name ?? "商品分類"}
             </h1>
           ) : (
-            <h1 className="sr-only">烘焙好物商城</h1>
+            <h1 className="text-xl font-bold text-[#6B3F24] md:text-2xl">全部分類</h1>
           )}
           <form onSubmit={onSearchSubmit} role="search">
             <div className="relative flex h-[48px] items-center rounded-[14px] border border-[#F2D8BF] bg-white">
@@ -453,10 +459,10 @@ export function BakingMaterialsClient({
                 <p className="font-semibold text-[#6B3F24]">找不到符合條件的商品</p>
                 <p className="mt-1 text-sm text-[#8C644A]">試試調整篩選條件或搜尋其他關鍵字。</p>
                 <Link
-                  href="/baking-materials"
+                  href={SHOP_CATEGORIES}
                   className="mt-4 inline-flex h-10 items-center rounded-button bg-[#FF5A5F] px-4 text-sm font-bold text-white"
                 >
-                  查看全部烘焙材料
+                  查看全部分類
                 </Link>
               </div>
             ) : (

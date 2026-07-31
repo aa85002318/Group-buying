@@ -35,7 +35,7 @@ export async function GET() {
     const categories: ShopCategoryItem[] = data.map((row) => ({
       id: String(row.id),
       name: String(row.name),
-      href: `/baking-materials/${row.slug}`,
+      href: `/shop/category/${row.slug}`,
       image:
         (row.shop_home_icon as string) ||
         (row.icon_url as string) ||
