@@ -1003,7 +1003,9 @@ function SectionCard({
 
           {section.hasGroupBuyBannerSettings ? (
             <div className="space-y-3 rounded-xl border border-border bg-white p-3">
-              <p className="text-xs font-medium text-muted-foreground">團購四格 Banner 設定</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                團購 Banner 輪播設定（圖片建議 1200×480／5:2）
+              </p>
               <div className="grid gap-2 sm:grid-cols-2">
                 <label className="flex items-center gap-2 text-sm">
                   <input
@@ -1013,155 +1015,67 @@ function SectionCard({
                   />
                   啟用 Banner
                 </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={gbb.ip.enabled}
-                    onChange={(e) =>
-                      setGbb({ ...gbb, ip: { ...gbb.ip, enabled: e.target.checked } })
-                    }
-                  />
-                  顯示 IP
-                </label>
                 <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">季節模式</label>
-                  <select
-                    className="input-field w-full"
-                    value={gbb.seasonMode}
-                    onChange={(e) =>
-                      setGbb({
-                        ...gbb,
-                        seasonMode: e.target.value as HomeGroupBuyBannerSettings["seasonMode"],
-                      })
-                    }
-                  >
-                    <option value="auto">auto（依月份）</option>
-                    <option value="spring">spring</option>
-                    <option value="summer">summer</option>
-                    <option value="autumn">autumn</option>
-                    <option value="winter">winter</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">IP 圖片 URL</label>
-                  <Input
-                    value={gbb.ip.imageUrl}
-                    onChange={(e) =>
-                      setGbb({ ...gbb, ip: { ...gbb.ip, imageUrl: e.target.value } })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">IP 水平位置 %</label>
+                  <label className="mb-1 block text-xs text-muted-foreground">
+                    自動播放毫秒（0＝關閉）
+                  </label>
                   <Input
                     type="number"
-                    value={gbb.ip.positionPercent}
+                    value={gbb.autoPlayMs}
                     onChange={(e) =>
-                      setGbb({
-                        ...gbb,
-                        ip: { ...gbb.ip, positionPercent: Number(e.target.value) || 50 },
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">IP 高度 %</label>
-                  <Input
-                    type="number"
-                    value={gbb.ip.heightPercent}
-                    onChange={(e) =>
-                      setGbb({
-                        ...gbb,
-                        ip: { ...gbb.ip, heightPercent: Number(e.target.value) || 58 },
-                      })
+                      setGbb({ ...gbb, autoPlayMs: Number(e.target.value) || 0 })
                     }
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">四格分類</p>
-                {gbb.tiles.map((tile, index) => (
+                <p className="text-xs font-medium text-muted-foreground">輪播圖（同尺寸）</p>
+                {gbb.slides.map((slide, index) => (
                   <div
-                    key={tile.id}
+                    key={slide.id}
                     className="grid gap-2 rounded-lg border border-border/70 p-2 sm:grid-cols-2"
                   >
                     <Input
-                      value={tile.title}
+                      value={slide.title}
                       onChange={(e) => {
-                        const tiles = [...gbb.tiles];
-                        tiles[index] = { ...tile, title: e.target.value };
-                        setGbb({ ...gbb, tiles });
+                        const slides = [...gbb.slides];
+                        slides[index] = { ...slide, title: e.target.value };
+                        setGbb({ ...gbb, slides });
                       }}
-                      placeholder="分類名稱"
+                      placeholder="標題／alt"
                     />
                     <Input
-                      value={tile.subtitle}
+                      value={slide.href}
                       onChange={(e) => {
-                        const tiles = [...gbb.tiles];
-                        tiles[index] = { ...tile, subtitle: e.target.value };
-                        setGbb({ ...gbb, tiles });
-                      }}
-                      placeholder="副標"
-                    />
-                    <Input
-                      value={tile.backgroundColor}
-                      onChange={(e) => {
-                        const tiles = [...gbb.tiles];
-                        tiles[index] = { ...tile, backgroundColor: e.target.value };
-                        setGbb({ ...gbb, tiles });
-                      }}
-                      placeholder="背景色 #HEX"
-                    />
-                    <Input
-                      value={tile.href}
-                      onChange={(e) => {
-                        const tiles = [...gbb.tiles];
-                        tiles[index] = { ...tile, href: e.target.value };
-                        setGbb({ ...gbb, tiles });
+                        const slides = [...gbb.slides];
+                        slides[index] = { ...slide, href: e.target.value };
+                        setGbb({ ...gbb, slides });
                       }}
                       placeholder="連結"
                     />
                     <Input
                       className="sm:col-span-2"
-                      value={tile.imageUrl}
+                      value={slide.imageUrl}
                       onChange={(e) => {
-                        const tiles = [...gbb.tiles];
-                        tiles[index] = { ...tile, imageUrl: e.target.value };
-                        setGbb({ ...gbb, tiles });
+                        const slides = [...gbb.slides];
+                        slides[index] = { ...slide, imageUrl: e.target.value };
+                        setGbb({ ...gbb, slides });
                       }}
-                      placeholder="插畫 URL"
+                      placeholder="圖片 URL（1200×480）"
                     />
-                    <Input
-                      className="sm:col-span-2"
-                      value={tile.backgroundImageUrl}
-                      onChange={(e) => {
-                        const tiles = [...gbb.tiles];
-                        tiles[index] = { ...tile, backgroundImageUrl: e.target.value };
-                        setGbb({ ...gbb, tiles });
-                      }}
-                      placeholder="粉筆底圖 URL"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-2">
-                <p className="sm:col-span-2 text-xs font-medium text-muted-foreground">
-                  季節限定插畫（CMS 可改）
-                </p>
-                {(["spring", "summer", "autumn", "winter"] as const).map((key) => (
-                  <div key={key}>
-                    <label className="mb-1 block text-xs text-muted-foreground">{key}</label>
-                    <Input
-                      value={gbb.seasonImages[key]}
-                      onChange={(e) =>
-                        setGbb({
-                          ...gbb,
-                          seasonImages: { ...gbb.seasonImages, [key]: e.target.value },
-                        })
-                      }
-                    />
+                    <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                      <input
+                        type="checkbox"
+                        checked={slide.enabled !== false}
+                        onChange={(e) => {
+                          const slides = [...gbb.slides];
+                          slides[index] = { ...slide, enabled: e.target.checked };
+                          setGbb({ ...gbb, slides });
+                        }}
+                      />
+                      顯示此張
+                    </label>
                   </div>
                 ))}
               </div>

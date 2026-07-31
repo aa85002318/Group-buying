@@ -80,7 +80,7 @@ export const SECTION_DEFAULTS: Record<
     },
   },
   group_buy_banner: {
-    title: "團購四格 Banner",
+    title: "團購 Banner 輪播",
     displayCount: 4,
     visible: true,
     viewAllUrl: "/group-buy",

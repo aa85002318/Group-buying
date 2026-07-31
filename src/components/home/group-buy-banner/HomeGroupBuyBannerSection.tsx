@@ -8,10 +8,10 @@ import {
   parseGroupBuyBannerSettings,
   type HomeGroupBuyBannerSettings,
 } from "@/types/home-group-buy-banner";
-import { GroupBuyBannerTiles } from "./GroupBuyBannerTiles";
+import { GroupBuyBannerCarousel } from "./GroupBuyBannerCarousel";
 import { GroupBuyBannerBenefits } from "./GroupBuyBannerBenefits";
 
-/** 團購四格粉筆 Banner — sits under「一鍵買齊材料」, above 團購專區. */
+/** 團購 Banner 輪播 — under「一鍵買齊材料」; keeps benefit strip below. */
 export function HomeGroupBuyBannerSection() {
   const [settings, setSettings] = useState<HomeGroupBuyBannerSettings>(
     DEFAULT_GROUP_BUY_BANNER_SETTINGS
@@ -44,10 +44,10 @@ export function HomeGroupBuyBannerSection() {
   return (
     <section
       className="group-buy-banner-section"
-      aria-label={settings.title || "團購分類"}
+      aria-label={settings.title || "團購 Banner"}
     >
       <div className="group-buy-banner-inner">
-        <GroupBuyBannerTiles settings={settings} />
+        <GroupBuyBannerCarousel settings={settings} />
         <GroupBuyBannerBenefits benefits={settings.benefits} />
       </div>
     </section>

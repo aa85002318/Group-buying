@@ -113,9 +113,9 @@ export const HOME_ADMIN_SECTIONS: HomeAdminSectionMeta[] = [
   },
   {
     id: "group_buy_banner",
-    label: "團購四格 Banner",
+    label: "團購 Banner 輪播",
     description:
-      "一鍵買齊材料下方：四格粉筆分類、IP、品牌優勢。可改分類名／色／插畫、季節圖、IP 與優勢文案。",
+      "一鍵買齊材料下方：同尺寸輪播圖（1200×480／5:2）＋下方四大特色。可改圖片、連結、自動播放與優勢文案。",
     contentMode: "manual",
     hasViewAllUrl: true,
     hasGroupBuyBannerSettings: true,

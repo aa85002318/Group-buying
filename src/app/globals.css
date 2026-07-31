@@ -562,7 +562,7 @@
     display: none;
   }
 
-  /* ── Group-buy 4-tile chalk banner ── */
+  /* ── Group-buy banner carousel + benefits ── */
   .group-buy-banner-section {
     width: 100%;
     max-width: 100%;
@@ -581,14 +581,16 @@
     background: #ffffff;
   }
 
-  .group-buy-banner-stage {
+  .group-buy-banner-carousel {
     position: relative;
     width: 100%;
     overflow: hidden;
+    border-radius: 0;
+    background: #f3f6f9;
   }
 
   .group-buy-banner-track {
-    display: block;
+    display: flex;
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
@@ -603,97 +605,85 @@
     display: none;
   }
 
-  .group-buy-banner-row {
+  .group-buy-banner-slide {
     position: relative;
-    display: flex;
-    gap: 0;
-    width: max-content;
-    min-width: 100%;
-  }
-
-  .group-buy-banner-tile {
-    position: relative;
-    flex: 0 0 78%;
-    width: 78%;
-    aspect-ratio: 1 / 1;
-    border-radius: 0;
+    flex: 0 0 100%;
+    width: 100%;
+    aspect-ratio: 5 / 2;
     overflow: hidden;
     scroll-snap-align: center;
+    scroll-snap-stop: always;
     text-decoration: none;
-    color: #ffffff;
-    box-shadow: none;
-    isolation: isolate;
+    background: #e9edf2;
   }
 
-  .group-buy-banner-tile-bg {
-    position: absolute;
-    inset: 0;
+  .group-buy-banner-slide-img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    pointer-events: none;
+    object-position: center;
     user-select: none;
+    pointer-events: none;
   }
 
-  .group-buy-banner-tile-copy {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
+  .group-buy-banner-nav {
+    position: absolute;
+    top: 50%;
+    z-index: 3;
+    display: none;
+    width: 40px;
+    height: 40px;
     align-items: center;
-    gap: 4px;
-    padding: 12% 8% 0;
-    text-align: center;
+    justify-content: center;
+    border: 1px solid #e9edf2;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #123b73;
+    transform: translateY(-50%);
+    transition: opacity 0.2s ease;
   }
 
-  .group-buy-banner-tile-title {
-    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-    font-size: clamp(16px, 4.2vw, 22px);
-    font-weight: 800;
-    line-height: 1.2;
-    letter-spacing: 0.04em;
-    color: #ffffff;
-    text-shadow: 0 1px 0 rgba(18, 59, 115, 0.12);
+  .group-buy-banner-nav:hover {
+    opacity: 0.85;
   }
 
-  .group-buy-banner-tile-subtitle {
-    font-size: clamp(11px, 2.8vw, 13px);
-    font-weight: 500;
-    line-height: 1.35;
-    color: rgba(255, 255, 255, 0.95);
+  .group-buy-banner-nav--prev {
+    left: 10px;
   }
 
-  .group-buy-banner-tile-art {
+  .group-buy-banner-nav--next {
+    right: 10px;
+  }
+
+  .group-buy-banner-dots {
     position: absolute;
-    left: 50%;
-    bottom: 4%;
-    z-index: 2;
-    width: 78%;
-    height: auto;
-    max-height: 52%;
-    transform: translateX(-50%);
-    object-fit: contain;
+    left: 0;
+    right: 0;
+    bottom: 10px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     pointer-events: none;
-    user-select: none;
   }
 
-  .group-buy-banner-ip {
-    position: absolute;
-    bottom: 2%;
-    z-index: 5;
-    width: auto;
-    max-width: 28%;
-    transform: translateX(-50%);
-    pointer-events: none;
-    user-select: none;
+  .group-buy-banner-dot {
+    pointer-events: auto;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 1px 2px rgba(18, 59, 115, 0.2);
+    transition: width 0.25s ease, background 0.25s ease;
   }
 
-  .group-buy-banner-ip img {
-    display: block;
-    width: auto;
-    height: 100%;
-    max-height: 100%;
-    object-fit: contain;
+  .group-buy-banner-dot--active {
+    width: 22px;
+    background: #123b73;
   }
 
   .group-buy-banner-benefits {
@@ -751,23 +741,8 @@
   }
 
   @media (min-width: 640px) {
-    .group-buy-banner-row {
-      width: 100%;
-    }
-
-    .group-buy-banner-tile {
-      flex: 0 0 25%;
-      width: 25%;
-      scroll-snap-align: start;
-    }
-
-    .group-buy-banner-track {
-      overflow: hidden;
-      scroll-snap-type: none;
-    }
-
-    .group-buy-banner-tile-title {
-      font-size: clamp(18px, 2vw, 24px);
+    .group-buy-banner-nav {
+      display: inline-flex;
     }
 
     .group-buy-banner-benefit {
@@ -787,8 +762,8 @@
       padding-block: 16px 10px;
     }
 
-    .group-buy-banner-ip {
-      max-width: 22%;
+    .group-buy-banner-dots {
+      bottom: 14px;
     }
   }
 
