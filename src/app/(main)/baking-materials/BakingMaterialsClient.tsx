@@ -13,6 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { ProductCard, type ProductBadge } from "@/components/products/ProductCard";
 import { CatalogCategorySteppedNav } from "@/components/baking/CatalogCategorySteppedNav";
+import { MallHeroBanner } from "@/components/baking/MallHeroBanner";
 import type {
   BakingBrand,
   BakingCategory,
@@ -354,10 +355,10 @@ export function BakingMaterialsClient({
             <li>
               {categorySlug ? (
                 <Link href="/baking-materials" className="hover:text-[#FF5A5F]">
-                  烘焙材料
+                  烘焙好物商城
                 </Link>
               ) : (
-                <span className="font-medium text-[#6B3F24]">烘焙材料</span>
+                <span className="font-medium text-[#6B3F24]">烘焙好物商城</span>
               )}
             </li>
             {activeCategory && (
@@ -369,10 +370,16 @@ export function BakingMaterialsClient({
           </ol>
         </nav>
 
+        {!categorySlug ? <MallHeroBanner /> : null}
+
         <header className="mb-4 space-y-3">
-          <h1 className="text-xl font-bold text-[#6B3F24] md:text-2xl">
-            {activeCategory?.name ?? "烘焙材料"}
-          </h1>
+          {categorySlug ? (
+            <h1 className="text-xl font-bold text-[#6B3F24] md:text-2xl">
+              {activeCategory?.name ?? "烘焙材料"}
+            </h1>
+          ) : (
+            <h1 className="sr-only">烘焙好物商城</h1>
+          )}
           <form onSubmit={onSearchSubmit} role="search">
             <div className="relative flex h-[48px] items-center rounded-[14px] border border-[#F2D8BF] bg-white">
               <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[#8C644A]" aria-hidden />

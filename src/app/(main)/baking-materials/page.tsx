@@ -10,8 +10,8 @@ import {
 import { BakingMaterialsClient } from "./BakingMaterialsClient";
 
 export const metadata: Metadata = {
-  title: "烘焙材料",
-  description: "原料、器具、包裝一次購足。依分類、品牌與價格篩選烘焙材料。",
+  title: "烘焙好物商城",
+  description: "精選超過 4,000 項商品。原料、器具、包裝一次購足。依分類、品牌與價格篩選烘焙材料。",
 };
 
 function CatalogFallback() {
