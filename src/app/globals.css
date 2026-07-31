@@ -771,7 +771,7 @@
   .gb-hub-band {
     width: 100%;
     margin: 0;
-    padding: 32px 0 28px;
+    padding: 32px 0 0;
     background: #fffefa;
     box-sizing: border-box;
   }
@@ -796,10 +796,155 @@
     scroll-snap-stop: always;
   }
 
+  /* ── Latest campaign banner (above 常用服務) ── */
+  .latest-campaign-section {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 12px 15px 8px;
+    background: #ffffff;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .latest-campaign-inner {
+    width: 100%;
+    max-width: 1100px;
+    margin-inline: auto;
+  }
+
+  .latest-campaign-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .latest-campaign-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #153e73;
+  }
+
+  .latest-campaign-emoji {
+    font-size: 0.9em;
+  }
+
+  .latest-campaign-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #153e73;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .latest-campaign-more:hover {
+    opacity: 0.75;
+  }
+
+  .latest-campaign-carousel {
+    position: relative;
+    width: 100%;
+  }
+
+  .latest-campaign-track {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    /* Side peek ~12% each side → main slide ~76% */
+    scroll-padding-inline: 12%;
+  }
+
+  .latest-campaign-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .latest-campaign-slide {
+    position: relative;
+    flex: 0 0 76%;
+    width: 76%;
+    max-height: 160px;
+    aspect-ratio: 5 / 2;
+    overflow: hidden;
+    border-radius: 20px;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    text-decoration: none;
+    background: #f3f6f9;
+    box-shadow: 0 6px 16px rgba(21, 62, 115, 0.06);
+  }
+
+  .latest-campaign-slide-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .latest-campaign-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 0;
+  }
+
+  .latest-campaign-dot {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: #d5dbe3;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .latest-campaign-dot--active {
+    background: #153e73;
+    transform: scale(1.15);
+  }
+
+  @media (min-width: 768px) {
+    .latest-campaign-section {
+      padding-block: 16px 10px;
+    }
+
+    .latest-campaign-title {
+      font-size: 26px;
+    }
+
+    .latest-campaign-slide {
+      max-height: 200px;
+    }
+  }
+
   /* ── Service shortcuts (1:1 buttons + safe area) ── */
   .service-shortcut-section {
     width: 100%;
     box-sizing: border-box;
+    margin-top: 0;
+    padding-top: 15px;
   }
 
   .service-shortcut-btn {

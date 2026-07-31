@@ -14,10 +14,12 @@ import { HeroBottomTransition } from "./HeroBottomTransition";
 import { HeroTextContent } from "./HeroTextContent";
 import { ResponsiveHeroImage } from "./ResponsiveHeroImage";
 import { HomeQuickServicesSection } from "./HomeQuickServicesSection";
+import { HomeLatestCampaignSection } from "./latest-campaign/HomeLatestCampaignSection";
 import { WeeklyPopularRecipesSection } from "./weekly-recipes/WeeklyPopularRecipesSection";
 import { HomeIngredientShopSection } from "./HomeIngredientShopSection";
 import { HomeGroupBuyBannerSection } from "./group-buy-banner/HomeGroupBuyBannerSection";
 import { HomeGroupBuyHubBand } from "./group-buy-hub/HomeGroupBuyHubBand";
+import { HomeServiceShortcutsSection } from "./HomeServiceShortcutsSection";
 
 function normalizePosition(
   value: unknown,
@@ -171,11 +173,13 @@ export function HomeHeroSection() {
         />
       </div>
     </section>
+    <HomeLatestCampaignSection />
     <HomeQuickServicesSection />
     <WeeklyPopularRecipesSection />
     <HomeIngredientShopSection />
     <HomeGroupBuyBannerSection />
     <HomeGroupBuyHubBand />
+    <HomeServiceShortcutsSection />
     </>
   );
 }

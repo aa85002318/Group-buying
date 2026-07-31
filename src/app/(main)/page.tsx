@@ -10,7 +10,6 @@ import { HorizontalProductRail } from "@/components/home/HorizontalProductRail";
 import { PromoBannerStrip } from "@/components/home/PromoBannerStrip";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
 import { HomeFooter } from "@/components/home/HomeFooter";
-import { HomeServiceShortcutsSection } from "@/components/home/HomeServiceShortcutsSection";
 import { HomepagePopupDialog } from "@/components/home/HomepagePopupDialog";
 import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 import { BrandStatementSection } from "@/components/home/BrandStatementSection";
@@ -621,7 +620,6 @@ export default function HomePage() {
         </div>
       </HomeContentArea>
 
-      <HomeServiceShortcutsSection />
       <HomeFooter className="mt-0" />
       <HomepagePopupDialog />
     </div>

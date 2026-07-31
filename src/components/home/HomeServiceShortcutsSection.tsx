@@ -53,7 +53,7 @@ export function HomeServiceShortcutsSection() {
 
   return (
     <section
-      className="service-shortcut-section bg-[#FFFEFA] px-[15px] py-8 md:py-10"
+      className="service-shortcut-section bg-[#FFFEFA] px-[15px] pt-[15px] pb-8 md:pb-10"
       aria-label={title}
     >
       <div className="mx-auto w-full max-w-[1440px] xl:max-w-[1320px]">
