@@ -140,6 +140,51 @@ export async function POST(request: Request) {
       return NextResponse.json({ draft });
     }
 
+    if (action === "rebuild_primary_layout") {
+      const { loadLiveBlocks } = await import("@/lib/home/layout-versions");
+      const { buildPrimaryHomeLayout } = await import("@/lib/home/blocks");
+      const publish = body.publish === true;
+      // Prefer current draft configs, fall back to live rows
+      const draft = await getDraft();
+      const live = await loadLiveBlocks();
+      const mergedById = new Map<string, HomepageBlock>();
+      for (const b of live) mergedById.set(b.id, b);
+      for (const b of draft.blocks_snapshot) mergedById.set(b.id, b);
+      const primary = buildPrimaryHomeLayout(Array.from(mergedById.values()));
+      const nextDraft = await saveDraft(primary, {
+        label: "前台核心版型",
+        note: "已依 staging 前台順序重建，僅保留 11 個核心區塊",
+        updatedBy: auth!.profile.id,
+      });
+      if (publish) {
+        const result = await publishDraft({
+          label: "發布前台核心版型",
+          note: "移除舊區塊，對齊目前前台順序",
+          publishedBy: auth!.profile.id,
+        });
+        await logAudit(
+          auth!.profile.id,
+          "publish",
+          "homepage_layout",
+          result.published.id,
+          null,
+          { action: "rebuild_primary_layout", version_number: result.published.version_number },
+          request as never
+        );
+        return NextResponse.json(result);
+      }
+      await logAudit(
+        auth!.profile.id,
+        "update",
+        "homepage_layout_draft",
+        nextDraft.id,
+        null,
+        { action: "rebuild_primary_layout", block_count: primary.length },
+        request as never
+      );
+      return NextResponse.json({ draft: nextDraft });
+    }
+
     if (action === "reset_draft_from_live") {
       const { loadLiveBlocks } = await import("@/lib/home/layout-versions");
       const live = await loadLiveBlocks();

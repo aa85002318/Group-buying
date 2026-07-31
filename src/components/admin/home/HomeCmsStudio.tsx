@@ -179,31 +179,27 @@ export function HomeCmsStudio() {
   };
 
   const syncPrimaryOrder = async () => {
-    if (!confirm("將右側核心區塊順序重設為與前台一致？")) return;
+    if (
+      !confirm(
+        "將後台草稿重建為目前前台核心版型（11 個區塊），並移除舊區塊？\n重建後請記得「發布更新」才會上線。"
+      )
+    ) {
+      return;
+    }
     setCatalogBusy(true);
     try {
-      for (const key of PRIMARY_HOME_SECTION_KEYS) {
-        const block = blocks.find((b) => b.block_key === key);
-        if (!block) continue;
-        const meta = getSectionMeta(key);
-        await fetch("/api/admin/cms", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            kind: "block",
-            id: block.id,
-            target: "draft",
-            sort_order: HOME_SECTION_SORT_DEFAULT[key],
-            title: meta?.label?.includes("／")
-              ? meta.label.split("／")[0]
-              : meta?.label || block.title,
-          }),
-        });
-      }
+      const res = await fetch("/api/admin/home/layout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rebuild_primary_layout" }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "重建失敗");
       await load();
       setPreviewKey((k) => k + 1);
+      setDirtyHint(true);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "同步失敗");
+      alert(e instanceof Error ? e.message : "重建失敗");
     } finally {
       setCatalogBusy(false);
     }
@@ -286,7 +282,7 @@ export function HomeCmsStudio() {
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col gap-2">
       <AdminPageHeader
         title="首頁 CMS"
-        description="固定版型模組化管理：左側即時預覽、右側素材設定。草稿不影響正式前台，發布後才上線。"
+        description="左側預覽對應目前前台版型；右側僅管理 11 個核心區塊。舊設定已淘汰，請用「重建為前台版型」對齊後再發布。"
       />
 
       <HomeLayoutPublishBar
@@ -330,7 +326,7 @@ export function HomeCmsStudio() {
           disabled={catalogBusy}
           onClick={() => void syncPrimaryOrder()}
         >
-          對齊前台順序
+          重建為前台版型
         </Button>
         {dirtyHint ? (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
@@ -431,98 +427,82 @@ export function HomeCmsStudio() {
             ) : (
               <>
                 <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[#153E73]/70">
-                  前台核心區塊
+                  前台核心區塊（依 staging 順序）
                 </p>
-                {primaryBlocks.map((block, index) => {
-                  const meta =
-                    getSectionMeta(block.block_key) ||
-                    ({
-                      id: block.block_key as HomeSectionKey,
-                      label: block.title || block.block_key,
-                      description: "",
-                      contentMode: "manual",
-                    } as HomeAdminSectionMeta);
+                {PRIMARY_HOME_SECTION_KEYS.map((key, index) => {
+                  const block = primaryBlocks.find((b) => b.block_key === key);
+                  const meta = getSectionMeta(key);
+                  if (!block) {
+                    return (
+                      <div
+                        key={`missing-${key}`}
+                        className="rounded-xl border border-dashed border-amber-300 bg-amber-50/70 p-3"
+                      >
+                        <p className="text-sm font-semibold text-coffee">
+                          {index + 1}. {meta?.label || key}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          前台有此區塊，草稿尚未加入
+                        </p>
+                        <Button
+                          size="sm"
+                          className="mt-2"
+                          variant="outline"
+                          disabled={catalogBusy}
+                          onClick={() => void addBlock(key)}
+                        >
+                          加入草稿
+                        </Button>
+                      </div>
+                    );
+                  }
                   return (
                     <SectionPanel
                       key={block.id}
-                      section={meta}
+                      section={
+                        meta ||
+                        ({
+                          id: key,
+                          label: block.title || key,
+                          description: "",
+                          contentMode: "manual",
+                        } as HomeAdminSectionMeta)
+                      }
                       block={block}
                       index={index}
                       open={expanded === block.id}
                       saving={savingId === block.id}
-                      displayLabel={meta.label}
+                      displayLabel={`${index + 1}. ${meta?.label || block.title}`}
                       onToggle={() =>
                         setExpanded((cur) => (cur === block.id ? null : block.id))
                       }
                       onPatch={patch}
                       onMove={moveSection}
                       onRemove={removeBlock}
-                      canDelete={!FIXED_FUNCTION_KEYS.has(block.block_key as HomeSectionKey)}
+                      canDelete={false}
                     />
-                  );
-                })}
-                {PRIMARY_HOME_SECTION_KEYS.filter(
-                  (key) => !primaryBlocks.some((b) => b.block_key === key)
-                ).map((key) => {
-                  const meta = getSectionMeta(key);
-                  return (
-                    <div
-                      key={`missing-${key}`}
-                      className="rounded-xl border border-dashed border-amber-300 bg-amber-50/70 p-3"
-                    >
-                      <p className="text-sm font-semibold text-coffee">
-                        {meta?.label || key}
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        前台有此區塊，草稿尚未加入
-                      </p>
-                      <Button
-                        size="sm"
-                        className="mt-2"
-                        variant="outline"
-                        disabled={catalogBusy}
-                        onClick={() => void addBlock(key)}
-                      >
-                        加入草稿
-                      </Button>
-                    </div>
                   );
                 })}
 
                 {legacyBlocks.length ? (
-                  <>
-                    <p className="mt-3 px-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                      其他／舊區塊（不在目前前台主堆疊）
+                  <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/80 p-3">
+                    <p className="text-sm font-semibold text-coffee">
+                      草稿仍有 {legacyBlocks.length} 個舊區塊
                     </p>
-                    {legacyBlocks.map((block, index) => {
-                      const meta =
-                        getSectionMeta(block.block_key) ||
-                        ({
-                          id: block.block_key as HomeSectionKey,
-                          label: block.title || block.block_key,
-                          description: "",
-                          contentMode: "manual",
-                        } as HomeAdminSectionMeta);
-                      return (
-                        <SectionPanel
-                          key={block.id}
-                          section={meta}
-                          block={block}
-                          index={primaryBlocks.length + index}
-                          open={expanded === block.id}
-                          saving={savingId === block.id}
-                          displayLabel={meta.label}
-                          onToggle={() =>
-                            setExpanded((cur) => (cur === block.id ? null : block.id))
-                          }
-                          onPatch={patch}
-                          onMove={moveSection}
-                          onRemove={removeBlock}
-                          canDelete={!FIXED_FUNCTION_KEYS.has(block.block_key as HomeSectionKey)}
-                        />
-                      );
-                    })}
-                  </>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      舊設定不再對應前台。請點上方「重建為前台版型」一次清掉。
+                    </p>
+                    <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">
+                      {legacyBlocks.slice(0, 8).map((b) => (
+                        <li key={b.id}>
+                          · {getSectionMeta(b.block_key)?.label || b.title || b.block_key}
+                        </li>
+                      ))}
+                      {legacyBlocks.length > 8 ? (
+                        <li>…另有 {legacyBlocks.length - 8} 個</li>
+                      ) : null}
+                    </ul>
+                  </div>
                 ) : null}
               </>
             )}

@@ -169,7 +169,7 @@ export const SECTION_DEFAULTS: Record<
     viewAllUrl: "/videos",
   },
   service_shortcuts: {
-    title: "服務快捷入口",
+    title: "快捷服務入口",
     displayCount: 4,
     visible: true,
     config: { items: DEFAULT_SERVICE_SHORTCUTS },
@@ -323,26 +323,33 @@ export function resolveHomeBlock(
 }
 
 /**
- * Visible CMS sections ordered by sort_order.
- * Supports multiple instances of the same block_key (each row is one section).
+ * Visible homepage sections in canonical primary order.
+ * Legacy / non-primary keys are ignored — new architecture only.
+ * Missing primary keys fall back to SECTION_DEFAULTS so the live page stays complete.
  */
 export function listOrderedHomeSections(
   blocks: HomepageBlock[] | null | undefined
 ): ResolvedHomeBlock[] {
-  const rows = (blocks ?? [])
-    .map(resolveHomeBlockRow)
-    .filter((b): b is ResolvedHomeBlock => Boolean(b));
-
-  if (rows.length === 0) {
-    return PRIMARY_HOME_SECTION_KEYS.map((key) => resolveHomeBlock([], key)).filter(
-      (b) => b.visible
-    );
+  const byKey = new Map<HomeSectionKey, HomepageBlock>();
+  for (const row of blocks ?? []) {
+    if (!isHomeSectionKey(row.block_key)) continue;
+    if (!PRIMARY_HOME_SECTION_KEYS.includes(row.block_key)) continue;
+    if (!byKey.has(row.block_key)) byKey.set(row.block_key, row);
   }
 
-  return rows
-    .slice()
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .filter((b) => b.visible);
+  return PRIMARY_HOME_SECTION_KEYS.map((key) => {
+    const row = byKey.get(key);
+    if (row) {
+      const resolved = resolveHomeBlockRow(row);
+      if (!resolved || !resolved.visible) return null;
+      return {
+        ...resolved,
+        sortOrder: HOME_SECTION_SORT_DEFAULT[key],
+      };
+    }
+    const fallback = resolveHomeBlock([], key);
+    return fallback.visible ? fallback : null;
+  }).filter((b): b is ResolvedHomeBlock => Boolean(b));
 }
 
 export function warnUnknownHomeSection(key: string) {
@@ -360,6 +367,40 @@ export function blockVisibleOnViewport(
   if (isMobile && config.show_mobile === false) return false;
   if (!isMobile && config.show_desktop === false) return false;
   return true;
+}
+
+/** Build the canonical primary homepage layout, preserving existing configs/ids. */
+export function buildPrimaryHomeLayout(
+  existing: HomepageBlock[] | null | undefined
+): HomepageBlock[] {
+  const byKey = new Map<string, HomepageBlock>();
+  for (const row of existing ?? []) {
+    if (!PRIMARY_HOME_SECTION_KEYS.includes(row.block_key as HomeSectionKey)) continue;
+    if (!byKey.has(row.block_key)) byKey.set(row.block_key, row);
+  }
+
+  return PRIMARY_HOME_SECTION_KEYS.map((key) => {
+    const found = byKey.get(key);
+    if (found) {
+      const def = SECTION_DEFAULTS[key];
+      return {
+        ...found,
+        title: def.title,
+        is_visible: true,
+        sort_order: HOME_SECTION_SORT_DEFAULT[key],
+        display_count: found.display_count ?? def.displayCount,
+        source_mode: found.source_mode ?? def.sourceMode ?? "auto",
+        data_source: found.data_source ?? def.dataSource ?? null,
+        view_all_url: found.view_all_url ?? def.viewAllUrl ?? null,
+        config:
+          found.config && typeof found.config === "object" && Object.keys(found.config).length
+            ? found.config
+            : (def.config ?? {}),
+        updated_at: new Date().toISOString(),
+      } as HomepageBlock;
+    }
+    return createBlockInstance(key);
+  });
 }
 
 /** Build a new draft block instance from a catalog type. */

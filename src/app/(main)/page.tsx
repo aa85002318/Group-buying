@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
 import { HomeHeroSection } from "@/components/home/HomeHeroSection";
-import { HomeContentArea } from "@/components/home/HomeContentArea";
 import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
 import { HorizontalProductRail } from "@/components/home/HorizontalProductRail";
 import { PromoBannerStrip } from "@/components/home/PromoBannerStrip";
@@ -597,7 +596,6 @@ export default function HomePage() {
 
   const creamKeys = new Set<HomeSectionKey>(CREAM_ZONE_KEYS);
   const creamSections = ordered.filter((b) => creamKeys.has(b.key));
-  const bodySections = ordered.filter((b) => !creamKeys.has(b.key));
 
   const ctx: HomeDataCtx = {
     blocks,
@@ -640,19 +638,6 @@ export default function HomePage() {
       <section className="w-full max-w-full overflow-x-clip p-0">
         {creamToRender.map((block) => renderHomeSection(block, ctx))}
       </section>
-
-      <HomeContentArea>
-        <div className="site-container site-content-container home-page-inner space-y-6 min-[375px]:space-y-7 md:space-y-8">
-          {bodySections.map((block) => {
-            try {
-              return renderHomeSection(block, ctx);
-            } catch (err) {
-              console.error(`[home] section ${block.key} failed`, err);
-              return null;
-            }
-          })}
-        </div>
-      </HomeContentArea>
 
       <HomeFooter className="mt-0" />
       <HomepagePopupDialog />
