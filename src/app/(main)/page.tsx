@@ -2,16 +2,11 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Clock3, Heart, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import { HomeHeroSection } from "@/components/home/HomeHeroSection";
-import { HomeStoreNews } from "@/components/home/HomeStoreNews";
-import { HomeServiceShortcuts } from "@/components/home/HomeServiceShortcuts";
-import { HomeIngredientCategories } from "@/components/home/HomeIngredientCategories";
 import { HomeContentArea } from "@/components/home/HomeContentArea";
 import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
-import { PopularCategories } from "@/components/home/PopularCategories";
 import { HorizontalProductRail } from "@/components/home/HorizontalProductRail";
-import { GroupBuyClosingSection } from "@/components/home/GroupBuyClosingSection";
 import { PromoBannerStrip } from "@/components/home/PromoBannerStrip";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
 import { HomeFooter } from "@/components/home/HomeFooter";
@@ -21,11 +16,9 @@ import { BrandStatementSection } from "@/components/home/BrandStatementSection";
 import { AiAssistantSection } from "@/components/home/AiAssistantSection";
 import { BakingInspirationSection } from "@/components/home/BakingInspirationSection";
 import { ChimeSelectSection } from "@/components/home/ChimeSelectSection";
-import { WeeklyLiveStreamsSection } from "@/components/home/WeeklyLiveStreamsSection";
 import { MonthlyChallengeSection } from "@/components/home/MonthlyChallengeSection";
 import { SeasonalThemesSection } from "@/components/home/SeasonalThemesSection";
 import { StoreInformationSection } from "@/components/home/StoreInformationSection";
-import { RecipeKitsSection } from "@/components/home/RecipeKitsSection";
 import { FeaturedCoursesSection } from "@/components/home/FeaturedCoursesSection";
 import {
   TrustServicesSection,
@@ -44,7 +37,6 @@ import {
   type ResolvedHomeBlock,
 } from "@/lib/home/blocks";
 import { CREAM_ZONE_KEYS, type HomeSectionKey } from "@/lib/home/section-keys";
-import { parsePopularCategories } from "@/lib/home/admin-sections";
 import { mockProducts } from "@/lib/mock-data";
 import type { RecipeSummary } from "@/lib/consumer-hub";
 import type { Article, HomepageBlock, Product, Video } from "@/lib/types/database";
@@ -157,24 +149,17 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     case "weekly_live_streams":
       // Band sections: hero / materials / group-buy banner+hub (avoid duplicate rails)
       return null;
+    case "store_news":
+    case "latest_recipes":
+    case "recipe_kits":
+    case "popular_categories":
+    case "ingredient_categories":
+    case "popular_baking_products":
+    case "service_shortcuts":
+      // Removed from homepage below 團購精選 (kept in CMS for possible future reuse)
+      return null;
     case "hero":
       return <HomeHeroSection key={reactKey} />;
-    case "store_news":
-      return (
-        <HomeStoreNews
-          key={reactKey}
-          title={block.title || "門市最新資訊"}
-          subtitle={block.subtitle}
-          viewAllHref={block.viewAllUrl || "/member"}
-          viewAllLabel={
-            typeof block.config?.more_label === "string"
-              ? block.config.more_label
-              : "查看全部"
-          }
-          config={block.config}
-          limit={block.displayCount}
-        />
-      );
     case "brand_statement":
       return <BrandStatementSection key={reactKey} config={block.config} />;
     case "quick_menu":
@@ -210,129 +195,6 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
           limit={block.displayCount}
         />
       );
-    case "popular_categories": {
-      const fromCms = parsePopularCategories(block.config);
-      return (
-        <PopularCategories
-          key={reactKey}
-          items={
-            fromCms.length > 0
-              ? fromCms.map((c) => ({
-                  id: c.id,
-                  name: c.name,
-                  href: c.href,
-                  imageUrl: c.imageUrl,
-                  icon: c.icon,
-                  iconBg: c.iconBg,
-                }))
-              : undefined
-          }
-          title={block.title || "找材料"}
-        />
-      );
-    }
-    case "ingredient_categories":
-      return (
-        <HomeIngredientCategories
-          key={reactKey}
-          title={block.title || "找材料"}
-          subtitle={block.subtitle}
-          viewAllHref={block.viewAllUrl || "/products"}
-          viewAllLabel={
-            typeof block.config?.view_all_label === "string"
-              ? block.config.view_all_label
-              : "查看全部"
-          }
-        />
-      );
-    case "latest_recipes": {
-      let recipes = ctx.recipes;
-      if (block.manualIds.length > 0) {
-        const byId = new Map(ctx.recipes.map((r) => [r.id, r]));
-        recipes = block.manualIds
-          .map((id) => byId.get(id))
-          .filter(Boolean) as RecipeSummary[];
-      }
-      recipes = recipes.slice(0, block.displayCount);
-      const difficultyLabel = (d?: string | null) =>
-        d === "easy" ? "簡單" : d === "hard" ? "進階" : d === "medium" ? "中等" : null;
-      return (
-        <section key={reactKey} className="space-y-3">
-          <SectionHeader
-            title={block.title || "熱門食譜"}
-            href={block.viewAllUrl || "/recipes"}
-            className="!mb-0"
-          />
-          {block.subtitle ? (
-            <p className="text-xs text-foreground-secondary">{block.subtitle}</p>
-          ) : (
-            <p className="text-xs text-foreground-secondary">從靈感開始，找到今天想做的甜點</p>
-          )}
-          <HomeSectionFrame
-            loading={ctx.recipesLoading}
-            error={ctx.recipesError}
-            onRetry={ctx.reloadRecipes}
-            empty={!ctx.recipesLoading && !ctx.recipesError && recipes.length === 0}
-            emptyTitle="尚無食譜"
-            emptyText="新食譜上架後會出現在這裡"
-            emptyActionHref="/recipes"
-            emptyActionLabel="看全部食譜"
-            skeletonCount={3}
-          >
-            <HorizontalScroller className="md:grid md:grid-cols-4 md:gap-4 md:overflow-visible">
-              {recipes.map((r) => (
-                <Link
-                  key={r.id}
-                  href={r.href}
-                  className="flex w-[42vw] shrink-0 flex-col overflow-hidden rounded-[16px] border border-border-soft bg-surface min-[375px]:w-[44vw] sm:w-[168px] md:w-auto"
-                >
-                  <div className="relative aspect-[4/3] bg-surface-soft">
-                    {r.coverImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.coverImage} alt="" className="h-full w-full object-cover" />
-                    ) : null}
-                    <span className="absolute left-2 top-2 rounded-full bg-surface-yellow px-2 py-0.5 text-[10px] font-bold text-brand-caramel">
-                      {r.category}
-                    </span>
-                    <span className="absolute right-2 top-2 text-brand-primary">
-                      <Heart className="h-4 w-4" aria-hidden />
-                    </span>
-                  </div>
-                  <div className="space-y-1 p-2.5">
-                    <p className="line-clamp-2 text-[13px] font-bold text-brand-caramel">
-                      {r.title}
-                    </p>
-                    <p className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground-secondary">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock3 className="h-3 w-3 text-brand-yellow" aria-hidden />
-                        {r.durationMinutes} 分
-                      </span>
-                      {difficultyLabel(r.difficulty) ? (
-                        <span>{difficultyLabel(r.difficulty)}</span>
-                      ) : null}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </HorizontalScroller>
-          </HomeSectionFrame>
-        </section>
-      );
-    }
-    case "recipe_kits":
-      return (
-        <RecipeKitsSection
-          key={reactKey}
-          title={block.title || "一鍵買齊材料"}
-          subtitle={
-            block.subtitle ||
-            (typeof block.config?.subtitle === "string" ? block.config.subtitle : undefined) ||
-            "跟著食譜，一次買齊所有材料"
-          }
-          viewAllHref={block.viewAllUrl || "/recipes"}
-          limit={block.displayCount}
-        />
-      );
     case "featured_courses":
       return (
         <FeaturedCoursesSection
@@ -351,16 +213,6 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
           title={block.title || "安心服務"}
           subtitle={block.subtitle}
           items={parseTrustServices(block.config)}
-        />
-      );
-    case "service_shortcuts":
-      return (
-        <HomeServiceShortcuts
-          key={reactKey}
-          title={block.title || "服務快捷入口"}
-          subtitle={block.subtitle}
-          config={block.config}
-          limit={block.displayCount}
         />
       );
     case "weekly_new_products": {
@@ -386,30 +238,6 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
           href={block.viewAllUrl || "/products?sort=newest"}
           products={products}
           badge="new"
-          loading={ctx.productsLoading}
-          error={ctx.productsError}
-          onRetry={ctx.reloadProducts}
-        />
-      );
-    }
-    case "popular_baking_products": {
-      const baking = filterProductsByScope(ctx.products, "baking");
-      const mode =
-        block.manualIds.length > 0 || block.sourceMode === "manual" ? "manual" : "auto";
-      const products = pickHomeProducts({
-        products: baking,
-        manualIds: block.manualIds,
-        autoList: baking,
-        mode: mode === "manual" && block.manualIds.length === 0 ? "auto" : mode,
-        limit: block.displayCount,
-      });
-      return (
-        <HorizontalProductRail
-          key={reactKey}
-          title={block.title || "本週熱門商品"}
-          href={block.viewAllUrl || "/baking-materials"}
-          products={products}
-          badge="hot"
           loading={ctx.productsLoading}
           error={ctx.productsError}
           onRetry={ctx.reloadProducts}
@@ -466,32 +294,6 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
           limit={block.displayCount}
         />
       );
-    case "weekly_live_streams":
-      return (
-        <WeeklyLiveStreamsSection
-          key={reactKey}
-          title={block.title}
-          viewAllHref={block.viewAllUrl || "/live"}
-          limit={block.displayCount}
-        />
-      );
-    case "closing_group_buys": {
-      const closing = ctx.events
-        .filter((e) => e.status === "active")
-        .slice()
-        .sort((a, b) => String(a.end_at ?? "").localeCompare(String(b.end_at ?? "")))
-        .slice(0, block.displayCount);
-      return (
-        <GroupBuyClosingSection
-          key={reactKey}
-          title={block.title || "團購優惠中"}
-          events={closing}
-          loading={ctx.eventsLoading}
-          error={ctx.eventsError}
-          onRetry={ctx.reloadEvents}
-        />
-      );
-    }
     case "weekly_promotions":
       return (
         <PromoBannerStrip

@@ -80,10 +80,14 @@ export function HomeGroupBuyHubBand() {
 
   return (
     <div className="gb-hub-band bg-[#FFFEFA]">
-      <div className="gb-hub-band-inner mx-auto w-full max-w-[1100px] px-[15px]">
+      <div className="gb-hub-band-inner mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
         {/* Section 1 — 本週開團 */}
         <section className="gb-hub-section" aria-label="本週開團">
-          <GroupBuyHubHeader title={<>📦 本週開團</>} href="/group-buy" />
+          <GroupBuyHubHeader
+            title="本週開團"
+            subtitle="本週熱門開團，一起買更划算"
+            href="/group-buy"
+          />
           {loading ? (
             <HubRailSkeleton count={4} tall />
           ) : weeklyOpen.length === 0 ? (
@@ -99,7 +103,11 @@ export function HomeGroupBuyHubBand() {
 
         {/* Section 2 — 即將結單 */}
         <section className="gb-hub-section" aria-label="即將結單">
-          <GroupBuyHubHeader title={<>⏰ 即將結單</>} href="/group-buy" />
+          <GroupBuyHubHeader
+            title="即將結單"
+            subtitle="倒數中的團購，把握最後機會"
+            href="/group-buy"
+          />
           {loading ? (
             <HubRailSkeleton count={4} />
           ) : closingSoon.length === 0 ? (
@@ -115,7 +123,11 @@ export function HomeGroupBuyHubBand() {
 
         {/* Section 3 — 團購直播預告 */}
         <section className="gb-hub-section" aria-label="團購直播預告">
-          <GroupBuyHubHeader title={<>LIVE 團購直播</>} href="/live" />
+          <GroupBuyHubHeader
+            title="LIVE 團購直播"
+            subtitle="鎖定直播檔期，不錯過限時優惠"
+            href="/live"
+          />
           {loading ? (
             <HubRailSkeleton count={2} wide />
           ) : livePreview.length === 0 ? (
@@ -130,7 +142,7 @@ export function HomeGroupBuyHubBand() {
         </section>
 
         {/* Section 4 — CHIMEIDIY 團購精選 */}
-        <FeaturedGroupBuySection events={featured} />
+        <FeaturedGroupBuySection events={featured} loading={loading} />
       </div>
     </div>
   );

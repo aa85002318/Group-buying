@@ -2,7 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { Filter, ChevronDown, Loader2, Minus, Plus, ShoppingCart } from "lucide-react";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
+import { MoreProductsCard } from "@/components/home/ingredient-shop/MoreProductsCard";
+import { ProductHorizontalScroller } from "@/components/home/ingredient-shop/ProductHorizontalScroller";
 import { useCart } from "@/hooks/useCart";
 import { formatCurrency, cn } from "@/lib/utils";
 import { GroupBuyHubHeader } from "./GroupBuyHubHeader";
@@ -17,117 +21,248 @@ import {
   type GroupBuyHubEvent,
 } from "./types";
 
-export function FeaturedGroupBuySection({ events }: { events: GroupBuyHubEvent[] }) {
+const CARD_WIDTH =
+  "w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]";
+
+const tabBase =
+  "inline-flex h-9 shrink-0 items-center gap-1 rounded-xl border px-3.5 text-[13px] font-semibold transition md:h-10 md:gap-1.5 md:rounded-[14px] md:px-[18px] md:text-sm";
+
+/** CHIMEIDIY 團購精選 — same layout language as「一鍵買齊材料」. */
+export function FeaturedGroupBuySection({
+  events,
+  loading = false,
+}: {
+  events: GroupBuyHubEvent[];
+  loading?: boolean;
+}) {
   const [tab, setTab] = useState<FeaturedTabId>("all");
   const visible = useMemo(
-    () => events.filter((e) => matchesFeaturedTab(e, tab)).slice(0, 8),
+    () => events.filter((e) => matchesFeaturedTab(e, tab)).slice(0, 12),
     [events, tab]
   );
 
   return (
-    <section className="gb-hub-section" aria-label="CHIMEIDIY 團購精選">
-      <GroupBuyHubHeader title="CHIMEIDIY 團購精選" href="/group-buy" />
+    <section className="gb-hub-section gb-hub-featured" aria-label="CHIMEIDIY 團購精選">
+      <GroupBuyHubHeader
+        title="CHIMEIDIY 團購精選"
+        subtitle="精選團購好物，一起買更划算"
+        href="/group-buy"
+      />
 
-      <div className="gb-hub-tabs mb-3.5 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {FEATURED_TABS.map((t) => {
-          const active = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={cn(
-                "h-9 shrink-0 rounded-full px-3.5 text-[13px] font-bold transition",
-                active
-                  ? "bg-[#FFD454] text-[#153E73]"
-                  : "bg-white text-[#153E73] ring-1 ring-[#E9EDF2]"
-              )}
-            >
-              {t.label}
-            </button>
-          );
-        })}
+      <div className="mb-3.5 md:mb-[18px]">
+        <div
+          className="ingredient-shop-tabs flex gap-2 overflow-x-auto pb-0.5 md:gap-2.5"
+          role="tablist"
+          aria-label="團購分類"
+        >
+          {FEATURED_TABS.map((t) => {
+            const selected = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  tabBase,
+                  selected
+                    ? "border-transparent bg-[#FFD454] text-[#153E73] shadow-[0_4px_12px_rgba(21,62,115,0.08)]"
+                    : "border-[#E9EDF2] bg-white text-[#153E73] hover:border-[#d5dde6]"
+                )}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+          <Link
+            href="/group-buy"
+            className={cn(tabBase, "border-[#E9EDF2] bg-white text-[#153E73] hover:border-[#d5dde6]")}
+          >
+            <Filter className="h-4 w-4 md:h-[18px] md:w-[18px]" aria-hidden />
+            更多選項
+            <ChevronDown className="h-3.5 w-3.5 opacity-70" aria-hidden />
+          </Link>
+        </div>
       </div>
 
-      {visible.length === 0 ? (
-        <p className="rounded-[24px] border border-[#E9EDF2] bg-white px-4 py-8 text-center text-sm text-[#687386]">
-          此分類暫無團購精選
-        </p>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 md:gap-4">
-          {visible.map((event) => (
-            <FeaturedProductCard key={event.id} event={event} />
+      {loading ? (
+        <div className="flex gap-2.5 overflow-hidden pb-2 md:gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className={`home-skeleton h-[300px] shrink-0 rounded-2xl md:h-[345px] ${CARD_WIDTH}`}
+            />
           ))}
         </div>
+      ) : visible.length === 0 ? (
+        <p className="rounded-2xl border border-[#E9EDF2] bg-white px-4 py-6 text-center text-sm text-[#687386]">
+          此分類暫無團購精選，試試其他分類或前往團購專區。
+        </p>
+      ) : (
+        <ProductHorizontalScroller>
+          {visible.map((event) => (
+            <FeaturedShopStyleCard key={event.id} event={event} />
+          ))}
+          <MoreProductsCard
+            title="更多團購"
+            subtitle="查看全部團購"
+            href="/group-buy"
+          />
+        </ProductHorizontalScroller>
       )}
     </section>
   );
 }
 
-function FeaturedProductCard({ event }: { event: GroupBuyHubEvent }) {
+function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
   const { addItem } = useCart();
+  const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const product = primaryProduct(event);
   const image = eventImage(event);
-  const { price } = eventPrices(event);
+  const { price, original } = eventPrices(event);
   const sold = soldCount(event);
   const href = `/group-buy/${event.id}`;
   const name = product?.name || event.title;
+  const maxQty = Math.max(1, Number(primaryProduct(event)?.stock) || 99);
+  const soldOut = product?.stock === 0;
 
-  const onAdd = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!product?.id || adding) return;
+  const onAdd = async () => {
+    if (!product?.id || soldOut || adding) return;
     setAdding(true);
+    setToast(null);
     try {
       await addItem({
         productId: product.id,
         name: product.name,
         price,
         imageUrl: product.image_url,
-        quantity: 1,
+        quantity,
       });
+      setToast("已加入購物車");
+      setTimeout(() => setToast(null), 2000);
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : "加入失敗");
+      setTimeout(() => setToast(null), 2500);
     } finally {
       setAdding(false);
     }
   };
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-[24px] border border-[#E9EDF2] bg-white p-2.5 shadow-[0_4px_14px_rgba(21,62,115,0.05)] transition duration-300 md:hover:-translate-y-1 md:hover:scale-[1.02]">
+    <article
+      className={cn(
+        "ingredient-shop-card group flex h-[300px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E9EDF2] bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[345px] md:p-3",
+        CARD_WIDTH,
+        !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
+      )}
+    >
       <div className="relative">
-        <Link href={href} className="relative block aspect-square overflow-hidden rounded-[18px] bg-[#FFFEFA]">
+        <Link
+          href={href}
+          className={cn(
+            "relative block h-[135px] overflow-hidden rounded-xl bg-[#FFFEFA] md:h-[165px] xl:h-[170px]",
+            soldOut && "opacity-60"
+          )}
+        >
+          <div className="absolute right-1.5 top-1.5 z-10">
+            {product?.id ? (
+              <FavoriteButton
+                productId={product.id}
+                size="sm"
+                className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
+              />
+            ) : null}
+          </div>
           {image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={image} alt="" className="h-full w-full object-cover" />
+            <Image
+              src={image}
+              alt={name}
+              fill
+              className="object-contain p-2.5 md:p-3.5"
+              sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
+              unoptimized
+            />
           ) : (
-            <span className="flex h-full items-center justify-center text-xs text-[#687386]">
-              商品
-            </span>
+            <div className="flex h-full items-center justify-center text-xs text-[#687386]">
+              暫無圖片
+            </div>
           )}
         </Link>
-        {product?.id ? (
-          <div className="absolute right-1.5 top-1.5 z-10">
-            <FavoriteButton targetType="product" targetId={product.id} size="sm" />
+      </div>
+
+      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+        <Link href={href}>
+          <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
+            {name}
+          </h3>
+        </Link>
+
+        <div className="mt-1.5 flex min-h-[28px] flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+          <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
+            {formatCurrency(price)}
+          </span>
+          {original > price ? (
+            <span className="text-[11px] text-[#687386] line-through md:text-xs">
+              {formatCurrency(original)}
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 text-[11px] text-[#687386]">已售 {sold}</p>
+
+        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+          <div
+            className={cn(
+              "inline-flex h-8 w-24 items-center overflow-hidden rounded-lg border border-[#E9EDF2] md:h-[34px] md:w-[112px]",
+              soldOut && "opacity-50"
+            )}
+          >
+            <button
+              type="button"
+              aria-label="減少數量"
+              disabled={soldOut || quantity <= 1}
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              className="inline-flex h-8 w-8 items-center justify-center text-[#153E73] disabled:cursor-not-allowed md:h-[34px] md:w-8"
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </button>
+            <span className="min-w-[20px] flex-1 text-center text-sm font-semibold text-[#153E73]">
+              {quantity}
+            </span>
+            <button
+              type="button"
+              aria-label="增加數量"
+              disabled={soldOut || quantity >= maxQty}
+              onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
+              className="inline-flex h-8 w-8 items-center justify-center text-[#153E73] disabled:cursor-not-allowed md:h-[34px] md:w-8"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
           </div>
+
+          <button
+            type="button"
+            aria-label="加入購物車"
+            disabled={!product?.id || soldOut || adding}
+            onClick={onAdd}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFD454] text-[#153E73] transition hover:brightness-95 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 md:h-10 md:w-10"
+          >
+            {adding ? (
+              <Loader2 className="h-4 w-4 animate-spin md:h-[19px] md:w-[19px]" aria-hidden />
+            ) : (
+              <ShoppingCart className="h-[17px] w-[17px] md:h-[19px] md:w-[19px]" aria-hidden />
+            )}
+          </button>
+        </div>
+
+        {toast ? (
+          <p className="mt-1 text-center text-[10px] font-medium text-[#153E73]" role="status">
+            {toast}
+          </p>
         ) : null}
       </div>
-      <Link href={href} className="mt-2">
-        <h3 className="line-clamp-2 text-[13px] font-bold leading-snug text-[#153E73]">
-          {name}
-        </h3>
-      </Link>
-      <p className="mt-1 text-[15px] font-extrabold text-[#F16458]">
-        {formatCurrency(price)}
-      </p>
-      <p className="mt-0.5 text-[11px] text-[#687386]">已售 {sold}</p>
-      <button
-        type="button"
-        disabled={!product?.id || adding}
-        onClick={onAdd}
-        className="mt-2 inline-flex h-9 w-full items-center justify-center rounded-full bg-[#153E73] text-[12px] font-extrabold text-white transition hover:opacity-90 active:scale-[0.98] disabled:opacity-50 md:hover:scale-[1.02]"
-      >
-        {adding ? "加入中…" : "加入購物車"}
-      </button>
     </article>
   );
 }
