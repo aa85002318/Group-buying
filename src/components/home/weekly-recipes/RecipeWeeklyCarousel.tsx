@@ -34,22 +34,23 @@ function nearestIndex(container: HTMLDivElement, count: number) {
   return Math.min(best, count - 1);
 }
 
-function ArcPlatform() {
+/** Fixed dual arcs — outside the scroll track so they do not slide with cards. */
+function RecipeCarouselArcs() {
   return (
-    <div className="recipe-coverflow-arc pointer-events-none absolute inset-x-0 bottom-11 z-0 mx-auto h-[90px] w-full max-w-[900px] opacity-70 lg:max-w-[1100px]" aria-hidden>
-      <svg viewBox="0 0 390 90" preserveAspectRatio="none" className="h-full w-full" aria-hidden>
+    <div className="recipe-carousel-arcs" aria-hidden="true">
+      <svg
+        viewBox="0 0 390 72"
+        preserveAspectRatio="none"
+        focusable="false"
+        aria-hidden="true"
+      >
         <path
-          d="M0 70 Q195 5 390 70"
-          fill="none"
-          stroke="#87C9E8"
-          strokeWidth="3"
+          className="recipe-carousel-arc-blue"
+          d="M0 50 Q195 4 390 50"
         />
         <path
-          d="M20 78 Q195 28 370 78"
-          fill="none"
-          stroke="#FFFDF7"
-          strokeWidth="18"
-          opacity="0.9"
+          className="recipe-carousel-arc-yellow"
+          d="M0 63 Q195 17 390 63"
         />
       </svg>
     </div>
@@ -62,7 +63,6 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
   const drag = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false });
   const [active, setActive] = useState(0);
   const [showHint, setShowHint] = useState(true);
-  const [compact, setCompact] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   const updateActive = useCallback(() => {
@@ -81,19 +81,11 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
   }, [updateActive]);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 374px)");
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => {
-      setCompact(mq.matches);
-      setReducedMotion(motion.matches);
-    };
+    const sync = () => setReducedMotion(motion.matches);
     sync();
-    mq.addEventListener("change", sync);
     motion.addEventListener("change", sync);
-    return () => {
-      mq.removeEventListener("change", sync);
-      motion.removeEventListener("change", sync);
-    };
+    return () => motion.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
@@ -165,33 +157,33 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
 
   return (
     <div
-      className="recipe-weekly-carousel recipe-coverflow relative mx-auto w-full max-w-full lg:max-w-[1100px]"
+      className="recipe-weekly-carousel recipe-coverflow relative mx-auto w-full max-w-full"
       onKeyDown={onKeyDown}
       tabIndex={0}
-      role="group"
-      aria-label="精選食譜輪播"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="精選食譜"
     >
-      {/* Desktop side arrows */}
       <button
         type="button"
         aria-label="上一張食譜"
         onClick={() => scrollTo(Math.max(0, active - 1))}
         disabled={active <= 0}
-        className="absolute left-2 top-[42%] z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#FFD34E] text-[#123B73] shadow-md transition hover:brightness-95 disabled:opacity-40 md:inline-flex lg:left-0"
+        className="absolute left-2 top-[38%] z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#E9EDF2] bg-white text-[#123B73] shadow-[0_8px_20px_rgba(18,59,115,0.12)] transition hover:opacity-80 disabled:opacity-40 md:inline-flex lg:left-1"
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-5 w-5" strokeWidth={2} />
       </button>
       <button
         type="button"
         aria-label="下一張食譜"
         onClick={() => scrollTo(Math.min(recipes.length - 1, active + 1))}
         disabled={active >= recipes.length - 1}
-        className="absolute right-2 top-[42%] z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#FFD34E] text-[#123B73] shadow-md transition hover:brightness-95 disabled:opacity-40 md:inline-flex lg:right-0"
+        className="absolute right-2 top-[38%] z-30 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#E9EDF2] bg-white text-[#123B73] shadow-[0_8px_20px_rgba(18,59,115,0.12)] transition hover:opacity-80 disabled:opacity-40 md:inline-flex lg:right-1"
       >
-        <ChevronRight className="h-5 w-5" />
+        <ChevronRight className="h-5 w-5" strokeWidth={2} />
       </button>
 
-      <div className="coverflow-viewport relative w-full max-w-full overflow-hidden">
+      <div className="coverflow-viewport">
         <div
           ref={trackRef}
           className="coverflow-track recipe-weekly-track"
@@ -213,19 +205,17 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
                 index={index}
                 total={recipes.length}
                 state={state}
-                style={getCoverflowStyle(index, active, compact)}
+                style={getCoverflowStyle(index, active)}
                 onActivate={scrollTo}
               />
             );
           })}
         </div>
 
-        <ArcPlatform />
-
         {showHint ? (
           <div
             className={cn(
-              "pointer-events-none absolute inset-x-0 bottom-[78px] z-[5] flex items-center justify-center gap-2 text-[#123B73]/70",
+              "pointer-events-none absolute inset-x-0 bottom-8 z-[5] flex items-center justify-center gap-2 text-[#123B73]/70",
               reducedMotion ? "opacity-80" : "animate-pulse"
             )}
             aria-hidden
@@ -238,14 +228,11 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
         ) : null}
       </div>
 
-      <div
-        className="relative z-[6] mt-2 flex items-end justify-center gap-2 pb-1"
-        aria-label="輪播分頁"
-      >
+      <RecipeCarouselArcs />
+
+      <div className="carousel-pagination" aria-label="輪播分頁">
         {recipes.map((recipe, i) => {
           const selected = active === i;
-          const abs = Math.abs(i - active);
-          const drop = Math.min(4, abs * 2);
           return (
             <button
               key={recipe.id}
@@ -256,12 +243,11 @@ export function RecipeWeeklyCarousel({ recipes = demoRecipes }: { recipes?: Demo
               className="inline-flex h-11 w-11 items-center justify-center"
             >
               <span
-                className="block rounded-full transition-all"
+                className="block rounded-full transition-all duration-300"
                 style={{
                   width: selected ? 30 : 9,
                   height: 9,
                   background: selected ? "#123B73" : "#87C9E8",
-                  transform: `translateY(${drop}px)`,
                 }}
               />
             </button>

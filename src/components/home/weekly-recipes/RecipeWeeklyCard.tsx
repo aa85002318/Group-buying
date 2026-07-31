@@ -20,37 +20,37 @@ export function getCardState(index: number, activeIndex: number): RecipeCardStat
 
 export function getCoverflowStyle(
   index: number,
-  activeIndex: number,
-  compact = false
+  activeIndex: number
 ): CSSProperties {
   const distance = index - activeIndex;
-  const abs = Math.abs(distance);
+  const absoluteDistance = Math.abs(distance);
 
-  const yOffset =
-    distance === 0 ? 0 : Math.min(76, 42 + (abs - 1) * 24);
+  if (distance === 0) {
+    return {
+      transform: "translateY(0) scale(1.04) rotateY(0deg) rotateZ(0deg)",
+      opacity: 1,
+      zIndex: 20,
+      filter: "none",
+    };
+  }
 
-  const activeScale = compact ? 1.04 : 1.08;
-  const scale =
-    distance === 0 ? activeScale : Math.max(0.72, 0.84 - (abs - 1) * 0.08);
-
-  const rotateY = distance === 0 ? 0 : distance < 0 ? 9 : -9;
-  const rotateZ = distance === 0 ? 0 : distance < 0 ? -2 : 2;
-
-  const opacity =
-    distance === 0 ? 1 : Math.max(0.38, 0.74 - (abs - 1) * 0.18);
+  if (absoluteDistance === 1) {
+    const isPrevious = distance === -1;
+    return {
+      transform: isPrevious
+        ? "translateY(40px) scale(0.84) rotateY(9deg) rotateZ(-2deg)"
+        : "translateY(40px) scale(0.84) rotateY(-9deg) rotateZ(2deg)",
+      opacity: 0.72,
+      zIndex: 10,
+      filter: "saturate(0.85) brightness(0.96)",
+    };
+  }
 
   return {
-    ["--distance" as string]: distance,
-    ["--abs-distance" as string]: abs,
-    transform: `translateY(${yOffset}px) scale(${scale}) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`,
-    opacity,
-    zIndex: 20 - abs,
-    filter:
-      distance === 0
-        ? "none"
-        : abs === 1
-          ? "saturate(0.85) brightness(0.96)"
-          : "saturate(0.7) brightness(0.94)",
+    transform: "translateY(64px) scale(0.74)",
+    opacity: 0.38,
+    zIndex: 2,
+    filter: "saturate(0.7) brightness(0.94)",
   };
 }
 
@@ -84,8 +84,8 @@ export function RecipeWeeklyCard({
   return (
     <article
       className={cn(
-        "recipe-weekly-card recipe-coverflow-card relative flex shrink-0 snap-center snap-always flex-col overflow-hidden rounded-[20px] border border-[#E9EDF2] bg-white",
-        isActive && "recipe-coverflow-card--active shadow-[0_22px_50px_rgba(18,59,115,0.20)]"
+        "recipe-weekly-card recipe-coverflow-card recipe-card relative flex shrink-0 snap-center snap-always flex-col",
+        isActive && "recipe-coverflow-card--active"
       )}
       style={style}
       data-active={isActive ? "true" : "false"}
@@ -94,83 +94,86 @@ export function RecipeWeeklyCard({
       aria-label={`第 ${index + 1} 張，共 ${total} 張：${recipe.title}`}
       onClick={handleCardClick}
     >
-      {isActive ? <div className="h-[5px] shrink-0 bg-[#FFD34E]" aria-hidden /> : null}
-
-      <div className="relative aspect-[4/3] shrink-0 overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={recipe.image}
-          alt={recipe.title}
-          className="h-full w-full object-cover"
-          loading="lazy"
-          draggable={false}
-        />
-        <span className="absolute left-3 top-3 rounded-full bg-[#123B73] px-2.5 py-1 text-[11px] font-semibold text-white">
-          {recipe.time}
-        </span>
-        <span className="absolute right-3 top-3 rounded-full bg-[#87C9E8] px-2.5 py-1 text-[11px] font-semibold text-[#123B73]">
-          {recipe.difficulty}
-        </span>
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3">
-        <h3 className="line-clamp-2 font-extrabold leading-[1.3] text-[#123B73] text-[clamp(21px,6vw,27px)]">
-          {recipe.title}
-        </h3>
-
-        <p
-          className={cn(
-            "card-description mt-1 truncate text-[15px] text-[#687386] transition-opacity",
-            !isActive && "pointer-events-none opacity-0"
-          )}
-        >
-          {recipe.description}
-        </p>
-
-        <div
-          className={cn(
-            "card-actions mt-[18px] grid grid-cols-[52px_1fr] items-center gap-3 transition-opacity",
-            !isActive && "pointer-events-none opacity-0"
-          )}
-        >
-          <button
-            type="button"
-            tabIndex={isActive ? 0 : -1}
-            aria-label={favorited ? "取消收藏" : "加入收藏"}
-            aria-hidden={!isActive}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isActive) return;
-              setFavorited((v) => !v);
-            }}
-            className="inline-flex h-[52px] w-[52px] items-center justify-center rounded-full border border-[#E9EDF2] bg-white transition hover:scale-105"
+      <div className="recipe-card-inner flex h-full flex-col overflow-hidden rounded-[20px] border border-[#E9EDF2] bg-white">
+        <div className="recipe-card-image relative aspect-[4/3] shrink-0 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={recipe.image}
+            alt={recipe.title}
+            className="h-full w-full object-cover"
+            loading={index === 0 ? "eager" : "lazy"}
+            draggable={false}
+          />
+          <span className="recipe-card-badge absolute left-[14px] top-[14px] bg-[#123B73] text-white">
+            {recipe.time}
+          </span>
+          <span
+            className="recipe-card-badge absolute right-[14px] top-[14px] text-[#123B73]"
+            style={{ background: "rgba(135, 201, 232, 0.35)" }}
           >
-            <Heart
-              className="h-5 w-5"
-              strokeWidth={2}
-              fill={favorited ? "#F15B52" : "none"}
-              color={favorited ? "#F15B52" : "#123B73"}
-            />
-          </button>
+            {recipe.difficulty}
+          </span>
+        </div>
 
-          <Link
-            href={`/recipes/${recipe.id}`}
-            tabIndex={isActive ? 0 : -1}
-            aria-hidden={!isActive}
-            onClick={(e) => {
-              if (!isActive) {
-                e.preventDefault();
-                onActivate(index);
-              }
-              e.stopPropagation();
-            }}
-            className="relative inline-flex h-[52px] items-center justify-center rounded-full bg-[#123B73] pr-12 text-[14px] font-semibold text-white transition hover:bg-[#0e2f5c]"
+        <div className="recipe-card-content flex min-h-0 flex-1 flex-col px-[18px] pb-5 pt-[18px]">
+          <h3 className="recipe-card-title line-clamp-2 font-extrabold text-[#123B73]">
+            {recipe.title}
+          </h3>
+
+          <p
+            className={cn(
+              "mt-1 truncate text-[15px] leading-normal text-[#687386] transition-opacity",
+              !isActive && "pointer-events-none opacity-0"
+            )}
           >
-            查看食譜
-            <span className="absolute right-2 inline-flex h-[38px] w-[38px] items-center justify-center rounded-full bg-[#FFD34E] text-[#123B73]">
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </span>
-          </Link>
+            {recipe.description}
+          </p>
+
+          <div
+            className={cn(
+              "recipe-card-actions mt-[18px] grid grid-cols-[52px_minmax(0,1fr)] items-center gap-3 transition-opacity",
+              !isActive && "pointer-events-none opacity-0"
+            )}
+          >
+            <button
+              type="button"
+              tabIndex={isActive ? 0 : -1}
+              aria-label={favorited ? "取消收藏" : "加入收藏"}
+              aria-hidden={!isActive}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isActive) return;
+                setFavorited((v) => !v);
+              }}
+              className="favorite-button inline-flex h-[52px] w-[52px] items-center justify-center rounded-full border border-[#E9EDF2] bg-white text-[#F15B52] transition hover:scale-105"
+            >
+              <Heart
+                className="h-5 w-5"
+                strokeWidth={2}
+                fill={favorited ? "#F15B52" : "none"}
+                color="#F15B52"
+              />
+            </button>
+
+            <Link
+              href={`/recipes/${recipe.id}`}
+              tabIndex={isActive ? 0 : -1}
+              aria-hidden={!isActive}
+              onClick={(e) => {
+                if (!isActive) {
+                  e.preventDefault();
+                  onActivate(index);
+                }
+                e.stopPropagation();
+              }}
+              className="recipe-view-button relative inline-flex h-[52px] items-center justify-center rounded-full bg-[#123B73] pr-12 text-base font-bold text-white transition hover:bg-[#0e2f5c]"
+            >
+              查看食譜
+              <span className="recipe-view-button-arrow absolute right-[7px] inline-flex h-[38px] w-[38px] items-center justify-center rounded-full bg-[#FFD34E] text-[#123B73]">
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </span>
+            </Link>
+          </div>
         </div>
       </div>
     </article>
