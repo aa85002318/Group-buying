@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { SearchScope } from "@/components/brand/search/types";
 import {
   HOME_HERO_DEFAULTS,
@@ -9,9 +9,13 @@ import {
   type HomeHeroData,
   type HomeHeroObjectPosition,
 } from "@/types/home-hero";
-import { FloatingSearchBar } from "./FloatingSearchBar";
+import {
+  FloatingSearchBar,
+  type HeroSearchBarHandle,
+} from "./FloatingSearchBar";
 import { HeroBottomTransition } from "./HeroBottomTransition";
 import { HeroTextContent } from "./HeroTextContent";
+import { HeroTopActions } from "./HeroTopActions";
 import { ResponsiveHeroImage } from "./ResponsiveHeroImage";
 import { HomeQuickServicesSection } from "./HomeQuickServicesSection";
 import { HomeLatestCampaignSection } from "./latest-campaign/HomeLatestCampaignSection";
@@ -114,6 +118,7 @@ function mapApiToHomeHero(raw: Record<string, unknown> | null): HomeHeroData {
 
 export function HomeHeroSection() {
   const [data, setData] = useState<HomeHeroData>(HOME_HERO_DEFAULTS);
+  const searchRef = useRef<HeroSearchBarHandle>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,49 +142,52 @@ export function HomeHeroSection() {
     };
   }, []);
 
+  const focusSearch = useCallback(() => {
+    searchRef.current?.focus();
+  }, []);
+
   const desktopUrl = data.desktopImageUrl || HOME_HERO_DESKTOP_IMAGE;
   const mobileUrl = data.mobileImageUrl || HOME_HERO_MOBILE_IMAGE;
   const alt = data.imageAlt || "CHIMEiDIY Lifestyle 首頁主視覺";
 
   return (
     <>
-      <section
-        className="home-hero-section relative w-full max-w-[100vw] rounded-none bg-white"
-        aria-label="首頁主視覺"
-      >
-      {/* Full-bleed yellow canvas — image extends to viewport edges */}
-      <div className="relative w-full max-w-[100vw] bg-[#FFD454]">
-        <ResponsiveHeroImage
-          desktopUrl={desktopUrl}
-          mobileUrl={mobileUrl}
-          alt={alt}
-          desktopObjectPosition={data.desktopObjectPosition}
-          mobileObjectPosition={data.mobileObjectPosition}
-        />
-        <HeroTextContent
-          title={data.title}
-          description={data.description}
-          showTitle={data.showTitle}
-          showDescription={data.showDescription}
-        />
-        <HeroBottomTransition />
-      </div>
+      <section className="home-hero home-hero-section" aria-label="首頁主視覺">
+        <div className="home-hero-canvas">
+          <ResponsiveHeroImage
+            desktopUrl={desktopUrl}
+            mobileUrl={mobileUrl}
+            alt={alt}
+            desktopObjectPosition={data.desktopObjectPosition}
+            mobileObjectPosition={data.mobileObjectPosition}
+          />
+          <div className="home-hero-top-bar">
+            <HeroTopActions onSearchClick={focusSearch} />
+          </div>
+          <HeroTextContent
+            title={data.title}
+            description={data.description}
+            showTitle={data.showTitle}
+            showDescription={data.showDescription}
+          />
+          <HeroBottomTransition />
+        </div>
 
-      {/* Search floats above wave */}
-      <div className="relative z-10 bg-white px-4 pb-2 pt-0 md:px-6">
-        <FloatingSearchBar
-          placeholder={data.searchPlaceholder}
-          scope={(data.searchScope as SearchScope) || "global"}
-        />
-      </div>
-    </section>
-    <HomeLatestCampaignSection />
-    <HomeQuickServicesSection />
-    <WeeklyPopularRecipesSection />
-    <HomeIngredientShopSection />
-    <HomeGroupBuyBannerSection />
-    <HomeGroupBuyHubBand />
-    <HomeServiceShortcutsSection />
+        <div className="home-hero-search-wrap">
+          <FloatingSearchBar
+            ref={searchRef}
+            placeholder={data.searchPlaceholder}
+            scope={(data.searchScope as SearchScope) || "global"}
+          />
+        </div>
+      </section>
+      <HomeLatestCampaignSection />
+      <HomeQuickServicesSection />
+      <WeeklyPopularRecipesSection />
+      <HomeIngredientShopSection />
+      <HomeGroupBuyBannerSection />
+      <HomeGroupBuyHubBand />
+      <HomeServiceShortcutsSection />
     </>
   );
 }

@@ -36,6 +36,7 @@ export const APP_ROUTES = {
   storeMap: "/store-map",
   search: "/search",
   cart: "/cart",
+  notifications: "/notifications",
   checkout: "/checkout",
   /** Legacy path — prefer memberOrders for member hub copy */
   orders: "/orders",
@@ -94,6 +95,7 @@ const LINK_META: Record<AppRouteKey, { label: string; description?: string }> = 
   storeMap: { label: "門市地圖", description: "商品擺放位置查詢" },
   search: { label: "全站搜尋", description: "商品／內容／門市位置" },
   cart: { label: "購物車", description: "需登入" },
+  notifications: { label: "通知中心", description: "活動與訂單通知" },
   checkout: { label: "結帳", description: "需登入且完成 Email 驗證" },
   orders: { label: "我的 App 訂單", description: "僅 App 商城與團購訂單（舊路徑）" },
   live: { label: "直播中心", description: "直播中、倒數、回放" },

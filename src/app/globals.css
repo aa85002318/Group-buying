@@ -100,6 +100,337 @@
     border-radius: 0;
   }
 
+  /* ── Home hero as page chrome (no separate header) ── */
+  .home-hero {
+    position: relative;
+    width: 100%;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
+    background: #ffd454;
+    overflow: hidden;
+  }
+
+  .home-hero-canvas {
+    position: relative;
+    width: 100%;
+    min-height: 430px;
+    background: #ffd454;
+    overflow: hidden;
+  }
+
+  /* Reserve top safe band so floating icons don't cover IP / title art */
+  .home-hero-canvas .home-hero-fullbleed {
+    padding-top: 52px;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 768px) {
+    .home-hero-canvas .home-hero-fullbleed {
+      padding-top: 56px;
+    }
+  }
+
+  .home-hero-top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 12px)
+      15px
+      0;
+    pointer-events: none;
+  }
+
+  .home-hero-top-bar > * {
+    pointer-events: auto;
+  }
+
+  .hero-top-actions {
+    position: relative;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 44px;
+    max-width: 1440px;
+    margin-inline: auto;
+  }
+
+  .hero-action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-icon-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.88);
+    color: #153e73;
+    box-shadow: 0 4px 14px rgba(21, 62, 115, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .hero-icon-button:hover {
+    background: rgba(255, 255, 255, 0.98);
+    transform: translateY(-1px);
+  }
+
+  .hero-icon-button:active {
+    transform: scale(0.96);
+  }
+
+  .hero-icon-button:focus-visible {
+    outline: 3px solid rgba(21, 62, 115, 0.22);
+    outline-offset: 2px;
+  }
+
+  .hero-action-badge {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #f16458;
+    border: 2px solid #ffffff;
+    pointer-events: none;
+  }
+
+  .hero-action-badge--dot {
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+  }
+
+  .hero-action-badge--count {
+    top: -3px;
+    right: -3px;
+    min-width: 17px;
+    height: 17px;
+    padding-inline: 4px;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .home-hero-search-wrap {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    padding: 0 15px 12px;
+    background: #ffffff;
+  }
+
+  /* Category drawer */
+  .home-category-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+  }
+
+  .home-category-drawer__backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: rgba(21, 62, 115, 0.42);
+    cursor: pointer;
+  }
+
+  .home-category-drawer__panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    width: min(86vw, 360px);
+    height: 100dvh;
+    max-height: 100dvh;
+    background: #fffefa;
+    box-shadow: 8px 0 28px rgba(21, 62, 115, 0.14);
+    overflow: hidden;
+  }
+
+  .home-category-drawer__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 14px)
+      16px
+      12px;
+  }
+
+  .home-category-drawer__search {
+    padding: 0 16px 12px;
+  }
+
+  .home-category-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 12px;
+    border-radius: 14px;
+    border: 1px solid #e9edf2;
+    background: #ffffff;
+  }
+
+  .home-category-search__input {
+    width: 100%;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: #153e73;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .home-category-search__input::placeholder {
+    color: #687386;
+  }
+
+  .home-category-drawer__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-category-accordion {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .home-category-card {
+    margin-bottom: 10px;
+    border-radius: 16px;
+    border: 1px solid #e9edf2;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .home-category-card--baking.is-open {
+    background: #fff8d9;
+  }
+
+  .home-category-card--group.is-open {
+    background: #f3eeff;
+  }
+
+  .home-category-card__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 52px;
+    padding: 14px 16px;
+    border: none;
+    background: transparent;
+    color: #153e73;
+    font-size: 16px;
+    font-weight: 800;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .home-category-children {
+    list-style: none;
+    margin: 0;
+    padding: 0 8px 10px;
+  }
+
+  .home-category-child {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 10px 8px;
+    border-radius: 10px;
+    color: #3e4c60;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .home-category-child:hover,
+  .home-category-child:focus-visible {
+    background: rgba(21, 62, 115, 0.06);
+  }
+
+  .home-category-child__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #ffd454;
+    flex-shrink: 0;
+  }
+
+  .home-category-child--all {
+    color: #153e73;
+    font-weight: 700;
+  }
+
+  .home-category-search-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  @media (min-width: 768px) {
+    .home-hero-top-bar {
+      padding-inline: 24px;
+    }
+
+    .home-hero-search-wrap {
+      padding-inline: 24px;
+    }
+
+    .hero-icon-button {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+    }
+
+    .home-category-drawer__panel {
+      width: min(86vw, 380px);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .home-hero-top-bar {
+      padding-inline: 32px;
+    }
+
+    .home-hero-search-wrap {
+      padding-inline: 32px;
+      max-width: 1440px;
+      margin-inline: auto;
+    }
+  }
+
   @keyframes quick-entry-fade-up {
     from {
       opacity: 0;

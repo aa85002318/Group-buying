@@ -1,20 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Sparkles } from "lucide-react";
 import { SEARCH_SCOPE_PATH, type SearchScope } from "@/components/brand/search/types";
 
+export type HeroSearchBarHandle = {
+  focus: () => void;
+};
+
 /** Floating search — keeps existing search navigation behavior. */
-export function FloatingSearchBar({
-  placeholder,
-  scope = "global",
-}: {
-  placeholder?: string | null;
-  scope?: SearchScope | string;
-}) {
+export const FloatingSearchBar = forwardRef<
+  HeroSearchBarHandle,
+  {
+    placeholder?: string | null;
+    scope?: SearchScope | string;
+  }
+>(function FloatingSearchBar({ placeholder, scope = "global" }, ref) {
   const router = useRouter();
   const [q, setQ] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      window.setTimeout(() => {
+        inputRef.current?.focus({ preventScroll: true });
+      }, 280);
+    },
+  }));
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +41,7 @@ export function FloatingSearchBar({
 
   return (
     <form
+      ref={formRef}
       onSubmit={submit}
       role="search"
       className="relative z-10 mx-auto flex h-[54px] w-full max-w-[1280px] -mt-[26px] min-w-0 items-center gap-2 border border-[#E9EDF2] bg-white px-4 pr-2.5 md:h-16 md:-mt-[38px] md:gap-3 md:px-[18px] md:pr-2.5"
@@ -40,6 +56,7 @@ export function FloatingSearchBar({
         搜尋
       </label>
       <input
+        ref={inputRef}
         id="home-hero-search-input"
         value={q}
         onChange={(e) => setQ(e.target.value)}
@@ -58,4 +75,7 @@ export function FloatingSearchBar({
       </button>
     </form>
   );
-}
+});
+
+/** Alias per homepage hero naming. */
+export { FloatingSearchBar as HeroSearchBar };
