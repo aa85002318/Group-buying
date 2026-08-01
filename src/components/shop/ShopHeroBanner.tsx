@@ -36,7 +36,8 @@ function BannerSlide({
       <img
         src={desktop}
         alt={alt}
-        className="absolute inset-0 block h-full w-full object-cover"
+        className="absolute inset-0 block h-full w-full rounded-none border-0 object-cover"
+        style={{ borderRadius: 0 }}
         draggable={false}
         decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : "auto"}

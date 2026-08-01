@@ -478,10 +478,18 @@
     display: block;
     width: 100%;
     height: 100%;
+    border-radius: 0 !important;
     object-fit: cover;
     object-position: center;
     user-select: none;
     pointer-events: none;
+  }
+
+  .shop-hub [aria-label="商城主視覺"],
+  .shop-hub [aria-label="商城主視覺"] *,
+  .shop-hub [aria-label="商城主視覺"] img,
+  .shop-hub [aria-label="商城主視覺"] picture {
+    border-radius: 0 !important;
   }
 
   .shop-hero-nav {

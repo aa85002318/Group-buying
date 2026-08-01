@@ -45,10 +45,19 @@ function isWithinSchedule(row: Record<string, unknown>, now = Date.now()) {
 }
 
 export function mapCmsRowToShopHero(row: Record<string, unknown>): ShopHeroBanner | null {
-  const desktop =
+  let desktop =
     String(row.desktop_image ?? row.image_url ?? row.desktopImage ?? "").trim() || "";
   if (!desktop && !row.title) return null;
-  const mobile = String(row.mobile_image ?? row.mobile_image_url ?? row.mobileImage ?? "").trim();
+  let mobile = String(row.mobile_image ?? row.mobile_image_url ?? row.mobileImage ?? "").trim();
+
+  // Legacy mall asset had baked-in rounded white corners — remap to square-edge shop heroes.
+  if (desktop.includes("/images/mall/hero-banner")) {
+    desktop = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
+  }
+  if (mobile.includes("/images/mall/hero-banner")) {
+    mobile = DEFAULT_SHOP_HERO_BANNERS[0].mobile_image || "";
+  }
+
   const linkTargetRaw = String(row.link_target ?? "_self").trim();
   const link_target: "_self" | "_blank" =
     linkTargetRaw === "_blank" ? "_blank" : "_self";
