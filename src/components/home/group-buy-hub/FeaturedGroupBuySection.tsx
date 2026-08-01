@@ -10,13 +10,16 @@ import { ProductHorizontalScroller } from "@/components/home/ingredient-shop/Pro
 import { useCart } from "@/hooks/useCart";
 import { formatCurrency, cn } from "@/lib/utils";
 import {
+  PRODUCT_RAIL_BODY,
   PRODUCT_RAIL_CARD_SHELL,
+  PRODUCT_RAIL_IMAGE,
   PRODUCT_RAIL_IMAGE_FRAME,
   PRODUCT_RAIL_SKELETON,
 } from "@/lib/ui/product-rail";
 import { GroupBuyHubHeader } from "./GroupBuyHubHeader";
 import {
   FEATURED_TABS,
+  eventDetailHref,
   eventImage,
   eventPrices,
   matchesFeaturedTab,
@@ -144,11 +147,13 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
   const product = primaryProduct(event);
   const image = eventImage(event);
   const { price, original } = eventPrices(event);
-  const href = `/group-buy/${event.id}`;
+  const href = eventDetailHref(event);
   const name = product?.name || event.title;
   const soldOut = product?.stock === 0;
 
-  const onAdd = async () => {
+  const onAdd = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!product?.id || soldOut || adding) return;
     setAdding(true);
     setToast(null);
@@ -162,8 +167,8 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
       });
       setToast("已加入購物車");
       setTimeout(() => setToast(null), 2000);
-    } catch (e) {
-      setToast(e instanceof Error ? e.message : "加入失敗");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "加入失敗");
       setTimeout(() => setToast(null), 2500);
     } finally {
       setAdding(false);
@@ -177,38 +182,40 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
         !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
       )}
     >
-      <div className="relative">
-        <Link
-          href={href}
-          className={cn(PRODUCT_RAIL_IMAGE_FRAME, soldOut && "opacity-60")}
+      <Link
+        href={href}
+        className={cn(PRODUCT_RAIL_IMAGE_FRAME, soldOut && "opacity-60")}
+        aria-label={name}
+      >
+        <span
+          className="absolute right-1.5 top-1.5 z-10"
+          onClick={(e) => e.preventDefault()}
         >
-          <div className="absolute right-1.5 top-1.5 z-10">
-            {product?.id ? (
-              <FavoriteButton
-                productId={product.id}
-                size="sm"
-                className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
-              />
-            ) : null}
-          </div>
-          {image ? (
-            <Image
-              src={image}
-              alt={name}
-              fill
-              className="object-contain p-2.5 md:p-3.5"
-              sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
-              unoptimized
+          {product?.id ? (
+            <FavoriteButton
+              productId={product.id}
+              size="sm"
+              className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
             />
-          ) : (
-            <div className="flex h-full items-center justify-center text-xs text-[#687386]">
-              暫無圖片
-            </div>
-          )}
-        </Link>
-      </div>
+          ) : null}
+        </span>
+        {image ? (
+          <Image
+            src={image}
+            alt={name}
+            fill
+            className={PRODUCT_RAIL_IMAGE}
+            sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs text-[#687386]">
+            暫無圖片
+          </div>
+        )}
+      </Link>
 
-      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+      <div className={PRODUCT_RAIL_BODY}>
         <Link href={href}>
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
             {name}
@@ -216,7 +223,7 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
         </Link>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <div className="min-w-0">
+          <Link href={href} className="min-w-0">
             <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
               {formatCurrency(price)}
             </span>
@@ -225,7 +232,7 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
                 {formatCurrency(original)}
               </p>
             ) : null}
-          </div>
+          </Link>
 
           <button
             type="button"

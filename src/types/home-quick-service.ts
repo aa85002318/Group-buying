@@ -89,7 +89,7 @@ export const DEFAULT_QUICK_SERVICE_ITEMS: QuickServiceItem[] = [
     imageUrl: `${ICON}/promotion.svg`,
     href: "/shop?promo=1",
     backgroundColor: "#FFE9E7",
-    badge: "HOT",
+    badge: null,
     enabled: true,
     sortOrder: 60,
   },
@@ -194,7 +194,7 @@ function migrateLegacyCards(raw: Record<string, unknown>): QuickServiceItem[] | 
               c.backgroundColor ?? c.background_color ?? c.background,
               fallback?.backgroundColor ?? "#FFF5CC"
             ),
-        badge: (c.badge as string | null | undefined) ?? fallback?.badge ?? null,
+        badge: null,
         enabled: c.enabled !== false,
         sortOrder: asNumber(c.sortOrder ?? c.sort_order, fallback?.sortOrder ?? (index + 1) * 10),
       } satisfies QuickServiceItem;
@@ -223,12 +223,7 @@ export function parseQuickServicesSettings(
             item.backgroundColor ?? item.background_color ?? item.service_background_color,
             fallback?.backgroundColor ?? "#FFF5CC"
           ),
-          badge:
-            typeof item.badge === "string"
-              ? item.badge
-              : typeof item.service_badge === "string"
-                ? item.service_badge
-                : null,
+          badge: null,
           enabled: item.enabled !== false && item.service_enabled !== false,
           sortOrder: asNumber(
             item.sortOrder ?? item.sort_order ?? item.service_sort_order,

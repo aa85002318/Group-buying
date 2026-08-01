@@ -46,6 +46,13 @@ export function primaryProduct(event: GroupBuyHubEvent) {
   return event.group_buy_products?.find((x) => x.products)?.products ?? null;
 }
 
+/** Prefer product detail; fall back to group-buy campaign (文章) page. */
+export function eventDetailHref(event: GroupBuyHubEvent) {
+  const product = primaryProduct(event);
+  if (product?.id) return `/products/${product.id}`;
+  return `/group-buy/${event.id}`;
+}
+
 export function primaryGbp(event: GroupBuyHubEvent) {
   return event.group_buy_products?.find((x) => x.products) ?? event.group_buy_products?.[0] ?? null;
 }

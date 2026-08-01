@@ -93,39 +93,37 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
   return (
     <article
       className={cn(
-        "flex h-[280px] flex-col overflow-hidden rounded-2xl border bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[320px] md:p-3 md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]",
+        "flex h-[280px] flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[320px] md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]",
         variant === "closing" ? "border-[#F16458]" : "border-[#E9EDF2]"
       )}
     >
-      <Link href={href} className="block">
-        <div className="relative h-[135px] overflow-hidden rounded-xl bg-transparent md:h-[165px] xl:h-[170px]">
-          {product.image_url ? (
-            <Image
-              src={product.image_url}
-              alt={product.name}
-              fill
-              className="object-contain p-2.5 md:p-3.5"
-              sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
-              unoptimized
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-foreground-secondary">
-              暫無圖片
-            </div>
-          )}
+      <Link href={href} className="relative block h-[135px] shrink-0 overflow-hidden bg-[#F4F6F8] md:h-[165px] xl:h-[170px]" aria-label={product.name}>
+        {product.image_url ? (
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            className="object-cover object-center"
+            sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-foreground-secondary">
+            暫無圖片
+          </div>
+        )}
 
-          {variant === "new" && <ProductSticker type="new" />}
-          {variant === "hot" && <ProductSticker type="hot" />}
-          {variant === "recommend" && <ProductSticker type="limited" />}
-          {variant === "closing" && product.cutoff_at && (
-            <div className="absolute left-2 top-2 z-10">
-              <HomeCountdown endAt={product.cutoff_at} />
-            </div>
-          )}
-        </div>
+        {variant === "new" && <ProductSticker type="new" />}
+        {variant === "hot" && <ProductSticker type="hot" />}
+        {variant === "recommend" && <ProductSticker type="limited" />}
+        {variant === "closing" && product.cutoff_at && (
+          <div className="absolute left-2 top-2 z-10">
+            <HomeCountdown endAt={product.cutoff_at} />
+          </div>
+        )}
       </Link>
 
-      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col bg-white px-2.5 pb-2.5 pt-2 md:px-3 md:pb-3">
         <Link href={href}>
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
             {product.name}

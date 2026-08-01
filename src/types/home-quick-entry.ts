@@ -112,7 +112,7 @@ export const DEFAULT_QUICK_ENTRY_CARDS: QuickEntryCardConfig[] = [
     href: "/shop?promo=1",
     emoji: "🎁",
     background: "#FFF3F0",
-    badge: "HOT",
+    badge: null,
     sortOrder: 70,
   },
   {

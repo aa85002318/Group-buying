@@ -8,7 +8,9 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
 import { useState } from "react";
 import {
+  PRODUCT_RAIL_BODY,
   PRODUCT_RAIL_CARD_SHELL,
+  PRODUCT_RAIL_IMAGE,
   PRODUCT_RAIL_IMAGE_FRAME,
 } from "@/lib/ui/product-rail";
 
@@ -23,6 +25,7 @@ type HomeProductRailCardProps = {
   /** @deprecated unused — cards show name only */
   spec?: string | null;
   badge?: HomeProductRailBadge;
+  href?: string;
   className?: string;
 };
 
@@ -40,11 +43,12 @@ export function HomeProductRailCard({
   originalPrice,
   imageUrl,
   badge,
+  href: hrefProp,
   className,
 }: HomeProductRailCardProps) {
   const { addItem } = useCart();
   const [adding, setAdding] = useState(false);
-  const href = `/products/${id}`;
+  const href = hrefProp || `/products/${id}`;
 
   const onAdd = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -62,48 +66,49 @@ export function HomeProductRailCard({
 
   return (
     <article className={cn(PRODUCT_RAIL_CARD_SHELL, className)}>
-      <div className="relative">
-        <Link href={href} className={PRODUCT_RAIL_IMAGE_FRAME}>
-          {badge ? (
-            <span
-              className={cn(
-                "absolute left-2 top-2 z-10 rounded-[6px] px-2 py-0.5 text-xs font-bold leading-none",
-                BADGE[badge].className
-              )}
-            >
-              {BADGE[badge].label}
-            </span>
-          ) : null}
-          <div className="absolute right-1.5 top-1.5 z-10">
-            <FavoriteButton
-              productId={id}
-              size="sm"
-              className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
-            />
+      <Link href={href} className={PRODUCT_RAIL_IMAGE_FRAME} aria-label={name}>
+        {badge ? (
+          <span
+            className={cn(
+              "absolute left-2 top-2 z-10 rounded-[6px] px-2 py-0.5 text-xs font-bold leading-none",
+              BADGE[badge].className
+            )}
+          >
+            {BADGE[badge].label}
+          </span>
+        ) : null}
+        <span
+          className="absolute right-1.5 top-1.5 z-10"
+          onClick={(e) => e.preventDefault()}
+        >
+          <FavoriteButton
+            productId={id}
+            size="sm"
+            className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
+          />
+        </span>
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt=""
+            fill
+            className={PRODUCT_RAIL_IMAGE}
+            sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs text-foreground-muted">
+            暫無圖片
           </div>
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt=""
-              fill
-              className="object-contain p-2.5 md:p-3.5"
-              sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-xs text-foreground-muted">
-              暫無圖片
-            </div>
-          )}
-        </Link>
-      </div>
-      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+        )}
+      </Link>
+      <div className={PRODUCT_RAIL_BODY}>
         <Link href={href}>
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
             {name}
           </h3>
         </Link>
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <div className="min-w-0">
+          <Link href={href} className="min-w-0">
             <p className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
               {formatCurrency(price)}
             </p>
@@ -112,7 +117,7 @@ export function HomeProductRailCard({
                 {formatCurrency(originalPrice)}
               </p>
             ) : null}
-          </div>
+          </Link>
           <button
             type="button"
             onClick={onAdd}

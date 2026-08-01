@@ -4,10 +4,18 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, cn } from "@/lib/utils";
 import {
+  PRODUCT_RAIL_BODY,
   PRODUCT_RAIL_CARD_SHELL,
+  PRODUCT_RAIL_IMAGE,
   PRODUCT_RAIL_IMAGE_FRAME,
 } from "@/lib/ui/product-rail";
-import { eventImage, eventPrices, remainParts, type GroupBuyHubEvent } from "./types";
+import {
+  eventDetailHref,
+  eventImage,
+  eventPrices,
+  remainParts,
+  type GroupBuyHubEvent,
+} from "./types";
 
 function pad(n: number) {
   return String(Math.max(0, n)).padStart(2, "0");
@@ -23,7 +31,7 @@ export function ClosingSoonCard({ event }: { event: GroupBuyHubEvent }) {
   const parts = remainParts(event.end_at);
   const image = eventImage(event);
   const { price } = eventPrices(event);
-  const href = `/group-buy/${event.id}`;
+  const href = eventDetailHref(event);
 
   return (
     <article
@@ -33,10 +41,10 @@ export function ClosingSoonCard({ event }: { event: GroupBuyHubEvent }) {
       )}
     >
       <div className="relative">
-        <Link href={href} className={PRODUCT_RAIL_IMAGE_FRAME}>
+        <Link href={href} className={PRODUCT_RAIL_IMAGE_FRAME} aria-label={event.title}>
           {image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={image} alt="" className="h-full w-full object-contain p-2.5 md:p-3.5" />
+            <img src={image} alt="" className={cn("h-full w-full", PRODUCT_RAIL_IMAGE)} />
           ) : (
             <span className="flex h-full items-center justify-center text-xs text-[#687386]">
               團購
@@ -50,7 +58,7 @@ export function ClosingSoonCard({ event }: { event: GroupBuyHubEvent }) {
         ) : null}
       </div>
 
-      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+      <div className={PRODUCT_RAIL_BODY}>
         <Link href={href}>
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
             {event.title}
@@ -63,14 +71,16 @@ export function ClosingSoonCard({ event }: { event: GroupBuyHubEvent }) {
         ) : (
           <p className="mt-1.5 text-[11px] font-bold text-[#687386] md:text-xs">已結束</p>
         )}
-        <p className="mt-1 text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
-          {formatCurrency(price)}
-        </p>
+        <Link href={href} className="mt-1 block">
+          <p className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
+            {formatCurrency(price)}
+          </p>
+        </Link>
         <Link
           href={href}
           className="mt-auto inline-flex h-9 w-full items-center justify-center rounded-full bg-[#F16458] text-sm font-bold text-white transition hover:brightness-95 active:scale-[0.98] md:h-10"
         >
-          加入團購
+          查看詳情
         </Link>
       </div>
     </article>

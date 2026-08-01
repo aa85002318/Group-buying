@@ -9,7 +9,9 @@ import { useCart } from "@/hooks/useCart";
 import { formatCurrency, cn } from "@/lib/utils";
 import { isProductSoldOut } from "@/lib/home/ingredient-shop";
 import {
+  PRODUCT_RAIL_BODY,
   PRODUCT_RAIL_CARD_SHELL,
+  PRODUCT_RAIL_IMAGE,
   PRODUCT_RAIL_IMAGE_FRAME,
 } from "@/lib/ui/product-rail";
 import type { HomeProductBadgeType, IngredientShopProduct } from "@/types/home-product-section";
@@ -30,7 +32,8 @@ type IngredientShopProductCardProps = {
 };
 
 /**
- * Ingredient shop quick-buy card: image, name, price, add-to-cart only.
+ * Ingredient shop quick-buy card: full-bleed image + white text/CTA footer.
+ * Card click → product detail; yellow + → add to cart.
  */
 export function IngredientShopProductCard({ product }: IngredientShopProductCardProps) {
   const { addItem } = useCart();
@@ -39,7 +42,9 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
   const [toast, setToast] = useState<string | null>(null);
   const href = `/products/${product.id}`;
 
-  const onAdd = async () => {
+  const onAdd = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (soldOut || adding) return;
     setAdding(true);
     setToast(null);
@@ -53,8 +58,8 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
       });
       setToast("已加入購物車");
       setTimeout(() => setToast(null), 2000);
-    } catch (e) {
-      setToast(e instanceof Error ? e.message : "加入失敗");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "加入失敗");
       setTimeout(() => setToast(null), 2500);
     } finally {
       setAdding(false);
@@ -68,45 +73,48 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
         !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
       )}
     >
-      <div className="relative">
-        <Link
-          href={href}
-          className={cn(PRODUCT_RAIL_IMAGE_FRAME, soldOut && "opacity-60")}
+      <Link
+        href={href}
+        className={cn(PRODUCT_RAIL_IMAGE_FRAME, soldOut && "opacity-60")}
+        aria-label={product.name}
+      >
+        {product.badge ? (
+          <span
+            className={cn(
+              "absolute left-2 top-2 z-10 rounded-[6px] px-2 py-0.5 text-xs font-semibold",
+              BADGE_STYLES[product.badge].className
+            )}
+          >
+            {BADGE_STYLES[product.badge].label}
+          </span>
+        ) : null}
+        <span
+          className="absolute right-1.5 top-1.5 z-10"
+          onClick={(e) => e.preventDefault()}
+          onKeyDown={(e) => e.stopPropagation()}
         >
-          {product.badge ? (
-            <span
-              className={cn(
-                "absolute left-2 top-2 z-10 rounded-[6px] px-2 py-0.5 text-xs font-semibold",
-                BADGE_STYLES[product.badge].className
-              )}
-            >
-              {BADGE_STYLES[product.badge].label}
-            </span>
-          ) : null}
-          <div className="absolute right-1.5 top-1.5 z-10">
-            <FavoriteButton
-              productId={product.id}
-              size="sm"
-              className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
-            />
+          <FavoriteButton
+            productId={product.id}
+            size="sm"
+            className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
+          />
+        </span>
+        {product.image_url ? (
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            className={PRODUCT_RAIL_IMAGE}
+            sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs text-[#687386]">
+            暫無圖片
           </div>
-          {product.image_url ? (
-            <Image
-              src={product.image_url}
-              alt={product.name}
-              fill
-              className="object-contain p-2.5 md:p-3.5"
-              sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-xs text-[#687386]">
-              暫無圖片
-            </div>
-          )}
-        </Link>
-      </div>
+        )}
+      </Link>
 
-      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+      <div className={PRODUCT_RAIL_BODY}>
         <Link href={href}>
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
             {product.name}
@@ -114,7 +122,7 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
         </Link>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <div className="min-w-0">
+          <Link href={href} className="min-w-0">
             <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
               {formatCurrency(product.displayPrice)}
             </span>
@@ -123,7 +131,7 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
                 {formatCurrency(product.displayOriginalPrice)}
               </p>
             ) : null}
-          </div>
+          </Link>
 
           <button
             type="button"

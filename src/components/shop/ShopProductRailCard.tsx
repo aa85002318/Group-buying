@@ -7,6 +7,12 @@ import { useState } from "react";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { useCart } from "@/hooks/useCart";
 import { formatCurrency, cn } from "@/lib/utils";
+import {
+  PRODUCT_RAIL_BODY,
+  PRODUCT_RAIL_CARD_SHELL,
+  PRODUCT_RAIL_IMAGE,
+  PRODUCT_RAIL_IMAGE_FRAME,
+} from "@/lib/ui/product-rail";
 
 export type ShopRailBadge = "new" | "hot" | "soldout";
 
@@ -16,7 +22,7 @@ const BADGE_STYLES: Record<ShopRailBadge, { label: string; className: string }> 
   soldout: { label: "售完", className: "bg-[#E9EDF2] text-[#687386]" },
 };
 
-/** Same width tokens as homepage「一鍵買齊材料」. */
+/** @deprecated use PRODUCT_RAIL_CARD_WIDTH from product-rail */
 export const SHOP_RAIL_CARD_WIDTH =
   "w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]";
 
@@ -31,8 +37,8 @@ type ShopProductRailCardProps = {
 };
 
 /**
- * Shop hub rail card — layout matches homepage IngredientShopProductCard.
- * Image area has no fill color.
+ * Shop hub rail card — full-bleed image + white text/CTA footer.
+ * Click → product (or custom href) detail; yellow + → cart.
  */
 export function ShopProductRailCard({
   id,
@@ -49,7 +55,9 @@ export function ShopProductRailCard({
   const [toast, setToast] = useState<string | null>(null);
   const link = href ?? `/products/${id}`;
 
-  const onAdd = async () => {
+  const onAdd = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (soldOut || adding) return;
     setAdding(true);
     setToast(null);
@@ -63,8 +71,8 @@ export function ShopProductRailCard({
       });
       setToast("已加入購物車");
       setTimeout(() => setToast(null), 2000);
-    } catch (e) {
-      setToast(e instanceof Error ? e.message : "加入失敗");
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : "加入失敗");
       setTimeout(() => setToast(null), 2500);
     } finally {
       setAdding(false);
@@ -74,53 +82,51 @@ export function ShopProductRailCard({
   return (
     <article
       className={cn(
-        "ingredient-shop-card group flex h-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E9EDF2] bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[320px] md:p-3",
-        SHOP_RAIL_CARD_WIDTH,
+        PRODUCT_RAIL_CARD_SHELL,
         !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
       )}
     >
-      <div className="relative">
-        <Link
-          href={link}
-          className={cn(
-            "relative block h-[135px] overflow-hidden rounded-xl bg-transparent md:h-[165px] xl:h-[170px]",
-            soldOut && "opacity-60"
-          )}
+      <Link
+        href={link}
+        className={cn(PRODUCT_RAIL_IMAGE_FRAME, soldOut && "opacity-60")}
+        aria-label={name}
+      >
+        {badge ? (
+          <span
+            className={cn(
+              "absolute left-2 top-2 z-10 rounded-[6px] px-2 py-0.5 text-xs font-semibold leading-none",
+              BADGE_STYLES[badge].className
+            )}
+          >
+            {BADGE_STYLES[badge].label}
+          </span>
+        ) : null}
+        <span
+          className="absolute right-1.5 top-1.5 z-10"
+          onClick={(e) => e.preventDefault()}
         >
-          {badge ? (
-            <span
-              className={cn(
-                "absolute left-2 top-2 z-10 rounded-[6px] px-2 py-0.5 text-xs font-semibold leading-none",
-                BADGE_STYLES[badge].className
-              )}
-            >
-              {BADGE_STYLES[badge].label}
-            </span>
-          ) : null}
-          <div className="absolute right-1.5 top-1.5 z-10">
-            <FavoriteButton
-              productId={id}
-              size="sm"
-              className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
-            />
+          <FavoriteButton
+            productId={id}
+            size="sm"
+            className="!h-8 !w-8 !rounded-full !border !border-[#E9EDF2] !bg-white/95 !shadow-none md:!h-[34px] md:!w-[34px]"
+          />
+        </span>
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={name}
+            fill
+            className={PRODUCT_RAIL_IMAGE}
+            sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs text-[#687386]">
+            暫無圖片
           </div>
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={name}
-              fill
-              className="object-contain p-2.5 md:p-3.5"
-              sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-xs text-[#687386]">
-              暫無圖片
-            </div>
-          )}
-        </Link>
-      </div>
+        )}
+      </Link>
 
-      <div className="mt-2 flex min-h-0 flex-1 flex-col">
+      <div className={PRODUCT_RAIL_BODY}>
         <Link href={link}>
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
             {name}
@@ -128,7 +134,7 @@ export function ShopProductRailCard({
         </Link>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-          <div className="min-w-0">
+          <Link href={link} className="min-w-0">
             <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
               {formatCurrency(price)}
             </span>
@@ -137,7 +143,7 @@ export function ShopProductRailCard({
                 {formatCurrency(originalPrice)}
               </p>
             ) : null}
-          </div>
+          </Link>
 
           <button
             type="button"
