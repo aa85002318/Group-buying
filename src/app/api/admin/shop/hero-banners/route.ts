@@ -10,23 +10,21 @@ import {
 
 export const dynamic = "force-dynamic";
 
-function toCmsPayload(body: Record<string, unknown>) {
-  const type = String(body.type ?? SHOP_HERO_BANNER_TYPE).trim() || SHOP_HERO_BANNER_TYPE;
-  const desktop = String(body.desktop_image ?? body.image_url ?? "").trim();
-  const mobile = String(body.mobile_image ?? body.mobile_image_url ?? "").trim();
+function toPayload(body: Record<string, unknown>) {
+  const desktop = String(body.desktop_image_url ?? body.desktop_image ?? body.image_url ?? "").trim();
+  const mobile = String(body.mobile_image_url ?? body.mobile_image ?? "").trim();
   const linkTargetRaw = String(body.link_target ?? "_self").trim();
-  const link_target = linkTargetRaw === "_blank" ? "_blank" : "_self";
   return {
     title: String(body.title ?? "").trim(),
+    alt_text: String(body.alt_text ?? body.title ?? "").trim(),
     subtitle: body.subtitle ? String(body.subtitle).trim() : null,
-    alt_text: body.alt_text != null ? String(body.alt_text).trim() : String(body.title ?? "").trim(),
     image_url: desktop || null,
     mobile_image_url: mobile || null,
-    link_url: body.link ? String(body.link).trim() : body.link_url ? String(body.link_url).trim() : null,
-    link_target,
+    link_url: body.link_url != null ? String(body.link_url).trim() || null : body.link != null ? String(body.link).trim() || null : null,
+    link_target: linkTargetRaw === "_blank" ? "_blank" : "_self",
     button_text: body.button_text ? String(body.button_text).trim() : null,
-    placement: type,
-    banner_type: type,
+    placement: SHOP_HERO_BANNER_TYPE,
+    banner_type: SHOP_HERO_BANNER_TYPE,
     sort_order: Number(body.sort_order ?? 0) || 0,
     is_active: body.is_active !== false,
     status: body.is_active === false ? "inactive" : "active",
@@ -35,47 +33,39 @@ function toCmsPayload(body: Record<string, unknown>) {
   };
 }
 
-/** Admin list — GET /api/admin/banners?type=shop_hero */
-export async function GET(request: Request) {
+/** GET /api/admin/shop/hero-banners */
+export async function GET() {
   const { error: authError } = await requireContentAdmin();
   if (authError) return authError;
 
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type")?.trim();
-
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({
-      banners: !type || type === SHOP_HERO_BANNER_TYPE ? DEFAULT_SHOP_HERO_BANNERS : [],
-    });
+    return NextResponse.json({ banners: DEFAULT_SHOP_HERO_BANNERS });
   }
 
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("cms_banners")
     .select("*")
+    .or(`placement.eq.${SHOP_HERO_BANNER_TYPE},banner_type.eq.${SHOP_HERO_BANNER_TYPE}`)
     .order("sort_order", { ascending: true });
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  let rows = data ?? [];
-  if (type) {
-    rows = rows.filter(
-      (r) => String(r.placement ?? "") === type || String(r.banner_type ?? "") === type
-    );
-  }
-
   return NextResponse.json({
-    banners: rows.map((r) => mapCmsRowToShopHero(r as Record<string, unknown>)).filter(Boolean),
-    raw: rows,
+    banners: (data ?? [])
+      .map((r) => mapCmsRowToShopHero(r as Record<string, unknown>))
+      .filter(Boolean),
+    raw: data ?? [],
   });
 }
 
-/** Admin create — POST /api/admin/banners */
+/** POST /api/admin/shop/hero-banners */
 export async function POST(request: Request) {
   const { error: authError, auth } = await requireContentAdmin();
   if (authError) return authError;
 
   const body = (await request.json()) as Record<string, unknown>;
-  const payload = toCmsPayload(body);
+  const payload = toPayload(body);
   if (!payload.title) {
     return NextResponse.json({ error: "標題必填" }, { status: 400 });
   }
@@ -92,16 +82,7 @@ export async function POST(request: Request) {
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
-      {
-        banner: {
-          id: `mock-${Date.now()}`,
-          ...payload,
-          desktop_image: payload.image_url,
-          mobile_image: payload.mobile_image_url,
-          link: payload.link_url,
-          type: payload.banner_type,
-        },
-      },
+      { banner: { id: `mock-${Date.now()}`, ...payload } },
       { status: 201 }
     );
   }

@@ -5,10 +5,13 @@ import {
   DEFAULT_SHOP_CATEGORIES,
   type ShopCategoryItem,
 } from "@/lib/shop/categories";
+import { shopCategoryHref } from "@/lib/shop/paths";
+
+export const dynamic = "force-dynamic";
 
 /**
- * GET /api/shop/home-categories
- * Returns up to 8 product categories flagged for shop home menu.
+ * GET /api/shop/main-categories
+ * Active main categories flagged for shop home (max 8).
  * 「全部分類」 is appended on the client — never returned from DB.
  */
 export async function GET() {
@@ -18,7 +21,7 @@ export async function GET() {
 
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("product_categories")
       .select(
         "id, name, slug, shop_home_icon, shop_home_bg_color, shop_home_sort_order, icon_url, custom_link"
@@ -40,24 +43,12 @@ export async function GET() {
         .order("shop_home_sort_order", { ascending: true })
         .limit(8);
 
-      if (fallback.error || !fallback.data?.length) {
-        return NextResponse.json({ categories: DEFAULT_SHOP_CATEGORIES });
-      }
+      data = fallback.data;
+      error = fallback.error;
+    }
 
-      const categories: ShopCategoryItem[] = fallback.data.map((row) => ({
-        id: String(row.id),
-        name: String(row.name),
-        href: row.custom_link?.trim()
-          ? String(row.custom_link).trim()
-          : `/shop/category/${row.slug}`,
-        image:
-          (row.shop_home_icon as string) ||
-          (row.icon_url as string) ||
-          undefined,
-        bgColor: (row.shop_home_bg_color as string) || "#F1F2F7",
-      }));
-
-      return NextResponse.json({ categories });
+    if (error || !data?.length) {
+      return NextResponse.json({ categories: DEFAULT_SHOP_CATEGORIES });
     }
 
     const categories: ShopCategoryItem[] = data.map((row) => ({
@@ -65,12 +56,12 @@ export async function GET() {
       name: String(row.name),
       href: row.custom_link?.trim()
         ? String(row.custom_link).trim()
-        : `/shop/category/${row.slug}`,
+        : shopCategoryHref(String(row.slug)),
       image:
         (row.shop_home_icon as string) ||
         (row.icon_url as string) ||
         undefined,
-      bgColor: (row.shop_home_bg_color as string) || "#F1F2F7",
+      bgColor: (row.shop_home_bg_color as string) || "#FFF4CC",
     }));
 
     return NextResponse.json({ categories });

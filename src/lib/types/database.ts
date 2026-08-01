@@ -193,9 +193,11 @@ export interface CmsBanner {
   id: string;
   title: string;
   subtitle: string | null;
+  alt_text?: string | null;
   image_url: string | null;
   mobile_image_url?: string | null;
   link_url: string | null;
+  link_target?: "_self" | "_blank";
   button_text?: string | null;
   badge_text?: string | null;
   placement?: string;

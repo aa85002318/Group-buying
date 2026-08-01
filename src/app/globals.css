@@ -446,31 +446,38 @@
   }
 
   /* ── Shop hero (full-bleed) + search ── */
-  /* Same model as homepage hero: width 100%, intrinsic height, no side crop */
+  /* Fixed aspect: mobile 6:5 / desktop 5:2, object-cover */
   .shop-hero-banner {
     width: 100%;
     max-width: none;
     margin: 0;
     padding: 0;
-    background: #fde045;
+    background: #ffd84d;
   }
 
   .shop-hero-frame {
     position: relative;
     width: 100%;
-    background: #fde045;
+    aspect-ratio: 6 / 5;
+    background: #ffd84d;
+  }
+
+  @media (min-width: 768px) {
+    .shop-hero-frame {
+      aspect-ratio: 5 / 2;
+    }
   }
 
   .shop-hero-img {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
-    max-width: 100%;
-    height: auto;
-    object-fit: contain;
+    height: 100%;
+    object-fit: cover;
     object-position: center;
     user-select: none;
     pointer-events: none;
-    vertical-align: top;
   }
 
   .shop-hero-nav {

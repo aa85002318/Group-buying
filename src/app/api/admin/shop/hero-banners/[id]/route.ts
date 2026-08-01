@@ -8,55 +8,46 @@ export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-function toCmsUpdates(body: Record<string, unknown>) {
-  const updates: Record<string, unknown> = {};
-  if (body.title != null) updates.title = String(body.title).trim();
-  if (body.subtitle !== undefined) updates.subtitle = body.subtitle ? String(body.subtitle) : null;
-  if (body.alt_text !== undefined) updates.alt_text = body.alt_text ? String(body.alt_text).trim() : "";
-  if (body.desktop_image != null || body.image_url != null) {
-    updates.image_url = String(body.desktop_image ?? body.image_url ?? "").trim() || null;
-  }
-  if (body.mobile_image !== undefined || body.mobile_image_url !== undefined) {
-    const m = body.mobile_image ?? body.mobile_image_url;
-    updates.mobile_image_url = m ? String(m).trim() : null;
-  }
-  if (body.link !== undefined || body.link_url !== undefined) {
-    updates.link_url = body.link != null ? String(body.link).trim() : body.link_url != null ? String(body.link_url).trim() : null;
-  }
-  if (body.link_target !== undefined) {
-    updates.link_target = String(body.link_target).trim() === "_blank" ? "_blank" : "_self";
-  }
-  if (body.button_text !== undefined) {
-    updates.button_text = body.button_text ? String(body.button_text).trim() : null;
-  }
-  if (body.sort_order != null) updates.sort_order = Number(body.sort_order) || 0;
-  if (body.is_active != null) {
-    updates.is_active = Boolean(body.is_active);
-    updates.status = body.is_active ? "active" : "inactive";
-  }
-  if (body.starts_at !== undefined) {
-    updates.starts_at = body.starts_at ? String(body.starts_at) : null;
-  }
-  if (body.ends_at !== undefined) {
-    updates.ends_at = body.ends_at ? String(body.ends_at) : null;
-  }
-  if (body.type != null) {
-    const type = String(body.type).trim() || SHOP_HERO_BANNER_TYPE;
-    updates.placement = type;
-    updates.banner_type = type;
-  }
-  return updates;
-}
-
-/** PATCH /api/admin/banners/[id] */
+/** PATCH /api/admin/shop/hero-banners/[id] */
 export async function PATCH(request: Request, context: Ctx) {
   const { error: authError, auth } = await requireContentAdmin();
   if (authError) return authError;
 
   const { id } = await context.params;
   const body = (await request.json()) as Record<string, unknown>;
-  const updates = toCmsUpdates(body);
-  updates.updated_by = auth!.profile.id;
+  const updates: Record<string, unknown> = { updated_by: auth!.profile.id };
+
+  if (body.title != null) updates.title = String(body.title).trim();
+  if (body.alt_text !== undefined) updates.alt_text = String(body.alt_text ?? "").trim();
+  if (body.subtitle !== undefined) updates.subtitle = body.subtitle ? String(body.subtitle) : null;
+  if (body.desktop_image_url != null || body.desktop_image != null || body.image_url != null) {
+    updates.image_url = String(
+      body.desktop_image_url ?? body.desktop_image ?? body.image_url ?? ""
+    ).trim() || null;
+  }
+  if (
+    body.mobile_image_url !== undefined ||
+    body.mobile_image !== undefined
+  ) {
+    const m = body.mobile_image_url ?? body.mobile_image;
+    updates.mobile_image_url = m ? String(m).trim() : null;
+  }
+  if (body.link_url !== undefined || body.link !== undefined) {
+    const link = body.link_url ?? body.link;
+    updates.link_url = link ? String(link).trim() : null;
+  }
+  if (body.link_target !== undefined) {
+    updates.link_target = String(body.link_target).trim() === "_blank" ? "_blank" : "_self";
+  }
+  if (body.sort_order != null) updates.sort_order = Number(body.sort_order) || 0;
+  if (body.is_active != null) {
+    updates.is_active = Boolean(body.is_active);
+    updates.status = body.is_active ? "active" : "inactive";
+  }
+  if (body.starts_at !== undefined) updates.starts_at = body.starts_at ? String(body.starts_at) : null;
+  if (body.ends_at !== undefined) updates.ends_at = body.ends_at ? String(body.ends_at) : null;
+  updates.placement = SHOP_HERO_BANNER_TYPE;
+  updates.banner_type = SHOP_HERO_BANNER_TYPE;
 
   if (updates.link_url) {
     const { isSafeLinkUrl } = await import("@/lib/cms/safeHtml");
@@ -83,16 +74,13 @@ export async function PATCH(request: Request, context: Ctx) {
   return NextResponse.json({ banner: mapCmsRowToShopHero(data as Record<string, unknown>) });
 }
 
-/** DELETE /api/admin/banners/[id] */
+/** DELETE /api/admin/shop/hero-banners/[id] */
 export async function DELETE(request: Request, context: Ctx) {
   const { error: authError, auth } = await requireContentAdmin();
   if (authError) return authError;
 
   const { id } = await context.params;
-
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json({ ok: true });
-  }
+  if (!isSupabaseConfigured()) return NextResponse.json({ ok: true });
 
   const admin = createAdminClient();
   const { data: old } = await admin.from("cms_banners").select("*").eq("id", id).single();

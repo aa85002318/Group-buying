@@ -1,5 +1,30 @@
 import { SHOP_CATEGORIES, shopCategoryHref } from "@/lib/shop/paths";
 
+/** Built-in pastel circle backgrounds for shop main categories. */
+export const CATEGORY_COLOR_PRESETS = [
+  { name: "奶油黃", value: "#FFF4CC" },
+  { name: "蜜桃粉", value: "#FFE4E2" },
+  { name: "杏仁米", value: "#FFF0DF" },
+  { name: "抹茶綠", value: "#EAF4D8" },
+  { name: "薰衣草紫", value: "#EEE9FF" },
+  { name: "天空藍", value: "#DFF3FF" },
+  { name: "草莓粉", value: "#FFE1E5" },
+  { name: "暖灰", value: "#F1F2F7" },
+] as const;
+
+export const SYSTEM_ALL_CATEGORY_NAME = "全部分類";
+
+const HEX_COLOR_RE = /^#[0-9A-Fa-f]{6}$/;
+
+export function normalizeCategoryHex(value: string): string | null {
+  const v = value.trim().toUpperCase();
+  return HEX_COLOR_RE.test(v) ? v : null;
+}
+
+export function isReservedCategoryName(name: string) {
+  return name.trim() === SYSTEM_ALL_CATEGORY_NAME;
+}
+
 /** Shop home circular category menu item. */
 export type ShopCategoryItem = {
   id: string;

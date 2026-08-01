@@ -38,7 +38,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               : "app-shell bg-background md:shadow-lift"
         )}
       >
-        {!isHome ? <AppHeader /> : null}
+        {/* Homepage & shop hub render their own headers (shop uses ShopHeader above hero). */}
+        {!isHome && !isShopHub ? <AppHeader /> : null}
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",

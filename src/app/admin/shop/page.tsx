@@ -5,9 +5,14 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   {
-    href: "/admin/banners?placement=shop_hero",
+    href: "/admin/shop/hero-banners",
     title: "商城 Hero Banner",
-    desc: "商城頁最上方主視覺（滿寬）。",
+    desc: "滿版主視覺。桌面 1500×600（5:2）、手機 1080×900（6:5）。",
+  },
+  {
+    href: "/admin/shop/categories",
+    title: "商品主分類",
+    desc: "搜尋欄下方圓形主分類：素材圖、色卡底色、排序與啟用。",
   },
   {
     href: "/admin/shop/promo-banners",
@@ -31,7 +36,7 @@ export default function AdminShopCmsHubPage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="商城頁面 CMS"
-        description="管理商城首頁 Hero、5:2 活動 Banner 與熱門商品。"
+        description="管理商城首頁 Header／Hero、主分類、活動 Banner 與熱門商品。"
       />
       <div className="grid gap-3 md:grid-cols-2">
         {LINKS.map((item) => (
