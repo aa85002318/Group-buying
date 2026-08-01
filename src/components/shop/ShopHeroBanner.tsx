@@ -4,13 +4,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   DEFAULT_SHOP_HERO_BANNERS,
+  SHOP_HERO_DESKTOP_HEIGHT,
+  SHOP_HERO_DESKTOP_WIDTH,
+  SHOP_HERO_MOBILE_HEIGHT,
+  SHOP_HERO_MOBILE_WIDTH,
   normalizeShopHeroList,
 } from "@/types/shop-hero-banner";
 import { DEFAULT_SHOP_PAGE_SETTINGS } from "@/lib/shop/page-settings";
+import { HeroBottomTransition } from "@/components/home/HeroBottomTransition";
+import { ShopSearchBar } from "@/components/shop/ShopSearchBar";
 
 /**
- * Shop hub hero — yellow plane art only, below in-flow header (no overlap).
- * Image top-centered like homepage; search floats on the seam below.
+ * Shop hero + search seam — mirrors homepage HomeHeroSection structure:
+ * canvas (full-bleed art) → HeroBottomTransition → home-hero-search-wrap + floating search.
+ * Header stays outside (in-flow above) so icons do not overlap art.
  */
 export function ShopHeroBanner({
   backgroundColor = DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color,
@@ -18,7 +25,10 @@ export function ShopHeroBanner({
   backgroundColor?: string;
 }) {
   const [art, setArt] = useState({
-    src: DEFAULT_SHOP_HERO_BANNERS[0].desktop_image,
+    desktop: DEFAULT_SHOP_HERO_BANNERS[0].desktop_image,
+    mobile:
+      DEFAULT_SHOP_HERO_BANNERS[0].mobile_image ||
+      DEFAULT_SHOP_HERO_BANNERS[0].desktop_image,
     alt: DEFAULT_SHOP_HERO_BANNERS[0].alt_text || DEFAULT_SHOP_HERO_BANNERS[0].title,
     href: DEFAULT_SHOP_HERO_BANNERS[0].link || "/shop/categories",
   });
@@ -35,7 +45,8 @@ export function ShopHeroBanner({
         const list = normalizeShopHeroList(json.banners);
         const first = list[0] ?? DEFAULT_SHOP_HERO_BANNERS[0];
         setArt({
-          src: first.mobile_image || first.desktop_image,
+          desktop: first.desktop_image,
+          mobile: first.mobile_image || first.desktop_image,
           alt: first.alt_text || first.title,
           href: first.link || "/shop/categories",
         });
@@ -51,53 +62,65 @@ export function ShopHeroBanner({
   }, []);
 
   const media = (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={art.src}
-      alt={art.alt}
-      width={1024}
-      height={839}
-      className="shop-hero-layout__img"
-      decoding="async"
-      fetchPriority="high"
-      draggable={false}
-      onError={(e) => {
-        const el = e.currentTarget;
-        if (el.src.includes("hero-default")) return;
-        el.src = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
-      }}
-    />
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={art.mobile}
+        alt={art.alt}
+        width={SHOP_HERO_MOBILE_WIDTH}
+        height={SHOP_HERO_MOBILE_HEIGHT}
+        className="home-hero-fullbleed__img block w-full rounded-none md:hidden"
+        decoding="async"
+        fetchPriority="high"
+        onError={(e) => {
+          const el = e.currentTarget;
+          if (el.src.includes("hero-default") || el.src.includes("hero-mobile")) return;
+          el.src = DEFAULT_SHOP_HERO_BANNERS[0].mobile_image || DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
+        }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={art.desktop}
+        alt={art.alt}
+        width={SHOP_HERO_DESKTOP_WIDTH}
+        height={SHOP_HERO_DESKTOP_HEIGHT}
+        className="home-hero-fullbleed__img hidden w-full rounded-none md:block"
+        decoding="async"
+        fetchPriority="high"
+        onError={(e) => {
+          const el = e.currentTarget;
+          if (el.src.includes("hero-default") || el.src.includes("hero-desktop")) return;
+          el.src = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
+        }}
+      />
+    </>
   );
 
   return (
     <section
-      className="shop-hero-layout"
+      className="shop-hero home-hero-section"
       style={{ backgroundColor: bg }}
       aria-label="商城主視覺"
       aria-busy={loading}
     >
-      <div className="shop-hero-layout__stage">
-        <span className="shop-hero-sparkle shop-hero-sparkle--a" aria-hidden />
-        <span className="shop-hero-sparkle shop-hero-sparkle--b" aria-hidden />
-        <span className="shop-hero-sparkle shop-hero-sparkle--c" aria-hidden />
-        <span className="shop-hero-glow" aria-hidden />
-        {art.href ? (
-          <Link href={art.href} className="shop-hero-layout__art-link" aria-label={art.alt}>
-            {media}
-          </Link>
-        ) : (
-          media
-        )}
+      <div className="shop-hero-canvas home-hero-canvas" style={{ backgroundColor: bg }}>
+        <div
+          className="home-hero-fullbleed relative z-0 w-full rounded-none"
+          style={{ backgroundColor: bg }}
+        >
+          {art.href ? (
+            <Link href={art.href} className="block w-full" aria-label={art.alt}>
+              {media}
+            </Link>
+          ) : (
+            media
+          )}
+        </div>
+        <HeroBottomTransition />
       </div>
 
-      <div className="shopHeroBlur" aria-hidden />
-      <div className="shop-hero-wave" aria-hidden>
-        <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="shop-hero-wave__svg">
-          <path
-            fill="rgba(255,255,255,0.92)"
-            d="M0,36 C220,18 380,54 560,42 C780,28 960,58 1140,40 C1280,28 1380,34 1440,30 L1440,80 L0,80 Z"
-          />
-        </svg>
+      <div className="home-hero-search-wrap">
+        <ShopSearchBar />
       </div>
     </section>
   );

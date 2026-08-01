@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
-import { ShopSearchBar } from "@/components/shop/ShopSearchBar";
 import { ShopMainCategoryMenu } from "@/components/shop/ShopMainCategoryMenu";
 import { ShopHeroFeatureCapsules } from "@/components/shop/ShopHeroFeatureCapsules";
 import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
@@ -71,16 +70,13 @@ export function ShopHubClient() {
 
   return (
     <div className="shop-hub space-y-0 bg-white">
-      {/* Yellow plane: header + hero + absolute floating search */}
+      {/* Header + homepage-style hero canvas / transition / search seam */}
       <div
         className="shop-hub-hero-plane w-full max-w-none"
         style={{ backgroundColor: planeYellow }}
       >
         <ShopHeader settings={unifiedSettings} title="商城" />
         <ShopHeroBanner backgroundColor={planeYellow} />
-        <div className="shop-hero-search-float">
-          <ShopSearchBar />
-        </div>
       </div>
 
       <main>

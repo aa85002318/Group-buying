@@ -17,7 +17,7 @@ function ShopSearchInner() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-4 md:px-6">
       <div className="shop-search-bar-wrap !px-0 !pt-0">
-        <ShopSearchBar />
+        <ShopSearchBar seam={false} />
       </div>
       <div className="rounded-[20px] border border-[#EAEAEA] bg-[#FFFEFA] p-5">
         <h1 className="text-xl font-bold text-[#153E73]">

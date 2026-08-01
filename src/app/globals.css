@@ -469,7 +469,7 @@
     }
   }
 
-  /* ── Shop hub hero layout (App home structure) ── */
+  /* ── Shop hub hero — reuse homepage hero canvas + search seam ── */
   .shop-hub-hero-plane {
     position: relative;
     width: 100%;
@@ -490,175 +490,35 @@
     border: none;
   }
 
-  /*
-   * Header is in-flow above this block (no overlap).
-   * Art is top-centered like homepage hero — natural height, not pushed under icons.
-   */
-  .shop-hero-layout {
+  /* Same structure as .home-hero; header is in-flow above so no top pad */
+  .shop-hero {
     position: relative;
     width: 100%;
+    max-width: 100vw;
     margin: 0;
-    height: min(480px, 58dvh);
-    max-height: 520px;
-    padding: 8px 16px 56px;
+    padding: 0;
     background: #ffe149;
     overflow: hidden;
   }
 
-  @media (min-width: 768px) {
-    .shop-hero-layout {
-      height: min(460px, 52dvh);
-      max-height: 520px;
-      padding-left: 24px;
-      padding-right: 24px;
-      padding-bottom: 64px;
-      max-width: 1440px;
-      margin-inline: auto;
-      overflow: visible;
-    }
-  }
-
-  .shop-hero-layout__stage {
+  .shop-hub-hero-plane .home-hero-canvas,
+  .shop-hero-canvas {
     position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-  }
-
-  .shop-hero-layout__art-link {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    line-height: 0;
-  }
-
-  .shop-hero-layout__img {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    max-height: 100%;
-    margin-inline: auto;
-    object-fit: contain;
-    object-position: center top;
-    user-select: none;
-    pointer-events: none;
-    border-radius: 0;
-  }
-
-  .shop-hero-glow {
-    position: absolute;
-    left: 50%;
-    top: 36%;
     z-index: 0;
-    width: min(78%, 420px);
-    height: min(55%, 280px);
-    transform: translate(-50%, -50%);
-    border-radius: 999px;
-    background: radial-gradient(
-      ellipse at center,
-      rgba(255, 255, 255, 0.55) 0%,
-      rgba(255, 225, 73, 0.15) 55%,
-      transparent 72%
-    );
-    pointer-events: none;
-  }
-
-  .shop-hero-sparkle {
-    position: absolute;
-    z-index: 2;
-    width: 8px;
-    height: 8px;
-    background: #ffffff;
-    clip-path: polygon(50% 0%, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0% 50%, 35% 35%);
-    opacity: 0.85;
-    pointer-events: none;
-  }
-
-  .shop-hero-sparkle--a {
-    top: 8%;
-    left: 10%;
-  }
-
-  .shop-hero-sparkle--b {
-    top: 18%;
-    right: 12%;
-    width: 6px;
-    height: 6px;
-    opacity: 0.7;
-  }
-
-  .shop-hero-sparkle--c {
-    bottom: 22%;
-    left: 16%;
-    width: 5px;
-    height: 5px;
-    opacity: 0.65;
-  }
-
-  /* Soft white fog + wave at hero bottom (App home style) */
-  .shopHeroBlur {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 2;
-    height: 120px;
-    pointer-events: none;
-    background: radial-gradient(
-      ellipse at bottom,
-      rgba(255, 255, 255, 0.95) 0%,
-      rgba(255, 255, 255, 0.7) 42%,
-      transparent 72%
-    );
-  }
-
-  .shop-hero-wave {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -1px;
-    z-index: 3;
     width: 100%;
-    height: 36px;
-    pointer-events: none;
+    min-height: 0;
+    padding-top: 0;
+    background: #ffe149;
     overflow: hidden;
   }
 
-  .shop-hero-wave__svg {
-    display: block;
-    width: 100%;
-    height: 100%;
+  .shop-hub-hero-plane .home-hero-fullbleed {
+    background: #ffe149;
   }
 
-  /* Search floats on Hero / content seam — not its own white section */
-  .shop-hero-search-float {
-    position: absolute;
-    bottom: -28px;
-    left: 16px;
-    right: 16px;
-    z-index: 20;
-    margin: 0;
-    padding: 0;
-    background: transparent;
-  }
-
-  @media (min-width: 768px) {
-    .shop-hero-search-float {
-      left: 24px;
-      right: 24px;
-      max-width: 1440px;
-      margin-inline: auto;
-    }
-  }
-
-  /* Category clears floating search; first row visible on first screen */
+  /* Category — search seam handled by home-hero-search-wrap */
   .shop-category-menu {
-    padding-top: 60px;
+    padding-top: 8px;
     padding-bottom: 8px;
     background: #ffffff;
   }
@@ -757,86 +617,6 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-
-  .shop-search-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    max-width: 1280px;
-    height: 58px;
-    margin-inline: auto;
-    padding: 0 16px 0 18px;
-    border: none;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    box-shadow: 0 14px 34px rgba(21, 62, 115, 0.1);
-    transition:
-      transform 160ms ease,
-      box-shadow 160ms ease;
-  }
-
-  .shop-search-bar:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 18px 40px rgba(21, 62, 115, 0.14);
-  }
-
-  @media (min-width: 768px) {
-    .shop-search-bar {
-      height: 58px;
-      padding-inline: 20px;
-    }
-  }
-
-  .shop-search-bar__input {
-    min-width: 0;
-    flex: 1;
-    height: 100%;
-    border: none;
-    background: transparent;
-    color: #153e73;
-    font-size: 15px;
-    outline: none;
-  }
-
-  .shop-search-bar__input::placeholder {
-    color: #9ca3af;
-  }
-
-  .shop-search-bar__actions {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-  }
-
-  .shop-search-bar__icon-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 999px;
-    background: transparent;
-    color: #153e73;
-    cursor: pointer;
-  }
-
-  .shop-search-bar__ai-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: 1.5px solid #3b82f6;
-    border-radius: 999px;
-    background: #eef6ff;
-    color: #3b82f6;
-    cursor: pointer;
   }
 
   .shop-hub-body {
