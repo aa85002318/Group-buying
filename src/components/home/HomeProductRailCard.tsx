@@ -16,6 +16,7 @@ type HomeProductRailCardProps = {
   price: number;
   originalPrice?: number | null;
   imageUrl?: string | null;
+  /** @deprecated unused — cards show name only */
   spec?: string | null;
   badge?: HomeProductRailBadge;
   className?: string;
@@ -27,14 +28,13 @@ const BADGE: Record<HomeProductRailBadge, { label: string; className: string }> 
   sale: { label: "折扣", className: "bg-[var(--yellow-soft)] text-brand-caramel" },
 };
 
-/** Compact commerce card used by home product rails. */
+/** Compact commerce card: image, name, price, add-to-cart only. */
 export function HomeProductRailCard({
   id,
   name,
   price,
   originalPrice,
   imageUrl,
-  spec,
   badge,
   className,
 }: HomeProductRailCardProps) {
@@ -98,9 +98,6 @@ export function HomeProductRailCard({
           <h3 className="line-clamp-2 min-h-[2.25rem] text-[13px] font-semibold leading-snug text-brand-caramel">
             {name}
           </h3>
-          {spec ? (
-            <p className="mt-0.5 line-clamp-1 text-[11px] text-foreground-secondary">{spec}</p>
-          ) : null}
         </Link>
         <div className="mt-auto flex items-end justify-between gap-1 pt-1.5">
           <div className="min-w-0">
@@ -118,7 +115,7 @@ export function HomeProductRailCard({
             onClick={onAdd}
             disabled={adding}
             aria-label="加入購物車"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white transition duration-200 hover:bg-primary-hover disabled:opacity-50"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFD54F] text-[#153E73] transition duration-200 hover:brightness-95 disabled:opacity-50"
           >
             <Plus className="h-4 w-4" aria-hidden />
           </button>

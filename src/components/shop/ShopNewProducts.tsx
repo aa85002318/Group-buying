@@ -22,13 +22,6 @@ function resolveBadge(p: Product): ProductBadge | undefined {
   return "new";
 }
 
-function brandOrSpec(p: Product): string | null {
-  const brand = p.brands?.name?.trim();
-  const spec = (p.package_spec || p.unit || p.specifications || "").trim();
-  if (brand && spec) return `${brand} · ${spec}`;
-  return brand || spec || null;
-}
-
 const CARD_WIDTH =
   "w-[calc((100%-0.75rem)/2.2)] shrink-0 sm:w-[calc((100%-1.5rem)/3)] lg:w-[calc((100%-4rem)/5)]";
 
@@ -97,7 +90,6 @@ export function ShopNewProducts({
                   price={price}
                   original_price={original}
                   image_url={p.image_url}
-                  brandOrSpec={brandOrSpec(p)}
                   badge={resolveBadge(p)}
                   variant="shop"
                 />

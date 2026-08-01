@@ -25,13 +25,6 @@ function resolveBadge(p: Product): ProductBadge | undefined {
   return undefined;
 }
 
-function brandOrSpec(p: Product): string | null {
-  const brand = p.brands?.name?.trim();
-  const spec = (p.package_spec || p.unit || p.specifications || "").trim();
-  if (brand && spec) return `${brand} · ${spec}`;
-  return brand || spec || null;
-}
-
 /**
  * Shop home popular products — horizontal rail under promo carousel.
  */
@@ -96,7 +89,6 @@ export function PopularProducts({
                   price={price}
                   original_price={original}
                   image_url={p.image_url}
-                  brandOrSpec={brandOrSpec(p)}
                   badge={resolveBadge(p)}
                   variant="shop"
                 />

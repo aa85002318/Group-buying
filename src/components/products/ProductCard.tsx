@@ -18,6 +18,7 @@ interface ProductCardProps {
   original_price?: number | null;
   image_url?: string | null;
   href?: string;
+  /** @deprecated unused — cards show name only (no unit / brand line) */
   brandOrSpec?: string | null;
   badge?: ProductBadge;
   /** @deprecated prefer badge — kept for existing call sites */
@@ -69,6 +70,10 @@ const STICKER_TO_BADGE: Partial<Record<ProductStickerType, ProductBadge>> = {
   limited: "hot",
 };
 
+/**
+ * Product quick-buy card: image, name, price, add-to-cart only.
+ * No unit / brand line and no quantity stepper.
+ */
 export function ProductCard({
   id,
   name,
@@ -76,7 +81,6 @@ export function ProductCard({
   original_price,
   image_url,
   href,
-  brandOrSpec,
   badge,
   sticker,
   groupBuyLabel,
@@ -125,7 +129,7 @@ export function ProductCard({
         "group relative flex min-w-0 flex-col overflow-hidden border bg-surface transition",
         shop
           ? "rounded-[14px] border-[#EEEEEE] shadow-[0_4px_16px_rgba(21,62,115,0.06)]"
-          : "rounded-[20px] border-border shadow-soft hover:-translate-y-0.5 hover:shadow-lift"
+          : "rounded-[16px] border-border shadow-soft hover:-translate-y-0.5 hover:shadow-lift"
       )}
     >
       {addedHint ? (
@@ -171,14 +175,16 @@ export function ProductCard({
         )}
       </Link>
 
-      <div className={cn("flex flex-1 flex-col gap-1 p-3", shop ? "min-h-[8rem]" : "min-h-[7.5rem]")}>
+      <div className="flex flex-1 flex-col gap-1 p-3">
         <Link href={link} className="min-w-0">
-          <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-medium text-foreground break-words">
+          <h3
+            className={cn(
+              "line-clamp-2 min-h-[2.5rem] text-sm font-medium break-words",
+              shop ? "text-[#153E73]" : "text-foreground"
+            )}
+          >
             {name}
           </h3>
-          {brandOrSpec && (
-            <p className="mt-0.5 line-clamp-1 text-sm text-foreground-secondary">{brandOrSpec}</p>
-          )}
         </Link>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-1">
@@ -204,10 +210,10 @@ export function ProductCard({
               disabled={adding || resolvedBadge === "soldout"}
               aria-label="將商品加入購物車"
               className={cn(
-                "inline-flex h-10 w-10 shrink-0 items-center justify-center transition active:scale-95 disabled:opacity-50",
+                "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition active:scale-95 disabled:opacity-50",
                 shop
-                  ? "rounded-full bg-[#FFD54F] text-[#153E73] hover:brightness-95"
-                  : "rounded-xl bg-brand-primary text-white hover:bg-primary-hover"
+                  ? "bg-[#FFD54F] text-[#153E73] hover:brightness-95"
+                  : "bg-[#FFD54F] text-[#153E73] hover:brightness-95"
               )}
             >
               <Plus className="h-5 w-5" aria-hidden />

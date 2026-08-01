@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Loader2, Minus, Plus, ShoppingCart } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { useState } from "react";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { useCart } from "@/hooks/useCart";
@@ -28,16 +28,15 @@ type IngredientShopProductCardProps = {
   product: IngredientShopProduct;
 };
 
+/**
+ * Ingredient shop quick-buy card: image, name, price, add-to-cart only.
+ */
 export function IngredientShopProductCard({ product }: IngredientShopProductCardProps) {
   const { addItem } = useCart();
   const soldOut = isProductSoldOut(product);
-  const maxQty = Math.max(1, Number(product.stock) || 1);
-  const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const href = `/products/${product.id}`;
-  const spec = product.unit || product.subtitle || null;
-  const displayName = spec ? `${product.name} ${spec}` : product.name;
 
   const onAdd = async () => {
     if (soldOut || adding) return;
@@ -49,7 +48,7 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
         name: product.name,
         price: product.displayPrice,
         imageUrl: product.image_url,
-        quantity,
+        quantity: 1,
       });
       setToast("已加入購物車");
       setTimeout(() => setToast(null), 2000);
@@ -61,13 +60,10 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
     }
   };
 
-  const dec = () => setQuantity((q) => Math.max(1, q - 1));
-  const inc = () => setQuantity((q) => Math.min(maxQty, q + 1));
-
   return (
     <article
       className={cn(
-        "ingredient-shop-card group flex h-[300px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E9EDF2] bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[345px] md:p-3",
+        "ingredient-shop-card group flex h-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E9EDF2] bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[320px] md:p-3",
         CARD_WIDTH,
         !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
       )}
@@ -83,7 +79,7 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
           {product.badge ? (
             <span
               className={cn(
-                "absolute left-2 top-2 z-10 rounded-full px-2 py-1 text-[11px] font-semibold",
+                "absolute left-2 top-2 z-10 rounded-[6px] px-2 py-0.5 text-xs font-semibold",
                 BADGE_STYLES[product.badge].className
               )}
             >
@@ -116,49 +112,20 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
       <div className="mt-2 flex min-h-0 flex-1 flex-col">
         <Link href={href}>
           <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
-            {displayName}
+            {product.name}
           </h3>
         </Link>
 
-        <div className="mt-1.5 flex min-h-[28px] flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-          <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
-            {formatCurrency(product.displayPrice)}
-          </span>
-          {product.displayOriginalPrice != null ? (
-            <span className="text-[11px] text-[#687386] line-through md:text-xs">
-              {formatCurrency(product.displayOriginalPrice)}
+        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+          <div className="min-w-0">
+            <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
+              {formatCurrency(product.displayPrice)}
             </span>
-          ) : null}
-        </div>
-
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <div
-            className={cn(
-              "inline-flex h-8 w-24 items-center overflow-hidden rounded-lg border border-[#E9EDF2] md:h-[34px] md:w-[112px]",
-              soldOut && "opacity-50"
-            )}
-          >
-            <button
-              type="button"
-              aria-label="減少數量"
-              disabled={soldOut || quantity <= 1}
-              onClick={dec}
-              className="inline-flex h-8 w-8 items-center justify-center text-[#153E73] disabled:cursor-not-allowed md:h-[34px] md:w-8"
-            >
-              <Minus className="h-3.5 w-3.5" />
-            </button>
-            <span className="min-w-[20px] flex-1 text-center text-sm font-semibold text-[#153E73]">
-              {quantity}
-            </span>
-            <button
-              type="button"
-              aria-label="增加數量"
-              disabled={soldOut || quantity >= maxQty}
-              onClick={inc}
-              className="inline-flex h-8 w-8 items-center justify-center text-[#153E73] disabled:cursor-not-allowed md:h-[34px] md:w-8"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
+            {product.displayOriginalPrice != null ? (
+              <p className="mt-0.5 text-[11px] text-[#687386] line-through md:text-xs">
+                {formatCurrency(product.displayOriginalPrice)}
+              </p>
+            ) : null}
           </div>
 
           <button
@@ -171,7 +138,7 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
             {adding ? (
               <Loader2 className="h-4 w-4 animate-spin md:h-[19px] md:w-[19px]" aria-hidden />
             ) : (
-              <ShoppingCart className="h-[17px] w-[17px] md:h-[19px] md:w-[19px]" aria-hidden />
+              <Plus className="h-5 w-5" aria-hidden />
             )}
           </button>
         </div>

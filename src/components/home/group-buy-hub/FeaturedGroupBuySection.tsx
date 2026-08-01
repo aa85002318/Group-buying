@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Filter, ChevronDown, Loader2, Minus, Plus, ShoppingCart } from "lucide-react";
+import { Filter, ChevronDown, Loader2, Plus } from "lucide-react";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { MoreProductsCard } from "@/components/home/ingredient-shop/MoreProductsCard";
 import { ProductHorizontalScroller } from "@/components/home/ingredient-shop/ProductHorizontalScroller";
@@ -16,7 +16,6 @@ import {
   eventPrices,
   matchesFeaturedTab,
   primaryProduct,
-  soldCount,
   type FeaturedTabId,
   type GroupBuyHubEvent,
 } from "./types";
@@ -141,16 +140,13 @@ export function FeaturedGroupBuySection({
 
 function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
   const { addItem } = useCart();
-  const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const product = primaryProduct(event);
   const image = eventImage(event);
   const { price, original } = eventPrices(event);
-  const sold = soldCount(event);
   const href = `/group-buy/${event.id}`;
   const name = product?.name || event.title;
-  const maxQty = Math.max(1, Number(primaryProduct(event)?.stock) || 99);
   const soldOut = product?.stock === 0;
 
   const onAdd = async () => {
@@ -163,7 +159,7 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
         name: product.name,
         price,
         imageUrl: product.image_url,
-        quantity,
+        quantity: 1,
       });
       setToast("已加入購物車");
       setTimeout(() => setToast(null), 2000);
@@ -178,7 +174,7 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
   return (
     <article
       className={cn(
-        "ingredient-shop-card group flex h-[300px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E9EDF2] bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[345px] md:p-3",
+        "ingredient-shop-card group flex h-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E9EDF2] bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[320px] md:p-3",
         CARD_WIDTH,
         !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
       )}
@@ -224,46 +220,16 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
           </h3>
         </Link>
 
-        <div className="mt-1.5 flex min-h-[28px] flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-          <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
-            {formatCurrency(price)}
-          </span>
-          {original > price ? (
-            <span className="text-[11px] text-[#687386] line-through md:text-xs">
-              {formatCurrency(original)}
+        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+          <div className="min-w-0">
+            <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
+              {formatCurrency(price)}
             </span>
-          ) : null}
-        </div>
-        <p className="mt-1 text-[11px] text-[#687386]">已售 {sold}</p>
-
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <div
-            className={cn(
-              "inline-flex h-8 w-24 items-center overflow-hidden rounded-lg border border-[#E9EDF2] md:h-[34px] md:w-[112px]",
-              soldOut && "opacity-50"
-            )}
-          >
-            <button
-              type="button"
-              aria-label="減少數量"
-              disabled={soldOut || quantity <= 1}
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="inline-flex h-8 w-8 items-center justify-center text-[#153E73] disabled:cursor-not-allowed md:h-[34px] md:w-8"
-            >
-              <Minus className="h-3.5 w-3.5" />
-            </button>
-            <span className="min-w-[20px] flex-1 text-center text-sm font-semibold text-[#153E73]">
-              {quantity}
-            </span>
-            <button
-              type="button"
-              aria-label="增加數量"
-              disabled={soldOut || quantity >= maxQty}
-              onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
-              className="inline-flex h-8 w-8 items-center justify-center text-[#153E73] disabled:cursor-not-allowed md:h-[34px] md:w-8"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
+            {original > price ? (
+              <p className="mt-0.5 text-[11px] text-[#687386] line-through md:text-xs">
+                {formatCurrency(original)}
+              </p>
+            ) : null}
           </div>
 
           <button
@@ -276,7 +242,7 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
             {adding ? (
               <Loader2 className="h-4 w-4 animate-spin md:h-[19px] md:w-[19px]" aria-hidden />
             ) : (
-              <ShoppingCart className="h-[17px] w-[17px] md:h-[19px] md:w-[19px]" aria-hidden />
+              <Plus className="h-5 w-5" aria-hidden />
             )}
           </button>
         </div>

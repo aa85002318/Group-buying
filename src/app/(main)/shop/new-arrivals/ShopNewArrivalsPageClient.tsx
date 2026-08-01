@@ -54,8 +54,6 @@ export function ShopNewArrivalsPageClient() {
               p.status === "sold_out" || (Number(p.stock ?? 0) <= 0 && !p.allow_oversell)
                 ? "soldout"
                 : "new";
-            const brand = p.brands?.name?.trim();
-            const spec = (p.package_spec || p.unit || "").trim();
             return (
               <ProductCard
                 key={p.id}
@@ -64,7 +62,6 @@ export function ShopNewArrivalsPageClient() {
                 price={price}
                 original_price={original}
                 image_url={p.image_url}
-                brandOrSpec={brand && spec ? `${brand} · ${spec}` : brand || spec || null}
                 badge={badge}
                 variant="shop"
               />

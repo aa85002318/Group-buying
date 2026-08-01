@@ -53,8 +53,6 @@ export function ShopPopularPageClient() {
                   : p.is_new
                     ? "new"
                     : undefined;
-            const brand = p.brands?.name?.trim();
-            const spec = (p.package_spec || p.unit || "").trim();
             return (
               <ProductCard
                 key={p.id}
@@ -63,7 +61,6 @@ export function ShopPopularPageClient() {
                 price={price}
                 original_price={original}
                 image_url={p.image_url}
-                brandOrSpec={brand && spec ? `${brand} · ${spec}` : brand || spec || null}
                 badge={badge}
                 variant="shop"
               />

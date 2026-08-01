@@ -75,7 +75,6 @@ export function HorizontalProductRail({
               price={Number(p.price)}
               originalPrice={p.original_price}
               imageUrl={p.image_url}
-              spec={p.unit ?? p.subtitle ?? null}
               badge={badge}
             />
           ))}

@@ -481,11 +481,6 @@ export function ShopCatalogClient({
                       price={displayPrice}
                       original_price={original}
                       image_url={product.cover_image || null}
-                      brandOrSpec={
-                        [product.brand_name, product.primary_variant_name].filter(Boolean).join(" · ") ||
-                        product.sku ||
-                        null
-                      }
                       badge={productBadge(product)}
                       href={`/products/${product.id}`}
                     />

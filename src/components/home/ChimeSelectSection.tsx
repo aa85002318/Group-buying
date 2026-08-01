@@ -151,7 +151,6 @@ export function ChimeSelectSection({
               price={Number(p.sale_price ?? p.price)}
               originalPrice={p.original_price}
               imageUrl={p.image_url}
-              spec={p.unit ?? p.subtitle ?? null}
             />
           ))}
         </HorizontalScroller>
