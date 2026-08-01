@@ -58,7 +58,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           ) : (
             <div className="mx-auto w-full min-w-0 max-w-full">{children}</div>
           )}
-          {showChrome ? <HomeFooter className="mt-6" /> : null}
+          {showChrome ? <HomeFooter /> : null}
         </main>
         <MobileBottomNav />
       </div>
