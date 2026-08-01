@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { Mic, ScanLine, Search, Sparkles } from "lucide-react";
 
 /**
- * Shop search bar — frosted floating pill overlapping hero (App home style).
+ * Version A floating frosted search — sits on Hero / content seam.
  */
 export function ShopSearchBar({
-  placeholder = "搜尋商品、品牌、材料、食譜……",
+  placeholder = "搜尋商品、品牌、材料、食譜、優惠活動…",
 }: {
   placeholder?: string;
 }) {
@@ -33,11 +33,7 @@ export function ShopSearchBar({
       className="shop-search-bar"
       aria-label="商城搜尋"
     >
-      <button
-        type="submit"
-        className="shop-search-bar__icon-btn"
-        aria-label="搜尋"
-      >
+      <button type="submit" className="shop-search-bar__icon-btn" aria-label="搜尋">
         <Search className="h-5 w-5" strokeWidth={1.75} aria-hidden />
       </button>
 
@@ -57,6 +53,18 @@ export function ShopSearchBar({
       <div className="shop-search-bar__actions">
         <button
           type="button"
+          className="shop-search-bar__ai-btn"
+          aria-label="AI 智慧搜尋"
+          onClick={() => {
+            const query = q.trim();
+            if (query) router.push(`/ai?q=${encodeURIComponent(query)}`);
+            else router.push("/ai");
+          }}
+        >
+          <Sparkles className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+        </button>
+        <button
+          type="button"
           className="shop-search-bar__icon-btn"
           aria-label="掃描搜尋（即將推出）"
           onClick={() => goSearch()}
@@ -70,21 +78,6 @@ export function ShopSearchBar({
           onClick={() => goSearch()}
         >
           <Mic className="h-5 w-5" strokeWidth={1.75} aria-hidden />
-        </button>
-        <button
-          type="button"
-          className="shop-search-bar__ai-btn"
-          aria-label="AI 智慧搜尋"
-          onClick={() => {
-            const query = q.trim();
-            if (query) {
-              router.push(`/ai?q=${encodeURIComponent(query)}`);
-            } else {
-              router.push("/ai");
-            }
-          }}
-        >
-          <Sparkles className="h-5 w-5" strokeWidth={1.75} aria-hidden />
         </button>
       </div>
     </form>

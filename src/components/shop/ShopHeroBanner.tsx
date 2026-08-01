@@ -1,132 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import useEmblaCarousel from "embla-carousel-react";
-import Autoplay from "embla-carousel-autoplay";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   DEFAULT_SHOP_HERO_BANNERS,
-  SHOP_HERO_DESKTOP_HEIGHT,
-  SHOP_HERO_DESKTOP_WIDTH,
-  SHOP_HERO_MOBILE_HEIGHT,
-  SHOP_HERO_MOBILE_WIDTH,
   normalizeShopHeroList,
-  type ShopHeroBanner as ShopHeroBannerType,
 } from "@/types/shop-hero-banner";
 import { DEFAULT_SHOP_PAGE_SETTINGS } from "@/lib/shop/page-settings";
-import { cn } from "@/lib/utils";
-
-function isExternalHref(href: string) {
-  return /^https?:\/\//i.test(href) || href.startsWith("//");
-}
-
-function BannerSlide({
-  banner,
-  priority,
-}: {
-  banner: ShopHeroBannerType;
-  priority?: boolean;
-}) {
-  const desktop = banner.desktop_image;
-  const mobile = banner.mobile_image || banner.desktop_image;
-  const alt = banner.alt_text || banner.title;
-  const openBlank =
-    banner.link_target === "_blank" ||
-    (banner.link ? isExternalHref(banner.link) : false);
-
-  const media = (
-    <div className="shop-hero-fullbleed relative z-0 w-full">
-      {/* Mobile */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={mobile}
-        alt={alt}
-        width={SHOP_HERO_MOBILE_WIDTH}
-        height={SHOP_HERO_MOBILE_HEIGHT}
-        className="shop-hero-fullbleed__img block w-full md:hidden"
-        draggable={false}
-        decoding={priority ? "sync" : "async"}
-        fetchPriority={priority ? "high" : "auto"}
-        onError={(e) => {
-          const el = e.currentTarget;
-          if (el.src.includes("hero-default")) return;
-          el.src =
-            DEFAULT_SHOP_HERO_BANNERS[0].mobile_image ||
-            DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
-        }}
-      />
-      {/* Desktop */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={desktop}
-        alt={alt}
-        width={SHOP_HERO_DESKTOP_WIDTH}
-        height={SHOP_HERO_DESKTOP_HEIGHT}
-        className="shop-hero-fullbleed__img hidden w-full md:block"
-        draggable={false}
-        decoding={priority ? "sync" : "async"}
-        fetchPriority={priority ? "high" : "auto"}
-        onError={(e) => {
-          const el = e.currentTarget;
-          if (el.src.includes("hero-default")) return;
-          el.src = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
-        }}
-      />
-    </div>
-  );
-
-  const className = cn(
-    "relative min-w-0 flex-[0_0_100%]",
-    banner.link ? "cursor-pointer" : "cursor-default"
-  );
-
-  if (!banner.link) {
-    return <div className={className}>{media}</div>;
-  }
-
-  if (openBlank || isExternalHref(banner.link)) {
-    return (
-      <a
-        href={banner.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={className}
-        aria-label={alt}
-      >
-        {media}
-      </a>
-    );
-  }
-
-  return (
-    <Link href={banner.link} className={className} aria-label={alt}>
-      {media}
-    </Link>
-  );
-}
+import { ShopHeroFeatureCapsules } from "@/components/shop/ShopHeroFeatureCapsules";
 
 /**
- * Full-bleed shop hero — same display model as homepage:
- * edge-to-edge width, height auto (intrinsic), no object-cover crop / radius.
+ * Version A shop hero — breathing art + capsule features + soft fog/wave.
+ * Not an isolated hard-cut banner; blends into floating search.
  */
 export function ShopHeroBanner({
   backgroundColor = DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color,
 }: {
   backgroundColor?: string;
 }) {
-  const [banners, setBanners] = useState<ShopHeroBannerType[]>(DEFAULT_SHOP_HERO_BANNERS);
+  const [art, setArt] = useState({
+    src: DEFAULT_SHOP_HERO_BANNERS[0].desktop_image,
+    alt: DEFAULT_SHOP_HERO_BANNERS[0].alt_text || DEFAULT_SHOP_HERO_BANNERS[0].title,
+    href: DEFAULT_SHOP_HERO_BANNERS[0].link || "/shop/categories",
+  });
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(0);
   const bg = backgroundColor || DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color;
-  const autoplay = useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
-  );
-
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, align: "start" },
-    [autoplay.current]
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -135,9 +33,15 @@ export function ShopHeroBanner({
         const res = await fetch("/api/shop/hero-banners", { cache: "no-store" });
         const json = await res.json().catch(() => ({}));
         if (cancelled) return;
-        setBanners(normalizeShopHeroList(json.banners));
+        const list = normalizeShopHeroList(json.banners);
+        const first = list[0] ?? DEFAULT_SHOP_HERO_BANNERS[0];
+        setArt({
+          src: first.mobile_image || first.desktop_image,
+          alt: first.alt_text || first.title,
+          href: first.link || "/shop/categories",
+        });
       } catch {
-        if (!cancelled) setBanners(DEFAULT_SHOP_HERO_BANNERS);
+        /* keep defaults */
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -147,111 +51,58 @@ export function ShopHeroBanner({
     };
   }, []);
 
-  useEffect(() => {
-    if (!emblaApi) return;
-    const onSelect = () => setSelected(emblaApi.selectedScrollSnap());
-    const resetTimer = () => {
-      try {
-        autoplay.current.reset();
-      } catch {
-        /* ignore */
-      }
-    };
-    emblaApi.on("select", onSelect);
-    emblaApi.on("pointerUp", resetTimer);
-    onSelect();
-    return () => {
-      emblaApi.off("select", onSelect);
-      emblaApi.off("pointerUp", resetTimer);
-    };
-  }, [emblaApi, banners.length]);
-
-  const scrollPrev = useCallback(() => {
-    emblaApi?.scrollPrev();
-    try {
-      autoplay.current.reset();
-    } catch {
-      /* ignore */
-    }
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    emblaApi?.scrollNext();
-    try {
-      autoplay.current.reset();
-    } catch {
-      /* ignore */
-    }
-  }, [emblaApi]);
+  const media = (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={art.src}
+      alt={art.alt}
+      width={1024}
+      height={839}
+      className="shop-hero-vA__img"
+      decoding="async"
+      fetchPriority="high"
+      draggable={false}
+      onError={(e) => {
+        const el = e.currentTarget;
+        if (el.src.includes("hero-default")) return;
+        el.src = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
+      }}
+    />
+  );
 
   return (
     <section
-      className="shop-hero-banner relative m-0 w-full max-w-none border-0 p-0"
+      className="shop-hero-vA"
       style={{ backgroundColor: bg }}
       aria-label="商城主視覺"
       aria-busy={loading}
     >
-      <div className="shop-hero-stage">
-        <div className="shop-hero-frame">
-          <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex touch-pan-y items-start">
-              {banners.map((banner, i) => (
-                <BannerSlide key={banner.id} banner={banner} priority={i === 0} />
-              ))}
-            </div>
-          </div>
-
-          {banners.length > 1 ? (
-            <>
-              <button
-                type="button"
-                className="shop-hero-nav shop-hero-nav--prev"
-                aria-label="上一張"
-                onClick={scrollPrev}
-              >
-                <ChevronLeft className="h-5 w-5" strokeWidth={2} />
-              </button>
-              <button
-                type="button"
-                className="shop-hero-nav shop-hero-nav--next"
-                aria-label="下一張"
-                onClick={scrollNext}
-              >
-                <ChevronRight className="h-5 w-5" strokeWidth={2} />
-              </button>
-              <div className="shop-hero-dots" aria-label="輪播分頁">
-                {banners.map((b, i) => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    aria-label={`第 ${i + 1} 張`}
-                    aria-current={i === selected ? "true" : undefined}
-                    className={cn(
-                      "shop-hero-dot",
-                      i === selected && "shop-hero-dot--active"
-                    )}
-                    onClick={() => {
-                      emblaApi?.scrollTo(i);
-                      try {
-                        autoplay.current.reset();
-                      } catch {
-                        /* ignore */
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          ) : null}
-
-          {loading ? (
-            <div
-              className="pointer-events-none absolute inset-0 animate-pulse opacity-40"
-              style={{ backgroundColor: bg }}
-              aria-hidden
-            />
-          ) : null}
+      <div className="shop-hero-vA__inner">
+        <div className="shop-hero-vA__art">
+          <span className="shop-hero-sparkle shop-hero-sparkle--a" aria-hidden />
+          <span className="shop-hero-sparkle shop-hero-sparkle--b" aria-hidden />
+          <span className="shop-hero-sparkle shop-hero-sparkle--c" aria-hidden />
+          <span className="shop-hero-glow" aria-hidden />
+          {art.href ? (
+            <Link href={art.href} className="shop-hero-vA__art-link" aria-label={art.alt}>
+              {media}
+            </Link>
+          ) : (
+            media
+          )}
         </div>
+
+        <ShopHeroFeatureCapsules />
+      </div>
+
+      <div className="shopHeroBlur" aria-hidden />
+      <div className="shop-hero-wave" aria-hidden>
+        <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="shop-hero-wave__svg">
+          <path
+            fill="rgba(255,255,255,0.92)"
+            d="M0,36 C220,18 380,54 560,42 C780,28 960,58 1140,40 C1280,28 1380,34 1440,30 L1440,80 L0,80 Z"
+          />
+        </svg>
       </div>
     </section>
   );

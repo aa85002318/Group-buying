@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, Search, ShoppingCart, User } from "lucide-react";
-import { ChimeidiyLogo } from "@/components/branding/ChimeidiyLogo";
+import { Bell, Search, ShoppingCart } from "lucide-react";
 import { AppHamburgerMenu } from "@/components/layout/AppHamburgerMenu";
 import { useCart } from "@/hooks/useCart";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -13,23 +12,19 @@ import {
 } from "@/lib/shop/page-settings";
 import { cn } from "@/lib/utils";
 
-const SHOP_HEADER_NAV = [
-  { href: APP_ROUTES.home, label: "首頁" },
-  { href: APP_ROUTES.shopCategories, label: "商品分類" },
-  { href: "/themes", label: "品牌館" },
-  { href: "/news", label: "最新活動" },
-  { href: APP_ROUTES.recipes, label: "食譜專區" },
-  { href: APP_ROUTES.articles, label: "部落格" },
-] as const;
+const GLASS_BTN =
+  "shop-header-glass inline-flex h-[42px] w-[42px] shrink-0 items-center justify-center text-[#153E73] transition hover:brightness-[1.02] active:scale-[0.98]";
 
 /**
- * Shop storefront header — sits ABOVE hero (never overlays).
- * Shares the same #FFE149 plane as Hero; no divider line.
+ * Version A shop header — frosted pill icons floating on yellow hero.
+ * No logo; page title 「商城」 centered.
  */
 export function ShopHeader({
   settings: settingsProp,
+  title = "商城",
 }: {
   settings?: ShopPageSettings;
+  title?: string;
 }) {
   const { items } = useCart();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -55,80 +50,44 @@ export function ShopHeader({
     };
   }, [settingsProp]);
 
-  const bg = settings.header_bg_color || DEFAULT_SHOP_PAGE_SETTINGS.header_bg_color;
-  const border = settings.header_border_color;
+  void settings; // kept for future CMS header color hooks
 
   return (
     <header
-      className={cn("sticky top-0 z-50 w-full shrink-0 rounded-none")}
-      style={{
-        paddingTop: "env(safe-area-inset-top, 0px)",
-        backgroundColor: bg,
-        borderBottom: border ? `1px solid ${border}` : "none",
-      }}
+      className="shop-header-float absolute inset-x-0 top-0 z-30 w-full"
+      style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
     >
-      <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-2 px-3 md:h-[76px] md:gap-3 md:px-6">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 md:gap-2">
-          <AppHamburgerMenu />
-          <ChimeidiyLogo
-            variant="shopHeader"
-            href={APP_ROUTES.shop}
-            priority
-            className="bg-transparent"
-          />
-          <span className="hidden rounded-full border border-[#153E73]/20 bg-transparent px-2 py-0.5 text-[10px] font-semibold tracking-wide text-[#153E73] sm:inline-flex md:text-xs">
-            Lifestyle
-          </span>
+      <div className="mx-auto flex w-full max-w-[1440px] items-center gap-2 px-[15px] md:px-6">
+        <div className="flex flex-1 items-center justify-start">
+          <AppHamburgerMenu className={cn(GLASS_BTN, "!min-h-0 !min-w-0 !rounded-full")} />
         </div>
 
-        <nav
-          className="hidden min-w-0 flex-[1.4] items-center justify-center gap-1 lg:flex"
-          aria-label="商城導覽"
-        >
-          {SHOP_HEADER_NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-[#153E73] transition hover:bg-black/5"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <h1 className="shrink-0 text-[17px] font-bold tracking-wide text-[#153E73] md:text-lg">
+          {title}
+        </h1>
 
-        <div className="flex shrink-0 items-center gap-0.5">
+        <div className="flex flex-1 items-center justify-end gap-2">
           <Link
             href={APP_ROUTES.memberNotifications}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-black/5 md:h-11 md:w-11"
+            className={GLASS_BTN}
             aria-label="通知"
           >
-            <Bell className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+            <Bell className="h-5 w-5" aria-hidden />
           </Link>
           <Link
             href={APP_ROUTES.cart}
-            className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-black/5 md:h-11 md:w-11"
+            className={cn(GLASS_BTN, "relative")}
             aria-label={`購物車${cartCount > 0 ? `，${cartCount} 件商品` : ""}`}
           >
-            <ShoppingCart className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+            <ShoppingCart className="h-5 w-5" aria-hidden />
             {cartCount > 0 ? (
-              <span className="absolute right-0.5 top-0.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#F0645A] px-1 text-[10px] font-bold leading-none text-white">
+              <span className="absolute -right-0.5 -top-0.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#F0645A] px-1 text-[10px] font-bold leading-none text-white">
                 {cartCount > 99 ? "99+" : cartCount}
               </span>
             ) : null}
           </Link>
-          <Link
-            href="/shop/search"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-black/5 md:h-11 md:w-11"
-            aria-label="搜尋"
-          >
-            <Search className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
-          </Link>
-          <Link
-            href={APP_ROUTES.member}
-            className="hidden h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-black/5 sm:inline-flex md:h-11 md:w-11"
-            aria-label="會員入口"
-          >
-            <User className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+          <Link href="/shop/search" className={GLASS_BTN} aria-label="搜尋">
+            <Search className="h-5 w-5" aria-hidden />
           </Link>
         </div>
       </div>

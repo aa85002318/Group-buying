@@ -69,7 +69,7 @@ export function ShopHubClient() {
         className="shop-hub-hero-plane w-full max-w-none"
         style={{ backgroundColor: planeYellow }}
       >
-        <ShopHeader settings={unifiedSettings} />
+        <ShopHeader settings={unifiedSettings} title="商城" />
         <ShopHeroBanner backgroundColor={planeYellow} />
         <div className="shop-hero-search-wrap">
           <ShopSearchBar />
