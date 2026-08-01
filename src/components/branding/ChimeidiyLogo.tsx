@@ -13,6 +13,14 @@ const VARIANTS = {
     className:
       "h-auto w-[108px] object-contain bg-transparent min-[375px]:w-[118px] sm:w-[132px] md:w-[148px] xl:w-[176px]",
   },
+  /** Shop hub sticky header — transparent PNG (no white plate) */
+  shopHeader: {
+    src: "/branding/chimeidiy-app-header-logo-v3.png",
+    width: 841,
+    height: 212,
+    className:
+      "h-auto w-[120px] object-contain bg-transparent min-[375px]:w-[132px] sm:w-[148px] md:w-[168px]",
+  },
   compact: {
     src: "/branding/chimeidiy-logo-compact.png",
     width: 80,

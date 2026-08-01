@@ -20,6 +20,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/banners",
   "/admin/home",
   "/admin/shop",
+  "/admin/shop/appearance",
   "/admin/shop/hero-banners",
   "/admin/shop/categories",
   "/admin/shop/promo-banners",
@@ -174,6 +175,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { href: "/admin/home", label: "首頁 CMS", roles: ["admin", "content_editor"] },
       { href: "/admin/shop", label: "商城頁面 CMS", roles: ["admin", "content_editor"] },
+      { href: "/admin/shop/appearance", label: "商城頁首外觀", roles: ["admin", "content_editor"] },
       { href: "/admin/shop/hero-banners", label: "商城 Hero Banner", roles: ["admin", "content_editor"] },
       { href: "/admin/shop/categories", label: "商城主分類", roles: ["admin", "content_editor"] },
       { href: "/admin/shop/promo-banners", label: "商城活動 Banner", roles: ["admin", "content_editor"] },

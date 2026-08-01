@@ -1,11 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell, Search, ShoppingCart, User } from "lucide-react";
 import { ChimeidiyLogo } from "@/components/branding/ChimeidiyLogo";
 import { AppHamburgerMenu } from "@/components/layout/AppHamburgerMenu";
 import { useCart } from "@/hooks/useCart";
 import { APP_ROUTES } from "@/lib/site-links";
+import {
+  DEFAULT_SHOP_PAGE_SETTINGS,
+  type ShopPageSettings,
+} from "@/lib/shop/page-settings";
 import { cn } from "@/lib/utils";
 
 const SHOP_HEADER_NAV = [
@@ -18,26 +23,61 @@ const SHOP_HEADER_NAV = [
 ] as const;
 
 /**
- * Shop storefront header — soft yellow, sits ABOVE hero (never overlays).
- * sticky / relative only; no absolute / negative margin / backdrop blur on hero.
+ * Shop storefront header — sits ABOVE hero (never overlays).
+ * Background matches hero yellow by default; color is CMS-configurable.
+ * Logo uses transparent PNG (no white plate).
  */
-export function ShopHeader() {
+export function ShopHeader({
+  settings: settingsProp,
+}: {
+  settings?: ShopPageSettings;
+}) {
   const { items } = useCart();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const [settings, setSettings] = useState<ShopPageSettings>(
+    settingsProp ?? DEFAULT_SHOP_PAGE_SETTINGS
+  );
+
+  useEffect(() => {
+    if (settingsProp) {
+      setSettings(settingsProp);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/shop/page-settings", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled || !d.settings) return;
+        setSettings(d.settings as ShopPageSettings);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [settingsProp]);
+
+  const bg = settings.header_bg_color || DEFAULT_SHOP_PAGE_SETTINGS.header_bg_color;
+  const border = settings.header_border_color;
 
   return (
     <header
-      className={cn(
-        "sticky top-0 z-50 w-full shrink-0",
-        "border-b border-[#F5DB75] bg-[#FFF3B8]"
-      )}
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      className={cn("sticky top-0 z-50 w-full shrink-0 rounded-none")}
+      style={{
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        backgroundColor: bg,
+        borderBottom: border ? `1px solid ${border}` : "none",
+      }}
     >
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-2 px-3 md:h-[76px] md:gap-3 md:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-1.5 md:gap-2">
           <AppHamburgerMenu />
-          <ChimeidiyLogo variant="header" href={APP_ROUTES.shop} priority />
-          <span className="hidden rounded-full border border-[#153E73]/15 bg-white/70 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-[#153E73] sm:inline-flex md:text-xs">
+          <ChimeidiyLogo
+            variant="shopHeader"
+            href={APP_ROUTES.shop}
+            priority
+            className="bg-transparent"
+          />
+          <span className="hidden rounded-full border border-[#153E73]/20 bg-transparent px-2 py-0.5 text-[10px] font-semibold tracking-wide text-[#153E73] sm:inline-flex md:text-xs">
             Lifestyle
           </span>
         </div>
@@ -50,7 +90,7 @@ export function ShopHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-[#153E73] transition hover:bg-[#FFE98A]/70"
+              className="whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium text-[#153E73] transition hover:bg-black/5"
             >
               {item.label}
             </Link>
@@ -60,14 +100,14 @@ export function ShopHeader() {
         <div className="flex shrink-0 items-center gap-0.5">
           <Link
             href={APP_ROUTES.memberNotifications}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-[#FFE98A]/70 md:h-11 md:w-11"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-black/5 md:h-11 md:w-11"
             aria-label="通知"
           >
             <Bell className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
           </Link>
           <Link
             href={APP_ROUTES.cart}
-            className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-[#FFE98A]/70 md:h-11 md:w-11"
+            className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-black/5 md:h-11 md:w-11"
             aria-label={`購物車${cartCount > 0 ? `，${cartCount} 件商品` : ""}`}
           >
             <ShoppingCart className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
@@ -79,14 +119,14 @@ export function ShopHeader() {
           </Link>
           <Link
             href="/shop/search"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-[#FFE98A]/70 md:h-11 md:w-11"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-black/5 md:h-11 md:w-11"
             aria-label="搜尋"
           >
             <Search className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
           </Link>
           <Link
             href={APP_ROUTES.member}
-            className="hidden h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-[#FFE98A]/70 sm:inline-flex md:h-11 md:w-11"
+            className="hidden h-10 w-10 items-center justify-center rounded-xl text-[#153E73] transition hover:bg-black/5 sm:inline-flex md:h-11 md:w-11"
             aria-label="會員入口"
           >
             <User className="h-5 w-5 md:h-6 md:w-6" aria-hidden />

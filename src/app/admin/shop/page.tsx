@@ -5,6 +5,11 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   {
+    href: "/admin/shop/appearance",
+    title: "頁首／Hero 外觀",
+    desc: "頁首底色、Hero 底色（建議同色銜接，無白邊）。",
+  },
+  {
     href: "/admin/shop/hero-banners",
     title: "商城 Hero Banner",
     desc: "滿版主視覺。桌面 1500×600（5:2）、手機 1080×900（6:5）。",

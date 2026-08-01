@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
@@ -10,12 +11,44 @@ import { PopularProducts } from "@/components/shop/PopularProducts";
 import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
 import { ShopNewProducts } from "@/components/shop/ShopNewProducts";
 import { APP_ROUTES } from "@/lib/site-links";
+import {
+  DEFAULT_SHOP_PAGE_SETTINGS,
+  type ShopPageSettings,
+} from "@/lib/shop/page-settings";
 
 export function ShopHubClient() {
+  const [pageSettings, setPageSettings] = useState<ShopPageSettings>(
+    DEFAULT_SHOP_PAGE_SETTINGS
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/shop/page-settings", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled || !d.settings) return;
+        setPageSettings(d.settings as ShopPageSettings);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const brandYellow =
+    pageSettings.header_bg_color || DEFAULT_SHOP_PAGE_SETTINGS.header_bg_color;
+
   return (
     <div className="shop-hub space-y-0 bg-white">
-      <ShopHeader />
-      <ShopHeroBanner />
+      {/* Header + Hero share one yellow plane — no white gap / radius */}
+      <div className="w-full max-w-none rounded-none" style={{ backgroundColor: brandYellow }}>
+        <ShopHeader settings={pageSettings} />
+        <ShopHeroBanner
+          backgroundColor={
+            pageSettings.hero_bg_color || pageSettings.header_bg_color
+          }
+        />
+      </div>
 
       <main>
         <div className="bg-white">

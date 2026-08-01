@@ -10,6 +10,7 @@ import {
   normalizeShopHeroList,
   type ShopHeroBanner as ShopHeroBannerType,
 } from "@/types/shop-hero-banner";
+import { DEFAULT_SHOP_PAGE_SETTINGS } from "@/lib/shop/page-settings";
 import { cn } from "@/lib/utils";
 
 function isExternalHref(href: string) {
@@ -49,7 +50,7 @@ function BannerSlide({
   );
 
   const frame = (
-    <div className="relative w-full aspect-[6/5] md:aspect-[5/2]">{media}</div>
+    <div className="relative w-full aspect-[6/5] rounded-none md:aspect-[5/2]">{media}</div>
   );
 
   const className = cn(
@@ -84,12 +85,17 @@ function BannerSlide({
 
 /**
  * Full-bleed shop hero — independent block below ShopHeader.
- * Mobile 6:5 / desktop 5:2, object-cover, no radius / max-width.
+ * Mobile 6:5 / desktop 5:2, object-cover, no radius / max-width / white frame.
  */
-export function ShopHeroBanner() {
+export function ShopHeroBanner({
+  backgroundColor = DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color,
+}: {
+  backgroundColor?: string;
+}) {
   const [banners, setBanners] = useState<ShopHeroBannerType[]>(DEFAULT_SHOP_HERO_BANNERS);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(0);
+  const bg = backgroundColor || DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color;
   const autoplay = useRef(
     Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
   );
@@ -157,11 +163,12 @@ export function ShopHeroBanner() {
 
   return (
     <section
-      className="relative w-full overflow-hidden bg-[#FFD84D]"
+      className="relative m-0 w-full max-w-none overflow-hidden rounded-none border-0 p-0 shadow-none"
+      style={{ backgroundColor: bg }}
       aria-label="商城主視覺"
       aria-busy={loading}
     >
-      <div className="overflow-hidden" ref={emblaRef}>
+      <div className="overflow-hidden rounded-none" ref={emblaRef}>
         <div className="flex touch-pan-y">
           {banners.map((banner, i) => (
             <BannerSlide key={banner.id} banner={banner} priority={i === 0} />
@@ -211,7 +218,8 @@ export function ShopHeroBanner() {
 
       {loading ? (
         <div
-          className="pointer-events-none absolute inset-0 animate-pulse bg-[#FFD84D]/40"
+          className="pointer-events-none absolute inset-0 animate-pulse opacity-40"
+          style={{ backgroundColor: bg }}
           aria-hidden
         />
       ) : null}
