@@ -16,7 +16,7 @@ const GLASS_BTN =
   "shop-header-glass inline-flex h-[42px] w-[42px] shrink-0 items-center justify-center text-[#153E73] transition hover:brightness-[1.02] active:scale-[0.98]";
 
 /**
- * Version A shop header — frosted pill icons floating on yellow hero.
+ * Shop header — sits above hero on the yellow plane (no absolute overlap).
  * No logo; page title 「商城」 centered.
  */
 export function ShopHeader({
@@ -54,10 +54,10 @@ export function ShopHeader({
 
   return (
     <header
-      className="shop-header-float absolute inset-x-0 top-0 z-30 w-full"
+      className="shop-header-bar relative z-30 w-full shrink-0"
       style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
     >
-      <div className="mx-auto flex w-full max-w-[1440px] items-center gap-2 px-[15px] md:px-6">
+      <div className="mx-auto flex h-[48px] w-full max-w-[1440px] items-center gap-2 px-[15px] pb-2 md:px-6">
         <div className="flex flex-1 items-center justify-start">
           <AppHamburgerMenu className={cn(GLASS_BTN, "!min-h-0 !min-w-0 !rounded-full")} />
         </div>

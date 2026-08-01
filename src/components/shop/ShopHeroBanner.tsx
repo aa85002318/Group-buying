@@ -9,8 +9,8 @@ import {
 import { DEFAULT_SHOP_PAGE_SETTINGS } from "@/lib/shop/page-settings";
 
 /**
- * Shop hub hero — App-home layout: yellow plane + art only.
- * Search floats outside this section; feature cards live below categories.
+ * Shop hub hero — yellow plane art only, below in-flow header (no overlap).
+ * Image top-centered like homepage; search floats on the seam below.
  */
 export function ShopHeroBanner({
   backgroundColor = DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color,

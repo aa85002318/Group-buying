@@ -491,27 +491,24 @@
   }
 
   /*
-   * Hero height: ~520–560px / ≤65dvh so first screen shows
-   * Header + Hero + floating search + first category row.
+   * Header is in-flow above this block (no overlap).
+   * Art is top-centered like homepage hero — natural height, not pushed under icons.
    */
   .shop-hero-layout {
     position: relative;
     width: 100%;
     margin: 0;
-    height: min(540px, 65dvh);
-    max-height: 560px;
-    padding:
-      calc(env(safe-area-inset-top, 0px) + 12px + 42px + 24px)
-      16px
-      56px;
+    height: min(480px, 58dvh);
+    max-height: 520px;
+    padding: 8px 16px 56px;
     background: #ffe149;
     overflow: hidden;
   }
 
   @media (min-width: 768px) {
     .shop-hero-layout {
-      height: min(520px, 58dvh);
-      max-height: 560px;
+      height: min(460px, 52dvh);
+      max-height: 520px;
       padding-left: 24px;
       padding-right: 24px;
       padding-bottom: 64px;
@@ -526,7 +523,7 @@
     z-index: 1;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: flex-start;
     width: 100%;
     height: 100%;
     min-height: 0;
@@ -534,22 +531,20 @@
 
   .shop-hero-layout__art-link {
     display: block;
+    width: 100%;
     max-width: 100%;
     line-height: 0;
   }
 
   .shop-hero-layout__img {
     display: block;
-    width: auto;
+    width: 100%;
     max-width: 100%;
     height: auto;
     max-height: 100%;
     margin-inline: auto;
     object-fit: contain;
-    object-position: center bottom;
-    /* IP ~15% larger + nudged down for airy title zone */
-    transform: scale(1.15) translateY(12px);
-    transform-origin: center bottom;
+    object-position: center top;
     user-select: none;
     pointer-events: none;
     border-radius: 0;
@@ -558,7 +553,7 @@
   .shop-hero-glow {
     position: absolute;
     left: 50%;
-    top: 48%;
+    top: 36%;
     z-index: 0;
     width: min(78%, 420px);
     height: min(55%, 280px);
