@@ -13,6 +13,7 @@ import type { CmsBanner } from "@/lib/types/database";
 
 const PLACEMENTS = [
   { value: "shop_hero", label: "商城 Hero Banner" },
+  { value: "shop_promo", label: "商城 5:2 活動 Banner" },
   { value: "home_weekly_promo", label: "首頁本週優惠" },
   { value: "home_secondary", label: "首頁次要 Banner" },
   { value: "shop", label: "商城（舊）" },
@@ -146,6 +147,11 @@ function AdminBannersClient() {
       alert("請上傳商城 Hero 桌面圖片（滿寬完整顯示、兩側不裁切）");
       return;
     }
+    const isShopPromo = form.placement === "shop_promo";
+    if (isShopPromo && !form.image_url.trim()) {
+      alert("請上傳桌面圖片（建議 1500×600 px，比例 5:2）");
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -267,12 +273,18 @@ function AdminBannersClient() {
                 ? "優惠圖片（建議 720×360 px）"
                 : form.placement === "shop_hero"
                   ? "桌面圖（完整顯示、兩側不裁切；建議寬 1500px）"
-                  : "桌機圖"
+                  : form.placement === "shop_promo"
+                    ? "桌面圖片（建議 1500 × 600 px，比例 5:2）"
+                    : "桌機圖"
             }
             images={form.image_url ? [form.image_url] : []}
             onChange={(images) => setForm({ ...form, image_url: images[0] ?? "" })}
             uploadFolder={
-              form.placement === "shop_hero" ? "banners/shop/hero/desktop" : "banners"
+              form.placement === "shop_hero"
+                ? "banners/shop/hero/desktop"
+                : form.placement === "shop_promo"
+                  ? "banners/shop/promo/desktop"
+                  : "banners"
             }
             maxImages={1}
             multiple={false}
@@ -281,12 +293,18 @@ function AdminBannersClient() {
             label={
               form.placement === "shop_hero"
                 ? "手機圖（完整顯示、兩側不裁切；未設定則使用桌面圖）"
-                : "手機版圖片（建議 750×700 px；未設定則使用桌機圖）"
+                : form.placement === "shop_promo"
+                  ? "手機圖片（建議 1080 × 432 px，比例 5:2；未設定則用桌面圖）"
+                  : "手機版圖片（建議 750×700 px；未設定則使用桌機圖）"
             }
             images={form.mobile_image_url ? [form.mobile_image_url] : []}
             onChange={(images) => setForm({ ...form, mobile_image_url: images[0] ?? "" })}
             uploadFolder={
-              form.placement === "shop_hero" ? "banners/shop/hero/mobile" : "banners"
+              form.placement === "shop_hero"
+                ? "banners/shop/hero/mobile"
+                : form.placement === "shop_promo"
+                  ? "banners/shop/promo/mobile"
+                  : "banners"
             }
             maxImages={1}
             multiple={false}
@@ -294,6 +312,11 @@ function AdminBannersClient() {
           {form.placement === "shop_hero" ? (
             <p className="text-xs text-muted-foreground">
               商城 Hero 比照首頁：滿寬、高度隨圖片比例、兩側不裁切（object-contain）。底色 #FDE045。
+            </p>
+          ) : null}
+          {form.placement === "shop_promo" ? (
+            <p className="text-xs text-muted-foreground">
+              商城活動 Banner 固定 5:2、object-cover；桌面／手機請分開上傳以免文字被裁切。
             </p>
           ) : null}
           <div className="grid gap-3 sm:grid-cols-2">

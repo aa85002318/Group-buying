@@ -6,10 +6,8 @@ import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
 import { ShopSearchBar } from "@/components/shop/ShopSearchBar";
 import { ShopCategoryMenu } from "@/components/shop/ShopCategoryMenu";
 import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
-import {
-  NewProductsSection,
-  PopularProductsSection,
-} from "@/components/home/NewProductsSection";
+import { PopularProducts } from "@/components/shop/PopularProducts";
+import { NewProductsSection } from "@/components/home/NewProductsSection";
 import { getNewThisWeekProducts } from "@/lib/home";
 import { mockProducts } from "@/lib/mock-data";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -28,7 +26,6 @@ export function ShopHubClient() {
   }, []);
 
   const newest = useMemo(() => getNewThisWeekProducts(products), [products]);
-  const popular = useMemo(() => products.slice(0, 8), [products]);
 
   return (
     <div className="shop-hub space-y-0 bg-white">
@@ -40,20 +37,18 @@ export function ShopHubClient() {
 
       <ShopCategoryMenu />
 
-      <div className="mx-auto max-w-[1200px] px-4 pb-7 pt-0">
+      <div className="pb-7 pt-0">
         <ShopPromoCarousel />
       </div>
 
-      <div className="shop-hub-body mx-auto w-full max-w-7xl space-y-6 px-4 pb-8 pt-0 md:px-6">
-        <PopularProductsSection
-          products={popular}
-          href={APP_ROUTES.bakingMaterials}
-          title="熱門商品"
-        />
+      <div className="pb-6">
+        <PopularProducts />
+      </div>
 
+      <div className="shop-hub-body mx-auto w-full max-w-7xl space-y-6 px-4 pb-8 pt-0 md:px-6">
         <NewProductsSection
           products={newest}
-          href={`${APP_ROUTES.bakingMaterials}?sort=newest`}
+          href={`${APP_ROUTES.shopCategories}?sort=newest`}
           title="新品上架"
         />
 
@@ -75,10 +70,10 @@ export function ShopHubClient() {
         </section>
 
         <Link
-          href={APP_ROUTES.bakingMaterials}
+          href={APP_ROUTES.shopCategories}
           className="flex min-h-12 items-center justify-center rounded-[16px] border border-[#EAEAEA] bg-white text-sm font-bold text-[#153E73]"
         >
-          進入烘焙材料目錄
+          進入全部分類
         </Link>
       </div>
     </div>

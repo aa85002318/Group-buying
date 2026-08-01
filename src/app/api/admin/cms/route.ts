@@ -102,6 +102,7 @@ export async function POST(request: Request) {
         mobile_image_url: body.mobile_image_url ?? null,
         link_url: body.link_url ?? null,
         button_text: body.button_text ?? null,
+        link_type: body.link_type ?? null,
         banner_type: body.banner_type ?? body.placement ?? "home_hero",
         placement: body.placement ?? "home_hero",
         status: body.status ?? "active",

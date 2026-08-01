@@ -560,16 +560,14 @@
     display: none;
   }
 
+  .shop-promo-carousel {
+    padding-bottom: 8px;
+    background: #ffffff;
+  }
+
   .shop-promo-carousel__frame {
     aspect-ratio: 5 / 2;
     min-height: 140px;
-  }
-
-  @media (max-width: 639px) {
-    .shop-promo-carousel__frame {
-      aspect-ratio: 16 / 9;
-      min-height: 148px;
-    }
   }
 
   .scrollbar-hide {

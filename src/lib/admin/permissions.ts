@@ -20,6 +20,8 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/banners",
   "/admin/home",
   "/admin/shop",
+  "/admin/shop/promo-banners",
+  "/admin/shop/popular-products",
   "/admin/content",
   "/admin/faqs",
   "/admin/cms",
@@ -169,6 +171,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { href: "/admin/home", label: "首頁 CMS", roles: ["admin", "content_editor"] },
       { href: "/admin/shop", label: "商城頁面 CMS", roles: ["admin", "content_editor"] },
+      { href: "/admin/shop/promo-banners", label: "商城活動 Banner", roles: ["admin", "content_editor"] },
+      { href: "/admin/shop/popular-products", label: "商城熱門商品", roles: ["admin", "content_editor"] },
       { href: "/admin/recipes", label: "食譜頁面 CMS", roles: ["admin", "content_editor"] },
       { href: "/admin/group-buy/settings", label: "團購頁面 CMS", roles: ["admin"] },
       { href: "/admin/members", label: "會員頁面 CMS", roles: ["admin", "customer_service"] },

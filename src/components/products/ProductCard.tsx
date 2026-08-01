@@ -27,6 +27,8 @@ interface ProductCardProps {
   groupBuyEventId?: string | null;
   groupBuyProductId?: string | null;
   showQuickAdd?: boolean;
+  /** Shop mall card styling (coral price + yellow cart). */
+  variant?: "default" | "shop";
 }
 
 const BADGE_CLASS: Record<ProductBadge, string> = {
@@ -70,6 +72,7 @@ export function ProductCard({
   groupBuyEventId,
   groupBuyProductId,
   showQuickAdd = true,
+  variant = "default",
 }: ProductCardProps) {
   const link = href ?? `/products/${id}`;
   const resolvedBadge: ProductBadge | undefined =
@@ -78,6 +81,8 @@ export function ProductCard({
     (sticker ? STICKER_TO_BADGE[sticker] : undefined);
   const { addItem } = useCart();
   const [adding, setAdding] = useState(false);
+  const [addedHint, setAddedHint] = useState(false);
+  const shop = variant === "shop";
 
   const onQuickAdd = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -93,15 +98,29 @@ export function ProductCard({
         groupBuyEventId: groupBuyEventId ?? null,
         groupBuyProductId: groupBuyProductId ?? null,
       });
+      setAddedHint(true);
+      window.setTimeout(() => setAddedHint(false), 1600);
     } catch {
-      /* toast optional in phase 1 */
+      /* ignore */
     } finally {
       setAdding(false);
     }
   };
 
   return (
-    <article className="group flex min-w-0 flex-col overflow-hidden rounded-[20px] border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
+    <article
+      className={cn(
+        "group relative flex min-w-0 flex-col overflow-hidden border bg-surface transition",
+        shop
+          ? "rounded-[14px] border-[#EEEEEE] shadow-[0_4px_16px_rgba(21,62,115,0.06)]"
+          : "rounded-[20px] border-border shadow-soft hover:-translate-y-0.5 hover:shadow-lift"
+      )}
+    >
+      {addedHint ? (
+        <div className="absolute inset-x-2 top-2 z-20 rounded-full bg-[#153E73] px-2 py-1 text-center text-[10px] font-bold text-white">
+          已加入購物車
+        </div>
+      ) : null}
       <Link href={link} className="relative block aspect-square overflow-hidden bg-surface-soft">
         <div className="absolute right-2 top-2 z-10">
           <FavoriteButton productId={id} size="sm" />
@@ -132,7 +151,7 @@ export function ProductCard({
         )}
       </Link>
 
-      <div className="flex min-h-[7.5rem] flex-1 flex-col gap-1 p-3">
+      <div className={cn("flex flex-1 flex-col gap-1 p-3", shop ? "min-h-[8rem]" : "min-h-[7.5rem]")}>
         <Link href={link} className="min-w-0">
           <h3 className="line-clamp-2 min-h-[2.5rem] text-sm font-medium text-foreground break-words">
             {name}
@@ -144,7 +163,14 @@ export function ProductCard({
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-1">
           <div className="min-w-0">
-            <p className="font-semibold text-brand-primary">{formatCurrency(price)}</p>
+            <p
+              className={cn(
+                "font-semibold",
+                shop ? "text-[#F0645A]" : "text-brand-primary"
+              )}
+            >
+              {formatCurrency(price)}
+            </p>
             {original_price && original_price > price && (
               <p className="text-xs text-foreground-muted line-through">
                 {formatCurrency(original_price)}
@@ -158,8 +184,10 @@ export function ProductCard({
               disabled={adding || resolvedBadge === "soldout"}
               aria-label="將商品加入購物車"
               className={cn(
-                "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white transition active:scale-95 disabled:opacity-50",
-                "bg-brand-primary hover:bg-primary-hover"
+                "inline-flex h-10 w-10 shrink-0 items-center justify-center transition active:scale-95 disabled:opacity-50",
+                shop
+                  ? "rounded-full bg-[#FFD54F] text-[#153E73] hover:brightness-95"
+                  : "rounded-xl bg-brand-primary text-white hover:bg-primary-hover"
               )}
             >
               <Plus className="h-5 w-5" aria-hidden />

@@ -205,6 +205,7 @@ export interface CmsBanner {
   text_color?: string | null;
   text_align?: "left" | "center" | "right";
   audience?: "all" | "guest" | "member";
+  link_type?: string | null;
   is_active: boolean;
   sort_order: number;
   starts_at: string | null;
@@ -424,6 +425,18 @@ export interface Product {
   product_scope?: ProductScope;
   product_categories?: ProductCategory;
   product_channels?: Array<{ channel: string; is_enabled: boolean }>;
+  is_hot?: boolean;
+  is_new?: boolean;
+  is_popular?: boolean;
+  popular_sort_order?: number;
+  package_spec?: string | null;
+  brand_id?: string | null;
+  view_count?: number | null;
+  cart_add_count?: number | null;
+  favorite_count?: number | null;
+  inventory_mode?: string | null;
+  allow_oversell?: boolean | null;
+  brands?: { name?: string | null } | null;
 }
 
 export interface GroupBuyEvent {
