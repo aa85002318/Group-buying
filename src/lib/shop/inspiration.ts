@@ -289,9 +289,10 @@ export function mapInspirationRow(row: Record<string, unknown>): ShopInspiration
 }
 
 export function aspectToRowSpan(aspect: InspirationAspect, cardType: InspirationCardType): number {
-  const base = aspect === "1/1" ? 30 : aspect === "4/5" ? 36 : 38;
-  if (cardType === "tip") return base - 2;
-  if (cardType === "teacher") return base + 2;
-  if (cardType === "recipe") return base + 1;
-  return base + 4;
+  /* Compact hub footprint — ~30% shorter than full masonry spans */
+  const base = aspect === "1/1" ? 20 : aspect === "4/5" ? 24 : 26;
+  if (cardType === "tip") return base - 1;
+  if (cardType === "teacher") return base + 1;
+  if (cardType === "recipe") return base;
+  return base + 2;
 }

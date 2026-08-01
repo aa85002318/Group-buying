@@ -12,7 +12,8 @@ import {
 } from "@/lib/shop/inspiration";
 import { cn } from "@/lib/utils";
 
-const PAGE_SIZE = 6;
+/** Compact hub preview — 4 cards per page keeps section short. */
+const PAGE_SIZE = 4;
 
 function Stars({ value }: { value: number }) {
   return (
@@ -20,7 +21,7 @@ function Stars({ value }: { value: number }) {
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
-          className={cn("h-3 w-3", i < value ? "fill-current" : "opacity-25")}
+          className={cn("h-2.5 w-2.5", i < value ? "fill-current" : "opacity-25")}
           strokeWidth={1.5}
           aria-hidden
         />
@@ -32,11 +33,11 @@ function Stars({ value }: { value: number }) {
 function Avatar({ name, src }: { name: string; src: string | null }) {
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt="" className="h-6 w-6 rounded-full object-cover" />;
+    return <img src={src} alt="" className="h-5 w-5 rounded-full object-cover" />;
   }
   return (
     <span
-      className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#FFE149] text-[10px] font-bold text-[#153E73]"
+      className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#FFE149] text-[9px] font-bold text-[#153E73]"
       aria-hidden
     >
       {name.slice(0, 1)}
@@ -55,19 +56,19 @@ function InspirationCard({ post }: { post: ShopInspirationPost }) {
 
   return (
     <article
-      className="shop-inspiration-card group relative flex flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_8px_24px_rgba(21,62,115,0.08)] transition duration-200 hover:scale-[1.02]"
+      className="shop-inspiration-card group relative flex flex-col overflow-hidden rounded-[16px] bg-white shadow-[0_6px_16px_rgba(21,62,115,0.07)] transition duration-200 hover:scale-[1.02]"
       style={{ gridRowEnd: `span ${span}` }}
     >
       <button
         type="button"
-        className="absolute right-2.5 top-2.5 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#F16458] shadow-sm backdrop-blur"
+        className="absolute right-1.5 top-1.5 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#F16458] shadow-sm backdrop-blur"
         aria-label={`收藏 ${post.title}`}
       >
-        <Heart className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+        <Heart className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
       </button>
 
       {post.card_type === "teacher" ? (
-        <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-[#7C5CFF] px-2 py-0.5 text-[10px] font-bold text-white">
+        <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-[#7C5CFF] px-1.5 py-0.5 text-[9px] font-bold text-white">
           老師作品
         </span>
       ) : null}
@@ -83,35 +84,30 @@ function InspirationCard({ post }: { post: ShopInspirationPost }) {
           />
         </div>
 
-        <div className="flex flex-1 flex-col gap-1.5 p-3">
-          <h3 className="line-clamp-2 text-[13px] font-bold leading-snug text-[#153E73]">
+        <div className="flex flex-1 flex-col gap-1 p-2">
+          <h3 className="line-clamp-1 text-[12px] font-bold leading-snug text-[#153E73]">
             {post.title}
           </h3>
 
           {post.card_type === "community" ? (
             <>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <Avatar name={post.author_name} src={post.author_avatar} />
-                <div className="min-w-0">
-                  <p className="truncate text-[11px] font-medium text-[#153E73]">{post.author_name}</p>
-                  {post.time_label ? (
-                    <p className="text-[10px] text-[#687386]">{post.time_label}</p>
-                  ) : null}
-                </div>
+                <p className="truncate text-[10px] font-medium text-[#153E73]">{post.author_name}</p>
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-[#687386]">
+              <div className="flex items-center gap-2 text-[10px] text-[#687386]">
                 <span className="inline-flex items-center gap-0.5">
-                  <Heart className="h-3 w-3 text-[#F16458]" aria-hidden />
+                  <Heart className="h-2.5 w-2.5 text-[#F16458]" aria-hidden />
                   {post.likes}
                 </span>
                 <span className="inline-flex items-center gap-0.5">
-                  <MessageCircle className="h-3 w-3" aria-hidden />
+                  <MessageCircle className="h-2.5 w-2.5" aria-hidden />
                   {post.comments}
                 </span>
               </div>
               {post.materials.length ? (
-                <p className="line-clamp-2 text-[10px] leading-relaxed text-[#687386]">
-                  使用材料：{post.materials.join("、")}
+                <p className="line-clamp-1 text-[9px] leading-relaxed text-[#687386]">
+                  {post.materials.join("、")}
                 </p>
               ) : null}
             </>
@@ -119,9 +115,9 @@ function InspirationCard({ post }: { post: ShopInspirationPost }) {
 
           {post.card_type === "teacher" ? (
             <>
-              <p className="text-[12px] font-medium text-[#153E73]">{post.author_name}</p>
-              <span className="mt-1 inline-flex h-8 items-center justify-center rounded-full bg-[#153E73] px-3 text-[11px] font-bold text-white">
-                查看完整教學
+              <p className="text-[11px] font-medium text-[#153E73]">{post.author_name}</p>
+              <span className="mt-0.5 inline-flex h-7 items-center justify-center rounded-full bg-[#153E73] px-2.5 text-[10px] font-bold text-white">
+                查看教學
               </span>
             </>
           ) : null}
@@ -129,13 +125,10 @@ function InspirationCard({ post }: { post: ShopInspirationPost }) {
           {post.card_type === "recipe" ? (
             <>
               {post.cook_time ? (
-                <p className="text-[11px] text-[#687386]">完成時間 {post.cook_time}</p>
-              ) : null}
-              {post.difficulty ? (
-                <p className="text-[11px] text-[#687386]">難度 {post.difficulty}</p>
+                <p className="text-[10px] text-[#687386]">{post.cook_time}</p>
               ) : null}
               <Stars value={post.rating} />
-              <span className="mt-1 inline-flex h-8 items-center justify-center rounded-full border border-[#153E73]/20 bg-[#FFF8D6] px-3 text-[11px] font-bold text-[#153E73]">
+              <span className="mt-0.5 inline-flex h-7 items-center justify-center rounded-full border border-[#153E73]/20 bg-[#FFF8D6] px-2.5 text-[10px] font-bold text-[#153E73]">
                 查看食譜
               </span>
             </>
@@ -144,12 +137,12 @@ function InspirationCard({ post }: { post: ShopInspirationPost }) {
           {post.card_type === "tip" ? (
             <>
               {post.tip_body ? (
-                <p className="line-clamp-3 text-[11px] leading-relaxed text-[#687386]">{post.tip_body}</p>
+                <p className="line-clamp-2 text-[10px] leading-relaxed text-[#687386]">{post.tip_body}</p>
               ) : null}
               <Stars value={post.rating} />
-              {post.product_name && post.product_href ? (
-                <span className="mt-1 text-[11px] font-bold text-[#F16458]">
-                  使用商品：{post.product_name}
+              {post.product_name ? (
+                <span className="mt-0.5 line-clamp-1 text-[10px] font-bold text-[#F16458]">
+                  {post.product_name}
                 </span>
               ) : null}
             </>
@@ -161,7 +154,7 @@ function InspirationCard({ post }: { post: ShopInspirationPost }) {
 }
 
 /**
- * 烘焙靈感牆 — CSS Grid masonry (no third-party lib).
+ * 烘焙靈感牆 — compact CSS Grid masonry for shop hub.
  */
 export function ShopInspirationWall({
   posts: postsProp,
@@ -211,23 +204,23 @@ export function ShopInspirationWall({
   return (
     <section className="shop-inspiration-wall w-full" aria-label="烘焙靈感牆">
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
-        <header className="mb-3.5 flex items-start justify-between gap-3">
+        <header className="mb-2.5 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="text-[22px] font-bold leading-tight text-[#153E73] md:text-[26px]">
+            <h2 className="text-[18px] font-bold leading-tight text-[#153E73] md:text-[20px]">
               ✨ 烘焙靈感牆
             </h2>
-            <p className="mt-1 text-[13px] text-[#687386]">看看大家今天烤了什麼 ❤️</p>
+            <p className="mt-0.5 text-[12px] text-[#687386]">看看大家今天烤了什麼 ❤️</p>
           </div>
           <Link
             href="/recipes"
-            className="mt-1 shrink-0 text-[14px] font-bold text-[#153E73] transition hover:opacity-75"
+            className="shrink-0 text-[13px] font-bold text-[#153E73] transition hover:opacity-75"
           >
             探索更多 &gt;
           </Link>
         </header>
 
         <div
-          className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide"
+          className="mb-2.5 flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide"
           role="tablist"
           aria-label="靈感分類"
         >
@@ -241,7 +234,7 @@ export function ShopInspirationWall({
                 aria-selected={active}
                 onClick={() => setTag(t.id)}
                 className={cn(
-                  "shop-inspiration-chip shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition",
+                  "shop-inspiration-chip shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold transition",
                   active
                     ? "bg-[#FFE149] text-[#153E73]"
                     : "bg-white text-[#153E73] ring-1 ring-[#E8ECF2] hover:bg-[#FFE149]"
@@ -259,7 +252,7 @@ export function ShopInspirationWall({
           ))}
         </div>
 
-        <div className="mt-4 flex items-center justify-center gap-2" aria-label="靈感牆分頁">
+        <div className="mt-2.5 flex items-center justify-center gap-1.5" aria-label="靈感牆分頁">
           {Array.from({ length: pageCount }).map((_, i) => (
             <button
               key={i}
@@ -268,8 +261,8 @@ export function ShopInspirationWall({
               aria-current={i === safePage ? "true" : undefined}
               onClick={() => setPage(i)}
               className={cn(
-                "h-2 rounded-full transition",
-                i === safePage ? "w-5 bg-[#153E73]" : "w-2 bg-[#D5DBE5]"
+                "h-1.5 rounded-full transition",
+                i === safePage ? "w-4 bg-[#153E73]" : "w-1.5 bg-[#D5DBE5]"
               )}
             />
           ))}

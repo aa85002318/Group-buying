@@ -102,7 +102,7 @@ export function ShopHubClient() {
           <ShopNewProducts />
         </div>
 
-        <div className="pb-6">
+        <div className="pb-4">
           <ShopInspirationWall />
         </div>
 
