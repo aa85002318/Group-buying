@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
+import {
+  PRODUCT_RAIL_CARD_SHELL,
+  PRODUCT_RAIL_IMAGE_FRAME,
+} from "@/lib/ui/product-rail";
 import { eventImage, eventPrices, remainParts, type GroupBuyHubEvent } from "./types";
 
 function pad(n: number) {
@@ -22,44 +26,49 @@ export function ClosingSoonCard({ event }: { event: GroupBuyHubEvent }) {
   const href = `/group-buy/${event.id}`;
 
   return (
-    <article className="gb-hub-closing-card group flex h-[190px] w-[40vw] max-w-[132px] shrink-0 snap-start flex-col overflow-hidden rounded-[24px] border border-[#E9EDF2] bg-white p-2 shadow-[0_4px_14px_rgba(21,62,115,0.05)] transition duration-300 md:h-[198px] md:w-[132px] md:max-w-[132px] md:hover:-translate-y-1 md:hover:scale-[1.02]">
+    <article
+      className={cn(
+        PRODUCT_RAIL_CARD_SHELL,
+        "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
+      )}
+    >
       <div className="relative">
-        <Link href={href} className="relative block h-[78px] overflow-hidden rounded-[16px] bg-[#FFFEFA]">
+        <Link href={href} className={PRODUCT_RAIL_IMAGE_FRAME}>
           {image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={image} alt="" className="h-full w-full object-cover" />
+            <img src={image} alt="" className="h-full w-full object-contain p-2.5 md:p-3.5" />
           ) : (
-            <span className="flex h-full items-center justify-center text-[10px] text-[#687386]">
+            <span className="flex h-full items-center justify-center text-xs text-[#687386]">
               團購
             </span>
           )}
         </Link>
         {parts && !parts.done ? (
-          <span className="absolute left-1 top-1 rounded-full bg-[#F16458] px-1.5 py-0.5 text-[9px] font-extrabold text-white shadow-sm">
+          <span className="absolute left-2 top-2 rounded-[6px] bg-[#F16458] px-2 py-0.5 text-xs font-bold leading-none text-white">
             倒數中
           </span>
         ) : null}
       </div>
 
-      <div className="mt-1.5 flex min-h-0 flex-1 flex-col">
+      <div className="mt-2 flex min-h-0 flex-1 flex-col">
         <Link href={href}>
-          <h3 className="line-clamp-2 text-[11px] font-bold leading-snug text-[#153E73]">
+          <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
             {event.title}
           </h3>
         </Link>
         {parts && !parts.done ? (
-          <p className="mt-1 text-[9px] font-bold leading-tight text-[#F16458]">
+          <p className="mt-1.5 text-[11px] font-bold leading-tight text-[#F16458] md:text-xs">
             剩餘 {pad(parts.days)}天 {pad(parts.hours)}小時 {pad(parts.minutes)}分鐘
           </p>
         ) : (
-          <p className="mt-1 text-[9px] font-bold text-[#687386]">已結束</p>
+          <p className="mt-1.5 text-[11px] font-bold text-[#687386] md:text-xs">已結束</p>
         )}
-        <p className="mt-0.5 text-[13px] font-extrabold text-[#F16458]">
+        <p className="mt-1 text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
           {formatCurrency(price)}
         </p>
         <Link
           href={href}
-          className="mt-auto inline-flex h-7 w-full items-center justify-center rounded-full bg-[#F16458] text-[10px] font-extrabold text-white transition hover:brightness-95 active:scale-[0.98] md:hover:scale-[1.02]"
+          className="mt-auto inline-flex h-9 w-full items-center justify-center rounded-full bg-[#F16458] text-sm font-bold text-white transition hover:brightness-95 active:scale-[0.98] md:h-10"
         >
           加入團購
         </Link>

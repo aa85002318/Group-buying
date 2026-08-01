@@ -9,6 +9,11 @@ import { MoreProductsCard } from "@/components/home/ingredient-shop/MoreProducts
 import { ProductHorizontalScroller } from "@/components/home/ingredient-shop/ProductHorizontalScroller";
 import { useCart } from "@/hooks/useCart";
 import { formatCurrency, cn } from "@/lib/utils";
+import {
+  PRODUCT_RAIL_CARD_SHELL,
+  PRODUCT_RAIL_IMAGE_FRAME,
+  PRODUCT_RAIL_SKELETON,
+} from "@/lib/ui/product-rail";
 import { GroupBuyHubHeader } from "./GroupBuyHubHeader";
 import {
   FEATURED_TABS,
@@ -20,9 +25,6 @@ import {
   type GroupBuyHubEvent,
 } from "./types";
 import type { HomeCategoryMenuItem } from "@/lib/home/category-menu";
-
-const CARD_WIDTH =
-  "w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]";
 
 const tabBase =
   "inline-flex h-9 shrink-0 items-center gap-1 rounded-xl border px-3.5 text-[13px] font-semibold transition md:h-10 md:gap-1.5 md:rounded-[14px] md:px-[18px] md:text-sm";
@@ -112,10 +114,7 @@ export function FeaturedGroupBuySection({
       {loading ? (
         <div className="flex gap-2.5 overflow-hidden pb-2 md:gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className={`home-skeleton h-[300px] shrink-0 rounded-2xl md:h-[345px] ${CARD_WIDTH}`}
-            />
+            <div key={i} className={PRODUCT_RAIL_SKELETON} />
           ))}
         </div>
       ) : visible.length === 0 ? (
@@ -174,18 +173,14 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
   return (
     <article
       className={cn(
-        "ingredient-shop-card group flex h-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E9EDF2] bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[320px] md:p-3",
-        CARD_WIDTH,
+        PRODUCT_RAIL_CARD_SHELL,
         !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
       )}
     >
       <div className="relative">
         <Link
           href={href}
-          className={cn(
-            "relative block h-[135px] overflow-hidden rounded-xl bg-transparent md:h-[165px] xl:h-[170px]",
-            soldOut && "opacity-60"
-          )}
+          className={cn(PRODUCT_RAIL_IMAGE_FRAME, soldOut && "opacity-60")}
         >
           <div className="absolute right-1.5 top-1.5 z-10">
             {product?.id ? (

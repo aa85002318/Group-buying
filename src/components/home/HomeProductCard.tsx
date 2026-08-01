@@ -93,19 +93,19 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
   return (
     <article
       className={cn(
-        "flex h-full flex-col overflow-hidden rounded-[20px] border bg-card shadow-card transition duration-250 ease-brand hover:-translate-y-1 hover:shadow-lift",
-        variant === "closing" ? "border-2 border-error" : "border-border"
+        "flex h-[280px] flex-col overflow-hidden rounded-2xl border bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[320px] md:p-3 md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]",
+        variant === "closing" ? "border-[#F16458]" : "border-[#E9EDF2]"
       )}
     >
       <Link href={href} className="block">
-        <div className="relative aspect-square overflow-hidden bg-muted">
+        <div className="relative h-[135px] overflow-hidden rounded-xl bg-transparent md:h-[165px] xl:h-[170px]">
           {product.image_url ? (
             <Image
               src={product.image_url}
               alt={product.name}
               fill
-              className="object-cover transition duration-400 hover:scale-105"
-              sizes="(max-width: 640px) 72vw, 25vw"
+              className="object-contain p-2.5 md:p-3.5"
+              sizes="(max-width: 767px) 176px, (max-width: 1279px) 210px, 220px"
               unoptimized
             />
           ) : (
@@ -125,32 +125,29 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-3">
+      <div className="mt-2 flex min-h-0 flex-1 flex-col">
         <Link href={href}>
-          <h3 className="line-clamp-2 min-h-10 text-sm font-bold leading-5 text-foreground">
+          <h3 className="line-clamp-2 min-h-[40px] text-sm font-semibold leading-[1.4] text-[#153E73] md:min-h-[42px] md:text-[15px]">
             {product.name}
           </h3>
         </Link>
 
-        <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-lg font-black text-price">{formatCurrency(product.price)}</span>
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className="text-[17px] font-bold leading-none text-[#F16458] md:text-xl">
+            {formatCurrency(product.price)}
+          </span>
           {saving > 0 && (
-            <>
-              <span className="text-xs text-foreground-secondary line-through">
-                {formatCurrency(product.original_price!)}
-              </span>
-              <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-black text-price">
-                現省 {formatCurrency(saving)}
-              </span>
-            </>
+            <span className="text-[11px] text-[#687386] line-through md:text-xs">
+              {formatCurrency(product.original_price!)}
+            </span>
           )}
         </div>
 
-        <div className="mt-auto pt-3">
+        <div className="mt-auto pt-2">
           {variant === "closing" ? (
             <Link
               href={href}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-error px-3 text-sm font-black text-white shadow-brand transition hover:opacity-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/40"
+              className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-full bg-[#F16458] px-3 text-sm font-bold text-white transition hover:brightness-95 active:scale-[0.98] md:h-10"
             >
               結團前搶購
               <ArrowRight className="h-4 w-4" />
@@ -160,7 +157,7 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
               type="button"
               onClick={addToCart}
               disabled={adding}
-              className="btn-brand w-full gap-2 disabled:opacity-60"
+              className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-full bg-[#FFD454] text-sm font-bold text-[#153E73] transition hover:brightness-95 disabled:opacity-60 md:h-10"
             >
               <ShoppingCart className="h-4 w-4" />
               {adding ? "加入中…" : "加入購物車"}

@@ -142,7 +142,7 @@ export function ChimeSelectSection({
         emptyActionLabel="前往選購"
         skeletonCount={4}
       >
-        <HorizontalScroller className="md:grid md:grid-cols-3 md:gap-4 md:overflow-visible lg:grid-cols-4 xl:grid-cols-5">
+        <HorizontalScroller className="flex gap-2.5 overflow-x-auto md:gap-3 md:overflow-visible lg:grid lg:grid-cols-4 xl:grid-cols-5">
           {visible.map((p) => (
             <HomeProductRailCard
               key={p.id}

@@ -113,7 +113,7 @@ export function HomeIngredientShopSection() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="home-skeleton h-[300px] w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] shrink-0 rounded-2xl md:h-[340px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]"
+                className="home-skeleton h-[280px] w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] shrink-0 rounded-2xl md:h-[320px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]"
               />
             ))}
           </div>

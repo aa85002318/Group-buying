@@ -66,7 +66,7 @@ export function HorizontalProductRail({
           actionLabel="逛全部商品"
         />
       ) : (
-        <HorizontalScroller className="md:grid md:grid-cols-3 md:gap-4 md:overflow-visible lg:grid-cols-4 xl:grid-cols-5">
+        <HorizontalScroller className="flex gap-2.5 overflow-x-auto md:gap-3 md:overflow-visible lg:grid lg:grid-cols-4 xl:grid-cols-5">
           {products.map((p) => (
             <HomeProductRailCard
               key={p.id}

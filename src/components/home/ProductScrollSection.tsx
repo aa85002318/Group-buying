@@ -6,6 +6,7 @@ import {
 import type { HomeProduct } from "@/lib/home";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PRODUCT_RAIL_CARD_WIDTH } from "@/lib/ui/product-rail";
 
 interface ProductScrollSectionProps {
   title: string;
@@ -82,14 +83,14 @@ export function ProductScrollSection({
       {products.length === 0 ? (
         <p className="py-4 text-center text-sm text-foreground-secondary">{emptyText}</p>
       ) : (
-        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 scrollbar-none">
+        <div className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto pb-3 scrollbar-none md:gap-3">
           {products.map((p, index) => (
             <div
               key={`${p.id}-${p.cutoff_at ?? ""}-${index}`}
               className={
                 isRanking
                   ? "w-[88%] shrink-0 snap-start sm:w-[48%] lg:w-[calc((100%_-_1.5rem)_/_3)]"
-                  : "w-[72%] shrink-0 snap-start sm:w-[42%] md:w-[31%] lg:w-[calc((100%_-_2.25rem)_/_4)]"
+                  : cn("shrink-0 snap-start", PRODUCT_RAIL_CARD_WIDTH)
               }
             >
               <HomeProductCard product={p} variant={variant} rank={index + 1} />

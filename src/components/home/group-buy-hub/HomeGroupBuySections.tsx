@@ -100,9 +100,7 @@ function HubRailSkeleton({
           className={
             wide
               ? "home-skeleton h-[180px] w-[78vw] max-w-[320px] shrink-0 rounded-[24px]"
-              : tall
-                ? "home-skeleton h-[212px] w-[44vw] max-w-[150px] shrink-0 rounded-[24px]"
-                : "home-skeleton h-[190px] w-[40vw] max-w-[132px] shrink-0 rounded-[24px]"
+              : "home-skeleton h-[280px] w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] shrink-0 rounded-2xl md:h-[320px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]"
           }
         />
       ))}

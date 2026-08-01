@@ -8,6 +8,10 @@ import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { useCart } from "@/hooks/useCart";
 import { formatCurrency, cn } from "@/lib/utils";
 import { isProductSoldOut } from "@/lib/home/ingredient-shop";
+import {
+  PRODUCT_RAIL_CARD_SHELL,
+  PRODUCT_RAIL_IMAGE_FRAME,
+} from "@/lib/ui/product-rail";
 import type { HomeProductBadgeType, IngredientShopProduct } from "@/types/home-product-section";
 
 const BADGE_STYLES: Record<
@@ -20,9 +24,6 @@ const BADGE_STYLES: Record<
   new: { label: "新品", className: "bg-[#FFD454] text-[#153E73]" },
   sold_out: { label: "售罄", className: "bg-[#E9EDF2] text-[#687386]" },
 };
-
-const CARD_WIDTH =
-  "w-[calc((100vw-48px)/2.15)] min-w-[156px] max-w-[176px] md:w-[210px] md:min-w-[210px] md:max-w-[210px] xl:w-[220px] xl:min-w-[220px] xl:max-w-[220px]";
 
 type IngredientShopProductCardProps = {
   product: IngredientShopProduct;
@@ -63,18 +64,14 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
   return (
     <article
       className={cn(
-        "ingredient-shop-card group flex h-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-[#E9EDF2] bg-white p-2.5 shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[320px] md:p-3",
-        CARD_WIDTH,
+        PRODUCT_RAIL_CARD_SHELL,
         !soldOut && "md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]"
       )}
     >
       <div className="relative">
         <Link
           href={href}
-          className={cn(
-            "relative block h-[135px] overflow-hidden rounded-xl bg-transparent md:h-[165px] xl:h-[170px]",
-            soldOut && "opacity-60"
-          )}
+          className={cn(PRODUCT_RAIL_IMAGE_FRAME, soldOut && "opacity-60")}
         >
           {product.badge ? (
             <span
