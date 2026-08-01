@@ -17,25 +17,23 @@ import { cn } from "@/lib/utils";
 const FALLBACK_SLIDES: ShopPromoBanner[] = [
   {
     id: "fallback-1",
-    title: "本月活動",
-    desktop_image_url: "",
+    title: "春日烘焙季",
+    desktop_image_url: "/images/shop/promo/spring-5x2.jpg",
+    mobile_image_url: "/images/shop/promo/spring-5x2.jpg",
     link_type: "page",
     link_url: "/shop/categories",
-    button_text: "立即逛逛",
     sort_order: 10,
     is_active: true,
-    subtitle: "滿額免運、滿額折扣",
   },
   {
     id: "fallback-2",
-    title: "新品到貨",
-    desktop_image_url: "",
-    link_type: "page",
-    link_url: "/shop/categories?sort=newest",
-    button_text: "看新品",
+    title: "烘焙器具",
+    desktop_image_url: "/images/shop/promo/tools-5x2.jpg",
+    mobile_image_url: "/images/shop/promo/tools-5x2.jpg",
+    link_type: "category",
+    link_url: "/shop/category/tools",
     sort_order: 20,
     is_active: true,
-    subtitle: "新品牌、新材料、新器具",
   },
 ];
 
@@ -51,22 +49,14 @@ function BannerMedia({
   const desktop = banner.desktop_image_url?.trim();
   const mobile = banner.mobile_image_url?.trim() || desktop;
 
+  // Image-only promo: no title / CTA overlay when media loads.
+  // Soft placeholder only if the image is missing or broken.
   if (failed || !desktop) {
     return (
-      <div className="flex h-full w-full flex-col justify-center bg-gradient-to-br from-[#FFF8E8] to-[#EEF5FF] px-5 md:px-8">
-        <p className="text-xs font-semibold text-[#F0645A]">商城活動</p>
-        <h2 className="mt-1 text-lg font-bold text-[#153E73] md:text-2xl">
-          {banner.title}
-        </h2>
-        {banner.subtitle ? (
-          <p className="mt-1 text-sm text-[#687386]">{banner.subtitle}</p>
-        ) : null}
-        {banner.button_text ? (
-          <span className="mt-3 inline-flex h-10 w-fit items-center rounded-full bg-[#153E73] px-4 text-sm font-bold text-white">
-            {banner.button_text}
-          </span>
-        ) : null}
-      </div>
+      <div
+        className="h-full w-full bg-gradient-to-br from-[#FFF1F3] to-[#EAF4FF]"
+        aria-hidden
+      />
     );
   }
 
