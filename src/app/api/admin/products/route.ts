@@ -15,6 +15,7 @@ import {
   syncProductChannels,
   type ProductChannel,
 } from "@/lib/services/productChannelService";
+import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
 
 function normalizeImages(body: Record<string, unknown>) {
   const images = Array.isArray(body.images)
@@ -91,7 +92,10 @@ function mapProductRow(body: Record<string, unknown>) {
     max_quantity_per_user: body.max_quantity_per_user ?? null,
     supplier_name: body.supplier_name ?? null,
     product_info: body.product_info ?? null,
-    disclaimer: body.product_info ?? body.disclaimer ?? null,
+    disclaimer: resolveProductDisclaimer(
+      typeof body.product_info === "string" ? body.product_info : undefined,
+      typeof body.disclaimer === "string" ? body.disclaimer : undefined
+    ),
     expected_arrival_date: body.expected_arrival_date ?? null,
     barcode: body.barcode ?? null,
     unit: String(body.unit ?? "").trim() || "件",

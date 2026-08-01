@@ -1,4 +1,5 @@
 import type { Product } from "@/lib/types/database";
+import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
 
 export type AdminProductFormState = {
   name: string;
@@ -113,7 +114,7 @@ export function formToPayload(form: AdminProductFormState) {
     cost_price: form.cost_price ? Number(form.cost_price) : null,
     gross_margin: margin,
     product_info: form.product_info.trim() || null,
-    disclaimer: form.product_info.trim() || null,
+    disclaimer: resolveProductDisclaimer(form.product_info),
     status: form.is_active ? "active" : "inactive",
   };
 }

@@ -1,4 +1,5 @@
 import type { Product, ProductScope, ProductStatus } from "@/lib/types/database";
+import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
 
 export type InventoryMode = "stock" | "preorder" | "both";
 
@@ -352,7 +353,7 @@ export function formV2ToPayload(form: AdminProductFormV2) {
       ? Number(form.max_quantity_per_user)
       : null,
     product_info: form.product_info.trim() || null,
-    disclaimer: form.product_info.trim() || null,
+    disclaimer: resolveProductDisclaimer(form.product_info),
     supplier_name: null,
   };
 }

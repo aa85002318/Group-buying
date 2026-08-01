@@ -6,6 +6,7 @@ import {
   fetchProductPickupStoreIds,
   syncProductPickupStores,
 } from "@/lib/services/productPickupStores";
+import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
 
 function mapProductBody(body: Record<string, unknown>) {
   const status = body.status as string | undefined;
@@ -41,7 +42,13 @@ function mapProductBody(body: Record<string, unknown>) {
     max_quantity_per_user: body.max_quantity_per_user,
     supplier_name: body.supplier_name,
     product_info: body.product_info,
-    disclaimer: body.product_info ?? body.disclaimer,
+    disclaimer:
+      body.product_info !== undefined || body.disclaimer !== undefined
+        ? resolveProductDisclaimer(
+            typeof body.product_info === "string" ? body.product_info : undefined,
+            typeof body.disclaimer === "string" ? body.disclaimer : undefined
+          )
+        : undefined,
     status: status ?? (is_active === false ? "inactive" : "active"),
     sort_order: body.sort_order,
     expected_arrival_date: body.expected_arrival_date,
