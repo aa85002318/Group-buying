@@ -145,11 +145,12 @@ export function HomeHeroSection() {
   const alt = data.imageAlt || "CHIMEiDIY Lifestyle 首頁主視覺";
 
   return (
-    <section className="home-hero home-hero-section" aria-label="首頁主視覺">
-      <div className="home-hero-top-bar">
+    <section className="home-hero home-hero-section home-hero-wrapper" aria-label="首頁主視覺">
+      {/* Absolute on mobile — transparent over continuous yellow plane */}
+      <header className="home-hero-top-bar home-mobile-header">
         <HeroTopActions onSearchClick={focusSearch} />
-      </div>
-      <div className="home-hero-canvas">
+      </header>
+      <div className="home-hero-canvas home-hero-content">
         <ResponsiveHeroImage
           desktopUrl={desktopUrl}
           mobileUrl={mobileUrl}

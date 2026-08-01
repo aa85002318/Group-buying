@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   applicationName: "CHIMEIDIY",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    /* Translucent so homepage/shop yellow can run under the status bar */
+    statusBarStyle: "black-translucent",
     title: "CHIMEIDIY",
   },
   icons: {
