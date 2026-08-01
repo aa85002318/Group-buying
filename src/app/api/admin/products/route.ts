@@ -94,7 +94,7 @@ function mapProductRow(body: Record<string, unknown>) {
     disclaimer: body.product_info ?? body.disclaimer ?? null,
     expected_arrival_date: body.expected_arrival_date ?? null,
     barcode: body.barcode ?? null,
-    unit: body.unit ?? null,
+    unit: String(body.unit ?? "").trim() || "件",
     video_url: body.video_url ?? null,
     website_price: body.website_price ?? null,
     group_buy_price: body.group_buy_price ?? null,
