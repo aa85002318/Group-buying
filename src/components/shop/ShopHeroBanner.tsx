@@ -7,6 +7,10 @@ import Autoplay from "embla-carousel-autoplay";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   DEFAULT_SHOP_HERO_BANNERS,
+  SHOP_HERO_DESKTOP_HEIGHT,
+  SHOP_HERO_DESKTOP_WIDTH,
+  SHOP_HERO_MOBILE_HEIGHT,
+  SHOP_HERO_MOBILE_WIDTH,
   normalizeShopHeroList,
   type ShopHeroBanner as ShopHeroBannerType,
 } from "@/types/shop-hero-banner";
@@ -27,31 +31,44 @@ function BannerSlide({
   const desktop = banner.desktop_image;
   const mobile = banner.mobile_image || banner.desktop_image;
   const alt = banner.alt_text || banner.title;
-  const openBlank = banner.link_target === "_blank" || (banner.link ? isExternalHref(banner.link) : false);
+  const openBlank =
+    banner.link_target === "_blank" || (banner.link ? isExternalHref(banner.link) : false);
 
   const media = (
-    <picture>
-      <source media="(max-width: 767px)" srcSet={mobile} />
+    <div className="shop-hero-fullbleed relative z-0 w-full rounded-none">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={desktop}
+        src={mobile}
         alt={alt}
-        className="absolute inset-0 block h-full w-full rounded-none border-0 object-cover"
-        style={{ borderRadius: 0 }}
+        width={SHOP_HERO_MOBILE_WIDTH}
+        height={SHOP_HERO_MOBILE_HEIGHT}
+        className="shop-hero-fullbleed__img block w-full rounded-none md:hidden"
         draggable={false}
         decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : "auto"}
         onError={(e) => {
           const el = e.currentTarget;
-          if (el.src.includes("hero-default")) return;
+          if (el.src.includes("hero-mobile") || el.src.includes("hero-default")) return;
+          el.src = DEFAULT_SHOP_HERO_BANNERS[0].mobile_image || DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
+        }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={desktop}
+        alt={alt}
+        width={SHOP_HERO_DESKTOP_WIDTH}
+        height={SHOP_HERO_DESKTOP_HEIGHT}
+        className="shop-hero-fullbleed__img hidden w-full rounded-none md:block"
+        draggable={false}
+        decoding={priority ? "sync" : "async"}
+        fetchPriority={priority ? "high" : "auto"}
+        onError={(e) => {
+          const el = e.currentTarget;
+          if (el.src.includes("hero-desktop") || el.src.includes("hero-default")) return;
           el.src = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
         }}
       />
-    </picture>
-  );
-
-  const frame = (
-    <div className="relative w-full aspect-[6/5] rounded-none md:aspect-[5/2]">{media}</div>
+    </div>
   );
 
   const className = cn(
@@ -60,7 +77,7 @@ function BannerSlide({
   );
 
   if (!banner.link) {
-    return <div className={className}>{frame}</div>;
+    return <div className={className}>{media}</div>;
   }
 
   if (openBlank || isExternalHref(banner.link)) {
@@ -72,21 +89,21 @@ function BannerSlide({
         className={className}
         aria-label={alt}
       >
-        {frame}
+        {media}
       </a>
     );
   }
 
   return (
     <Link href={banner.link} className={className} aria-label={alt}>
-      {frame}
+      {media}
     </Link>
   );
 }
 
 /**
- * Full-bleed shop hero — independent block below ShopHeader.
- * Mobile 6:5 / desktop 5:2, object-cover, no radius / max-width / white frame.
+ * Full-bleed shop hero — same sizing model as homepage ResponsiveHeroImage:
+ * width 100%, height auto (intrinsic), no radius / object-cover crop frame.
  */
 export function ShopHeroBanner({
   backgroundColor = DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color,
@@ -164,7 +181,7 @@ export function ShopHeroBanner({
 
   return (
     <section
-      className="relative m-0 w-full max-w-none overflow-hidden rounded-none border-0 p-0 shadow-none"
+      className="shop-hero-banner relative m-0 w-full max-w-none overflow-hidden rounded-none border-0 p-0 shadow-none"
       style={{ backgroundColor: bg }}
       aria-label="商城主視覺"
       aria-busy={loading}

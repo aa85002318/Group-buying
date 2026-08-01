@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
-import { ShopSearchBar } from "@/components/shop/ShopSearchBar";
+import {
+  ShopSearchBar,
+  type ShopSearchBarHandle,
+} from "@/components/shop/ShopSearchBar";
 import { ShopMainCategoryMenu } from "@/components/shop/ShopMainCategoryMenu";
 import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
 import { PopularProducts } from "@/components/shop/PopularProducts";
@@ -20,6 +23,7 @@ export function ShopHubClient() {
   const [pageSettings, setPageSettings] = useState<ShopPageSettings>(
     DEFAULT_SHOP_PAGE_SETTINGS
   );
+  const searchRef = useRef<ShopSearchBarHandle>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,28 +39,33 @@ export function ShopHubClient() {
     };
   }, []);
 
-  const brandYellow =
+  const focusSearch = useCallback(() => {
+    searchRef.current?.focus();
+  }, []);
+
+  const headerBg =
     pageSettings.header_bg_color || DEFAULT_SHOP_PAGE_SETTINGS.header_bg_color;
+  const heroBg =
+    pageSettings.hero_bg_color || pageSettings.header_bg_color || headerBg;
 
   return (
     <div className="shop-hub space-y-0 bg-white">
-      {/* Header + Hero share one yellow plane — no white gap / radius */}
-      <div className="w-full max-w-none rounded-none" style={{ backgroundColor: brandYellow }}>
-        <ShopHeader settings={pageSettings} />
-        <ShopHeroBanner
-          backgroundColor={
-            pageSettings.hero_bg_color || pageSettings.header_bg_color
-          }
-        />
-      </div>
+      {/* Same chrome stack as homepage: top bar → full-bleed hero → overlapping search */}
+      <section
+        className="shop-hero shop-hero-section"
+        style={{ backgroundColor: headerBg }}
+        aria-label="商城頁首與主視覺"
+      >
+        <ShopHeader settings={pageSettings} onSearchClick={focusSearch} />
+        <div className="shop-hero-canvas" style={{ backgroundColor: heroBg }}>
+          <ShopHeroBanner backgroundColor={heroBg} />
+        </div>
+        <div className="shop-hero-search-wrap">
+          <ShopSearchBar ref={searchRef} />
+        </div>
+      </section>
 
       <main>
-        <div className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 pt-4 md:px-6 md:pt-5">
-            <ShopSearchBar />
-          </div>
-        </div>
-
         <ShopMainCategoryMenu />
 
         <div className="pb-7 pt-0">

@@ -214,20 +214,19 @@ export default function AdminShopAppearancePage() {
               即時預覽
             </p>
             <div
-              className="px-4 py-3"
+              className="px-4 py-2"
               style={{ backgroundColor: settings.header_bg_color }}
             >
-              <p className="text-sm font-bold text-[#153E73]">CHIMEIDIY · Lifestyle</p>
-              <p className="text-[11px] text-[#153E73]/70">頁首（透明 Logo 區）</p>
+              <p className="text-[11px] text-[#153E73]/70">頁首操作列（與首頁同尺寸）</p>
             </div>
             <div
-              className="flex aspect-[5/2] items-center justify-center text-sm font-medium text-[#153E73]/80"
+              className="flex min-h-[96px] items-center justify-center text-sm font-medium text-[#153E73]/80"
               style={{ backgroundColor: settings.hero_bg_color }}
             >
-              Hero Banner 區域（無圓角）
+              Hero Banner（滿版、高度隨圖）
             </div>
             <div className="bg-white px-4 py-3 text-xs text-muted-foreground">
-              下方為搜尋欄／白底內容區
+              下方為重疊搜尋欄／白底內容區
             </div>
           </div>
         </div>

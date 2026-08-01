@@ -445,8 +445,40 @@
     }
   }
 
-  /* ── Shop hero (full-bleed) + search ── */
-  /* Fixed aspect: mobile 6:5 / desktop 5:2, object-cover */
+  /* ── Shop hero chrome — mirror homepage home-hero sizing/layout ── */
+  .shop-hero,
+  .shop-hero-section {
+    position: relative;
+    width: 100%;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 0;
+  }
+
+  .shop-hero-top-bar {
+    position: relative;
+    z-index: 20;
+    width: 100%;
+    margin: 0;
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 8px)
+      15px
+      6px;
+  }
+
+  .shop-hero-top-bar > * {
+    pointer-events: auto;
+  }
+
+  .shop-hero-canvas {
+    position: relative;
+    width: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .shop-hero-banner {
     width: 100%;
     max-width: none;
@@ -455,41 +487,58 @@
     border-radius: 0;
     border: none;
     box-shadow: none;
-    background: #ffd84d;
   }
 
-  .shop-hero-frame {
-    position: relative;
+  .shop-hero-fullbleed {
     width: 100%;
-    aspect-ratio: 6 / 5;
+    max-width: 100vw;
+    margin-inline: 0;
+    padding-inline: 0;
     border-radius: 0;
-    background: #ffd84d;
+  }
+
+  .shop-hero-fullbleed__img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 0;
+    user-select: none;
+  }
+
+  .shop-hub .shop-hero img,
+  .shop-hub .shop-hero-banner img,
+  .shop-hub .shop-hero-fullbleed__img {
+    border-radius: 0 !important;
+  }
+
+  .shop-hero-search-wrap {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    padding: 0 15px 12px;
+    background: #ffffff;
   }
 
   @media (min-width: 768px) {
-    .shop-hero-frame {
-      aspect-ratio: 5 / 2;
+    .shop-hero-top-bar {
+      padding-inline: 24px;
+      padding-bottom: 8px;
+    }
+
+    .shop-hero-search-wrap {
+      padding-inline: 24px;
     }
   }
 
-  .shop-hero-img {
-    position: absolute;
-    inset: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    border-radius: 0 !important;
-    object-fit: cover;
-    object-position: center;
-    user-select: none;
-    pointer-events: none;
-  }
+  @media (min-width: 1024px) {
+    .shop-hero-top-bar {
+      padding-inline: 32px;
+    }
 
-  .shop-hub [aria-label="商城主視覺"],
-  .shop-hub [aria-label="商城主視覺"] *,
-  .shop-hub [aria-label="商城主視覺"] img,
-  .shop-hub [aria-label="商城主視覺"] picture {
-    border-radius: 0 !important;
+    .shop-hero-search-wrap {
+      padding-inline: 32px;
+    }
   }
 
   .shop-hero-nav {
