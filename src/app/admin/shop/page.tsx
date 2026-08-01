@@ -35,6 +35,16 @@ const LINKS = [
     desc: "固定 3 格：免運／出貨／會員優惠，圖示與連結可調。",
   },
   {
+    href: "/admin/shop/inspiration",
+    title: "烘焙靈感牆",
+    desc: "瀑布流卡片：大家作品、食譜靈感、老師作品、烘焙心得。",
+  },
+  {
+    href: "/admin/shop/ai-chips",
+    title: "AI 推薦 Chip",
+    desc: "AI 烘焙助手快速推薦標籤：新增、排序、上下架。",
+  },
+  {
     href: "/shop",
     title: "前台商城預覽",
     desc: "開啟 /shop 查看實際呈現。",

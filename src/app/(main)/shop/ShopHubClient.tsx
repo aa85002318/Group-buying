@@ -11,6 +11,8 @@ import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
 import { PopularProducts } from "@/components/shop/PopularProducts";
 import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
 import { ShopNewProducts } from "@/components/shop/ShopNewProducts";
+import { ShopInspirationWall } from "@/components/shop/ShopInspirationWall";
+import { ShopAiBakingAssistant } from "@/components/shop/ShopAiBakingAssistant";
 import { ShopOrderingInfo } from "@/components/shop/ShopOrderingInfo";
 import { ShopCorporateInquiry } from "@/components/shop/ShopCorporateInquiry";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -102,6 +104,14 @@ export function ShopHubClient() {
 
         <div className="pb-6">
           <ShopNewProducts />
+        </div>
+
+        <div className="pb-6">
+          <ShopInspirationWall />
+        </div>
+
+        <div className="pb-6">
+          <ShopAiBakingAssistant />
         </div>
 
         <div className="pb-6">
