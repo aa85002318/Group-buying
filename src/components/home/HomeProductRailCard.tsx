@@ -65,7 +65,7 @@ export function HomeProductRailCard({
         className
       )}
     >
-      <Link href={href} className="home-product-image-bg relative block aspect-square">
+      <Link href={href} className="relative block aspect-square bg-transparent">
         {badge ? (
           <span
             className={cn(

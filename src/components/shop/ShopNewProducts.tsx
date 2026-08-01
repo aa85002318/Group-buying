@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ProductCard, type ProductBadge } from "@/components/products/ProductCard";
 import type { Product } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
+import { GroupBuyHubHeader } from "@/components/home/group-buy-hub/GroupBuyHubHeader";
+import { ProductHorizontalScroller } from "@/components/home/ingredient-shop/ProductHorizontalScroller";
+import {
+  ShopProductRailCard,
+  type ShopRailBadge,
+} from "@/components/shop/ShopProductRailCard";
 
 function resolvePrice(p: Product): { price: number; original?: number | null } {
   const price = Number(p.sale_price ?? p.website_price ?? p.price ?? 0);
@@ -15,19 +19,15 @@ function resolvePrice(p: Product): { price: number; original?: number | null } {
   };
 }
 
-function resolveBadge(p: Product): ProductBadge | undefined {
+function resolveBadge(p: Product): ShopRailBadge {
   if (p.status === "sold_out" || (Number(p.stock ?? 0) <= 0 && !p.allow_oversell)) {
     return "soldout";
   }
   return "new";
 }
 
-const CARD_WIDTH =
-  "w-[calc((100%-0.75rem)/2.2)] shrink-0 sm:w-[calc((100%-1.5rem)/3)] lg:w-[calc((100%-4rem)/5)]";
-
 /**
- * Shop home new arrivals — is_new products, horizontal rail.
- * Desktop ~5 / tablet ~3 / mobile ~2.2 peek.
+ * Shop home new arrivals — same rail layout as homepage「一鍵買齊材料」.
  */
 export function ShopNewProducts({
   products: productsProp,
@@ -63,40 +63,36 @@ export function ShopNewProducts({
       className={cn("shop-new-products w-full bg-white", className)}
       aria-label="新品上架"
     >
-      <div className="mx-auto max-w-[1200px] px-4 md:px-6">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-[#153E73] md:text-xl">
-            新品上架
-            <span className="rounded-[6px] bg-[#FF8A3D] px-1.5 py-0.5 text-xs font-bold leading-none text-white">
-              NEW
+      <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
+        <GroupBuyHubHeader
+          title={
+            <span className="inline-flex flex-wrap items-center gap-2">
+              新品上架
+              <span className="rounded-[6px] bg-[#FF8A3D] px-1.5 py-0.5 text-xs font-bold leading-none text-white">
+                NEW
+              </span>
             </span>
-          </h2>
-          <Link
-            href="/shop/new-arrivals"
-            className="inline-flex min-h-10 items-center text-sm font-semibold text-[#153E73]"
-          >
-            查看更多 ＞
-          </Link>
-        </div>
+          }
+          href="/shop/new-arrivals"
+          linkLabel="查看更多"
+        />
 
-        <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-1 md:gap-4">
+        <ProductHorizontalScroller>
           {products.map((p) => {
             const { price, original } = resolvePrice(p);
             return (
-              <div key={p.id} className={CARD_WIDTH}>
-                <ProductCard
-                  id={p.id}
-                  name={p.name}
-                  price={price}
-                  original_price={original}
-                  image_url={p.image_url}
-                  badge={resolveBadge(p)}
-                  variant="shop"
-                />
-              </div>
+              <ShopProductRailCard
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                price={price}
+                originalPrice={original}
+                imageUrl={p.image_url}
+                badge={resolveBadge(p)}
+              />
             );
           })}
-        </div>
+        </ProductHorizontalScroller>
       </div>
     </section>
   );

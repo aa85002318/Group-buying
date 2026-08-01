@@ -137,7 +137,7 @@ export function ProductCard({
           已加入購物車
         </div>
       ) : null}
-      <Link href={link} className="relative block aspect-square overflow-hidden bg-surface-soft">
+      <Link href={link} className="relative block aspect-square overflow-hidden bg-transparent">
         <div className="absolute right-2 top-2 z-10">
           <FavoriteButton productId={id} size="sm" />
         </div>

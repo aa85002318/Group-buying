@@ -183,7 +183,7 @@ function FeaturedShopStyleCard({ event }: { event: GroupBuyHubEvent }) {
         <Link
           href={href}
           className={cn(
-            "relative block h-[135px] overflow-hidden rounded-xl bg-[#FFFEFA] md:h-[165px] xl:h-[170px]",
+            "relative block h-[135px] overflow-hidden rounded-xl bg-transparent md:h-[165px] xl:h-[170px]",
             soldOut && "opacity-60"
           )}
         >

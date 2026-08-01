@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ProductCard, type ProductBadge } from "@/components/products/ProductCard";
 import type { Product } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
+import { GroupBuyHubHeader } from "@/components/home/group-buy-hub/GroupBuyHubHeader";
+import { ProductHorizontalScroller } from "@/components/home/ingredient-shop/ProductHorizontalScroller";
+import {
+  ShopProductRailCard,
+  type ShopRailBadge,
+} from "@/components/shop/ShopProductRailCard";
 
 function resolvePrice(p: Product): { price: number; original?: number | null } {
   const price = Number(p.sale_price ?? p.website_price ?? p.price ?? 0);
@@ -15,18 +19,17 @@ function resolvePrice(p: Product): { price: number; original?: number | null } {
   };
 }
 
-function resolveBadge(p: Product): ProductBadge | undefined {
+function resolveBadge(p: Product): ShopRailBadge | null {
   if (p.status === "sold_out" || (Number(p.stock ?? 0) <= 0 && !p.allow_oversell)) {
     return "soldout";
   }
-  // Priority: HOT > NEW
   if (p.is_hot) return "hot";
   if (p.is_new) return "new";
-  return undefined;
+  return null;
 }
 
 /**
- * Shop home popular products — horizontal rail under promo carousel.
+ * Shop home popular products — same rail layout as homepage「一鍵買齊材料」.
  */
 export function PopularProducts({
   products: productsProp,
@@ -62,40 +65,33 @@ export function PopularProducts({
       className={cn("shop-popular-products w-full bg-white", className)}
       aria-label="熱門商品"
     >
-      <div className="mx-auto max-w-[1200px] px-4 md:px-6">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-[#153E73] md:text-xl">
-            <span aria-hidden>🔥 </span>熱門商品
-          </h2>
-          <Link
-            href="/shop/popular"
-            className="inline-flex min-h-10 items-center text-sm font-semibold text-[#153E73]"
-          >
-            查看更多 ＞
-          </Link>
-        </div>
+      <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
+        <GroupBuyHubHeader
+          title={
+            <>
+              <span aria-hidden>🔥 </span>熱門商品
+            </>
+          }
+          href="/shop/popular"
+          linkLabel="查看更多"
+        />
 
-        <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-1 md:gap-4">
+        <ProductHorizontalScroller>
           {products.map((p) => {
             const { price, original } = resolvePrice(p);
             return (
-              <div
+              <ShopProductRailCard
                 key={p.id}
-                className="w-[calc((100%-0.75rem)/2.2)] shrink-0 sm:w-[calc((100%-1.5rem)/3)] lg:w-[calc((100%-4rem)/5)]"
-              >
-                <ProductCard
-                  id={p.id}
-                  name={p.name}
-                  price={price}
-                  original_price={original}
-                  image_url={p.image_url}
-                  badge={resolveBadge(p)}
-                  variant="shop"
-                />
-              </div>
+                id={p.id}
+                name={p.name}
+                price={price}
+                originalPrice={original}
+                imageUrl={p.image_url}
+                badge={resolveBadge(p)}
+              />
             );
           })}
-        </div>
+        </ProductHorizontalScroller>
       </div>
     </section>
   );
