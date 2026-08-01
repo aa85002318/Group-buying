@@ -363,7 +363,7 @@ export default function AdminShopHeroBannersPage() {
           <div className="space-y-4 rounded-xl bg-white p-4 shadow-card">
             <div>
               <p className="mb-2 text-sm font-medium text-coffee">桌面預覽（5:2）</p>
-              <div className="relative aspect-[5/2] overflow-hidden bg-[#FFD84D]">
+              <div className="relative aspect-[5/2] overflow-hidden bg-[#FEDB49]">
                 {previewDesktop ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -380,7 +380,7 @@ export default function AdminShopHeroBannersPage() {
             </div>
             <div>
               <p className="mb-2 text-sm font-medium text-coffee">手機預覽（6:5）</p>
-              <div className="relative mx-auto aspect-[6/5] max-w-xs overflow-hidden bg-[#FFD84D]">
+              <div className="relative mx-auto aspect-[6/5] max-w-xs overflow-hidden bg-[#FEDB49]">
                 {previewMobile ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

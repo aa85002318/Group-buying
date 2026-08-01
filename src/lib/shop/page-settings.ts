@@ -7,8 +7,9 @@ export type ShopPageSettings = {
 };
 
 export const DEFAULT_SHOP_PAGE_SETTINGS: ShopPageSettings = {
-  header_bg_color: "#FCCA30",
-  hero_bg_color: "#FFD84D",
+  /** Matches shop hero banner top yellow (#FEDB49). */
+  header_bg_color: "#FEDB49",
+  hero_bg_color: "#FEDB49",
   header_border_color: null,
 };
 
@@ -37,8 +38,9 @@ export function parseShopPageSettings(row: Record<string, unknown> | null | unde
 }
 
 export const SHOP_HEADER_COLOR_PRESETS = [
-  { name: "頁首黃", value: "#FCCA30" },
-  { name: "Hero 主黃", value: "#FFD84D" },
+  { name: "Hero 黃", value: "#FEDB49" },
+  { name: "頁首黃（舊）", value: "#FCCA30" },
+  { name: "主黃（舊）", value: "#FFD84D" },
   { name: "淺黃", value: "#FFF3B8" },
   { name: "淡黃", value: "#FFF8D9" },
   { name: "奶油黃", value: "#FFF4CC" },

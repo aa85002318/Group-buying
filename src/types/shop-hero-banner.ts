@@ -23,8 +23,8 @@ export const DEFAULT_SHOP_HERO_BANNERS: ShopHeroBanner[] = [
   {
     id: "default-shop-hero",
     title: "烘焙好物商城",
-    alt_text: "烘焙好物 · 一站購足",
-    subtitle: "嚴選烘焙材料與生活好物，讓美味更簡單！",
+    alt_text: "烘焙好物商城 · 精選超過 4,000 項商品",
+    subtitle: "材料、器具、包裝一次購足！",
     desktop_image: "/images/shop/hero-desktop.jpg",
     mobile_image: "/images/shop/hero-mobile.jpg",
     link: "/shop/categories",
