@@ -116,6 +116,8 @@ export function ShopHeroBanner({
             media
           )}
         </div>
+        {/* Yellow pad so wave + search seam sit below art (square banner has edge content). */}
+        <div className="shop-hero-art-pad" style={{ backgroundColor: bg }} aria-hidden />
         <HeroBottomTransition />
       </div>
 

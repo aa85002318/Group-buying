@@ -516,6 +516,33 @@
     background: #ffe149;
   }
 
+  /*
+   * Square shop hero art fills the fullbleed edge-to-edge; keep a yellow
+   * buffer under the image so HeroBottomTransition + search seam do not
+   * cover the bottom illustration / baked-in feature strip.
+   */
+  .shop-hero-art-pad {
+    width: 100%;
+    height: 64px;
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+
+  @media (min-width: 768px) {
+    .shop-hero-art-pad {
+      height: 96px;
+    }
+  }
+
+  /* Keep shop hero art intrinsic — never cover-crop the square banner */
+  .shop-hero .home-hero-fullbleed__img {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: center top;
+  }
+
   /* Category — search seam handled by home-hero-search-wrap */
   .shop-category-menu {
     padding-top: 8px;
