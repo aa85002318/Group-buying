@@ -89,7 +89,7 @@ export function HomeGroupBuyHubBand() {
             href="/group-buy"
           />
           {loading ? (
-            <HubRailSkeleton count={4} tall />
+            <HubRailSkeleton count={4} />
           ) : weeklyOpen.length === 0 ? (
             <HubEmpty text="本週尚無開團活動" href="/group-buy" />
           ) : (
@@ -172,11 +172,9 @@ function HubEmpty({
 
 function HubRailSkeleton({
   count,
-  tall,
   wide,
 }: {
   count: number;
-  tall?: boolean;
   wide?: boolean;
 }) {
   return (

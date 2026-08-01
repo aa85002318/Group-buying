@@ -85,11 +85,9 @@ function HubEmpty({
 
 function HubRailSkeleton({
   count,
-  tall,
   wide,
 }: {
   count: number;
-  tall?: boolean;
   wide?: boolean;
 }) {
   return (
@@ -129,7 +127,7 @@ export function WeeklyGroupBuysSection({ block }: { block: ResolvedHomeBlock }) 
           href={block.viewAllUrl || "/group-buy"}
         />
         {loading ? (
-          <HubRailSkeleton count={4} tall />
+          <HubRailSkeleton count={4} />
         ) : weeklyOpen.length === 0 ? (
           <HubEmpty text="本週尚無開團活動" href={block.viewAllUrl || "/group-buy"} />
         ) : (
