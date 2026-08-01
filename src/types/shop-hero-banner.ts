@@ -19,14 +19,20 @@ export type ShopHeroBanner = {
 
 export const SHOP_HERO_BANNER_TYPE = "shop_hero" as const;
 
+/** Match homepage hero display: full-bleed, intrinsic height (no forced crop). */
+export const SHOP_HERO_DESKTOP_WIDTH = 1024;
+export const SHOP_HERO_DESKTOP_HEIGHT = 1024;
+export const SHOP_HERO_MOBILE_WIDTH = 1024;
+export const SHOP_HERO_MOBILE_HEIGHT = 1024;
+
 export const DEFAULT_SHOP_HERO_BANNERS: ShopHeroBanner[] = [
   {
     id: "default-shop-hero",
     title: "烘焙好物商城",
     alt_text: "烘焙好物商城 · 精選超過 4,000 項商品",
     subtitle: "材料、器具、包裝一次購足！",
-    desktop_image: "/images/shop/hero-desktop.jpg",
-    mobile_image: "/images/shop/hero-mobile.jpg",
+    desktop_image: "/images/shop/hero-desktop.jpg?v=20260802b",
+    mobile_image: "/images/shop/hero-mobile.jpg?v=20260802b",
     link: "/shop/categories",
     link_target: "_self",
     button_text: "探索更多好物",
@@ -55,6 +61,13 @@ export function mapCmsRowToShopHero(row: Record<string, unknown>): ShopHeroBanne
     desktop = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
   }
   if (mobile.includes("/images/mall/hero-banner")) {
+    mobile = DEFAULT_SHOP_HERO_BANNERS[0].mobile_image || "";
+  }
+  // Keep static shop hero assets on the latest cache-busted defaults.
+  if (desktop.includes("/images/shop/hero-desktop")) {
+    desktop = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
+  }
+  if (mobile.includes("/images/shop/hero-mobile")) {
     mobile = DEFAULT_SHOP_HERO_BANNERS[0].mobile_image || "";
   }
 

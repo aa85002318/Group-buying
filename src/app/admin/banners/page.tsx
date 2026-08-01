@@ -311,7 +311,7 @@ function AdminBannersClient() {
           />
           {form.placement === "shop_hero" ? (
             <p className="text-xs text-muted-foreground">
-              商城 Hero 比照首頁：滿寬、高度隨圖片比例、兩側不裁切（object-contain）。底色 #FDE045。
+              商城 Hero 比照首頁：滿寬、高度隨圖片比例、兩側不裁切。底色請與頁首一致（#FEDB49）。
             </p>
           ) : null}
           {form.placement === "shop_promo" ? (

@@ -47,53 +47,41 @@ function toLocalInput(iso: string | null | undefined) {
 
 function AspectHint({
   label,
-  expected,
+  kind,
   src,
 }: {
   label: string;
-  expected: string;
+  kind: "desktop" | "mobile";
   src: string;
 }) {
   const [meta, setMeta] = useState<string>("");
-  const [warn, setWarn] = useState(false);
 
   useEffect(() => {
     if (!src) {
       setMeta("");
-      setWarn(false);
       return;
     }
     const img = new window.Image();
     img.onload = () => {
       const w = img.naturalWidth;
       const h = img.naturalHeight;
-      const ratio = w / h;
-      const expectedRatio = expected === "5:2" ? 2.5 : 1.2;
-      const ok = Math.abs(ratio - expectedRatio) < 0.12;
-      setMeta(`${w} × ${h} px（約 ${(ratio).toFixed(2)}）`);
-      setWarn(!ok);
+      setMeta(`${w} × ${h} px（約 ${(w / h).toFixed(2)}）`);
     };
-    img.onerror = () => {
-      setMeta("無法讀取尺寸");
-      setWarn(false);
-    };
+    img.onerror = () => setMeta("無法讀取尺寸");
     img.src = src;
-  }, [src, expected]);
+  }, [src]);
 
   return (
     <div className="space-y-1 text-xs">
       <p className="text-muted-foreground">
-        {label}建議尺寸 {expected === "5:2" ? "1500 × 600 px" : "1080 × 900 px"}，比例 {expected}
+        {label}建議與首頁相同：
+        {kind === "desktop" ? "桌面約 1024 × 479 px" : "手機約 885 × 917 px"}
+        。前台滿寬、高度隨圖、不裁切。
       </p>
       <p className="text-muted-foreground">
-        重要文字：桌面左右各保留約 80px、手機約 60px 安全區域。
+        重要文字請留在安全區；底色請與商城頁首黃（#FEDB49）一致，避免縫隙色差。
       </p>
       {meta ? <p className="text-coffee">實際尺寸：{meta}</p> : null}
-      {warn ? (
-        <p className="rounded-md bg-amber-50 px-2 py-1 text-amber-800">
-          比例與建議不符，仍可儲存，但前台 object-cover 可能裁切邊緣內容。
-        </p>
-      ) : null}
     </div>
   );
 }
@@ -164,7 +152,7 @@ export default function AdminShopHeroBannersPage() {
       return;
     }
     if (!form.image_url.trim()) {
-      alert("請上傳桌面圖片（建議 1500×600 px，比例 5:2）");
+      alert("請上傳桌面圖片（比照首頁：滿寬完整顯示）");
       return;
     }
     setSaving(true);
@@ -236,7 +224,7 @@ export default function AdminShopHeroBannersPage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="商城 Hero Banner"
-        description="滿版主視覺。桌面建議 1500×600（5:2）、手機 1080×900（6:5）。Header 與 Hero 分開，不疊圖。"
+        description="比照首頁：滿寬、高度隨圖片比例、兩側不裁切。Header 與 Hero 分開，不疊圖。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
@@ -257,17 +245,17 @@ export default function AdminShopHeroBannersPage() {
             </p>
             <AdminImageUpload
               label="桌面圖片"
-              hint="建議 1500 × 600 px，比例 5:2；JPG／PNG／WebP，最大約 3MB"
+              hint="比照首頁桌面：約 1024 × 479 px；JPG／PNG／WebP，最大約 3MB。前台滿寬不裁切"
               images={form.image_url ? [form.image_url] : []}
               onChange={(images) => setForm({ ...form, image_url: images[0] ?? "" })}
               uploadFolder="hero/desktop"
               maxImages={1}
               multiple={false}
             />
-            <AspectHint label="桌面" expected="5:2" src={form.image_url} />
+            <AspectHint label="桌面" kind="desktop" src={form.image_url} />
             <AdminImageUpload
               label="手機圖片"
-              hint="建議 1080 × 900 px，比例 6:5；未設定則用桌面圖"
+              hint="比照首頁手機：約 885 × 917 px；未設定則用桌面圖。前台滿寬不裁切"
               images={form.mobile_image_url ? [form.mobile_image_url] : []}
               onChange={(images) =>
                 setForm({ ...form, mobile_image_url: images[0] ?? "" })
@@ -276,7 +264,7 @@ export default function AdminShopHeroBannersPage() {
               maxImages={1}
               multiple={false}
             />
-            <AspectHint label="手機" expected="6:5" src={form.mobile_image_url} />
+            <AspectHint label="手機" kind="mobile" src={form.mobile_image_url} />
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
                 placeholder="標題（後台辨識）"
@@ -362,34 +350,34 @@ export default function AdminShopHeroBannersPage() {
 
           <div className="space-y-4 rounded-xl bg-white p-4 shadow-card">
             <div>
-              <p className="mb-2 text-sm font-medium text-coffee">桌面預覽（5:2）</p>
-              <div className="relative aspect-[5/2] overflow-hidden bg-[#FEDB49]">
+              <p className="mb-2 text-sm font-medium text-coffee">桌面預覽（滿版）</p>
+              <div className="overflow-hidden rounded-none bg-[#FEDB49]">
                 {previewDesktop ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={previewDesktop}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="block h-auto w-full object-contain"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-[#153E73]/60">
+                  <div className="flex aspect-[1024/479] items-center justify-center text-sm text-[#153E73]/60">
                     上傳桌面圖後預覽
                   </div>
                 )}
               </div>
             </div>
             <div>
-              <p className="mb-2 text-sm font-medium text-coffee">手機預覽（6:5）</p>
-              <div className="relative mx-auto aspect-[6/5] max-w-xs overflow-hidden bg-[#FEDB49]">
+              <p className="mb-2 text-sm font-medium text-coffee">手機預覽（滿版）</p>
+              <div className="mx-auto max-w-xs overflow-hidden rounded-none bg-[#FEDB49]">
                 {previewMobile ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={previewMobile}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="block h-auto w-full object-contain"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-[#153E73]/60">
+                  <div className="flex aspect-[885/917] items-center justify-center text-sm text-[#153E73]/60">
                     上傳手機圖後預覽
                   </div>
                 )}

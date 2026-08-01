@@ -12,7 +12,7 @@ const LINKS = [
   {
     href: "/admin/shop/hero-banners",
     title: "商城 Hero Banner",
-    desc: "滿版主視覺。桌面 1500×600（5:2）、手機 1080×900（6:5）。",
+    desc: "比照首頁：滿寬、高度隨圖、不裁切。",
   },
   {
     href: "/admin/shop/categories",
