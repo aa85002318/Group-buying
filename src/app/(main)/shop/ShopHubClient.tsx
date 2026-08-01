@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
@@ -8,26 +7,11 @@ import { ShopSearchBar } from "@/components/shop/ShopSearchBar";
 import { ShopMainCategoryMenu } from "@/components/shop/ShopMainCategoryMenu";
 import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
 import { PopularProducts } from "@/components/shop/PopularProducts";
-import { NewProductsSection } from "@/components/home/NewProductsSection";
-import { getNewThisWeekProducts } from "@/lib/home";
-import { mockProducts } from "@/lib/mock-data";
+import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
+import { ShopNewProducts } from "@/components/shop/ShopNewProducts";
 import { APP_ROUTES } from "@/lib/site-links";
-import type { Product } from "@/lib/types/database";
 
 export function ShopHubClient() {
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-
-  useEffect(() => {
-    fetch("/api/products?scope=baking&channel=website")
-      .then((r) => r.json())
-      .then((p) => {
-        if (p.products?.length) setProducts(p.products);
-      })
-      .catch(() => {});
-  }, []);
-
-  const newest = useMemo(() => getNewThisWeekProducts(products), [products]);
-
   return (
     <div className="shop-hub space-y-0 bg-white">
       <ShopHeader />
@@ -50,13 +34,15 @@ export function ShopHubClient() {
           <PopularProducts />
         </div>
 
-        <div className="shop-hub-body mx-auto w-full max-w-7xl space-y-6 px-4 pb-8 pt-0 md:px-6">
-          <NewProductsSection
-            products={newest}
-            href={`${APP_ROUTES.shopCategories}?sort=newest`}
-            title="新品上架"
-          />
+        <div className="pb-6">
+          <ShopFeatureBlocks />
+        </div>
 
+        <div className="pb-6">
+          <ShopNewProducts />
+        </div>
+
+        <div className="shop-hub-body mx-auto w-full max-w-7xl space-y-6 px-4 pb-8 pt-0 md:px-6">
           <section className="grid gap-3 sm:grid-cols-2">
             <Link
               href="/stores"

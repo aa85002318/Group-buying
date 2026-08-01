@@ -76,6 +76,8 @@ function mapProductRow(body: Record<string, unknown>) {
     is_featured: Boolean(body.is_featured),
     is_hot: Boolean(body.is_hot),
     is_new: Boolean(body.is_new),
+    hot_sort_order: Number(body.hot_sort_order ?? 100) || 100,
+    new_sort_order: Number(body.new_sort_order ?? 100) || 100,
     is_weekly_pick: Boolean(body.is_weekly_pick),
     is_closing_soon: Boolean(body.is_closing_soon),
     sort_order: body.sort_order ?? 0,

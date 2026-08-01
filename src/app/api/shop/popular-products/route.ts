@@ -5,7 +5,7 @@ import { mockProducts } from "@/lib/mock-data";
 import type { Product } from "@/lib/types/database";
 
 const SELECT =
-  "id, name, slug, price, sale_price, website_price, original_price, msrp, image_url, stock, status, is_active, is_hot, is_new, is_popular, popular_sort_order, package_spec, unit, specifications, publish_website, product_scope, view_count, cart_add_count, favorite_count, allow_oversell, inventory_mode, brands:brand_id(name)";
+  "id, name, slug, price, sale_price, website_price, original_price, msrp, image_url, stock, status, is_active, is_hot, is_new, is_popular, popular_sort_order, hot_sort_order, new_sort_order, package_spec, unit, specifications, publish_website, product_scope, view_count, cart_add_count, favorite_count, allow_oversell, inventory_mode, brands:brand_id(name)";
 
 function isSellable(p: Product): boolean {
   if (p.is_active === false) return false;
@@ -37,7 +37,7 @@ function normalizeProduct(row: Record<string, unknown>): Product {
 
 /**
  * GET /api/shop/popular-products
- * Manual is_popular first, then auto-fill by engagement metrics.
+ * Prefer is_hot / is_popular (hot_sort_order / popular_sort_order), then auto-fill.
  */
 export async function GET(request: Request) {
   const limit = Math.min(
@@ -55,7 +55,16 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
-    const { data: manualRows, error: manualError } = await supabase
+    const { data: hotRows } = await supabase
+      .from("products")
+      .select(SELECT)
+      .eq("is_active", true)
+      .eq("publish_website", true)
+      .eq("is_hot", true)
+      .order("hot_sort_order", { ascending: true })
+      .limit(limit);
+
+    const { data: popularRows } = await supabase
       .from("products")
       .select(SELECT)
       .eq("is_active", true)
@@ -64,13 +73,19 @@ export async function GET(request: Request) {
       .order("popular_sort_order", { ascending: true })
       .limit(limit);
 
-    if (manualError) {
-      return NextResponse.json({ error: manualError.message }, { status: 500 });
+    const seen = new Set<string>();
+    const manual: Product[] = [];
+    for (const row of [...(hotRows ?? []), ...(popularRows ?? [])] as Record<
+      string,
+      unknown
+    >[]) {
+      const p = normalizeProduct(row);
+      if (seen.has(p.id) || !isSellable(p)) continue;
+      seen.add(p.id);
+      manual.push(p);
+      if (manual.length >= limit) break;
     }
 
-    const manual = ((manualRows ?? []) as Record<string, unknown>[])
-      .map(normalizeProduct)
-      .filter(isSellable);
     const remaining = limit - manual.length;
 
     if (remaining <= 0) {

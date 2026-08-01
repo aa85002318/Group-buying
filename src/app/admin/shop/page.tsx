@@ -25,6 +25,11 @@ const LINKS = [
     desc: "人工精選與排序；不足時依瀏覽／加購自動補足。",
   },
   {
+    href: "/admin/shop/features",
+    title: "商城特色區塊",
+    desc: "固定 3 格：免運／出貨／會員優惠，圖示與連結可調。",
+  },
+  {
     href: "/shop",
     title: "前台商城預覽",
     desc: "開啟 /shop 查看實際呈現。",

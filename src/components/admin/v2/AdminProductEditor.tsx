@@ -312,12 +312,34 @@ export function AdminProductEditor({
           </AdminField>
           <div className="grid gap-2 sm:grid-cols-2 md:col-span-2">
             <AdminCheckbox label="首頁推薦" checked={form.is_featured} onChange={(v) => patch({ is_featured: v })} />
-            <AdminCheckbox label="熱門商品" checked={form.is_hot} onChange={(v) => patch({ is_hot: v })} />
-            <AdminCheckbox label="新品" checked={form.is_new} onChange={(v) => patch({ is_new: v })} />
+            <AdminCheckbox label="HOT 熱門" checked={form.is_hot} onChange={(v) => patch({ is_hot: v })} />
+            <AdminCheckbox label="NEW 新品" checked={form.is_new} onChange={(v) => patch({ is_new: v })} />
             <AdminCheckbox label="本週精選" checked={form.is_weekly_pick} onChange={(v) => patch({ is_weekly_pick: v })} />
             <AdminCheckbox label="即將收單" checked={form.is_closing_soon} onChange={(v) => patch({ is_closing_soon: v })} />
             <AdminCheckbox label="團購商品" checked={form.is_group_buy} onChange={(v) => patch({ is_group_buy: v })} />
           </div>
+          {(form.is_hot || form.is_new) && (
+            <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
+              {form.is_hot ? (
+                <AdminField label="熱門排序（hot_sort_order）">
+                  <AdminInput
+                    type="number"
+                    value={form.hot_sort_order}
+                    onChange={(e) => patch({ hot_sort_order: e.target.value })}
+                  />
+                </AdminField>
+              ) : null}
+              {form.is_new ? (
+                <AdminField label="新品排序（new_sort_order）">
+                  <AdminInput
+                    type="number"
+                    value={form.new_sort_order}
+                    onChange={(e) => patch({ new_sort_order: e.target.value })}
+                  />
+                </AdminField>
+              ) : null}
+            </div>
+          )}
           {form.is_group_buy && (
             <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
               <AdminField label="團購開始">

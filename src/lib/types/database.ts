@@ -431,6 +431,8 @@ export interface Product {
   is_new?: boolean;
   is_popular?: boolean;
   popular_sort_order?: number;
+  hot_sort_order?: number;
+  new_sort_order?: number;
   package_spec?: string | null;
   brand_id?: string | null;
   view_count?: number | null;

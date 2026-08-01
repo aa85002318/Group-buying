@@ -43,6 +43,8 @@ export type AdminProductFormV2 = {
   is_featured: boolean;
   is_hot: boolean;
   is_new: boolean;
+  hot_sort_order: string;
+  new_sort_order: string;
   is_weekly_pick: boolean;
   is_closing_soon: boolean;
   images: string[];
@@ -106,6 +108,8 @@ export const emptyProductFormV2 = (): AdminProductFormV2 => ({
   is_featured: false,
   is_hot: false,
   is_new: false,
+  hot_sort_order: "100",
+  new_sort_order: "100",
   is_weekly_pick: false,
   is_closing_soon: false,
   images: [],
@@ -175,6 +179,8 @@ type ExtendedProduct = Product & {
   is_featured?: boolean;
   is_hot?: boolean;
   is_new?: boolean;
+  hot_sort_order?: number;
+  new_sort_order?: number;
   is_weekly_pick?: boolean;
   is_closing_soon?: boolean;
   inventory_mode?: InventoryMode;
@@ -223,6 +229,8 @@ export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
     is_featured: p.is_featured ?? false,
     is_hot: p.is_hot ?? false,
     is_new: p.is_new ?? false,
+    hot_sort_order: String(p.hot_sort_order ?? 100),
+    new_sort_order: String(p.new_sort_order ?? 100),
     is_weekly_pick: p.is_weekly_pick ?? false,
     is_closing_soon: p.is_closing_soon ?? false,
     images,
@@ -291,6 +299,8 @@ export function formV2ToPayload(form: AdminProductFormV2) {
     is_featured: form.is_featured,
     is_hot: form.is_hot,
     is_new: form.is_new,
+    hot_sort_order: Number(form.hot_sort_order) || 100,
+    new_sort_order: Number(form.new_sort_order) || 100,
     is_weekly_pick: form.is_weekly_pick,
     is_closing_soon: form.is_closing_soon,
     images: form.images,
