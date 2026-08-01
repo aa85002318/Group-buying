@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mic, ScanLine, Search, Sparkles } from "lucide-react";
 
 /**
- * Shop search bar — sits directly under full-bleed ShopHeroBanner.
+ * Shop search bar — frosted floating pill overlapping hero (App home style).
  */
 export function ShopSearchBar({
   placeholder = "搜尋商品、品牌、材料、食譜……",

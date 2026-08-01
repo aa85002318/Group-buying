@@ -24,8 +24,7 @@ const SHOP_HEADER_NAV = [
 
 /**
  * Shop storefront header — sits ABOVE hero (never overlays).
- * Background matches hero yellow by default; color is CMS-configurable.
- * Logo uses transparent PNG (no white plate).
+ * Shares the same #FFE149 plane as Hero; no divider line.
  */
 export function ShopHeader({
   settings: settingsProp,

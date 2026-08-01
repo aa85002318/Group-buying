@@ -24,11 +24,9 @@ function isExternalHref(href: string) {
 function BannerSlide({
   banner,
   priority,
-  backgroundColor,
 }: {
   banner: ShopHeroBannerType;
   priority?: boolean;
-  backgroundColor: string;
 }) {
   const desktop = banner.desktop_image;
   const mobile = banner.mobile_image || banner.desktop_image;
@@ -38,35 +36,34 @@ function BannerSlide({
     (banner.link ? isExternalHref(banner.link) : false);
 
   const media = (
-    <div
-      className="shop-hero-fullbleed relative z-0 w-full rounded-none"
-      style={{ backgroundColor }}
-    >
-      {/* Mobile — full-bleed, intrinsic height (same model as homepage) */}
+    <div className="shop-hero-fullbleed relative z-0 w-full">
+      {/* Mobile */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={mobile}
         alt={alt}
         width={SHOP_HERO_MOBILE_WIDTH}
         height={SHOP_HERO_MOBILE_HEIGHT}
-        className="shop-hero-fullbleed__img block w-full rounded-none md:hidden"
+        className="shop-hero-fullbleed__img block w-full md:hidden"
         draggable={false}
         decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : "auto"}
         onError={(e) => {
           const el = e.currentTarget;
           if (el.src.includes("hero-default")) return;
-          el.src = DEFAULT_SHOP_HERO_BANNERS[0].mobile_image || DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
+          el.src =
+            DEFAULT_SHOP_HERO_BANNERS[0].mobile_image ||
+            DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
         }}
       />
-      {/* Desktop — full-bleed, intrinsic height */}
+      {/* Desktop */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={desktop}
         alt={alt}
         width={SHOP_HERO_DESKTOP_WIDTH}
         height={SHOP_HERO_DESKTOP_HEIGHT}
-        className="shop-hero-fullbleed__img hidden w-full rounded-none md:block"
+        className="shop-hero-fullbleed__img hidden w-full md:block"
         draggable={false}
         decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : "auto"}
@@ -189,71 +186,73 @@ export function ShopHeroBanner({
 
   return (
     <section
-      className="shop-hero-banner relative m-0 w-full max-w-none overflow-hidden rounded-none border-0 p-0 shadow-none"
+      className="shop-hero-banner relative m-0 w-full max-w-none border-0 p-0"
       style={{ backgroundColor: bg }}
       aria-label="商城主視覺"
       aria-busy={loading}
     >
-      <div className="overflow-hidden rounded-none" ref={emblaRef}>
-        <div className="flex touch-pan-y items-start">
-          {banners.map((banner, i) => (
-            <BannerSlide
-              key={banner.id}
-              banner={banner}
-              priority={i === 0}
-              backgroundColor={bg}
+      <div className="shop-hero-stage">
+        <div className="shop-hero-glow-frame">
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex touch-pan-y items-start">
+              {banners.map((banner, i) => (
+                <BannerSlide key={banner.id} banner={banner} priority={i === 0} />
+              ))}
+            </div>
+          </div>
+
+          {banners.length > 1 ? (
+            <>
+              <button
+                type="button"
+                className="shop-hero-nav shop-hero-nav--prev"
+                aria-label="上一張"
+                onClick={scrollPrev}
+              >
+                <ChevronLeft className="h-5 w-5" strokeWidth={2} />
+              </button>
+              <button
+                type="button"
+                className="shop-hero-nav shop-hero-nav--next"
+                aria-label="下一張"
+                onClick={scrollNext}
+              >
+                <ChevronRight className="h-5 w-5" strokeWidth={2} />
+              </button>
+              <div className="shop-hero-dots" aria-label="輪播分頁">
+                {banners.map((b, i) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    aria-label={`第 ${i + 1} 張`}
+                    aria-current={i === selected ? "true" : undefined}
+                    className={cn(
+                      "shop-hero-dot",
+                      i === selected && "shop-hero-dot--active"
+                    )}
+                    onClick={() => {
+                      emblaApi?.scrollTo(i);
+                      try {
+                        autoplay.current.reset();
+                      } catch {
+                        /* ignore */
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {loading ? (
+            <div
+              className="pointer-events-none absolute inset-0 animate-pulse opacity-40"
+              style={{ backgroundColor: bg }}
+              aria-hidden
             />
-          ))}
+          ) : null}
         </div>
       </div>
-
-      {banners.length > 1 ? (
-        <>
-          <button
-            type="button"
-            className="shop-hero-nav shop-hero-nav--prev"
-            aria-label="上一張"
-            onClick={scrollPrev}
-          >
-            <ChevronLeft className="h-5 w-5" strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            className="shop-hero-nav shop-hero-nav--next"
-            aria-label="下一張"
-            onClick={scrollNext}
-          >
-            <ChevronRight className="h-5 w-5" strokeWidth={2} />
-          </button>
-          <div className="shop-hero-dots" aria-label="輪播分頁">
-            {banners.map((b, i) => (
-              <button
-                key={b.id}
-                type="button"
-                aria-label={`第 ${i + 1} 張`}
-                aria-current={i === selected ? "true" : undefined}
-                className={cn("shop-hero-dot", i === selected && "shop-hero-dot--active")}
-                onClick={() => {
-                  emblaApi?.scrollTo(i);
-                  try {
-                    autoplay.current.reset();
-                  } catch {
-                    /* ignore */
-                  }
-                }}
-              />
-            ))}
-          </div>
-        </>
-      ) : null}
-
-      {loading ? (
-        <div
-          className="pointer-events-none absolute inset-0 animate-pulse opacity-40"
-          style={{ backgroundColor: bg }}
-          aria-hidden
-        />
-      ) : null}
     </section>
   );
 }

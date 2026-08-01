@@ -6,10 +6,12 @@ export type ShopPageSettings = {
   header_border_color: string | null;
 };
 
+/** Unified shop hero plane yellow — matches App home hero warmth. */
+export const SHOP_BRAND_YELLOW = "#FFE149";
+
 export const DEFAULT_SHOP_PAGE_SETTINGS: ShopPageSettings = {
-  /** Matches shop hero banner top yellow (#FEDB49). */
-  header_bg_color: "#FEDB49",
-  hero_bg_color: "#FEDB49",
+  header_bg_color: SHOP_BRAND_YELLOW,
+  hero_bg_color: SHOP_BRAND_YELLOW,
   header_border_color: null,
 };
 
@@ -38,7 +40,8 @@ export function parseShopPageSettings(row: Record<string, unknown> | null | unde
 }
 
 export const SHOP_HEADER_COLOR_PRESETS = [
-  { name: "Hero 黃", value: "#FEDB49" },
+  { name: "App Hero 黃", value: SHOP_BRAND_YELLOW },
+  { name: "Hero 黃（舊）", value: "#FEDB49" },
   { name: "頁首黃（舊）", value: "#FCCA30" },
   { name: "主黃（舊）", value: "#FFD84D" },
   { name: "淺黃", value: "#FFF3B8" },

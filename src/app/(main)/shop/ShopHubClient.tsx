@@ -15,8 +15,25 @@ import { ShopCorporateInquiry } from "@/components/shop/ShopCorporateInquiry";
 import { APP_ROUTES } from "@/lib/site-links";
 import {
   DEFAULT_SHOP_PAGE_SETTINGS,
+  SHOP_BRAND_YELLOW,
   type ShopPageSettings,
 } from "@/lib/shop/page-settings";
+
+/** Older CMS yellows → unify to App hero plane. */
+const LEGACY_SHOP_YELLOWS = new Set([
+  "#FEDB49",
+  "#FCCA30",
+  "#FFD84D",
+  "#FDE045",
+]);
+
+function resolvePlaneYellow(settings: ShopPageSettings) {
+  const header = (settings.header_bg_color || "").toUpperCase();
+  const hero = (settings.hero_bg_color || "").toUpperCase();
+  if (!header || LEGACY_SHOP_YELLOWS.has(header)) return SHOP_BRAND_YELLOW;
+  if (!hero || LEGACY_SHOP_YELLOWS.has(hero)) return SHOP_BRAND_YELLOW;
+  return header;
+}
 
 export function ShopHubClient() {
   const [pageSettings, setPageSettings] = useState<ShopPageSettings>(
@@ -37,27 +54,29 @@ export function ShopHubClient() {
     };
   }, []);
 
-  const brandYellow =
-    pageSettings.header_bg_color || DEFAULT_SHOP_PAGE_SETTINGS.header_bg_color;
+  const planeYellow = resolvePlaneYellow(pageSettings);
+  const unifiedSettings: ShopPageSettings = {
+    ...pageSettings,
+    header_bg_color: planeYellow,
+    hero_bg_color: planeYellow,
+    header_border_color: null,
+  };
 
   return (
     <div className="shop-hub space-y-0 bg-white">
-      <div className="w-full max-w-none rounded-none" style={{ backgroundColor: brandYellow }}>
-        <ShopHeader settings={pageSettings} />
-        <ShopHeroBanner
-          backgroundColor={
-            pageSettings.hero_bg_color || pageSettings.header_bg_color
-          }
-        />
+      {/* Header + Hero + floating search share one yellow plane (App home style). */}
+      <div
+        className="shop-hub-hero-plane w-full max-w-none"
+        style={{ backgroundColor: planeYellow }}
+      >
+        <ShopHeader settings={unifiedSettings} />
+        <ShopHeroBanner backgroundColor={planeYellow} />
+        <div className="shop-hero-search-wrap">
+          <ShopSearchBar />
+        </div>
       </div>
 
       <main>
-        <div className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 pt-4 md:px-6 md:pt-5">
-            <ShopSearchBar />
-          </div>
-        </div>
-
         <ShopMainCategoryMenu />
 
         <div className="pb-7 pt-0">
