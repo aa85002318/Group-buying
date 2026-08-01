@@ -192,7 +192,7 @@ export function ShopHeroBanner({
       aria-busy={loading}
     >
       <div className="shop-hero-stage">
-        <div className="shop-hero-glow-frame">
+        <div className="shop-hero-frame">
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex touch-pan-y items-start">
               {banners.map((banner, i) => (

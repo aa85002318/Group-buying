@@ -445,7 +445,7 @@
     }
   }
 
-  /* ── Shop hero plane (App-home style) + floating search ── */
+  /* ── Shop hero plane + floating search (full-bleed banner, no radius) ── */
   .shop-hub-hero-plane {
     position: relative;
     width: 100%;
@@ -462,59 +462,46 @@
     margin: 0;
     padding: 0;
     border: none;
+    border-radius: 0;
     box-shadow: none;
     background: transparent;
     overflow: visible;
   }
 
+  /* Full-bleed art; bottom pad so frosted search can overlap */
   .shop-hero-stage {
     position: relative;
     width: 100%;
-    padding: 4px 14px 48px;
+    max-width: none;
+    margin: 0;
+    padding: 0 0 48px;
     box-sizing: border-box;
   }
 
   @media (min-width: 768px) {
     .shop-hero-stage {
-      padding: 8px 24px 52px;
+      padding-bottom: 52px;
     }
   }
 
-  @media (min-width: 1024px) {
-    .shop-hero-stage {
-      padding-inline: 32px;
-      max-width: 1440px;
-      margin-inline: auto;
-    }
-  }
-
-  /* Soft glow frame — feathered edges, no hard rectangle cut */
-  .shop-hero-glow-frame {
+  .shop-hero-frame {
     position: relative;
     width: 100%;
     overflow: hidden;
-    border-radius: 36px;
+    border-radius: 0;
     background: transparent;
-    box-shadow: 0 0 45px rgba(255, 225, 73, 0.45);
-    filter: drop-shadow(0 20px 35px rgba(255, 225, 73, 0.35));
-    -webkit-mask-image: radial-gradient(
-      circle at center,
-      rgba(0, 0, 0, 1) 82%,
-      rgba(0, 0, 0, 0.92) 90%,
-      rgba(0, 0, 0, 0) 100%
-    );
-    mask-image: radial-gradient(
-      circle at center,
-      rgba(0, 0, 0, 1) 82%,
-      rgba(0, 0, 0, 0.92) 90%,
-      rgba(0, 0, 0, 0) 100%
-    );
+    box-shadow: none;
+    filter: none;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   .shop-hero-fullbleed {
     width: 100%;
+    max-width: none;
     margin: 0;
     padding: 0;
+    border-radius: 0;
   }
 
   .shop-hero-fullbleed__img {
@@ -522,12 +509,17 @@
     width: 100%;
     max-width: 100%;
     height: auto;
-    border-radius: 0;
+    border-radius: 0 !important;
     object-fit: contain;
     object-position: center;
     user-select: none;
     pointer-events: none;
     vertical-align: top;
+  }
+
+  .shop-hub [aria-label="商城主視覺"],
+  .shop-hub [aria-label="商城主視覺"] img {
+    border-radius: 0 !important;
   }
 
   .shop-hero-nav {
