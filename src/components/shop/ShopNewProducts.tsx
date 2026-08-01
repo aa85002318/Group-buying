@@ -29,8 +29,12 @@ function brandOrSpec(p: Product): string | null {
   return brand || spec || null;
 }
 
+const CARD_WIDTH =
+  "w-[calc((100%-0.75rem)/2.2)] shrink-0 sm:w-[calc((100%-1.5rem)/3)] lg:w-[calc((100%-4rem)/5)]";
+
 /**
- * Shop home new arrivals — horizontal rail (desktop ~5, mobile ~2.2 peek).
+ * Shop home new arrivals — is_new products, horizontal rail.
+ * Desktop ~5 / tablet ~3 / mobile ~2.2 peek.
  */
 export function ShopNewProducts({
   products: productsProp,
@@ -70,26 +74,23 @@ export function ShopNewProducts({
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-lg font-bold text-[#153E73] md:text-xl">
             新品上架
-            <span className="rounded-md bg-[#FFD84D] px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-[#153E73]">
+            <span className="rounded-[6px] bg-[#FF8A3D] px-1.5 py-0.5 text-xs font-bold leading-none text-white">
               NEW
             </span>
           </h2>
           <Link
-            href="/shop/categories?sort=newest"
+            href="/shop/new-arrivals"
             className="inline-flex min-h-10 items-center text-sm font-semibold text-[#153E73]"
           >
             查看更多 ＞
           </Link>
         </div>
 
-        <div className="scrollbar-hide -mx-1 flex gap-3 overflow-x-auto px-1 pb-1 md:gap-4">
+        <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-1 md:gap-4">
           {products.map((p) => {
             const { price, original } = resolvePrice(p);
             return (
-              <div
-                key={p.id}
-                className="w-[42vw] max-w-[180px] shrink-0 sm:w-[165px] md:w-[200px] lg:w-[210px]"
-              >
+              <div key={p.id} className={CARD_WIDTH}>
                 <ProductCard
                   id={p.id}
                   name={p.name}

@@ -38,7 +38,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               : "app-shell bg-background md:shadow-lift"
         )}
       >
-        {/* Homepage & shop hub render their own hero top-bar chrome. */}
+        {/* Homepage & shop hub render their own headers (shop uses ShopHeader above hero). */}
         {!isHome && !isShopHub ? <AppHeader /> : null}
         <main
           className={cn(

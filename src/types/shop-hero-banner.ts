@@ -19,14 +19,6 @@ export type ShopHeroBanner = {
 
 export const SHOP_HERO_BANNER_TYPE = "shop_hero" as const;
 
-/** Mobile shop hero — intrinsic full-bleed (same model as homepage). */
-export const SHOP_HERO_MOBILE_WIDTH = 1024;
-export const SHOP_HERO_MOBILE_HEIGHT = 854;
-
-/** Desktop shop hero — intrinsic full-bleed. */
-export const SHOP_HERO_DESKTOP_WIDTH = 1024;
-export const SHOP_HERO_DESKTOP_HEIGHT = 409;
-
 export const DEFAULT_SHOP_HERO_BANNERS: ShopHeroBanner[] = [
   {
     id: "default-shop-hero",

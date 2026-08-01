@@ -89,7 +89,7 @@ export function ShopFeatureBlocks({
             </>
           );
           const boxClass = cn(
-            "flex min-h-[88px] flex-col items-start rounded-2xl p-2.5 transition",
+            "flex min-h-[88px] flex-col items-start rounded-[16px] p-2.5 transition",
             "hover:-translate-y-0.5 active:scale-[0.99] md:min-h-[108px] md:p-4"
           );
 
@@ -101,7 +101,7 @@ export function ShopFeatureBlocks({
                 target="_blank"
                 rel="noopener noreferrer"
                 className={boxClass}
-                style={{ backgroundColor: item.background_color || "#E8F3FF" }}
+                style={{ backgroundColor: item.background_color || "#F1F6FF" }}
               >
                 {inner}
               </a>
@@ -113,7 +113,7 @@ export function ShopFeatureBlocks({
               key={item.id}
               href={href}
               className={boxClass}
-              style={{ backgroundColor: item.background_color || "#E8F3FF" }}
+              style={{ backgroundColor: item.background_color || "#F1F6FF" }}
             >
               {inner}
             </Link>

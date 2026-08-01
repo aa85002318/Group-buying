@@ -1,18 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
-import {
-  ShopSearchBar,
-  type ShopSearchBarHandle,
-} from "@/components/shop/ShopSearchBar";
+import { ShopSearchBar } from "@/components/shop/ShopSearchBar";
 import { ShopMainCategoryMenu } from "@/components/shop/ShopMainCategoryMenu";
 import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
 import { PopularProducts } from "@/components/shop/PopularProducts";
 import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
 import { ShopNewProducts } from "@/components/shop/ShopNewProducts";
+import { ShopOrderingInfo } from "@/components/shop/ShopOrderingInfo";
+import { ShopCorporateInquiry } from "@/components/shop/ShopCorporateInquiry";
 import { APP_ROUTES } from "@/lib/site-links";
 import {
   DEFAULT_SHOP_PAGE_SETTINGS,
@@ -23,7 +22,6 @@ export function ShopHubClient() {
   const [pageSettings, setPageSettings] = useState<ShopPageSettings>(
     DEFAULT_SHOP_PAGE_SETTINGS
   );
-  const searchRef = useRef<ShopSearchBarHandle>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,33 +37,27 @@ export function ShopHubClient() {
     };
   }, []);
 
-  const focusSearch = useCallback(() => {
-    searchRef.current?.focus();
-  }, []);
-
-  const headerBg =
+  const brandYellow =
     pageSettings.header_bg_color || DEFAULT_SHOP_PAGE_SETTINGS.header_bg_color;
-  const heroBg =
-    pageSettings.hero_bg_color || pageSettings.header_bg_color || headerBg;
 
   return (
     <div className="shop-hub space-y-0 bg-white">
-      {/* Same chrome stack as homepage: top bar → full-bleed hero → overlapping search */}
-      <section
-        className="shop-hero shop-hero-section"
-        style={{ backgroundColor: headerBg }}
-        aria-label="商城頁首與主視覺"
-      >
-        <ShopHeader settings={pageSettings} onSearchClick={focusSearch} />
-        <div className="shop-hero-canvas" style={{ backgroundColor: heroBg }}>
-          <ShopHeroBanner backgroundColor={heroBg} />
-        </div>
-        <div className="shop-hero-search-wrap">
-          <ShopSearchBar ref={searchRef} />
-        </div>
-      </section>
+      <div className="w-full max-w-none rounded-none" style={{ backgroundColor: brandYellow }}>
+        <ShopHeader settings={pageSettings} />
+        <ShopHeroBanner
+          backgroundColor={
+            pageSettings.hero_bg_color || pageSettings.header_bg_color
+          }
+        />
+      </div>
 
       <main>
+        <div className="bg-white">
+          <div className="mx-auto max-w-7xl px-4 pt-4 md:px-6 md:pt-5">
+            <ShopSearchBar />
+          </div>
+        </div>
+
         <ShopMainCategoryMenu />
 
         <div className="pb-7 pt-0">
@@ -84,24 +76,15 @@ export function ShopHubClient() {
           <ShopNewProducts />
         </div>
 
-        <div className="shop-hub-body mx-auto w-full max-w-7xl space-y-6 px-4 pb-8 pt-0 md:px-6">
-          <section className="grid gap-3 sm:grid-cols-2">
-            <Link
-              href="/stores"
-              className="rounded-[16px] border border-[#EAEAEA] bg-white p-4 text-[#153E73] shadow-[0_4px_14px_rgba(21,62,115,0.06)]"
-            >
-              <h3 className="font-bold">門市取貨</h3>
-              <p className="mt-1 text-sm text-[#687386]">線上下單，就近門市取貨</p>
-            </Link>
-            <Link
-              href="/corporate"
-              className="rounded-[16px] border border-[#EAEAEA] bg-white p-4 text-[#153E73] shadow-[0_4px_14px_rgba(21,62,115,0.06)]"
-            >
-              <h3 className="font-bold">企業訂購詢問</h3>
-              <p className="mt-1 text-sm text-[#687386]">大宗採購與福委方案</p>
-            </Link>
-          </section>
+        <div className="pb-6">
+          <ShopOrderingInfo />
+        </div>
 
+        <div className="pb-6">
+          <ShopCorporateInquiry />
+        </div>
+
+        <div className="shop-hub-body mx-auto w-full max-w-7xl space-y-6 px-4 pb-8 pt-0 md:px-6">
           <Link
             href={APP_ROUTES.shopCategories}
             className="flex min-h-12 items-center justify-center rounded-[16px] border border-[#EAEAEA] bg-white text-sm font-bold text-[#153E73]"

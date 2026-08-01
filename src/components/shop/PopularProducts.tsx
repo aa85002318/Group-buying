@@ -19,8 +19,9 @@ function resolveBadge(p: Product): ProductBadge | undefined {
   if (p.status === "sold_out" || (Number(p.stock ?? 0) <= 0 && !p.allow_oversell)) {
     return "soldout";
   }
+  // Priority: HOT > NEW
+  if (p.is_hot) return "hot";
   if (p.is_new) return "new";
-  if (p.is_popular || p.is_hot) return "hot";
   return undefined;
 }
 
@@ -81,13 +82,13 @@ export function PopularProducts({
           </Link>
         </div>
 
-        <div className="scrollbar-hide -mx-1 flex gap-3 overflow-x-auto px-1 pb-1 md:gap-4">
+        <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-1 md:gap-4">
           {products.map((p) => {
             const { price, original } = resolvePrice(p);
             return (
               <div
                 key={p.id}
-                className="w-[158px] shrink-0 sm:w-[165px] md:w-[200px] lg:w-[210px]"
+                className="w-[calc((100%-0.75rem)/2.2)] shrink-0 sm:w-[calc((100%-1.5rem)/3)] lg:w-[calc((100%-4rem)/5)]"
               >
                 <ProductCard
                   id={p.id}

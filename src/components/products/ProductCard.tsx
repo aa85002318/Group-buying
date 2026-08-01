@@ -40,6 +40,13 @@ const BADGE_CLASS: Record<ProductBadge, string> = {
   soldout: "bg-disabled-soft text-disabled",
 };
 
+/** Shop mall badges — HOT red / NEW orange, 6px radius, 12px type. */
+const SHOP_BADGE_CLASS: Partial<Record<ProductBadge, string>> = {
+  new: "bg-[#FF8A3D] text-white",
+  hot: "bg-[#E53935] text-white",
+  soldout: "bg-disabled-soft text-disabled",
+};
+
 const BADGE_LABEL: Record<ProductBadge, string> = {
   new: "新品",
   hot: "熱門",
@@ -47,6 +54,11 @@ const BADGE_LABEL: Record<ProductBadge, string> = {
   preorder: "預購",
   instock: "現貨",
   soldout: "售完",
+};
+
+const SHOP_BADGE_LABEL: Partial<Record<ProductBadge, string>> = {
+  new: "NEW",
+  hot: "HOT",
 };
 
 const STICKER_TO_BADGE: Partial<Record<ProductStickerType, ProductBadge>> = {
@@ -129,11 +141,19 @@ export function ProductCard({
         {resolvedBadge && (
           <span
             className={cn(
-              "absolute left-2 top-2 z-10 rounded-chip px-2 py-0.5 text-[10px] font-bold",
-              BADGE_CLASS[resolvedBadge]
+              "absolute left-2 top-2 z-10 px-2 py-0.5 font-bold",
+              shop
+                ? cn(
+                    "rounded-[6px] text-xs leading-none",
+                    SHOP_BADGE_CLASS[resolvedBadge] ?? BADGE_CLASS[resolvedBadge]
+                  )
+                : cn("rounded-chip text-[10px]", BADGE_CLASS[resolvedBadge])
             )}
           >
-            {groupBuyLabel ?? BADGE_LABEL[resolvedBadge]}
+            {groupBuyLabel ??
+              (shop
+                ? SHOP_BADGE_LABEL[resolvedBadge] ?? BADGE_LABEL[resolvedBadge]
+                : BADGE_LABEL[resolvedBadge])}
           </span>
         )}
         {image_url ? (
