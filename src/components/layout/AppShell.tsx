@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { HomeFooter } from "@/components/home/HomeFooter";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
  * Main has no horizontal padding so color sections can go edge-to-edge.
  * Content inset (--page-padding-x) lives on .site-container inside each section.
  * Non-home pages wrap children once in .site-container; homepage manages its own.
+ * HomeFooter is shown on all consumer pages (hidden on admin/staff/auth).
  */
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -56,6 +58,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           ) : (
             <div className="mx-auto w-full min-w-0 max-w-full">{children}</div>
           )}
+          {showChrome ? <HomeFooter className="mt-6" /> : null}
         </main>
         <MobileBottomNav />
       </div>

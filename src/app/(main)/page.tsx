@@ -8,7 +8,6 @@ import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
 import { HorizontalProductRail } from "@/components/home/HorizontalProductRail";
 import { PromoBannerStrip } from "@/components/home/PromoBannerStrip";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
-import { HomeFooter } from "@/components/home/HomeFooter";
 import { HomepagePopupDialog } from "@/components/home/HomepagePopupDialog";
 import { HorizontalScroller } from "@/components/home/HorizontalScroller";
 import { BrandStatementSection } from "@/components/home/BrandStatementSection";
@@ -639,7 +638,6 @@ export default function HomePage() {
         {creamToRender.map((block) => renderHomeSection(block, ctx))}
       </section>
 
-      <HomeFooter className="mt-0" />
       <HomepagePopupDialog />
     </div>
   );
