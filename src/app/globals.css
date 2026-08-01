@@ -469,7 +469,7 @@
     }
   }
 
-  /* ── Shop hero Version A: capsule float + soft fog ── */
+  /* ── Shop hub hero layout (App home structure) ── */
   .shop-hub-hero-plane {
     position: relative;
     width: 100%;
@@ -490,86 +490,75 @@
     border: none;
   }
 
-  .shop-hero-vA {
+  /*
+   * Hero height: ~520–560px / ≤65dvh so first screen shows
+   * Header + Hero + floating search + first category row.
+   */
+  .shop-hero-layout {
     position: relative;
     width: 100%;
     margin: 0;
+    height: min(540px, 65dvh);
+    max-height: 560px;
     padding:
-      calc(env(safe-area-inset-top, 0px) + 12px + 42px + 28px)
-      15px
-      72px;
+      calc(env(safe-area-inset-top, 0px) + 12px + 42px + 24px)
+      16px
+      56px;
     background: #ffe149;
-    overflow: visible;
+    overflow: hidden;
   }
 
   @media (min-width: 768px) {
-    .shop-hero-vA {
+    .shop-hero-layout {
+      height: min(520px, 58dvh);
+      max-height: 560px;
       padding-left: 24px;
       padding-right: 24px;
-      padding-bottom: 80px;
+      padding-bottom: 64px;
       max-width: 1440px;
       margin-inline: auto;
+      overflow: visible;
     }
   }
 
-  .shop-hero-vA__inner {
+  .shop-hero-layout__stage {
     position: relative;
     z-index: 1;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-  }
-
-  .shop-hero-vA__art {
-    position: relative;
-    display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-end;
     width: 100%;
+    height: 100%;
     min-height: 0;
-    /* Keep first screen airy — art ~10% smaller visual weight */
-    max-height: min(42vh, 380px);
   }
 
-  @media (min-width: 768px) {
-    .shop-hero-vA__art {
-      max-height: min(46vh, 440px);
-    }
-  }
-
-  .shop-hero-vA__art-link {
+  .shop-hero-layout__art-link {
     display: block;
     max-width: 100%;
     line-height: 0;
   }
 
-  .shop-hero-vA__img {
+  .shop-hero-layout__img {
     display: block;
     width: auto;
     max-width: 100%;
     height: auto;
-    max-height: min(42vh, 380px);
+    max-height: 100%;
     margin-inline: auto;
     object-fit: contain;
-    object-position: center top;
-    transform: scale(0.9);
-    transform-origin: center top;
+    object-position: center bottom;
+    /* IP ~15% larger + nudged down for airy title zone */
+    transform: scale(1.15) translateY(12px);
+    transform-origin: center bottom;
     user-select: none;
     pointer-events: none;
     border-radius: 0;
   }
 
-  @media (min-width: 768px) {
-    .shop-hero-vA__img {
-      max-height: min(46vh, 440px);
-    }
-  }
-
   .shop-hero-glow {
     position: absolute;
     left: 50%;
-    top: 42%;
+    top: 48%;
     z-index: 0;
     width: min(78%, 420px);
     height: min(55%, 280px);
@@ -596,12 +585,12 @@
   }
 
   .shop-hero-sparkle--a {
-    top: 12%;
+    top: 8%;
     left: 10%;
   }
 
   .shop-hero-sparkle--b {
-    top: 22%;
+    top: 18%;
     right: 12%;
     width: 6px;
     height: 6px;
@@ -609,109 +598,27 @@
   }
 
   .shop-hero-sparkle--c {
-    bottom: 18%;
+    bottom: 22%;
     left: 16%;
     width: 5px;
     height: 5px;
     opacity: 0.65;
   }
 
-  /* Frosted capsule feature row */
-  .shop-hero-capsules {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    margin: 4px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  @media (min-width: 480px) {
-    .shop-hero-capsules {
-      gap: 8px;
-    }
-  }
-
-  .shop-hero-capsule {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-    height: 56px;
-    padding: 0 8px;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.65);
-    background: rgba(255, 255, 255, 0.72);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-
-  @media (min-width: 480px) {
-    .shop-hero-capsule {
-      gap: 8px;
-      padding: 0 10px;
-    }
-  }
-
-  .shop-hero-capsule__icon {
-    display: inline-flex;
-    flex-shrink: 0;
-    color: #f16458;
-  }
-
-  .shop-hero-capsule__copy {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  .shop-hero-capsule__title {
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.2;
-    color: #153e73;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .shop-hero-capsule__sub {
-    font-size: 10px;
-    line-height: 1.2;
-    color: #687386;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  @media (max-width: 379px) {
-    .shop-hero-capsule__sub {
-      display: none;
-    }
-
-    .shop-hero-capsule {
-      justify-content: center;
-      flex-direction: column;
-      gap: 2px;
-      padding: 4px 4px;
-    }
-  }
-
-  /* Soft white fog at hero bottom */
+  /* Soft white fog + wave at hero bottom (App home style) */
   .shopHeroBlur {
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: 2;
-    height: 100px;
+    height: 120px;
     pointer-events: none;
     background: radial-gradient(
       ellipse at bottom,
-      rgba(255, 255, 255, 0.95),
-      rgba(255, 255, 255, 0.65),
-      transparent
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 255, 255, 0.7) 42%,
+      transparent 72%
     );
   }
 
@@ -733,30 +640,31 @@
     height: 100%;
   }
 
-  /* Floating frosted search — overlaps hero seam */
-  .shop-hero-search-wrap {
-    position: relative;
+  /* Search floats on Hero / content seam — not its own white section */
+  .shop-hero-search-float {
+    position: absolute;
+    bottom: -28px;
+    left: 16px;
+    right: 16px;
     z-index: 20;
-    width: 100%;
-    max-width: none;
-    margin-top: -28px;
-    padding: 0 15px 0;
+    margin: 0;
+    padding: 0;
     background: transparent;
   }
 
   @media (min-width: 768px) {
-    .shop-hero-search-wrap {
-      margin-top: -28px;
-      padding: 0 24px 0;
+    .shop-hero-search-float {
+      left: 24px;
+      right: 24px;
       max-width: 1440px;
       margin-inline: auto;
     }
   }
 
-  /* Shop category — clear floating search */
+  /* Category clears floating search; first row visible on first screen */
   .shop-category-menu {
-    padding-top: 54px;
-    padding-bottom: 28px;
+    padding-top: 60px;
+    padding-bottom: 8px;
     background: #ffffff;
   }
 
@@ -767,6 +675,74 @@
 
   .shop-category-menu__track::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Mall features 2×2 — below categories, not inside Hero */
+  .shop-mall-features {
+    width: 100%;
+    background: #ffffff;
+  }
+
+  .shop-mall-features__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+    list-style: none;
+  }
+
+  @media (min-width: 768px) {
+    .shop-mall-features__grid {
+      gap: 12px;
+      padding-inline: 24px;
+    }
+  }
+
+  .shop-mall-features__card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    height: 72px;
+    padding: 0 14px;
+    border-radius: 18px;
+    border: 1px solid #eef1f5;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(21, 62, 115, 0.04);
+  }
+
+  .shop-mall-features__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: #fff6e8;
+    color: #f16458;
+  }
+
+  .shop-mall-features__copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .shop-mall-features__title {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #153e73;
+  }
+
+  .shop-mall-features__sub {
+    font-size: 11px;
+    line-height: 1.2;
+    color: #687386;
   }
 
   .shop-promo-carousel {
@@ -799,7 +775,7 @@
     padding: 0 16px 0 18px;
     border: none;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     box-shadow: 0 14px 34px rgba(21, 62, 115, 0.1);

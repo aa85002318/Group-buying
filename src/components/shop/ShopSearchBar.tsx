@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mic, ScanLine, Search, Sparkles } from "lucide-react";
 
 /**
- * Version A floating frosted search — sits on Hero / content seam.
+ * Floating frosted search — absolutely positioned on Hero / content seam.
  */
 export function ShopSearchBar({
   placeholder = "搜尋商品、品牌、材料、食譜、優惠活動…",

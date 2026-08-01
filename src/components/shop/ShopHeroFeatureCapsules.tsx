@@ -7,21 +7,25 @@ const FEATURES = [
   { id: "member", title: "會員優惠", subtitle: "專屬折扣", Icon: Star },
 ] as const;
 
-/** Version A — frosted capsule feature strip under shop hero art. */
+/**
+ * Shop mall highlights — 2×2 white cards below category menu (not inside Hero).
+ */
 export function ShopHeroFeatureCapsules() {
   return (
-    <ul className="shop-hero-capsules" aria-label="商城服務特色">
-      {FEATURES.map(({ id, title, subtitle, Icon }) => (
-        <li key={id} className="shop-hero-capsule">
-          <span className="shop-hero-capsule__icon" aria-hidden>
-            <Icon className="h-[22px] w-[22px]" strokeWidth={1.75} />
-          </span>
-          <span className="shop-hero-capsule__copy">
-            <span className="shop-hero-capsule__title">{title}</span>
-            <span className="shop-hero-capsule__sub">{subtitle}</span>
-          </span>
-        </li>
-      ))}
-    </ul>
+    <section className="shop-mall-features" aria-label="商城服務特色">
+      <ul className="shop-mall-features__grid">
+        {FEATURES.map(({ id, title, subtitle, Icon }) => (
+          <li key={id} className="shop-mall-features__card">
+            <span className="shop-mall-features__icon" aria-hidden>
+              <Icon className="h-5 w-5" strokeWidth={1.75} />
+            </span>
+            <span className="shop-mall-features__copy">
+              <span className="shop-mall-features__title">{title}</span>
+              <span className="shop-mall-features__sub">{subtitle}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

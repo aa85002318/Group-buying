@@ -6,6 +6,7 @@ import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
 import { ShopSearchBar } from "@/components/shop/ShopSearchBar";
 import { ShopMainCategoryMenu } from "@/components/shop/ShopMainCategoryMenu";
+import { ShopHeroFeatureCapsules } from "@/components/shop/ShopHeroFeatureCapsules";
 import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
 import { PopularProducts } from "@/components/shop/PopularProducts";
 import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
@@ -35,6 +36,10 @@ function resolvePlaneYellow(settings: ShopPageSettings) {
   return header;
 }
 
+/**
+ * Shop hub layout (App home rhythm):
+ * Header → Hero → floating search → categories → mall features → banner → rails
+ */
 export function ShopHubClient() {
   const [pageSettings, setPageSettings] = useState<ShopPageSettings>(
     DEFAULT_SHOP_PAGE_SETTINGS
@@ -64,20 +69,24 @@ export function ShopHubClient() {
 
   return (
     <div className="shop-hub space-y-0 bg-white">
-      {/* Header + Hero + floating search share one yellow plane (App home style). */}
+      {/* Yellow plane: header + hero + absolute floating search */}
       <div
         className="shop-hub-hero-plane w-full max-w-none"
         style={{ backgroundColor: planeYellow }}
       >
         <ShopHeader settings={unifiedSettings} title="商城" />
         <ShopHeroBanner backgroundColor={planeYellow} />
-        <div className="shop-hero-search-wrap">
+        <div className="shop-hero-search-float">
           <ShopSearchBar />
         </div>
       </div>
 
       <main>
         <ShopMainCategoryMenu />
+
+        <div className="pb-5 pt-1">
+          <ShopHeroFeatureCapsules />
+        </div>
 
         <div className="pb-7 pt-0">
           <ShopPromoCarousel />

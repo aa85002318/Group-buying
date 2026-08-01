@@ -101,11 +101,15 @@ export function ShopMainCategoryMenu({
   }, [categoriesProp]);
 
   return (
-    <section className="w-full bg-white" aria-label="商品主分類" aria-busy={loading}>
-      <div className="mx-auto max-w-7xl px-4 py-5 md:px-6">
+    <section
+      className="shop-category-menu w-full bg-white"
+      aria-label="商品主分類"
+      aria-busy={loading}
+    >
+      <div className="mx-auto max-w-7xl px-4 pb-5 md:px-6">
         <div
           className={cn(
-            "flex gap-3 overflow-x-auto pb-2 scrollbar-hide",
+            "shop-category-menu__track flex gap-3 overflow-x-auto pb-2 scrollbar-hide",
             "lg:grid lg:grid-cols-9 lg:gap-5 lg:overflow-visible"
           )}
         >

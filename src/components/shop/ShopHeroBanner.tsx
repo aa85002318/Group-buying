@@ -7,11 +7,10 @@ import {
   normalizeShopHeroList,
 } from "@/types/shop-hero-banner";
 import { DEFAULT_SHOP_PAGE_SETTINGS } from "@/lib/shop/page-settings";
-import { ShopHeroFeatureCapsules } from "@/components/shop/ShopHeroFeatureCapsules";
 
 /**
- * Version A shop hero — breathing art + capsule features + soft fog/wave.
- * Not an isolated hard-cut banner; blends into floating search.
+ * Shop hub hero — App-home layout: yellow plane + art only.
+ * Search floats outside this section; feature cards live below categories.
  */
 export function ShopHeroBanner({
   backgroundColor = DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color,
@@ -58,7 +57,7 @@ export function ShopHeroBanner({
       alt={art.alt}
       width={1024}
       height={839}
-      className="shop-hero-vA__img"
+      className="shop-hero-layout__img"
       decoding="async"
       fetchPriority="high"
       draggable={false}
@@ -72,27 +71,23 @@ export function ShopHeroBanner({
 
   return (
     <section
-      className="shop-hero-vA"
+      className="shop-hero-layout"
       style={{ backgroundColor: bg }}
       aria-label="商城主視覺"
       aria-busy={loading}
     >
-      <div className="shop-hero-vA__inner">
-        <div className="shop-hero-vA__art">
-          <span className="shop-hero-sparkle shop-hero-sparkle--a" aria-hidden />
-          <span className="shop-hero-sparkle shop-hero-sparkle--b" aria-hidden />
-          <span className="shop-hero-sparkle shop-hero-sparkle--c" aria-hidden />
-          <span className="shop-hero-glow" aria-hidden />
-          {art.href ? (
-            <Link href={art.href} className="shop-hero-vA__art-link" aria-label={art.alt}>
-              {media}
-            </Link>
-          ) : (
-            media
-          )}
-        </div>
-
-        <ShopHeroFeatureCapsules />
+      <div className="shop-hero-layout__stage">
+        <span className="shop-hero-sparkle shop-hero-sparkle--a" aria-hidden />
+        <span className="shop-hero-sparkle shop-hero-sparkle--b" aria-hidden />
+        <span className="shop-hero-sparkle shop-hero-sparkle--c" aria-hidden />
+        <span className="shop-hero-glow" aria-hidden />
+        {art.href ? (
+          <Link href={art.href} className="shop-hero-layout__art-link" aria-label={art.alt}>
+            {media}
+          </Link>
+        ) : (
+          media
+        )}
       </div>
 
       <div className="shopHeroBlur" aria-hidden />
