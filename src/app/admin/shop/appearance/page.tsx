@@ -116,7 +116,7 @@ export default function AdminShopAppearancePage() {
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="color"
-                  value={normalizeShopHex(settings.header_bg_color, "#FFD84D")}
+                  value={normalizeShopHex(settings.header_bg_color, "#FCCA30")}
                   onChange={(e) => setHeader(e.target.value)}
                   className="h-10 w-14 cursor-pointer rounded border border-border"
                   aria-label="頁首色盤"
@@ -125,7 +125,7 @@ export default function AdminShopAppearancePage() {
                   value={settings.header_bg_color}
                   onChange={(e) => setHeader(e.target.value)}
                   className="max-w-[140px] font-mono uppercase"
-                  placeholder="#FFD84D"
+                  placeholder="#FCCA30"
                 />
               </div>
             </div>

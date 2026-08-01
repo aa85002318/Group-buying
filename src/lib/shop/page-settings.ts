@@ -7,7 +7,7 @@ export type ShopPageSettings = {
 };
 
 export const DEFAULT_SHOP_PAGE_SETTINGS: ShopPageSettings = {
-  header_bg_color: "#FFD84D",
+  header_bg_color: "#FCCA30",
   hero_bg_color: "#FFD84D",
   header_border_color: null,
 };
@@ -37,6 +37,7 @@ export function parseShopPageSettings(row: Record<string, unknown> | null | unde
 }
 
 export const SHOP_HEADER_COLOR_PRESETS = [
+  { name: "頁首黃", value: "#FCCA30" },
   { name: "Hero 主黃", value: "#FFD84D" },
   { name: "淺黃", value: "#FFF3B8" },
   { name: "淡黃", value: "#FFF8D9" },
