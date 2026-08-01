@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Heart, MessageCircle, Star } from "lucide-react";
 import {
   INSPIRATION_TAGS,
+  INSPIRATION_THEME_CLASS,
+  INSPIRATION_THEME_LABEL,
   aspectToRowSpan,
   type InspirationCategory,
   type ShopInspirationPost,
@@ -47,6 +49,9 @@ function Avatar({ name, src }: { name: string; src: string | null }) {
 
 function InspirationCard({ post }: { post: ShopInspirationPost }) {
   const span = aspectToRowSpan(post.aspect, post.card_type);
+  const theme = post.category;
+  const themeLabel = INSPIRATION_THEME_LABEL[theme];
+  const themeClass = INSPIRATION_THEME_CLASS[theme];
   const aspectClass =
     post.aspect === "1/1"
       ? "aspect-square"
@@ -61,17 +66,20 @@ function InspirationCard({ post }: { post: ShopInspirationPost }) {
     >
       <button
         type="button"
-        className="absolute right-1.5 top-1.5 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#F16458] shadow-sm backdrop-blur"
+        className="absolute left-1.5 top-1.5 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#F16458] shadow-sm backdrop-blur"
         aria-label={`收藏 ${post.title}`}
       >
         <Heart className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
       </button>
 
-      {post.card_type === "teacher" ? (
-        <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-[#7C5CFF] px-1.5 py-0.5 text-[9px] font-bold text-white">
-          老師作品
-        </span>
-      ) : null}
+      <span
+        className={cn(
+          "absolute right-1.5 top-1.5 z-10 max-w-[72%] truncate rounded-full px-2 py-0.5 text-[9px] font-bold shadow-sm",
+          themeClass
+        )}
+      >
+        {themeLabel}
+      </span>
 
       <Link href={post.href} className="block min-h-0 flex-1">
         <div className={cn("relative w-full overflow-hidden bg-[#FFF8D6]", aspectClass)}>
@@ -134,7 +142,7 @@ function InspirationCard({ post }: { post: ShopInspirationPost }) {
             </>
           ) : null}
 
-          {post.card_type === "tip" ? (
+          {post.card_type === "tip" || post.card_type === "knowledge" ? (
             <>
               {post.tip_body ? (
                 <p className="line-clamp-2 text-[10px] leading-relaxed text-[#687386]">{post.tip_body}</p>
@@ -144,6 +152,8 @@ function InspirationCard({ post }: { post: ShopInspirationPost }) {
                 <span className="mt-0.5 line-clamp-1 text-[10px] font-bold text-[#F16458]">
                   {post.product_name}
                 </span>
+              ) : post.cook_time ? (
+                <span className="mt-0.5 text-[10px] text-[#687386]">{post.cook_time}</span>
               ) : null}
             </>
           ) : null}

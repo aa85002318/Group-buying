@@ -5,9 +5,15 @@ export type InspirationCategory =
   | "community"
   | "recipe"
   | "teacher"
-  | "tip";
+  | "tip"
+  | "knowledge";
 
-export type InspirationCardType = "community" | "recipe" | "teacher" | "tip";
+export type InspirationCardType =
+  | "community"
+  | "recipe"
+  | "teacher"
+  | "tip"
+  | "knowledge";
 
 export type InspirationAspect = "1/1" | "4/5" | "3/4";
 
@@ -42,7 +48,46 @@ export const INSPIRATION_TAGS: { id: InspirationCategory; label: string }[] = [
   { id: "recipe", label: "食譜靈感" },
   { id: "teacher", label: "老師作品" },
   { id: "tip", label: "烘焙心得" },
+  { id: "knowledge", label: "烘焙知識" },
 ];
+
+export const INSPIRATION_THEME_LABEL: Record<
+  Exclude<InspirationCategory, "all">,
+  string
+> = {
+  community: "大家作品",
+  recipe: "食譜靈感",
+  teacher: "老師作品",
+  tip: "烘焙心得",
+  knowledge: "烘焙知識",
+};
+
+export const INSPIRATION_THEME_CLASS: Record<
+  Exclude<InspirationCategory, "all">,
+  string
+> = {
+  community: "bg-[#153E73] text-white",
+  recipe: "bg-[#F5A623] text-white",
+  teacher: "bg-[#7C5CFF] text-white",
+  tip: "bg-[#F16458] text-white",
+  knowledge: "bg-[#2F9E7B] text-white",
+};
+
+const CATEGORY_IDS = new Set<string>([
+  "community",
+  "recipe",
+  "teacher",
+  "tip",
+  "knowledge",
+]);
+
+function normalizeCategory(
+  value: string
+): Exclude<InspirationCategory, "all"> {
+  return CATEGORY_IDS.has(value)
+    ? (value as Exclude<InspirationCategory, "all">)
+    : "community";
+}
 
 const IMG = {
   cake: "/images/home/latest-campaigns/02-group-buy.jpg",
@@ -249,11 +294,37 @@ export const DEFAULT_INSPIRATION_POSTS: ShopInspirationPost[] = [
     sort_order: 8,
     is_active: true,
   },
+  {
+    id: "insp-9",
+    category: "knowledge",
+    card_type: "knowledge",
+    title: "低筋／中筋／高筋怎麼選？",
+    image_url: IMG.kitchen,
+    aspect: "1/1",
+    author_name: "CHIMEIDIY",
+    author_avatar: null,
+    time_label: null,
+    likes: 112,
+    comments: 12,
+    materials: ["高筋麵粉", "低筋麵粉"],
+    rating: 5,
+    difficulty: null,
+    cook_time: "閱讀 3 分鐘",
+    tip_body: "筋性決定成品結構：吐司選高筋、蛋糕選低筋，搞懂就不易失敗。",
+    product_name: null,
+    product_href: null,
+    href: "/articles",
+    is_featured: true,
+    sort_order: 9,
+    is_active: true,
+  },
 ];
 
 export function mapInspirationRow(row: Record<string, unknown>): ShopInspirationPost {
-  const category = String(row.category ?? "community") as ShopInspirationPost["category"];
-  const cardType = String(row.card_type ?? category) as InspirationCardType;
+  const category = normalizeCategory(String(row.category ?? "community"));
+  const cardType = normalizeCategory(
+    String(row.card_type ?? row.category ?? "community")
+  ) as InspirationCardType;
   const aspectRaw = String(row.aspect ?? "4/5");
   const aspect = (["1/1", "4/5", "3/4"].includes(aspectRaw) ? aspectRaw : "4/5") as InspirationAspect;
   const materials = Array.isArray(row.materials)
@@ -264,8 +335,8 @@ export function mapInspirationRow(row: Record<string, unknown>): ShopInspiration
 
   return {
     id: String(row.id),
-    category: category === "recipe" || category === "teacher" || category === "tip" ? category : "community",
-    card_type: cardType === "recipe" || cardType === "teacher" || cardType === "tip" ? cardType : "community",
+    category,
+    card_type: cardType,
     title: String(row.title ?? ""),
     image_url: String(row.image_url ?? IMG.dessert),
     aspect,
@@ -291,7 +362,7 @@ export function mapInspirationRow(row: Record<string, unknown>): ShopInspiration
 export function aspectToRowSpan(aspect: InspirationAspect, cardType: InspirationCardType): number {
   /* Compact hub footprint — ~30% shorter than full masonry spans */
   const base = aspect === "1/1" ? 20 : aspect === "4/5" ? 24 : 26;
-  if (cardType === "tip") return base - 1;
+  if (cardType === "tip" || cardType === "knowledge") return base - 1;
   if (cardType === "teacher") return base + 1;
   if (cardType === "recipe") return base;
   return base + 2;

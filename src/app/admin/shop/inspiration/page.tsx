@@ -182,6 +182,7 @@ export default function AdminShopInspirationPage() {
                 <option value="recipe">食譜靈感</option>
                 <option value="teacher">老師作品</option>
                 <option value="tip">烘焙心得</option>
+                <option value="knowledge">烘焙知識</option>
               </select>
             </label>
             <label className="text-sm">
