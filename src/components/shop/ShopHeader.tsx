@@ -16,15 +16,18 @@ const GLASS_BTN =
   "shop-header-glass inline-flex h-[42px] w-[42px] shrink-0 items-center justify-center text-[#153E73] transition hover:brightness-[1.02] active:scale-[0.98]";
 
 /**
- * Shop header — sits above hero on the yellow plane (no absolute overlap).
- * No logo; page title 「商城」 centered.
+ * Hub header — sits above hero on the yellow plane (no absolute overlap).
+ * Used by shop hub and group-buy hub (title / search target differ).
  */
 export function ShopHeader({
   settings: settingsProp,
   title = "商城",
+  searchHref = "/shop/search",
 }: {
   settings?: ShopPageSettings;
   title?: string;
+  /** Header search icon destination (shop search or page-local focus). */
+  searchHref?: string;
 }) {
   const { items } = useCart();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -86,7 +89,7 @@ export function ShopHeader({
               </span>
             ) : null}
           </Link>
-          <Link href="/shop/search" className={GLASS_BTN} aria-label="搜尋">
+          <Link href={searchHref} className={GLASS_BTN} aria-label="搜尋">
             <Search className="h-5 w-5" aria-hidden />
           </Link>
         </div>

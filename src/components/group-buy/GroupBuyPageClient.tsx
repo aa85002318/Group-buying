@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BrandHero } from "@/components/brand/hero/BrandHero";
+import { ShopHeader } from "@/components/shop/ShopHeader";
+import { GroupBuyHeroBanner } from "@/components/group-buy/GroupBuyHeroBanner";
 import {
   DEFAULT_GROUP_BUY_PAGE_SETTINGS,
   TAB_LABELS,
@@ -15,6 +16,8 @@ import {
   GroupBuyCampaignCard,
   type GroupBuyCampaignCardData,
 } from "@/components/group-buy/GroupBuyCampaignCard";
+import { GROUP_BUY_BRAND_YELLOW } from "@/types/group-buy-hero-banner";
+import { DEFAULT_SHOP_PAGE_SETTINGS } from "@/lib/shop/page-settings";
 import { cn } from "@/lib/utils";
 
 function NoticeAccordion({
@@ -146,11 +149,27 @@ export function GroupBuyPageClient() {
     } finally {
       setLoading(false);
     }
-  }, [tab, sort, page, pageSize, query, category, fulfillment, settings.sections.ending_soon, settings.sections.upcoming]);
+  }, [
+    tab,
+    sort,
+    page,
+    pageSize,
+    query,
+    category,
+    fulfillment,
+    settings.sections.ending_soon,
+    settings.sections.upcoming,
+  ]);
 
   useEffect(() => {
     void loadList();
   }, [loadList]);
+
+  const onHeroSearch = useCallback((q: string) => {
+    setSearch(q);
+    setQuery(q);
+    setPage(1);
+  }, []);
 
   if (!settings.enabled) {
     return (
@@ -160,11 +179,18 @@ export function GroupBuyPageClient() {
     );
   }
 
+  const headerSettings = {
+    ...DEFAULT_SHOP_PAGE_SETTINGS,
+    header_bg_color: GROUP_BUY_BRAND_YELLOW,
+    hero_bg_color: GROUP_BUY_BRAND_YELLOW,
+    header_border_color: null,
+  };
+
   const renderSection = (id: GroupBuySectionId) => {
     if (!settings.sections[id]) return null;
 
     if (id === "header") {
-      // BrandHero 已提供頁面主視覺與標題，略過舊 header 區塊避免重複
+      // Yellow plane + GroupBuyHeroBanner replace the old BrandHero / header block.
       return null;
     }
 
@@ -197,7 +223,10 @@ export function GroupBuyPageClient() {
 
     if (id === "search_filters") {
       return (
-        <div key={id} className="space-y-3 rounded-[20px] border border-border bg-white p-4 shadow-card">
+        <div
+          key={id}
+          className="space-y-3 rounded-[20px] border border-border bg-white p-4 shadow-card"
+        >
           <form
             className="flex gap-2"
             onSubmit={(e) => {
@@ -394,9 +423,26 @@ export function GroupBuyPageClient() {
   };
 
   return (
-    <div className="space-y-8 page-enter">
-      <BrandHero heroKey="group-buy" />
-      {settings.sectionOrder.map((id) => renderSection(id))}
+    <div className="group-buy-hub space-y-0 bg-white">
+      <div
+        className="shop-hub-hero-plane w-full max-w-none"
+        style={{ backgroundColor: GROUP_BUY_BRAND_YELLOW }}
+      >
+        <ShopHeader
+          settings={headerSettings}
+          title="團購"
+          searchHref="#group-buy-search-input"
+        />
+        <GroupBuyHeroBanner
+          backgroundColor={GROUP_BUY_BRAND_YELLOW}
+          searchPlaceholder={settings.searchPlaceholder || "搜尋團購活動…"}
+          onSearch={onHeroSearch}
+        />
+      </div>
+
+      <main className="group-buy-hub-main mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-[15px] pt-[15px] md:px-6">
+        {settings.sectionOrder.map((id) => renderSection(id))}
+      </main>
     </div>
   );
 }

@@ -521,13 +521,16 @@
     background: #fde045;
   }
 
-  /* Keep shop hero art intrinsic — full-bleed, square edges, no crop */
+  /* Keep shop / group-buy hero art intrinsic — full-bleed, square edges, no crop */
   .shop-hero .home-hero-fullbleed,
-  .shop-hero .home-hero-fullbleed__img {
+  .shop-hero .home-hero-fullbleed__img,
+  .group-buy-hero .home-hero-fullbleed,
+  .group-buy-hero .home-hero-fullbleed__img {
     border-radius: 0 !important;
   }
 
-  .shop-hero .home-hero-fullbleed__img {
+  .shop-hero .home-hero-fullbleed__img,
+  .group-buy-hero .home-hero-fullbleed__img {
     width: 100%;
     height: auto;
     max-width: 100%;
@@ -537,7 +540,8 @@
   }
 
   /* Category — 15px gap under floating search (matches home search wrap rhythm) */
-  .shop-hero .home-hero-search-wrap {
+  .shop-hero .home-hero-search-wrap,
+  .group-buy-hero .home-hero-search-wrap {
     padding-bottom: 15px;
   }
 

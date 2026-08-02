@@ -20,28 +20,30 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const isHome = pathname === "/";
   const isShopHub =
     pathname === "/shop" || pathname === "/shop/" || pathname.startsWith("/shop?");
-  const fullBleedPage = isHome || isShopHub;
+  const isGroupBuyHub =
+    pathname === "/group-buy" ||
+    pathname === "/group-buy/" ||
+    pathname.startsWith("/group-buy?");
+  const fullBleedPage = isHome || isShopHub || isGroupBuyHub;
   const showChrome = !isMinimalChromePath(pathname);
 
   return (
     <div
       className={cn(
         "min-h-dvh w-full overflow-x-clip",
-        isHome ? "bg-[#FDE045]" : isShopHub ? "bg-[#FDE045]" : "bg-background"
+        isHome || isShopHub || isGroupBuyHub ? "bg-[#FDE045]" : "bg-background"
       )}
     >
       <div
         className={cn(
           "relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip",
-          isHome
+          isHome || isShopHub || isGroupBuyHub
             ? "max-w-none bg-[#FDE045]"
-            : isShopHub
-              ? "max-w-none bg-[#FDE045]"
-              : "app-shell bg-background md:shadow-lift"
+            : "app-shell bg-background md:shadow-lift"
         )}
       >
-        {/* Homepage & shop hub render their own headers (shop uses ShopHeader above hero). */}
-        {!isHome && !isShopHub ? <AppHeader /> : null}
+        {/* Homepage, shop hub, and group-buy hub render their own yellow-plane headers. */}
+        {!isHome && !isShopHub && !isGroupBuyHub ? <AppHeader /> : null}
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",
