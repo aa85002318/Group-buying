@@ -521,11 +521,19 @@
     background: #fde045;
   }
 
-  /* Keep shop hero art intrinsic — same as homepage full-bleed (no crop) */
+  /* Keep shop hero art intrinsic — full-bleed, square edges, no crop */
+  .shop-hero .home-hero-fullbleed,
+  .shop-hero .home-hero-fullbleed__img {
+    border-radius: 0 !important;
+  }
+
   .shop-hero .home-hero-fullbleed__img {
     width: 100%;
     height: auto;
     max-width: 100%;
+    object-fit: contain;
+    object-position: center top;
+    display: block;
   }
 
   /* Category — 15px gap under floating search (matches home search wrap rhythm) */
