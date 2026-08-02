@@ -77,8 +77,8 @@ export function ShopHubClient() {
       </div>
 
       <main className="shop-hub-main flex flex-col gap-[15px] pb-[15px]">
-        <ShopMainCategoryMenu />
-        <div className="-mt-[10px]">
+        <div className="flex flex-col gap-1">
+          <ShopMainCategoryMenu />
           <ShopFeatureBlocks />
         </div>
         <ShopPromoCarousel />

@@ -120,7 +120,7 @@ export function ShopMainCategoryMenu({
                   key={category.id}
                   href={category.href}
                   className={cn(
-                    "group flex min-w-[72px] flex-col items-center gap-2 text-center",
+                    "group flex min-w-[72px] flex-col items-center gap-1.5 text-center",
                     "md:min-w-[84px] lg:min-w-0"
                   )}
                   aria-label={category.name}
