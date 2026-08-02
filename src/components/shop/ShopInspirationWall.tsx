@@ -137,7 +137,7 @@ export function ShopInspirationWall() {
       className="shop-inspiration-wall-v2 w-full bg-[#FFFDF6]"
       aria-label="烘焙靈感牆"
     >
-      <div className="mx-auto w-full max-w-[1200px] px-4 py-5 md:px-6 md:py-6">
+      <div className="mx-auto w-full max-w-[1200px] px-4 py-[15px] md:px-6">
         <div className="mb-5 flex items-end justify-between gap-3 md:mb-6">
           <div className="min-w-0">
             <h2 className="text-[22px] font-bold leading-tight text-[#153E73] md:text-[26px]">
