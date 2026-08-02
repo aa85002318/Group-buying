@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
 import { ShopMainCategoryMenu } from "@/components/shop/ShopMainCategoryMenu";
-import { ShopHeroFeatureCapsules } from "@/components/shop/ShopHeroFeatureCapsules";
 import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
 import { PopularProducts } from "@/components/shop/PopularProducts";
 import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
@@ -38,7 +37,7 @@ function resolvePlaneYellow(settings: ShopPageSettings) {
 
 /**
  * Shop hub layout (App home rhythm):
- * Header → Hero → floating search → categories → mall features → banner → rails
+ * Header → Hero → search → categories → feature links → banner → rails
  */
 export function ShopHubClient() {
   const [pageSettings, setPageSettings] = useState<ShopPageSettings>(
@@ -81,8 +80,8 @@ export function ShopHubClient() {
       <main>
         <ShopMainCategoryMenu />
 
-        <div className="pb-5 pt-1">
-          <ShopHeroFeatureCapsules />
+        <div className="pb-5 pt-2">
+          <ShopFeatureBlocks />
         </div>
 
         <div className="pb-7 pt-0">
@@ -91,10 +90,6 @@ export function ShopHubClient() {
 
         <div className="pb-6">
           <PopularProducts />
-        </div>
-
-        <div className="pb-6">
-          <ShopFeatureBlocks />
         </div>
 
         <div className="pb-6">
