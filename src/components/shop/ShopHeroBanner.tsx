@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   DEFAULT_SHOP_HERO_BANNERS,
-  SHOP_HERO_DESKTOP_HEIGHT,
-  SHOP_HERO_DESKTOP_WIDTH,
   SHOP_HERO_MOBILE_HEIGHT,
   SHOP_HERO_MOBILE_WIDTH,
   normalizeShopHeroList,
@@ -18,6 +16,8 @@ import { ShopSearchBar } from "@/components/shop/ShopSearchBar";
  * Shop hero + search seam — mirrors homepage HomeHeroSection structure:
  * canvas (full-bleed art) → HeroBottomTransition → home-hero-search-wrap + floating search.
  * Header stays outside (in-flow above) so icons do not overlap art.
+ *
+ * Uses a single <picture> so only one hero image renders (not mobile+desktop stacked).
  */
 export function ShopHeroBanner({
   backgroundColor = DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color,
@@ -62,38 +62,27 @@ export function ShopHeroBanner({
   }, []);
 
   const media = (
-    <>
+    <picture>
+      <source media="(min-width: 768px)" srcSet={art.desktop} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={art.mobile}
         alt={art.alt}
         width={SHOP_HERO_MOBILE_WIDTH}
         height={SHOP_HERO_MOBILE_HEIGHT}
-        className="home-hero-fullbleed__img block w-full rounded-none md:hidden"
+        className="home-hero-fullbleed__img w-full rounded-none"
         decoding="async"
         fetchPriority="high"
         onError={(e) => {
           const el = e.currentTarget;
-          if (el.src.includes("hero-default") || el.src.includes("hero-mobile")) return;
-          el.src = DEFAULT_SHOP_HERO_BANNERS[0].mobile_image || DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
+          const fallback =
+            DEFAULT_SHOP_HERO_BANNERS[0].mobile_image ||
+            DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
+          if (el.getAttribute("src") === fallback) return;
+          el.src = fallback;
         }}
       />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={art.desktop}
-        alt={art.alt}
-        width={SHOP_HERO_DESKTOP_WIDTH}
-        height={SHOP_HERO_DESKTOP_HEIGHT}
-        className="home-hero-fullbleed__img hidden w-full rounded-none md:block"
-        decoding="async"
-        fetchPriority="high"
-        onError={(e) => {
-          const el = e.currentTarget;
-          if (el.src.includes("hero-default") || el.src.includes("hero-desktop")) return;
-          el.src = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
-        }}
-      />
-    </>
+    </picture>
   );
 
   return (

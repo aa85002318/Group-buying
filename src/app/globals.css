@@ -536,7 +536,7 @@
     max-width: 100%;
     object-fit: contain;
     object-position: center top;
-    display: block;
+    /* Do not set display here — it overrides Tailwind md:hidden and stacks mobile+desktop art */
   }
 
   /* Category — 15px gap under floating search (matches home search wrap rhythm) */

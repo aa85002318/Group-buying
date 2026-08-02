@@ -4,8 +4,6 @@ import Link from "next/link";
 import {
   DEFAULT_GROUP_BUY_HERO,
   GROUP_BUY_BRAND_YELLOW,
-  GROUP_BUY_HERO_DESKTOP_HEIGHT,
-  GROUP_BUY_HERO_DESKTOP_WIDTH,
   GROUP_BUY_HERO_MOBILE_HEIGHT,
   GROUP_BUY_HERO_MOBILE_WIDTH,
 } from "@/types/group-buy-hero-banner";
@@ -13,9 +11,8 @@ import { HeroBottomTransition } from "@/components/home/HeroBottomTransition";
 import { GroupBuySearchBar } from "@/components/group-buy/GroupBuySearchBar";
 
 /**
- * Group-buy hero + search seam — same structure as shop / homepage:
- * canvas (full-bleed art) → HeroBottomTransition → floating search.
- * Header stays outside (in-flow above) on the yellow plane.
+ * Group-buy hero + search seam — same structure as shop / homepage.
+ * Single <picture> so only one hero image renders at a time.
  */
 export function GroupBuyHeroBanner({
   backgroundColor = GROUP_BUY_BRAND_YELLOW,
@@ -30,28 +27,19 @@ export function GroupBuyHeroBanner({
   const art = DEFAULT_GROUP_BUY_HERO;
 
   const media = (
-    <>
+    <picture>
+      <source media="(min-width: 768px)" srcSet={art.desktop_image} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={art.mobile_image}
         alt={art.alt_text}
         width={GROUP_BUY_HERO_MOBILE_WIDTH}
         height={GROUP_BUY_HERO_MOBILE_HEIGHT}
-        className="home-hero-fullbleed__img block w-full rounded-none md:hidden"
+        className="home-hero-fullbleed__img w-full rounded-none"
         decoding="async"
         fetchPriority="high"
       />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={art.desktop_image}
-        alt={art.alt_text}
-        width={GROUP_BUY_HERO_DESKTOP_WIDTH}
-        height={GROUP_BUY_HERO_DESKTOP_HEIGHT}
-        className="home-hero-fullbleed__img hidden w-full rounded-none md:block"
-        decoding="async"
-        fetchPriority="high"
-      />
-    </>
+    </picture>
   );
 
   return (
