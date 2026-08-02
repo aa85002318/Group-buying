@@ -11,12 +11,16 @@ import { HeroBottomTransition } from "@/components/home/HeroBottomTransition";
 import { GroupBuySearchBar } from "@/components/group-buy/GroupBuySearchBar";
 
 /**
- * Group-buy hero + search seam — same structure as shop / homepage.
+ * Group-buy hero — copies staging homepage (`/`) chrome:
+ * yellow plane → full-bleed home hero art (mobile 885×917 / desktop 1024×479)
+ * → HeroBottomTransition blur seam → floating search (no drop shadow).
+ *
+ * Header stays outside (ShopHeader above) so icons do not overlap art.
  * Single <picture> so only one hero image renders at a time.
  */
 export function GroupBuyHeroBanner({
   backgroundColor = GROUP_BUY_BRAND_YELLOW,
-  searchPlaceholder = "搜尋團購活動…",
+  searchPlaceholder = DEFAULT_GROUP_BUY_HERO.searchPlaceholder,
   onSearch,
 }: {
   backgroundColor?: string;

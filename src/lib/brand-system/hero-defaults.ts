@@ -72,10 +72,14 @@ export const BRAND_HERO_DEFAULTS: Record<BrandHeroKey, BrandHeroData> = {
     heroKey: "group-buy",
     title: "團購優惠",
     subtitle: "好料一起買更划算",
-    showTitle: true,
-    showSubtitle: true,
-    searchPlaceholder: "搜尋團購活動…",
+    showTitle: false,
+    showSubtitle: false,
+    desktopImageUrl: "/images/group-buy/hero-desktop.png?v=20260802home",
+    mobileImageUrl: "/images/group-buy/hero-mobile.png?v=20260802home",
+    imageAlt: "CHIMEiDIY Lifestyle 團購主視覺",
+    searchPlaceholder: "今天想做什麼？搜尋食譜、商品、團購、生鮮…",
     searchScope: "group_buy",
+    showPopularTags: false,
   },
 };
 

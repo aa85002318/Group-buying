@@ -1,18 +1,33 @@
-/** Group-buy hub hero — mirrors shop hero chrome (full-bleed art + search seam). */
+/** Group-buy hub hero — mirrors staging homepage hero chrome & assets. */
 
-export const GROUP_BUY_HERO_DESKTOP_WIDTH = 1024;
-export const GROUP_BUY_HERO_DESKTOP_HEIGHT = 1062;
-export const GROUP_BUY_HERO_MOBILE_WIDTH = 885;
-export const GROUP_BUY_HERO_MOBILE_HEIGHT = 917;
+import {
+  HOME_HERO_DESKTOP_HEIGHT,
+  HOME_HERO_DESKTOP_WIDTH,
+  HOME_HERO_MOBILE_HEIGHT,
+  HOME_HERO_MOBILE_WIDTH,
+  HOME_HERO_DEFAULTS,
+} from "@/types/home-hero";
 
-/** Same art & sizing as current shop mall hero (square-edge, full-bleed). */
+/** Same dimensions as homepage (`/` on staging): desktop 1024×479, mobile 885×917. */
+export const GROUP_BUY_HERO_DESKTOP_WIDTH = HOME_HERO_DESKTOP_WIDTH;
+export const GROUP_BUY_HERO_DESKTOP_HEIGHT = HOME_HERO_DESKTOP_HEIGHT;
+export const GROUP_BUY_HERO_MOBILE_WIDTH = HOME_HERO_MOBILE_WIDTH;
+export const GROUP_BUY_HERO_MOBILE_HEIGHT = HOME_HERO_MOBILE_HEIGHT;
+
+/**
+ * Copied from staging homepage hero art (`/brand/hero-home-*.png`).
+ * Kept under /images/group-buy so the hub owns a snapshot of the home look.
+ */
 export const DEFAULT_GROUP_BUY_HERO = {
   title: "團購優惠",
-  alt_text: "團購優惠 · 好料一起買更划算",
-  desktop_image: "/images/group-buy/hero-desktop.jpg?v=20260802h",
-  mobile_image: "/images/group-buy/hero-mobile.jpg?v=20260802h",
+  alt_text: HOME_HERO_DEFAULTS.imageAlt || "CHIMEiDIY Lifestyle 團購主視覺",
+  desktop_image: "/images/group-buy/hero-desktop.png?v=20260802home",
+  mobile_image: "/images/group-buy/hero-mobile.png?v=20260802home",
   link: "/group-buy",
+  searchPlaceholder:
+    HOME_HERO_DEFAULTS.searchPlaceholder ||
+    "今天想做什麼？搜尋食譜、商品、團購、生鮮…",
 } as const;
 
-/** Brand yellow — same as homepage / shop hub plane (#FDE045). */
+/** Brand yellow — same as homepage `.home-hero` (#FDE045). */
 export const GROUP_BUY_BRAND_YELLOW = "#FDE045";

@@ -16,7 +16,7 @@ import {
   GroupBuyCampaignCard,
   type GroupBuyCampaignCardData,
 } from "@/components/group-buy/GroupBuyCampaignCard";
-import { GROUP_BUY_BRAND_YELLOW } from "@/types/group-buy-hero-banner";
+import { GROUP_BUY_BRAND_YELLOW, DEFAULT_GROUP_BUY_HERO } from "@/types/group-buy-hero-banner";
 import { DEFAULT_SHOP_PAGE_SETTINGS } from "@/lib/shop/page-settings";
 import { cn } from "@/lib/utils";
 
@@ -435,7 +435,9 @@ export function GroupBuyPageClient() {
         />
         <GroupBuyHeroBanner
           backgroundColor={GROUP_BUY_BRAND_YELLOW}
-          searchPlaceholder={settings.searchPlaceholder || "搜尋團購活動…"}
+          searchPlaceholder={
+            settings.searchPlaceholder || DEFAULT_GROUP_BUY_HERO.searchPlaceholder
+          }
           onSearch={onHeroSearch}
         />
       </div>
