@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
@@ -11,7 +11,6 @@ import { PopularProducts } from "@/components/shop/PopularProducts";
 import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
 import { ShopNewProducts } from "@/components/shop/ShopNewProducts";
 import { ShopInspirationWall } from "@/components/shop/ShopInspirationWall";
-import { ShopAiBakingAssistant } from "@/components/shop/ShopAiBakingAssistant";
 import { ShopOrderingInfo } from "@/components/shop/ShopOrderingInfo";
 import { ShopCorporateInquiry } from "@/components/shop/ShopCorporateInquiry";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -102,15 +101,13 @@ export function ShopHubClient() {
           <ShopNewProducts />
         </div>
 
-        <div className="pb-4">
-          <ShopInspirationWall />
+        <div className="pb-0">
+          <Suspense fallback={null}>
+            <ShopInspirationWall />
+          </Suspense>
         </div>
 
-        <div className="pb-6">
-          <ShopAiBakingAssistant />
-        </div>
-
-        <div className="pb-6">
+        <div className="pb-6 pt-6">
           <ShopOrderingInfo />
         </div>
 

@@ -753,6 +753,15 @@ export interface Recipe {
   related_video_id: string | null;
   sort_order: number;
   is_featured: boolean;
+  /** Version C — shop inspiration wall */
+  show_in_inspiration_wall?: boolean;
+  is_featured_inspiration?: boolean;
+  inspiration_sort_order?: number;
+  inspiration_category?: string | null;
+  duration_minutes?: number | null;
+  inspiration_difficulty?: number | null;
+  ingredient_product_ids?: string[] | null;
+  inspiration_use_ip_image?: boolean;
   reading_mode_default?: "flip" | "full";
   flip_mode_enabled?: boolean;
   full_reading_enabled?: boolean;

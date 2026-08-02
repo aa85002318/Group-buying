@@ -238,6 +238,13 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     storage_method: "",
     status: "draft",
     is_featured: false,
+    show_in_inspiration_wall: false,
+    is_featured_inspiration: false,
+    inspiration_sort_order: "0",
+    inspiration_category: "",
+    duration_minutes: "",
+    inspiration_difficulty: "",
+    inspiration_use_ip_image: true,
     seo_title: "",
     seo_description: "",
     author_label: "",
@@ -325,6 +332,20 @@ export function AdminRecipeEditor({ recipeId }: Props) {
       storage_method: r.storage_method ?? "",
       status: r.status ?? "draft",
       is_featured: Boolean(r.is_featured),
+      show_in_inspiration_wall: Boolean(r.show_in_inspiration_wall),
+      is_featured_inspiration: Boolean(r.is_featured_inspiration),
+      inspiration_sort_order:
+        r.inspiration_sort_order != null ? String(r.inspiration_sort_order) : "0",
+      inspiration_category: r.inspiration_category ?? "",
+      duration_minutes:
+        r.duration_minutes != null
+          ? String(r.duration_minutes)
+          : r.total_time != null
+            ? String(r.total_time)
+            : "",
+      inspiration_difficulty:
+        r.inspiration_difficulty != null ? String(r.inspiration_difficulty) : "",
+      inspiration_use_ip_image: r.inspiration_use_ip_image !== false,
       seo_title: r.seo_title ?? "",
       seo_description: r.seo_description ?? "",
       author_label: r.author_label ?? "",
@@ -448,6 +469,18 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     storage_method: form.storage_method || null,
     status: form.status,
     is_featured: form.is_featured,
+    show_in_inspiration_wall: form.show_in_inspiration_wall,
+    is_featured_inspiration: form.is_featured_inspiration,
+    inspiration_sort_order: Number(form.inspiration_sort_order || 0) || 0,
+    inspiration_category: form.inspiration_category || null,
+    duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
+    inspiration_difficulty: form.inspiration_difficulty
+      ? Number(form.inspiration_difficulty)
+      : null,
+    inspiration_use_ip_image: form.inspiration_use_ip_image,
+    ingredient_product_ids: ingredients
+      .map((ing) => String(ing.product_id ?? "").trim())
+      .filter(Boolean),
     seo_title: form.seo_title || null,
     seo_description: form.seo_description || null,
     author_label: form.author_label || null,
@@ -2344,6 +2377,95 @@ export function AdminRecipeEditor({ recipeId }: Props) {
               checked={form.is_featured}
               onChange={(v) => setForm({ ...form, is_featured: v })}
             />
+            <div className="rounded-xl border border-[#E9EDF2] bg-[#FFFDF6] p-4 space-y-3">
+              <p className="text-sm font-bold text-[#153E73]">商城 · 烘焙靈感牆</p>
+              <Toggle
+                label="顯示於烘焙靈感牆"
+                checked={form.show_in_inspiration_wall}
+                onChange={(v) => setForm({ ...form, show_in_inspiration_wall: v })}
+              />
+              <Toggle
+                label="設為 AI 今日推薦"
+                checked={form.is_featured_inspiration}
+                onChange={(v) =>
+                  setForm({
+                    ...form,
+                    is_featured_inspiration: v,
+                    show_in_inspiration_wall: v ? true : form.show_in_inspiration_wall,
+                  })
+                }
+              />
+              <Toggle
+                label="今日推薦顯示 IP 圖（關閉則用封面）"
+                checked={form.inspiration_use_ip_image}
+                onChange={(v) => setForm({ ...form, inspiration_use_ip_image: v })}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-xs font-medium text-[#687386]">
+                  靈感牆排序
+                  <Input
+                    className="mt-1"
+                    type="number"
+                    value={form.inspiration_sort_order}
+                    onChange={(e) =>
+                      setForm({ ...form, inspiration_sort_order: e.target.value })
+                    }
+                  />
+                </label>
+                <label className="block text-xs font-medium text-[#687386]">
+                  靈感分類
+                  <select
+                    className="input-field mt-1"
+                    value={form.inspiration_category}
+                    onChange={(e) =>
+                      setForm({ ...form, inspiration_category: e.target.value })
+                    }
+                  >
+                    <option value="">（沿用食譜分類）</option>
+                    <option value="hot">熱門推薦</option>
+                    <option value="cake">蛋糕</option>
+                    <option value="cookie">餅乾</option>
+                    <option value="bread">麵包</option>
+                    <option value="dessert">甜點</option>
+                  </select>
+                </label>
+                <label className="block text-xs font-medium text-[#687386]">
+                  製作時間（分鐘）
+                  <Input
+                    className="mt-1"
+                    type="number"
+                    value={form.duration_minutes}
+                    onChange={(e) =>
+                      setForm({ ...form, duration_minutes: e.target.value })
+                    }
+                  />
+                </label>
+                <label className="block text-xs font-medium text-[#687386]">
+                  靈感難度（1–5 星）
+                  <select
+                    className="input-field mt-1"
+                    value={form.inspiration_difficulty}
+                    onChange={(e) =>
+                      setForm({ ...form, inspiration_difficulty: e.target.value })
+                    }
+                  >
+                    <option value="">（依 easy/medium/hard）</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                </label>
+              </div>
+              <p className="text-xs text-[#687386]">
+                關聯商品請於「材料」分頁綁定 product；或由 API 寫入 ingredient_product_ids。
+                前台預覽：
+                <a href="/shop" target="_blank" rel="noreferrer" className="ml-1 font-semibold text-[#153E73] underline">
+                  /shop
+                </a>
+              </p>
+            </div>
             <Button onClick={saveSeo} disabled={saving}>
               {saving ? "儲存中…" : "儲存 SEO 與發布"}
             </Button>
