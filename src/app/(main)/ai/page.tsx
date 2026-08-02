@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Chip } from "@/components/ui/chip";
@@ -18,7 +19,8 @@ const TABS: Array<{ id: Tab; label: string }> = [
 
 const SUGGESTED_INGREDIENTS = ["奶油", "雞蛋", "低粉", "牛奶", "糖", "中粉", "鮮奶油", "酵母"];
 
-export default function AiBakingPage() {
+function AiBakingPageInner() {
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>("recipes");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +29,7 @@ export default function AiBakingPage() {
   // recipes
   const [ingredients, setIngredients] = useState<string[]>(["奶油", "雞蛋", "低粉", "牛奶"]);
   const [ingredientInput, setIngredientInput] = useState("");
+  const [promptHint, setPromptHint] = useState<string | null>(null);
 
   // scale
   const [fromServings, setFromServings] = useState("4");
@@ -46,6 +49,18 @@ export default function AiBakingPage() {
   // substitute / failure
   const [subIngredient, setSubIngredient] = useState("奶油");
   const [symptom, setSymptom] = useState("餅乾太硬");
+
+  useEffect(() => {
+    const q = searchParams.get("q")?.trim();
+    if (!q) return;
+    setPromptHint(q);
+    setTab("recipes");
+    setIngredientInput(q);
+    const seeds = ["雞蛋", "牛奶", "奶油", "巧克力", "低粉", "中粉", "鮮奶油", "糖", "酵母"].filter(
+      (token) => q.includes(token)
+    );
+    if (seeds.length) setIngredients(seeds);
+  }, [searchParams]);
 
   const run = async (action: Tab, payload: Record<string, unknown>) => {
     setLoading(true);
@@ -75,6 +90,11 @@ export default function AiBakingPage() {
           <div>
             <h1 className="text-2xl font-black">AI 烘焙助手</h1>
             <p className="mt-1 text-sm text-white/90">材料推薦 · 份量換算 · 烤箱換算 · 替代方案 · 失敗分析</p>
+            {promptHint ? (
+              <p className="mt-3 rounded-xl bg-white/15 px-3 py-2 text-sm text-white">
+                來自商城提問：{promptHint}
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
@@ -322,5 +342,14 @@ function ResultView({ tab, result }: { tab: Tab; result: unknown }) {
         </ul>
       </div>
     </div>
+  );
+}
+
+
+export default function AiBakingPage() {
+  return (
+    <Suspense fallback={<div className="page-enter p-6 text-sm text-muted-foreground">載入中…</div>}>
+      <AiBakingPageInner />
+    </Suspense>
   );
 }

@@ -10,6 +10,7 @@ import { PopularProducts } from "@/components/shop/PopularProducts";
 import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
 import { ShopNewProducts } from "@/components/shop/ShopNewProducts";
 import { ShopInspirationWall } from "@/components/shop/ShopInspirationWall";
+import { ShopAiRecipeAssistant } from "@/components/shop/ShopAiRecipeAssistant";
 import { ShopOrderingInfo } from "@/components/shop/ShopOrderingInfo";
 import { ShopCorporateInquiry } from "@/components/shop/ShopCorporateInquiry";
 import { APP_ROUTES } from "@/lib/site-links";
@@ -102,7 +103,9 @@ export function ShopHubClient() {
           </Suspense>
         </div>
 
-        <div className="pb-6 pt-6">
+        <ShopAiRecipeAssistant />
+
+        <div className="pb-6 pt-2">
           <ShopOrderingInfo />
         </div>
 

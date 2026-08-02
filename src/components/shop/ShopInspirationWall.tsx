@@ -6,7 +6,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AIFeaturedRecipe } from "@/components/shop/inspiration/AIFeaturedRecipe";
 import { InspirationCategoryMenu } from "@/components/shop/inspiration/InspirationCategoryMenu";
 import { InspirationRecipeCarousel } from "@/components/shop/inspiration/InspirationRecipeCarousel";
-import { AIInspirationPrompt } from "@/components/shop/inspiration/AIInspirationPrompt";
 import {
   DEMO_INSPIRATION_RECIPES,
   filterInspirationByCategory,
@@ -173,8 +172,6 @@ export function ShopInspirationWall() {
             loading={loadingList}
           />
         </div>
-
-        <AIInspirationPrompt />
       </div>
     </section>
   );

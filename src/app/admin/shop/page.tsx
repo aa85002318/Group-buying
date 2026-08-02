@@ -40,9 +40,14 @@ const LINKS = [
     desc: "瀑布流卡片：大家作品、食譜靈感、老師作品、烘焙心得。",
   },
   {
+    href: "/admin/shop/ai-assistant",
+    title: "AI 食譜助手",
+    desc: "Version A 暖黃功能卡：標題、搜尋、智慧 Prompt、IP 圖與顯示開關。",
+  },
+  {
     href: "/admin/shop/ai-chips",
-    title: "AI 推薦 Chip",
-    desc: "AI 烘焙助手快速推薦標籤：新增、排序、上下架。",
+    title: "AI 推薦 Chip（舊）",
+    desc: "舊版 AI 烘焙助手快速推薦標籤（可保留）。",
   },
   {
     href: "/shop",
