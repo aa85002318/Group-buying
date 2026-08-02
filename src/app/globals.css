@@ -543,10 +543,14 @@
     object-position: center top;
   }
 
-  /* Category — search seam handled by home-hero-search-wrap */
+  /* Category — 15px gap under floating search */
+  .shop-hero .home-hero-search-wrap {
+    padding-bottom: 15px;
+  }
+
   .shop-category-menu {
-    padding-top: 8px;
-    padding-bottom: 8px;
+    padding-top: 0;
+    padding-bottom: 0;
     background: #ffffff;
   }
 
@@ -628,7 +632,7 @@
   }
 
   .shop-promo-carousel {
-    padding-bottom: 8px;
+    padding-bottom: 0;
     background: #ffffff;
   }
 
@@ -651,10 +655,15 @@
   }
 
   /* ── Shop inspiration wall (CSS Grid masonry) ── */
+  .shop-inspiration-wall,
+  .shop-inspiration-wall-v2 {
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
   .shop-inspiration-wall {
     background: linear-gradient(180deg, #fffefa 0%, #fff8d6 48%, #fffefa 100%);
-    padding-top: 4px;
-    padding-bottom: 4px;
   }
 
   .shop-inspiration-masonry {

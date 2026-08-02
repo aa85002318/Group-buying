@@ -79,7 +79,7 @@ export function ShopAiRecipeAssistant({
     <section className="shop-ai-recipe-assistant w-full px-4 md:px-6" aria-label="AI 食譜助手">
       <div
         className={cn(
-          "shop-ai-recipe-assistant__card relative mx-auto mt-8 mb-8 max-w-[1200px] overflow-hidden rounded-[28px] border border-[rgba(255,220,120,0.35)] p-6 md:mt-10 md:mb-10 md:p-8"
+          "shop-ai-recipe-assistant__card relative mx-auto max-w-[1200px] overflow-hidden rounded-[28px] border border-[rgba(255,220,120,0.35)] p-6 md:p-8"
         )}
         style={{
           background: `linear-gradient(180deg, ${settings.background_color} 0%, #FFF3CF 100%)`,

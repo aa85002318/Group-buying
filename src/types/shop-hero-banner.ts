@@ -21,18 +21,18 @@ export const SHOP_HERO_BANNER_TYPE = "shop_hero" as const;
 
 /** Match homepage hero display: full-bleed art, intrinsic size (no crop). */
 export const SHOP_HERO_DESKTOP_WIDTH = 1024;
-export const SHOP_HERO_DESKTOP_HEIGHT = 1024;
+export const SHOP_HERO_DESKTOP_HEIGHT = 809;
 export const SHOP_HERO_MOBILE_WIDTH = 1024;
-export const SHOP_HERO_MOBILE_HEIGHT = 1024;
+export const SHOP_HERO_MOBILE_HEIGHT = 809;
 
 export const DEFAULT_SHOP_HERO_BANNERS: ShopHeroBanner[] = [
   {
     id: "default-shop-hero",
-    title: "烘焙好物商城",
-    alt_text: "烘焙好物商城 · 精選超過 4,000 項商品",
-    subtitle: "材料、器具、包裝一次購足！",
-    desktop_image: "/images/shop/hero-desktop.jpg?v=20260802e",
-    mobile_image: "/images/shop/hero-mobile.jpg?v=20260802e",
+    title: "烘焙材料商城",
+    alt_text: "烘焙材料商城 · 烘焙好物一站滿足",
+    subtitle: "烘焙好物一站滿足，讓您的每一次烘焙都更簡單、更美味！",
+    desktop_image: "/images/shop/hero-desktop.jpg?v=20260802f",
+    mobile_image: "/images/shop/hero-mobile.jpg?v=20260802f",
     link: "/shop/categories",
     link_target: "_self",
     button_text: "探索更多好物",

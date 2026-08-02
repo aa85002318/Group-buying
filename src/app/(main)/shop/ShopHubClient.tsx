@@ -37,8 +37,7 @@ function resolvePlaneYellow(settings: ShopPageSettings) {
 }
 
 /**
- * Shop hub layout (App home rhythm):
- * Header → Hero → search → categories → feature links → banner → rails
+ * Shop hub layout — 15px vertical rhythm between every major block.
  */
 export function ShopHubClient() {
   const [pageSettings, setPageSettings] = useState<ShopPageSettings>(
@@ -69,7 +68,6 @@ export function ShopHubClient() {
 
   return (
     <div className="shop-hub space-y-0 bg-white">
-      {/* Header + homepage-style hero canvas / transition / search seam */}
       <div
         className="shop-hub-hero-plane w-full max-w-none"
         style={{ backgroundColor: planeYellow }}
@@ -78,42 +76,22 @@ export function ShopHubClient() {
         <ShopHeroBanner backgroundColor={planeYellow} />
       </div>
 
-      <main>
+      <main className="shop-hub-main flex flex-col gap-[15px] pb-[15px]">
         <ShopMainCategoryMenu />
-
-        <div className="pb-5 pt-2">
+        <div className="-mt-[10px]">
           <ShopFeatureBlocks />
         </div>
-
-        <div className="pb-7 pt-0">
-          <ShopPromoCarousel />
-        </div>
-
-        <div className="pb-6">
-          <PopularProducts />
-        </div>
-
-        <div className="pb-6">
-          <ShopNewProducts />
-        </div>
-
-        <div className="pb-0">
-          <Suspense fallback={null}>
-            <ShopInspirationWall />
-          </Suspense>
-        </div>
-
+        <ShopPromoCarousel />
+        <PopularProducts />
+        <ShopNewProducts />
+        <Suspense fallback={null}>
+          <ShopInspirationWall />
+        </Suspense>
         <ShopAiRecipeAssistant />
+        <ShopOrderingInfo />
+        <ShopCorporateInquiry />
 
-        <div className="pb-6 pt-2">
-          <ShopOrderingInfo />
-        </div>
-
-        <div className="pb-6">
-          <ShopCorporateInquiry />
-        </div>
-
-        <div className="shop-hub-body mx-auto w-full max-w-7xl space-y-6 px-4 pb-8 pt-0 md:px-6">
+        <div className="shop-hub-body mx-auto w-full max-w-7xl px-4 md:px-6">
           <Link
             href={APP_ROUTES.shopCategories}
             className="flex min-h-12 items-center justify-center rounded-[16px] border border-[#EAEAEA] bg-white text-sm font-bold text-[#153E73]"
