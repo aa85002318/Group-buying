@@ -47,8 +47,6 @@ export const FloatingSearchBar = forwardRef<
       className="relative z-10 mx-auto flex h-[54px] w-full max-w-[1280px] -mt-[26px] min-w-0 items-center gap-2 border border-[#E9EDF2] bg-white px-4 pr-2.5 md:h-16 md:-mt-[38px] md:gap-3 md:px-[18px] md:pr-2.5"
       style={{
         borderRadius: "999px",
-        boxShadow:
-          "0 12px 30px rgba(21, 62, 115, 0.10), 0 3px 8px rgba(21, 62, 115, 0.04)",
       }}
     >
       <Search className="h-5 w-5 shrink-0 text-[#153E73]" strokeWidth={1.75} aria-hidden />

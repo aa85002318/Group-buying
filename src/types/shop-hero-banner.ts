@@ -19,20 +19,20 @@ export type ShopHeroBanner = {
 
 export const SHOP_HERO_BANNER_TYPE = "shop_hero" as const;
 
-/** Match homepage hero display: full-bleed art, intrinsic size (no crop). */
+/** Match homepage mobile hero: full-bleed art, intrinsic size (no crop). */
 export const SHOP_HERO_DESKTOP_WIDTH = 1024;
-export const SHOP_HERO_DESKTOP_HEIGHT = 809;
-export const SHOP_HERO_MOBILE_WIDTH = 1024;
-export const SHOP_HERO_MOBILE_HEIGHT = 809;
+export const SHOP_HERO_DESKTOP_HEIGHT = 1062;
+export const SHOP_HERO_MOBILE_WIDTH = 885;
+export const SHOP_HERO_MOBILE_HEIGHT = 917;
 
 export const DEFAULT_SHOP_HERO_BANNERS: ShopHeroBanner[] = [
   {
     id: "default-shop-hero",
     title: "烘焙材料商城",
-    alt_text: "烘焙材料商城 · 烘焙好物一站滿足",
-    subtitle: "烘焙好物一站滿足，讓您的每一次烘焙都更簡單、更美味！",
-    desktop_image: "/images/shop/hero-desktop.jpg?v=20260802f",
-    mobile_image: "/images/shop/hero-mobile.jpg?v=20260802f",
+    alt_text: "烘焙材料商城 · 烘焙好物一站購足",
+    subtitle: "烘焙好物一站購足，讓您的每一次烘焙都更簡單、更美味！",
+    desktop_image: "/images/shop/hero-desktop.jpg?v=20260802g",
+    mobile_image: "/images/shop/hero-mobile.jpg?v=20260802g",
     link: "/shop/categories",
     link_target: "_self",
     button_text: "探索更多好物",

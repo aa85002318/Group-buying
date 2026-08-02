@@ -27,7 +27,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     <div
       className={cn(
         "min-h-dvh w-full overflow-x-clip",
-        isHome ? "bg-[#FDE045]" : isShopHub ? "bg-[#FFE149]" : "bg-background"
+        isHome ? "bg-[#FDE045]" : isShopHub ? "bg-[#FDE045]" : "bg-background"
       )}
     >
       <div
@@ -36,7 +36,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           isHome
             ? "max-w-none bg-[#FDE045]"
             : isShopHub
-              ? "max-w-none bg-[#FFE149]"
+              ? "max-w-none bg-[#FDE045]"
               : "app-shell bg-background md:shadow-lift"
         )}
       >

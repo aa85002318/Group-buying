@@ -37,8 +37,6 @@ export function ShopSearchBar({
       }
       style={{
         borderRadius: "999px",
-        boxShadow:
-          "0 12px 30px rgba(21, 62, 115, 0.10), 0 3px 8px rgba(21, 62, 115, 0.04)",
       }}
     >
       <Search className="h-5 w-5 shrink-0 text-[#153E73]" strokeWidth={1.75} aria-hidden />

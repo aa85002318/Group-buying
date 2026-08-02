@@ -497,7 +497,7 @@
     max-width: 100vw;
     margin: 0;
     padding: 0;
-    background: #ffe149;
+    background: #fde045;
     overflow: hidden;
   }
 
@@ -508,42 +508,22 @@
     width: 100%;
     min-height: 0;
     padding-top: 0;
-    background: #ffe149;
+    background: #fde045;
     overflow: hidden;
   }
 
   .shop-hub-hero-plane .home-hero-fullbleed {
-    background: #ffe149;
+    background: #fde045;
   }
 
-  /*
-   * Square shop hero art fills the fullbleed edge-to-edge; keep a yellow
-   * buffer under the image so HeroBottomTransition + search seam do not
-   * cover the bottom illustration / baked-in feature strip.
-   */
-  .shop-hero-art-pad {
-    width: 100%;
-    height: 64px;
-    flex-shrink: 0;
-    pointer-events: none;
-  }
-
-  @media (min-width: 768px) {
-    .shop-hero-art-pad {
-      height: 96px;
-    }
-  }
-
-  /* Keep shop hero art intrinsic — never cover-crop the square banner */
+  /* Keep shop hero art intrinsic — same as homepage full-bleed (no crop) */
   .shop-hero .home-hero-fullbleed__img {
     width: 100%;
     height: auto;
     max-width: 100%;
-    object-fit: contain;
-    object-position: center top;
   }
 
-  /* Category — 15px gap under floating search */
+  /* Category — 15px gap under floating search (matches home search wrap rhythm) */
   .shop-hero .home-hero-search-wrap {
     padding-bottom: 15px;
   }

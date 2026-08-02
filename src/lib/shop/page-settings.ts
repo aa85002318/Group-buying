@@ -6,8 +6,8 @@ export type ShopPageSettings = {
   header_border_color: string | null;
 };
 
-/** Unified shop hero plane yellow — matches App home hero warmth. */
-export const SHOP_BRAND_YELLOW = "#FFE149";
+/** Unified shop hero plane yellow — same as homepage `.home-hero` (#FDE045). */
+export const SHOP_BRAND_YELLOW = "#FDE045";
 
 export const DEFAULT_SHOP_PAGE_SETTINGS: ShopPageSettings = {
   header_bg_color: SHOP_BRAND_YELLOW,

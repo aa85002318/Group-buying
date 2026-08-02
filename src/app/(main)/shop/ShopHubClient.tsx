@@ -20,11 +20,12 @@ import {
   type ShopPageSettings,
 } from "@/lib/shop/page-settings";
 
-/** Older CMS yellows → unify to App hero plane. */
+/** Older CMS yellows → unify to homepage hero yellow (#FDE045). */
 const LEGACY_SHOP_YELLOWS = new Set([
   "#FEDB49",
   "#FCCA30",
   "#FFD84D",
+  "#FFE149",
   "#FDE045",
 ]);
 
