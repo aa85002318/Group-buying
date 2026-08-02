@@ -17,23 +17,15 @@ import { cn } from "@/lib/utils";
 const FALLBACK_SLIDES: ShopPromoBanner[] = [
   {
     id: "fallback-1",
-    title: "春日烘焙季",
-    desktop_image_url: "/images/shop/promo/spring-5x2.jpg",
-    mobile_image_url: "/images/shop/promo/spring-5x2.jpg",
+    title: "會員日全館免運",
+    desktop_image_url: "/images/shop/promo/member-day-5x2.jpg?v=20260802a",
+    mobile_image_url: "/images/shop/promo/member-day-5x2.jpg?v=20260802a",
     link_type: "page",
-    link_url: "/shop/categories",
+    link_url: "/auth/register",
+    button_text: "加入會員",
     sort_order: 10,
     is_active: true,
-  },
-  {
-    id: "fallback-2",
-    title: "烘焙器具",
-    desktop_image_url: "/images/shop/promo/tools-5x2.jpg",
-    mobile_image_url: "/images/shop/promo/tools-5x2.jpg",
-    link_type: "category",
-    link_url: "/shop/category/tools",
-    sort_order: 20,
-    is_active: true,
+    subtitle: "每月 15 號 · 會員享全館免運優惠",
   },
 ];
 
