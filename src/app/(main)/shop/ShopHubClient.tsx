@@ -13,7 +13,6 @@ import { ShopInspirationWall } from "@/components/shop/ShopInspirationWall";
 import { ShopAiRecipeAssistant } from "@/components/shop/ShopAiRecipeAssistant";
 import { ShopOrderingInfo } from "@/components/shop/ShopOrderingInfo";
 import { ShopCorporateInquiry } from "@/components/shop/ShopCorporateInquiry";
-import { APP_ROUTES } from "@/lib/site-links";
 import {
   DEFAULT_SHOP_PAGE_SETTINGS,
   SHOP_BRAND_YELLOW,
@@ -93,10 +92,10 @@ export function ShopHubClient() {
 
         <div className="shop-hub-body mx-auto w-full max-w-7xl px-4 md:px-6">
           <Link
-            href={APP_ROUTES.shopCategories}
+            href="/shop"
             className="flex min-h-12 items-center justify-center rounded-[16px] border border-[#EAEAEA] bg-white text-sm font-bold text-[#153E73]"
           >
-            進入全部分類
+            回到商城首頁
           </Link>
         </div>
       </main>

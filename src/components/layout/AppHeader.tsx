@@ -10,7 +10,6 @@ import { isMinimalChromePath } from "@/lib/navigation";
 import { isShopCatalogPath, SHOP_HOME } from "@/lib/shop/paths";
 import { ChimeidiyLogo } from "@/components/branding/ChimeidiyLogo";
 import { AppHamburgerMenu } from "@/components/layout/AppHamburgerMenu";
-import { BakingCatalogSideMenu } from "@/components/baking/BakingCatalogSideMenu";
 import { ConsumerHubNav } from "@/components/consumer/ConsumerHubNav";
 
 export type AppHeaderVariant = "home" | "standard" | "detail" | "search";
@@ -146,7 +145,7 @@ export function AppHeader({
               <h1 className="truncate text-base font-bold text-brand-caramel">{headerTitle}</h1>
             </div>
             <div className="flex shrink-0 items-center justify-end gap-0.5">
-              {shopCatalog ? <BakingCatalogSideMenu /> : <AppHamburgerMenu />}
+              <AppHamburgerMenu />
               {showCart ? <CartButton /> : null}
             </div>
           </>

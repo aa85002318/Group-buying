@@ -56,7 +56,30 @@ export function ShopNewProducts({
     };
   }, [productsProp]);
 
-  if (!products.length) return null;
+  if (!products.length) {
+    return (
+      <section
+        className={cn("shop-new-products w-full bg-white", className)}
+        aria-label="新品上架"
+      >
+        <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
+          <GroupBuyHubHeader
+            title={
+              <span className="inline-flex flex-wrap items-center gap-2">
+                新品上架
+                <span className="rounded-[6px] bg-[#FF8A3D] px-1.5 py-0.5 text-xs font-bold leading-none text-white">
+                  NEW
+                </span>
+              </span>
+            }
+            href="/shop/new-arrivals"
+            linkLabel="查看更多"
+          />
+          <p className="py-6 text-center text-sm text-[#687386]">目前尚無新品</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

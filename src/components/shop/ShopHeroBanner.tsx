@@ -30,7 +30,7 @@ export function ShopHeroBanner({
       DEFAULT_SHOP_HERO_BANNERS[0].mobile_image ||
       DEFAULT_SHOP_HERO_BANNERS[0].desktop_image,
     alt: DEFAULT_SHOP_HERO_BANNERS[0].alt_text || DEFAULT_SHOP_HERO_BANNERS[0].title,
-    href: DEFAULT_SHOP_HERO_BANNERS[0].link || "/shop/categories",
+    href: DEFAULT_SHOP_HERO_BANNERS[0].link || "/shop",
   });
   const [loading, setLoading] = useState(true);
   const bg = backgroundColor || DEFAULT_SHOP_PAGE_SETTINGS.hero_bg_color;
@@ -48,7 +48,7 @@ export function ShopHeroBanner({
           desktop: first.desktop_image,
           mobile: first.mobile_image || first.desktop_image,
           alt: first.alt_text || first.title,
-          href: first.link || "/shop/categories",
+          href: first.link || "/shop",
         });
       } catch {
         /* keep defaults */

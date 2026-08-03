@@ -67,7 +67,18 @@ export const DEFAULT_HEADER_NAV_ITEMS: HeaderNavItem[] = [
   { id: "member", label: "門市會員", href: "/member", icon_emoji: "👤" },
   { id: "group_buy", label: "團購", href: "/group-buy", badge: "hot", icon_emoji: "🔥" },
   { id: "ai", label: "AI 工具", href: "/ai-tools", icon_emoji: "✨" },
-  { id: "store_map", label: "門市地圖", href: "/store-map", icon_emoji: "📍" },
+  {
+    id: "promo",
+    label: "優惠活動",
+    href: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95",
+    icon_emoji: "🏷️",
+  },
+  {
+    id: "news",
+    label: "最新消息",
+    href: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
+    icon_emoji: "📰",
+  },
 ];
 
 export const DEFAULT_HEADER_PROMO_ITEMS: HeaderPromoItem[] = [
@@ -139,11 +150,19 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
       },
       {
         id: "news",
-        label: "最新資訊",
-        description: "新品活動與公告",
-        href: "/news",
+        label: "最新消息",
+        description: "文章分類：最新消息",
+        href: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
         icon: "article",
         color: "blue",
+      },
+      {
+        id: "promo",
+        label: "優惠活動",
+        description: "文章分類：優惠活動",
+        href: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95",
+        icon: "star",
+        color: "orange",
       },
       {
         id: "ai",
@@ -152,14 +171,6 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         href: "/ai-tools",
         icon: "sparkles",
         color: "pink",
-      },
-      {
-        id: "store_map",
-        label: "門市地圖",
-        description: "商品擺放位置",
-        href: "/store-map",
-        icon: "package",
-        color: "teal",
       },
     ],
   },

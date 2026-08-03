@@ -1,11 +1,6 @@
-import type { Metadata } from "next";
-import { StoreMapClient } from "./StoreMapClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "CHIMEIDIY 門市商品地圖",
-  description: "以文字查詢商品區域、貨架與層架位置（非即時室內導航）。",
-};
-
-export default function StoreMapPage() {
-  return <StoreMapClient />;
+/** Store map page removed — redirect to stores list. */
+export default function StoreMapRedirectPage() {
+  redirect("/stores");
 }

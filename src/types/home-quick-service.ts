@@ -42,7 +42,7 @@ export const DEFAULT_QUICK_SERVICE_ITEMS: QuickServiceItem[] = [
     id: "baking",
     title: "烘焙材料",
     imageUrl: `${ICON}/baking-materials.svg`,
-    href: APP_ROUTES.bakingMaterials,
+    href: APP_ROUTES.shop,
     backgroundColor: "#FFF5CC",
     enabled: true,
     sortOrder: 10,
@@ -75,23 +75,14 @@ export const DEFAULT_QUICK_SERVICE_ITEMS: QuickServiceItem[] = [
     sortOrder: 40,
   },
   {
-    id: "store-map",
-    title: "門市地圖",
-    imageUrl: `${ICON}/store-map.svg`,
-    href: APP_ROUTES.storeMap,
-    backgroundColor: "#FFF2D8",
-    enabled: true,
-    sortOrder: 50,
-  },
-  {
     id: "promo",
     title: "優惠活動",
     imageUrl: `${ICON}/promotion.svg`,
-    href: "/shop?promo=1",
+    href: APP_ROUTES.promotions,
     backgroundColor: "#FFE9E7",
     badge: null,
     enabled: true,
-    sortOrder: 60,
+    sortOrder: 50,
   },
   {
     id: "news",
@@ -100,16 +91,16 @@ export const DEFAULT_QUICK_SERVICE_ITEMS: QuickServiceItem[] = [
     href: APP_ROUTES.news,
     backgroundColor: "#EAF4FF",
     enabled: true,
-    sortOrder: 70,
+    sortOrder: 60,
   },
   {
     id: "more",
     title: "更多",
     imageUrl: `${ICON}/more.svg`,
-    href: APP_ROUTES.member,
+    href: "#side-menu",
     backgroundColor: "#FFFFFF",
     enabled: true,
-    sortOrder: 80,
+    sortOrder: 70,
   },
 ];
 
@@ -312,6 +303,22 @@ export function parseQuickServicesSettings(
 export function listVisibleQuickServices(items: QuickServiceItem[]): QuickServiceItem[] {
   return items
     .filter((i) => i.enabled !== false)
+    .filter((i) => i.id !== "store-map" && !/門市地圖|store-map/i.test(`${i.title} ${i.href}`))
+    .map((i) => {
+      if (i.id === "baking" || i.title === "烘焙材料") {
+        return { ...i, href: APP_ROUTES.shop };
+      }
+      if (i.id === "promo" || i.title === "優惠活動") {
+        return { ...i, href: APP_ROUTES.promotions };
+      }
+      if (i.id === "news" || i.title === "最新消息") {
+        return { ...i, href: APP_ROUTES.news };
+      }
+      if (/shop\/categories/i.test(i.href)) {
+        return { ...i, href: APP_ROUTES.shop };
+      }
+      return i;
+    })
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }

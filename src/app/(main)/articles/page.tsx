@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { Clock3 } from "lucide-react";
 import { Chip } from "@/components/ui/chip";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,18 +15,27 @@ function readingMinutes(content: string | null | undefined) {
   return Math.max(1, Math.ceil(chars / 400));
 }
 
-export default function ArticlesPage() {
+function ArticlesPageInner() {
+  const searchParams = useSearchParams();
+  const categoryFromUrl = (searchParams.get("category") || "").trim();
+
   const [articles, setArticles] = useState<Article[]>(
     mockArticles.filter((a) => a.status === "published")
   );
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState("全部");
+  const [category, setCategory] = useState(categoryFromUrl || "全部");
+
+  useEffect(() => {
+    if (categoryFromUrl) setCategory(categoryFromUrl);
+  }, [categoryFromUrl]);
 
   useEffect(() => {
     fetch("/api/articles")
       .then((r) => r.json())
       .then((d) => {
-        if (d.articles?.length) setArticles(d.articles.filter((a: Article) => a.status === "published"));
+        if (d.articles?.length) {
+          setArticles(d.articles.filter((a: Article) => a.status === "published"));
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -36,8 +46,11 @@ export default function ArticlesPage() {
     for (const a of articles) {
       if (a.product_categories?.name) set.add(a.product_categories.name);
     }
+    if (categoryFromUrl) set.add(categoryFromUrl);
+    set.add("優惠活動");
+    set.add("最新消息");
     return ["全部", ...Array.from(set)];
-  }, [articles]);
+  }, [articles, categoryFromUrl]);
 
   const filtered = useMemo(() => {
     if (category === "全部") return articles;
@@ -66,7 +79,9 @@ export default function ArticlesPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <p className="py-12 text-center text-sm text-foreground-secondary">尚無已發布文章</p>
+        <p className="py-12 text-center text-sm text-foreground-secondary">
+          {category === "全部" ? "尚無已發布文章" : `「${category}」尚無文章`}
+        </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {filtered.map((a) => (
@@ -96,5 +111,21 @@ export default function ArticlesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ArticlesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="page-enter space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-[20px]" />
+          ))}
+        </div>
+      }
+    >
+      <ArticlesPageInner />
+    </Suspense>
   );
 }

@@ -33,7 +33,7 @@ export const DEFAULT_SHOP_HERO_BANNERS: ShopHeroBanner[] = [
     subtitle: "烘焙好物一站購足，讓您的每一次烘焙都更簡單、更美味！",
     desktop_image: "/images/shop/hero-desktop.jpg?v=20260803a",
     mobile_image: "/images/shop/hero-mobile.jpg?v=20260803a",
-    link: "/shop/categories",
+    link: "/shop",
     link_target: "_self",
     button_text: "探索更多好物",
     sort_order: 0,

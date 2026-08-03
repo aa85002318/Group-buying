@@ -216,7 +216,7 @@ export const DEFAULT_INSPIRATION_POSTS: ShopInspirationPost[] = [
     cook_time: null,
     tip_body: "溫度控好、冷藏夠久，餅乾邊緣酥脆中間軟！推薦這款奶油。",
     product_name: "法國發酵奶油",
-    product_href: "/shop/categories",
+    product_href: "/shop",
     href: "/articles",
     is_featured: false,
     sort_order: 5,

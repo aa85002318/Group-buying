@@ -51,12 +51,12 @@ const RECIPE_IMG = {
 } as const;
 
 const CAT = {
-  flour: "/images/shop/categories/flour.png",
-  butter: "/images/shop/categories/butter.png",
-  chocolate: "/images/shop/categories/chocolate.png",
-  food: "/images/shop/categories/food.png",
-  mold: "/images/shop/categories/baking-mold.png",
-  tools: "/images/shop/categories/baking-tools.png",
+  flour: "/images/shop/flour.png",
+  butter: "/images/shop/butter.png",
+  chocolate: "/images/shop/chocolate.png",
+  food: "/images/shop/food.png",
+  mold: "/images/shop/baking-mold.png",
+  tools: "/images/shop/baking-tools.png",
 } as const;
 
 /** Demo recommend map — key matched loosely against chip / query. */
@@ -90,12 +90,12 @@ export const DEFAULT_AI_RECOMMEND: ShopAiRecommendBundle[] = [
       },
     ],
     materials: [
-      { id: "m1", name: "高筋麵粉", image_url: CAT.flour, href: "/shop/categories" },
-      { id: "m2", name: "鮮奶油", image_url: CAT.food, href: "/shop/categories" },
-      { id: "m3", name: "無鹽奶油", image_url: CAT.butter, href: "/shop/categories" },
-      { id: "m4", name: "蜂蜜", image_url: CAT.food, href: "/shop/categories" },
-      { id: "m5", name: "牛奶", image_url: CAT.food, href: "/shop/categories" },
-      { id: "m6", name: "即溶酵母", image_url: CAT.flour, href: "/shop/categories" },
+      { id: "m1", name: "高筋麵粉", image_url: CAT.flour, href: "/shop" },
+      { id: "m2", name: "鮮奶油", image_url: CAT.food, href: "/shop" },
+      { id: "m3", name: "無鹽奶油", image_url: CAT.butter, href: "/shop" },
+      { id: "m4", name: "蜂蜜", image_url: CAT.food, href: "/shop" },
+      { id: "m5", name: "牛奶", image_url: CAT.food, href: "/shop" },
+      { id: "m6", name: "即溶酵母", image_url: CAT.flour, href: "/shop" },
     ],
     tools: ["吐司模", "刮板", "電子秤", "發酵箱"],
     cartProductIds: [],
@@ -129,10 +129,10 @@ export const DEFAULT_AI_RECOMMEND: ShopAiRecommendBundle[] = [
       },
     ],
     materials: [
-      { id: "c1", name: "奶油乳酪", image_url: CAT.food, href: "/shop/categories" },
-      { id: "c2", name: "低筋麵粉", image_url: CAT.flour, href: "/shop/categories" },
-      { id: "c3", name: "雞蛋", image_url: CAT.food, href: "/shop/categories" },
-      { id: "c4", name: "鮮奶油", image_url: CAT.butter, href: "/shop/categories" },
+      { id: "c1", name: "奶油乳酪", image_url: CAT.food, href: "/shop" },
+      { id: "c2", name: "低筋麵粉", image_url: CAT.flour, href: "/shop" },
+      { id: "c3", name: "雞蛋", image_url: CAT.food, href: "/shop" },
+      { id: "c4", name: "鮮奶油", image_url: CAT.butter, href: "/shop" },
     ],
     tools: ["圓模", "刮刀", "電子秤", "烤盤"],
     cartProductIds: [],

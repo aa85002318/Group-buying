@@ -6,6 +6,10 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import {
+  CmsLinkPicker,
+  type CmsLinkValue,
+} from "@/components/admin/home/CmsLinkPicker";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { CmsBanner } from "@/lib/types/database";
@@ -254,18 +258,34 @@ export default function AdminShopPromoBannersPage() {
                 value={form.button_text}
                 onChange={(e) => setForm({ ...form, button_text: e.target.value })}
               />
-              <Input
-                placeholder="指定連結（/shop/category/flour 或 https://…）"
-                value={form.link_url}
-                onChange={(e) => {
-                  const link_url = e.target.value;
-                  setForm({
-                    ...form,
-                    link_url,
-                    link_type: inferShopPromoLinkType(link_url),
-                  });
-                }}
-              />
+              <div className="sm:col-span-2 space-y-1">
+                <p className="text-xs text-muted-foreground">連結（文章或站內頁）</p>
+                <CmsLinkPicker
+                  value={
+                    {
+                      type: form.link_url
+                        ? form.link_url.startsWith("/articles")
+                          ? "article"
+                          : form.link_url.startsWith("/products/")
+                            ? "product"
+                            : "internal"
+                        : "none",
+                      href: form.link_url,
+                      refId: null,
+                      label: null,
+                      openInNewTab: false,
+                    } satisfies CmsLinkValue
+                  }
+                  onChange={(next) => {
+                    const link_url = next.href || "";
+                    setForm({
+                      ...form,
+                      link_url,
+                      link_type: inferShopPromoLinkType(link_url),
+                    });
+                  }}
+                />
+              </div>
               <label className="space-y-1 text-sm">
                 <span className="text-muted-foreground">連結類型</span>
                 <select

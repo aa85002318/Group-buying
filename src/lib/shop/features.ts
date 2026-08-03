@@ -35,7 +35,7 @@ export const DEFAULT_SHOP_FEATURES: ShopFeature[] = [
     subtitle: "全程冷鏈配送",
     image_url: null,
     link_type: "internal",
-    link_url: "/shop/categories",
+    link_url: "/shop",
     background_color: "#F1F6FF",
     sort_order: 1,
     is_active: true,

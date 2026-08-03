@@ -42,9 +42,19 @@ const LINK_TYPES: Array<{ id: CmsLinkType; label: string }> = [
 const INTERNAL_PAGES = [
   { id: "home", label: "首頁", href: "/" },
   { id: "shop", label: "商城", href: "/shop" },
-  { id: "baking", label: "商城全部分類", href: "/shop/categories" },
   { id: "group-buy", label: "團購", href: "/group-buy" },
   { id: "recipes", label: "食譜", href: "/recipes" },
+  { id: "articles", label: "文章中心", href: "/articles" },
+  {
+    id: "promo",
+    label: "優惠活動（文章）",
+    href: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95",
+  },
+  {
+    id: "news",
+    label: "最新消息（文章）",
+    href: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
+  },
   { id: "live", label: "直播", href: "/live" },
   { id: "stores", label: "門市", href: "/stores" },
   { id: "member", label: "會員中心", href: "/member" },

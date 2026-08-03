@@ -74,7 +74,7 @@ export function HomeIngredientShopSection() {
   const moreHref =
     cmsSection.config.more_card_link ||
     cmsSection.viewAllUrl ||
-    "/shop/categories";
+    "/shop";
 
   return (
     <section

@@ -153,7 +153,7 @@ export function ShopPromoCarousel() {
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
               {banners.map((banner) => {
-                const href = (banner.link_url || APP_ROUTES.shopCategories).trim();
+                const href = (banner.link_url || APP_ROUTES.shop).trim();
                 const external = isExternalHref(href);
                 const body = (
                   <BannerMedia

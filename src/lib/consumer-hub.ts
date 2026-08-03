@@ -9,9 +9,9 @@ export type ServiceHubId =
   | "member"
   | "groupBuy"
   | "news"
+  | "promo"
   | "support"
-  | "aiTools"
-  | "storeMap";
+  | "aiTools";
 
 export type ServiceHubTone =
   | "primary"
@@ -173,10 +173,18 @@ export const SERVICE_HUB_ITEMS: ServiceHubItem[] = [
   },
   {
     id: "news",
-    title: "最新資訊",
-    description: "新品、活動、課程與公告",
-    href: "/news",
+    title: "最新消息",
+    description: "文章分類：最新消息",
+    href: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
     tone: "info",
+    icon: "newspaper",
+  },
+  {
+    id: "promo",
+    title: "優惠活動",
+    description: "文章分類：優惠活動",
+    href: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95",
+    tone: "groupBuy",
     icon: "newspaper",
   },
   {
@@ -195,14 +203,6 @@ export const SERVICE_HUB_ITEMS: ServiceHubItem[] = [
     tone: "primary",
     icon: "sparkles",
   },
-  {
-    id: "storeMap",
-    title: "門市地圖",
-    description: "查詢商品擺放區域與位置",
-    href: "/store-map",
-    tone: "success",
-    icon: "mapPin",
-  },
 ];
 
 /** Desktop secondary nav (subset of hub — member/support in header) */
@@ -210,9 +210,15 @@ export const CONSUMER_SECONDARY_NAV = [
   { href: "/shop", label: "商城" },
   { href: "/recipes", label: "食譜影音" },
   { href: "/group-buy", label: "團購專區", accent: "groupBuy" as const },
-  { href: "/news", label: "最新資訊" },
+  {
+    href: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
+    label: "最新消息",
+  },
+  {
+    href: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95",
+    label: "優惠活動",
+  },
   { href: "/ai-tools", label: "AI 助手" },
-  { href: "/store-map", label: "門市地圖" },
 ] as const;
 
 /** Mobile bottom nav — 首頁／商城／團購／AI／我的 */

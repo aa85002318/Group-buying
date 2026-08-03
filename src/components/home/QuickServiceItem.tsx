@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { openSideMenu } from "@/lib/side-menu-events";
 import type { QuickServiceItem as QuickServiceItemType } from "@/types/home-quick-service";
 
 type QuickServiceItemProps = {
@@ -14,18 +15,16 @@ const PLACEHOLDER = "/images/home/quick-services/more.svg";
 
 export function QuickServiceItem({ item, className }: QuickServiceItemProps) {
   const [src, setSrc] = useState(item.imageUrl || PLACEHOLDER);
-  const isMore = item.id === "more";
+  const isMore = item.id === "more" || item.title === "更多";
 
-  return (
-    <Link
-      href={item.href}
-      aria-label={item.title}
-      className={cn(
-        "quick-service-item flex w-[70px] shrink-0 snap-start flex-col items-center gap-2 sm:w-[82px] lg:w-[92px]",
-        "min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD454]/70",
-        className
-      )}
-    >
+  const classNames = cn(
+    "quick-service-item flex w-[70px] shrink-0 snap-start flex-col items-center gap-2 sm:w-[82px] lg:w-[92px]",
+    "min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD454]/70",
+    className
+  );
+
+  const body = (
+    <>
       <span
         className={cn(
           "relative inline-flex h-[60px] w-[60px] items-center justify-center rounded-full shadow-[0_5px_14px_rgba(21,62,115,0.06)] transition hover:scale-[1.04] sm:h-[68px] sm:w-[68px] lg:h-[78px] lg:w-[78px]",
@@ -52,6 +51,25 @@ export function QuickServiceItem({ item, className }: QuickServiceItemProps) {
       <span className="w-full truncate text-center text-xs font-semibold leading-[1.3] text-[#153E73] lg:text-[13px]">
         {item.title}
       </span>
+    </>
+  );
+
+  if (isMore) {
+    return (
+      <button
+        type="button"
+        aria-label={item.title}
+        className={classNames}
+        onClick={() => openSideMenu()}
+      >
+        {body}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={item.href} aria-label={item.title} className={classNames}>
+      {body}
     </Link>
   );
 }

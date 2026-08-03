@@ -58,7 +58,27 @@ export function PopularProducts({
     };
   }, [productsProp]);
 
-  if (!products.length) return null;
+  if (!products.length) {
+    return (
+      <section
+        className={cn("shop-popular-products w-full bg-white", className)}
+        aria-label="熱門商品"
+      >
+        <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
+          <GroupBuyHubHeader
+            title={
+              <>
+                <span aria-hidden>🔥 </span>熱門商品
+              </>
+            }
+            href="/shop/popular"
+            linkLabel="查看更多"
+          />
+          <p className="py-6 text-center text-sm text-[#687386]">目前尚無熱門商品</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

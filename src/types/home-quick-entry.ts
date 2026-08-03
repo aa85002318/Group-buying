@@ -109,7 +109,7 @@ export const DEFAULT_QUICK_ENTRY_CARDS: QuickEntryCardConfig[] = [
     id: "promo",
     title: "優惠活動",
     subtitle: "本週精選優惠",
-    href: "/shop?promo=1",
+    href: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95",
     emoji: "🎁",
     background: "#FFF3F0",
     badge: null,

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   Headphones,
-  MapPin,
   Newspaper,
   Sparkles,
   type LucideIcon,
@@ -27,21 +26,20 @@ const SECONDARY: Array<{
     cardClass: "bg-ai-gradient",
   },
   {
-    href: "/store-map",
-    title: "門市地圖",
-    description: "快速找到商品位置",
-    icon: MapPin,
-    iconClass: "text-brand-primary",
-    well: "bg-surface",
-    cardClass: "bg-store-gradient",
-  },
-  {
-    href: "/news",
-    title: "最新資訊",
+    href: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
+    title: "最新消息",
     description: "新品與活動公告",
     icon: Newspaper,
     iconClass: "text-brand-primary",
     well: "bg-surface-yellow",
+  },
+  {
+    href: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95",
+    title: "優惠活動",
+    description: "折扣與會員活動",
+    icon: Newspaper,
+    iconClass: "text-brand-primary",
+    well: "bg-surface",
   },
   {
     href: "/support",

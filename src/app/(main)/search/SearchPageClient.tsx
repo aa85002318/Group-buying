@@ -104,7 +104,7 @@ export function SearchPageClient() {
 
       {locations.length > 0 && (
         <section className="space-y-3">
-          <SectionHeader title="門市商品位置" href="/store-map" accentClass="bg-success" />
+          <SectionHeader title="門市資訊" href="/stores" accentClass="bg-success" />
           {locations.map((item) => (
             <StoreLocationResult key={item.productId} item={item} />
           ))}

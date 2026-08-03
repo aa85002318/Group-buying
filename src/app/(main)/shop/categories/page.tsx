@@ -1,61 +1,6 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
-import {
-  getBakingMaterialCategories,
-  getBrandsForCatalog,
-  getCategoryTree,
-  parseBakingFiltersFromSearchParams,
-  searchBakingProducts,
-} from "@/lib/baking-materials/queries";
-import { ShopCatalogClient } from "@/components/shop/ShopCatalogClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "全部分類｜烘焙好物商城",
-  description: "精選超過 4,000 項商品。原料、器具、包裝一次購足。依分類、品牌與價格篩選。",
-};
-
-function CatalogFallback() {
-  return (
-    <div className="baking-catalog-page mx-auto max-w-[1280px] px-4 py-8">
-      <p className="text-sm text-[#8C644A]">載入商品分類…</p>
-    </div>
-  );
-}
-
-type PageProps = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-};
-
-export default async function ShopCategoriesPage({ searchParams }: PageProps) {
-  const rawSearchParams = await searchParams;
-  const normalizedSearchParams = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(rawSearchParams)) {
-    if (Array.isArray(value)) {
-      for (const item of value) normalizedSearchParams.append(key, item);
-    } else if (typeof value === "string") {
-      normalizedSearchParams.set(key, value);
-    }
-  }
-
-  const filters = parseBakingFiltersFromSearchParams(normalizedSearchParams);
-  const [categories, brands, initialProducts] = await Promise.all([
-    getBakingMaterialCategories(),
-    getBrandsForCatalog(),
-    searchBakingProducts(filters),
-  ]);
-
-  return (
-    <Suspense fallback={<CatalogFallback />}>
-      <ShopCatalogClient
-        initialMeta={{
-          categories,
-          tree: getCategoryTree(categories),
-          brands,
-        }}
-        initialProducts={initialProducts}
-        initialQueryString={normalizedSearchParams.toString()}
-      />
-    </Suspense>
-  );
+/** Legacy catalog index — merged into /shop hub. */
+export default function ShopCategoriesRedirectPage() {
+  redirect("/shop");
 }

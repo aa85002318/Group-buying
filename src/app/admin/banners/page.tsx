@@ -9,6 +9,10 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
+import {
+  CmsLinkPicker,
+  type CmsLinkValue,
+} from "@/components/admin/home/CmsLinkPicker";
 import type { CmsBanner } from "@/lib/types/database";
 
 const PLACEMENTS = [
@@ -339,11 +343,31 @@ function AdminBannersClient() {
               value={form.button_text}
               onChange={(e) => setForm({ ...form, button_text: e.target.value })}
             />
-            <Input
-              placeholder="按鈕連結（/shop 或 https://…）"
-              value={form.link_url}
-              onChange={(e) => setForm({ ...form, link_url: e.target.value })}
-            />
+            <div className="sm:col-span-2">
+              <p className="mb-1 text-xs font-medium text-muted-foreground">
+                Banner 連結（文章或站內頁）
+              </p>
+              <CmsLinkPicker
+                value={
+                  {
+                    type: form.link_url
+                      ? form.link_url.startsWith("/articles")
+                        ? "article"
+                        : form.link_url.startsWith("/products/")
+                          ? "product"
+                          : "internal"
+                      : "none",
+                    href: form.link_url,
+                    refId: null,
+                    label: null,
+                    openInNewTab: false,
+                  } satisfies CmsLinkValue
+                }
+                onChange={(next) =>
+                  setForm({ ...form, link_url: next.href || "" })
+                }
+              />
+            </div>
             <Input
               placeholder="背景色 #FFF9F5"
               value={form.background_color}

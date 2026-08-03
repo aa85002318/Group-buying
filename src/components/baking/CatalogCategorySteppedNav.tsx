@@ -131,7 +131,7 @@ export function CatalogCategorySteppedNav({
             href={
               stack.length > 0
                 ? `/shop/category/${stack[stack.length - 1].slug}`
-                : "/shop/categories"
+                : "/shop"
             }
             onClick={onNavigate}
             className={cn(

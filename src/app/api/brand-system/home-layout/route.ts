@@ -22,14 +22,14 @@ const DEFAULT_SECTIONS = [
   {
     sectionKey: "popular_categories",
     title: "找材料",
-    moreHref: "/shop/categories",
+    moreHref: "/shop",
     sortOrder: 40,
     enabled: true,
   },
   {
     sectionKey: "popular_baking_products",
     title: "本週熱賣",
-    moreHref: "/shop/categories",
+    moreHref: "/shop",
     sortOrder: 50,
     enabled: true,
   },

@@ -73,7 +73,7 @@ export function CategoryMenuEditor({
               {
                 id: `cm-${Date.now()}`,
                 label: "新分類",
-                href: "/shop/categories",
+                href: "/shop",
                 enabled: true,
                 sortOrder: (items.length + 1) * 10,
               },

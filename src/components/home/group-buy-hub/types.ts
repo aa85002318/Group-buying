@@ -46,8 +46,19 @@ export function primaryProduct(event: GroupBuyHubEvent) {
   return event.group_buy_products?.find((x) => x.products)?.products ?? null;
 }
 
-/** Prefer product detail; fall back to group-buy campaign (文章) page. */
-export function eventDetailHref(event: GroupBuyHubEvent) {
+/** Prefer custom CTA → linked product → primary product → group-buy / article page. */
+export function eventDetailHref(
+  event: GroupBuyHubEvent & {
+    link_url?: string | null;
+    linked_product_id?: string | null;
+    linked_article_slug?: string | null;
+  }
+) {
+  const custom = (event.link_url || "").trim();
+  if (custom) return custom;
+  const articleSlug = (event.linked_article_slug || "").trim();
+  if (articleSlug) return `/articles/${articleSlug}`;
+  if (event.linked_product_id) return `/products/${event.linked_product_id}`;
   const product = primaryProduct(event);
   if (product?.id) return `/products/${product.id}`;
   return `/group-buy/${event.id}`;

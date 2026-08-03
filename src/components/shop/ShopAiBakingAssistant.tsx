@@ -185,7 +185,7 @@ export function ShopAiBakingAssistant({
                     ))}
                   </div>
                   <Link
-                    href="/shop/categories"
+                    href="/shop"
                     className="mt-3 inline-flex items-center gap-1 text-[12px] font-bold text-[#153E73]"
                   >
                     查看全部材料 <ArrowRight className="h-3.5 w-3.5" aria-hidden />
@@ -202,7 +202,7 @@ export function ShopAiBakingAssistant({
                     ))}
                   </ul>
                   <Link
-                    href="/shop/categories"
+                    href="/shop"
                     className="mt-3 inline-flex items-center gap-1 text-[12px] font-bold text-[#153E73]"
                   >
                     查看全部工具 <ArrowRight className="h-3.5 w-3.5" aria-hidden />
@@ -222,7 +222,7 @@ export function ShopAiBakingAssistant({
                     onClick={() => {
                       setToast("已準備材料清單，前往分類挑選商品");
                       window.setTimeout(() => setToast(null), 2200);
-                      router.push("/shop/categories");
+                      router.push("/shop");
                     }}
                   >
                     <ShoppingCart className="h-4 w-4" aria-hidden />

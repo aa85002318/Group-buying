@@ -29,6 +29,7 @@ import {
 } from "@/lib/site-header";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
+import { OPEN_SIDE_MENU_EVENT } from "@/lib/side-menu-events";
 import { cn } from "@/lib/utils";
 
 const LUCIDE_BY_HINT: Record<string, LucideIcon> = {
@@ -103,6 +104,12 @@ export function AppHamburgerMenu({ className }: { className?: string }) {
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_SIDE_MENU_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_SIDE_MENU_EVENT, onOpen);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     fetch("/api/site-header")
       .then((r) => r.json())
@@ -112,7 +119,17 @@ export function AppHamburgerMenu({ className }: { className?: string }) {
           | SideMenuSection[]
           | undefined;
         if (Array.isArray(cms) && cms.length > 0) {
-          setSections(cms);
+          setSections(
+            cms
+              .map((section) => ({
+                ...section,
+                items: (section.items ?? []).filter(
+                  (item) =>
+                    !/store-map|門市地圖/i.test(`${item.href} ${item.label}`)
+                ),
+              }))
+              .filter((section) => (section.items?.length ?? 0) > 0)
+          );
         }
       })
       .catch(() => {});
