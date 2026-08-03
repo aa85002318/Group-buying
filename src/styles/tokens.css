@@ -253,12 +253,14 @@
    * 十一、Store Ops（後台）
    * ═══════════════════════════════════════════ */
   --admin-header: #ffffff;
-  --admin-sidebar: #fffdf9;
-  --admin-sidebar-active: #fff1ea;
-  --admin-active-border: #e86c5c;
+  --admin-sidebar: #ffffff;
+  --admin-sidebar-active: #fff5c7;
+  --admin-active-border: #ffe149;
   --admin-card: #ffffff;
   --admin-table-header: #f8e6d7;
-  --admin-primary: #e86c5c;
+  --admin-primary: #153e73;
+  --admin-page-bg: #f7f8fa;
+  --admin-sidebar-width: 252px;
 
   /* ═══════════════════════════════════════════
    * 十二、圖表（Dashboard）

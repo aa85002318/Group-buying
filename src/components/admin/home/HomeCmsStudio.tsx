@@ -5,13 +5,9 @@ import Link from "next/link";
 import {
   ChevronDown,
   ChevronUp,
-  Eye,
-  Monitor,
   Plus,
-  Smartphone,
   Trash2,
 } from "lucide-react";
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { HomeLayoutPublishBar } from "@/components/admin/HomeLayoutPublishBar";
 import { HomeHeroEditor } from "@/components/admin/home/HomeHeroEditor";
 import { LatestCampaignEditor } from "@/components/admin/home/LatestCampaignEditor";
@@ -22,6 +18,15 @@ import { ServiceShortcutsEditor } from "@/components/admin/home/ServiceShortcuts
 import { ExternalSourcePanel } from "@/components/admin/home/ExternalSourcePanel";
 import { CmsImageField, CMS_IMAGE_SPECS } from "@/components/admin/home/CmsImageField";
 import { CmsLinkPicker, cmsLinkFromHref, hrefFromCmsLink } from "@/components/admin/home/CmsLinkPicker";
+import {
+  CmsLivePreview,
+  CmsSectionList,
+  CmsSettingsPanel,
+  CmsStudioHeader,
+  CmsStudioShell,
+  type CmsDevice,
+  type CmsSaveStatus,
+} from "@/components/admin/cms-studio";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -75,18 +80,17 @@ function primaryRank(blockKey: string): number {
   return idx >= 0 ? idx : 999;
 }
 
-/** Sort like the live homepage: primary stack first (canonical order), then legacy. */
+/** Sort like the live homepage: primary stack by sort_order, then legacy. */
 function sortBlocksLikeHomepage(blocks: HomepageBlock[]): HomepageBlock[] {
   return [...blocks].sort((a, b) => {
     const aPrimary = PRIMARY_KEY_SET.has(a.block_key);
     const bPrimary = PRIMARY_KEY_SET.has(b.block_key);
-    if (aPrimary && bPrimary) {
-      const rank = primaryRank(a.block_key) - primaryRank(b.block_key);
-      if (rank !== 0) return rank;
-    } else if (aPrimary !== bPrimary) {
+    if (aPrimary !== bPrimary) {
       return aPrimary ? -1 : 1;
     }
-    return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    const bySort = (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    if (bySort !== 0) return bySort;
+    return primaryRank(a.block_key) - primaryRank(b.block_key);
   });
 }
 
@@ -98,9 +102,11 @@ export function HomeCmsStudio() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [showCatalog, setShowCatalog] = useState(false);
   const [catalogBusy, setCatalogBusy] = useState(false);
-  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("mobile");
+  const [previewDevice, setPreviewDevice] = useState<CmsDevice>("mobile");
   const [previewKey, setPreviewKey] = useState(0);
   const [dirtyHint, setDirtyHint] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"sections" | "edit" | "preview">("sections");
+  const [saveStatus, setSaveStatus] = useState<CmsSaveStatus>("idle");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -140,6 +146,7 @@ export function HomeCmsStudio() {
   const patch = async (id: string, updates: Record<string, unknown>) => {
     setSavingId(id);
     setDirtyHint(true);
+    setSaveStatus("saving");
     try {
       const res = await fetch("/api/admin/cms", {
         method: "PATCH",
@@ -150,10 +157,36 @@ export function HomeCmsStudio() {
       if (!res.ok) throw new Error(d.error ?? "儲存失敗");
       await load();
       setPreviewKey((k) => k + 1);
+      setSaveStatus("saved");
     } catch (e) {
+      setSaveStatus("error");
       alert(e instanceof Error ? e.message : "儲存失敗");
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const reorderPrimary = async (orderedIds: string[]) => {
+    setSaveStatus("saving");
+    setDirtyHint(true);
+    try {
+      for (let i = 0; i < orderedIds.length; i++) {
+        const id = orderedIds[i]!;
+        const sort_order = (i + 1) * 10;
+        const res = await fetch("/api/admin/cms", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kind: "block", id, target: "draft", sort_order }),
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error ?? "排序失敗");
+      }
+      await load();
+      setPreviewKey((k) => k + 1);
+      setSaveStatus("saved");
+    } catch (e) {
+      setSaveStatus("error");
+      alert(e instanceof Error ? e.message : "排序失敗");
     }
   };
 
@@ -276,240 +309,216 @@ export function HomeCmsStudio() {
     return true;
   });
 
-  const previewSrc = `/admin/home/preview?embed=1&v=${previewKey}&device=${previewDevice}`;
+  const previewSrc = `/admin/home/preview?embed=1&v=${previewKey}&device=${previewDevice === "desktop" ? "desktop" : "mobile"}`;
+
+  const listItems = useMemo(() => {
+    const presentKeys = new Set(primaryBlocks.map((b) => b.block_key));
+    const items = primaryBlocks.map((block, index) => {
+      const meta = getSectionMeta(block.block_key);
+      return {
+        id: block.id,
+        label: `${index + 1}. ${meta?.label || block.title || block.block_key}`,
+        enabled: Boolean(block.is_visible),
+      };
+    });
+    for (const key of PRIMARY_HOME_SECTION_KEYS) {
+      if (presentKeys.has(key)) continue;
+      const meta = getSectionMeta(key);
+      items.push({
+        id: `missing-${key}`,
+        label: `${meta?.label || key}`,
+        enabled: false,
+        subtitle: "草稿尚未加入",
+      } as { id: string; label: string; enabled: boolean; subtitle?: string });
+    }
+    return items;
+  }, [primaryBlocks]);
+
+  const selectedBlock = useMemo(() => {
+    if (!expanded) return null;
+    return blocks.find((b) => b.id === expanded) ?? null;
+  }, [blocks, expanded]);
+
+  const selectedMeta = selectedBlock
+    ? getSectionMeta(selectedBlock.block_key) ||
+      ({
+        id: selectedBlock.block_key as HomeSectionKey,
+        label: selectedBlock.title || selectedBlock.block_key,
+        description: "",
+        contentMode: "manual",
+      } as HomeAdminSectionMeta)
+    : null;
+
+  const selectSection = (id: string) => {
+    if (id.startsWith("missing-")) {
+      const key = id.replace("missing-", "") as HomeSectionKey;
+      void addBlock(key);
+      return;
+    }
+    setExpanded(id);
+    setMobileTab("edit");
+  };
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col gap-2">
-      <AdminPageHeader
-        title="首頁 CMS"
-        description="左側預覽對應目前前台版型；右側僅管理 11 個核心區塊。舊設定已淘汰，請用「重建為前台版型」對齊後再發布。"
-      />
-
-      <HomeLayoutPublishBar
-        onChanged={() => {
-          load();
-          setPreviewKey((k) => k + 1);
-          setDirtyHint(false);
-        }}
-      />
-
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 shadow-card">
-        <span className="text-xs font-semibold text-coffee">頁面：首頁</span>
-        <span className="text-xs text-muted-foreground">|</span>
-        <Button
-          size="sm"
-          variant={previewDevice === "desktop" ? "default" : "outline"}
-          onClick={() => setPreviewDevice("desktop")}
-        >
-          <Monitor className="mr-1 h-3.5 w-3.5" />
-          桌面版預覽
-        </Button>
-        <Button
-          size="sm"
-          variant={previewDevice === "mobile" ? "default" : "outline"}
-          onClick={() => setPreviewDevice("mobile")}
-        >
-          <Smartphone className="mr-1 h-3.5 w-3.5" />
-          手機版預覽
-        </Button>
-        <Link
-          href="/?preview=draft"
-          target="_blank"
-          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-        >
-          <Eye className="mr-1 h-3.5 w-3.5" />
-          預覽變更
-        </Link>
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={catalogBusy}
-          onClick={() => void syncPrimaryOrder()}
-        >
-          重建為前台版型
-        </Button>
-        {dirtyHint ? (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
-            有未發布草稿變更
-          </span>
-        ) : (
-          <span className="rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-bold text-success">
-            草稿已同步
-          </span>
-        )}
-      </div>
-
-      {error ? (
-        <p className="rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-
-      {/* Preview-first: ~70% left / ~30% right on large screens */}
-      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_380px]">
-        {/* Left preview — larger */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-[#F3F5F8] shadow-card">
-          <div className="flex items-center justify-between border-b border-border bg-white px-3 py-2">
-            <p className="text-sm font-semibold text-coffee">首頁即時預覽（草稿）</p>
-            <button
-              type="button"
-              className="text-xs text-primary underline"
-              onClick={() => setPreviewKey((k) => k + 1)}
-            >
-              重新整理
-            </button>
-          </div>
-          <div className="flex min-h-0 flex-1 justify-center overflow-auto p-2 md:p-4">
-            <div
-              className={cn(
-                "overflow-hidden rounded-xl border border-border bg-white shadow-lg",
-                previewDevice === "mobile"
-                  ? "w-full max-w-[430px]"
-                  : "w-full max-w-[1280px]"
-              )}
-            >
-              <iframe
-                key={previewKey}
-                title="首頁草稿預覽"
-                src={previewSrc}
-                className={cn(
-                  "w-full border-0 bg-white",
-                  previewDevice === "mobile"
-                    ? "h-[min(860px,calc(100vh-11rem))] min-h-[720px]"
-                    : "h-[min(920px,calc(100vh-11rem))] min-h-[760px]"
-                )}
-              />
-            </div>
-          </div>
-          <p className="border-t border-border bg-white px-3 py-2 text-[11px] text-muted-foreground">
-            預覽依草稿顯示。右側順序已對齊前台核心區塊；正式前台需「發布更新」。
-          </p>
-        </div>
-
-        {/* Right settings — narrower */}
-        <div className="flex max-h-[calc(100vh-10rem)] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-white shadow-card lg:sticky lg:top-2">
-          <div className="flex items-center justify-between border-b border-border px-3 py-2">
-            <div>
-              <p className="text-sm font-semibold text-coffee">區塊與素材設定</p>
-              <p className="text-[11px] text-muted-foreground">
-                依前台順序 · {PRIMARY_HOME_SECTION_KEYS.length} 個核心區塊
+    <CmsStudioShell
+      mobileTab={mobileTab}
+      onMobileTabChange={setMobileTab}
+      header={
+        <div className="space-y-3">
+          <CmsStudioHeader
+            title="首頁 CMS"
+            description="拖拉排序核心區塊，右側預覽草稿。AI 頁（/ai）Hero 為靜態素材，搜尋與頁首部分沿用首頁 Hero 設定。"
+            status={dirtyHint ? (saveStatus === "saving" ? "saving" : "dirty") : saveStatus}
+            notice={
+              <p className="rounded-lg border border-[#FFE149]/60 bg-[#FFFBEA] px-3 py-2 text-xs text-[#153E73]">
+                提示：商城 AI 卡（/admin/shop/ai-assistant）僅管理商城內卡片，不是 /ai 頁 CMS。
               </p>
-            </div>
+            }
+          />
+          <HomeLayoutPublishBar
+            onChanged={() => {
+              load();
+              setPreviewKey((k) => k + 1);
+              setDirtyHint(false);
+              setSaveStatus("published");
+            }}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={catalogBusy}
+              onClick={() => void syncPrimaryOrder()}
+            >
+              重建為前台版型
+            </Button>
+            <Link
+              href="/?preview=draft"
+              target="_blank"
+              className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+            >
+              完整預覽草稿
+            </Link>
+          </div>
+          {error ? (
+            <p className="rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger">
+              {error}
+            </p>
+          ) : null}
+        </div>
+      }
+      sectionList={
+        <CmsSectionList
+          title="首頁區塊"
+          items={listItems}
+          selectedId={expanded}
+          onSelect={selectSection}
+          onReorder={(ids) => {
+            const real = ids.filter((id) => !id.startsWith("missing-"));
+            void reorderPrimary(real);
+          }}
+          onToggleEnabled={(id) => {
+            const block = blocks.find((b) => b.id === id);
+            if (!block) return;
+            void patch(block.id, { is_visible: !block.is_visible });
+          }}
+          onMove={(id, dir) => {
+            const block = blocks.find((b) => b.id === id);
+            if (!block) return;
+            void moveSection(block, dir);
+          }}
+          headerExtra={
             <Button size="sm" variant="outline" onClick={() => setShowCatalog((v) => !v)}>
               <Plus className="mr-1 h-3.5 w-3.5" />
               新增
             </Button>
-          </div>
-
-          {showCatalog ? (
-            <div className="max-h-40 space-y-1 overflow-y-auto border-b border-border bg-surface-soft/50 p-2">
-              {catalogItems.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  disabled={catalogBusy}
-                  className="flex w-full flex-col rounded-lg px-2 py-1.5 text-left hover:bg-white"
-                  onClick={() => void addBlock(s.id)}
-                >
-                  <span className="text-sm font-medium text-coffee">{s.label}</span>
-                  <span className="text-[11px] text-muted-foreground">{s.description}</span>
-                </button>
-              ))}
-              {!catalogItems.length ? (
-                <p className="px-2 py-1 text-xs text-muted-foreground">可新增區塊已全部加入</p>
+          }
+          footer={
+            <>
+              {showCatalog ? (
+                <div className="mb-2 max-h-36 space-y-1 overflow-y-auto rounded-lg bg-[#F7F8FA] p-2">
+                  {catalogItems.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      disabled={catalogBusy}
+                      className="flex w-full flex-col rounded-lg px-2 py-1.5 text-left hover:bg-white"
+                      onClick={() => void addBlock(s.id)}
+                    >
+                      <span className="text-sm font-medium text-[#153E73]">{s.label}</span>
+                      <span className="text-[11px] text-muted-foreground">{s.description}</span>
+                    </button>
+                  ))}
+                </div>
               ) : null}
-            </div>
-          ) : null}
-
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
-            {loading ? (
-              <p className="p-3 text-sm text-muted-foreground">載入中…</p>
-            ) : (
-              <>
-                <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[#153E73]/70">
-                  前台核心區塊（依 staging 順序）
+              {legacyBlocks.length ? (
+                <p className="text-[11px] text-amber-800">
+                  草稿仍有 {legacyBlocks.length} 個舊區塊，建議「重建為前台版型」。
                 </p>
-                {PRIMARY_HOME_SECTION_KEYS.map((key, index) => {
-                  const block = primaryBlocks.find((b) => b.block_key === key);
-                  const meta = getSectionMeta(key);
-                  if (!block) {
-                    return (
-                      <div
-                        key={`missing-${key}`}
-                        className="rounded-xl border border-dashed border-amber-300 bg-amber-50/70 p-3"
-                      >
-                        <p className="text-sm font-semibold text-coffee">
-                          {index + 1}. {meta?.label || key}
-                        </p>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
-                          前台有此區塊，草稿尚未加入
-                        </p>
-                        <Button
-                          size="sm"
-                          className="mt-2"
-                          variant="outline"
-                          disabled={catalogBusy}
-                          onClick={() => void addBlock(key)}
-                        >
-                          加入草稿
-                        </Button>
-                      </div>
-                    );
-                  }
-                  return (
-                    <SectionPanel
-                      key={block.id}
-                      section={
-                        meta ||
-                        ({
-                          id: key,
-                          label: block.title || key,
-                          description: "",
-                          contentMode: "manual",
-                        } as HomeAdminSectionMeta)
-                      }
-                      block={block}
-                      index={index}
-                      open={expanded === block.id}
-                      saving={savingId === block.id}
-                      displayLabel={`${index + 1}. ${meta?.label || block.title}`}
-                      onToggle={() =>
-                        setExpanded((cur) => (cur === block.id ? null : block.id))
-                      }
-                      onPatch={patch}
-                      onMove={moveSection}
-                      onRemove={removeBlock}
-                      canDelete={false}
-                    />
-                  );
-                })}
-
-                {legacyBlocks.length ? (
-                  <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/80 p-3">
-                    <p className="text-sm font-semibold text-coffee">
-                      草稿仍有 {legacyBlocks.length} 個舊區塊
-                    </p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      舊設定不再對應前台。請點上方「重建為前台版型」一次清掉。
-                    </p>
-                    <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">
-                      {legacyBlocks.slice(0, 8).map((b) => (
-                        <li key={b.id}>
-                          · {getSectionMeta(b.block_key)?.label || b.title || b.block_key}
-                        </li>
-                      ))}
-                      {legacyBlocks.length > 8 ? (
-                        <li>…另有 {legacyBlocks.length - 8} 個</li>
-                      ) : null}
-                    </ul>
-                  </div>
-                ) : null}
-              </>
-            )}
-          </div>
+              ) : null}
+            </>
+          }
+        />
+      }
+      settingsPanel={
+        <CmsSettingsPanel
+          title={selectedMeta?.label || "區塊設定"}
+          subtitle={selectedMeta?.description}
+          empty={
+            loading ? (
+              <p className="text-sm text-muted-foreground">載入中…</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">請從左側選擇區塊進行編輯</p>
+            )
+          }
+        >
+          {selectedBlock && selectedMeta ? (
+            <SectionPanel
+              section={selectedMeta}
+              block={selectedBlock}
+              index={PRIMARY_HOME_SECTION_KEYS.indexOf(selectedBlock.block_key as HomeSectionKey)}
+              open
+              panelMode
+              saving={savingId === selectedBlock.id}
+              displayLabel={selectedMeta.label}
+              onToggle={() => undefined}
+              onPatch={patch}
+              onMove={moveSection}
+              onRemove={removeBlock}
+              canDelete={!FIXED_FUNCTION_KEYS.has(selectedBlock.block_key as HomeSectionKey)}
+            />
+          ) : null}
+        </CmsSettingsPanel>
+      }
+      preview={
+        <CmsLivePreview
+          title="首頁草稿預覽"
+          src={previewSrc}
+          reloadKey={previewKey}
+          device={previewDevice}
+          onDeviceChange={setPreviewDevice}
+          fullPreviewHref="/?preview=draft"
+          highlightLabel={selectedMeta?.label}
+        />
+      }
+      footer={
+        <div className="flex flex-wrap gap-2 lg:hidden">
+          <Button
+            className="flex-1 border-[#FFE149] bg-[#FFE149] font-bold text-[#153E73] hover:bg-[#FFE149]/90"
+            onClick={() => {
+              setSaveStatus("saved");
+              setDirtyHint(false);
+              void load();
+            }}
+          >
+            儲存草稿
+          </Button>
+          <Button variant="outline" className="flex-1" onClick={() => setMobileTab("preview")}>
+            預覽
+          </Button>
         </div>
-      </div>
-    </div>
+      }
+    />
   );
 }
 
@@ -525,6 +534,7 @@ function SectionPanel({
   onMove,
   onRemove,
   canDelete,
+  panelMode = false,
 }: {
   section: HomeAdminSectionMeta;
   block: HomepageBlock;
@@ -537,6 +547,7 @@ function SectionPanel({
   onMove: (block: HomepageBlock, dir: -1 | 1) => Promise<void>;
   onRemove: (block: HomepageBlock) => Promise<void>;
   canDelete: boolean;
+  panelMode?: boolean;
 }) {
   const [title, setTitle] = useState(block.title ?? section.label);
   const [subtitle, setSubtitle] = useState(block.subtitle ?? "");
@@ -609,7 +620,8 @@ function SectionPanel({
   const cardTitle = displayLabel || section.label;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-white">
+    <div className={cn(!panelMode && "overflow-hidden rounded-xl border border-border bg-white")}>
+      {!panelMode ? (
       <div className="flex flex-wrap items-center gap-1.5 p-2.5">
         <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-surface-soft text-[11px] font-bold text-caramel">
           {index + 1}
@@ -659,9 +671,40 @@ function SectionPanel({
           </Button>
         ) : null}
       </div>
+      ) : (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-[10px] font-bold",
+              block.is_visible ? "bg-success-soft text-success" : "bg-disabled-soft text-disabled"
+            )}
+          >
+            {block.is_visible ? "顯示中" : "已隱藏"}
+          </span>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={saving}
+            onClick={() => onPatch(block.id, { is_visible: !block.is_visible })}
+          >
+            {block.is_visible ? "隱藏區塊" : "顯示區塊"}
+          </Button>
+          {canDelete ? (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={saving}
+              onClick={() => void onRemove(block)}
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5 text-danger" />
+              移除
+            </Button>
+          ) : null}
+        </div>
+      )}
 
       {open ? (
-        <div className="space-y-3 border-t border-border bg-surface-soft/30 p-3">
+        <div className={cn("space-y-3", !panelMode && "border-t border-border bg-surface-soft/30 p-3")}>
           <div className="grid gap-2 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-[11px] text-muted-foreground">區塊標題</label>

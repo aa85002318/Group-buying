@@ -76,10 +76,19 @@ export function isCustomerServiceAllowedPath(path: string): boolean {
 export const ADMIN_ROLES = ["admin", "store_staff", "content_editor", "customer_service"] as const;
 
 export type AdminNavItem = {
-  href: string;
   label: string;
-  /** If omitted, visible to all admin-capable roles that can reach /admin */
+  /** Omit for type:"heading" */
+  href?: string;
+  /** Lucide icon name key — rendered by AdminSidebar */
+  icon?: string;
   roles?: AdminRole[];
+  badge?: string;
+  type?: "item" | "heading";
+  /**
+   * Keep route + allowlist, but omit from primary sidebar.
+   * Reach via CMS Hub (e.g. /admin/shop/* detail pages).
+   */
+  hiddenFromSidebar?: boolean;
 };
 
 export type AdminNavGroup = {
@@ -87,6 +96,7 @@ export type AdminNavGroup = {
   label: string;
   items: AdminNavItem[];
   roles?: AdminRole[];
+  icon?: string;
 };
 
 /**
@@ -97,30 +107,42 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     id: "dashboard",
     label: "營運總覽",
-    items: [{ href: "/admin", label: "總覽 Dashboard" }],
+    icon: "LayoutDashboard",
+    items: [{ href: "/admin", label: "總覽 Dashboard", icon: "LayoutDashboard" }],
   },
   {
     id: "store",
     label: "門市管理",
+    icon: "Store",
     roles: ["admin", "store_staff"],
     items: [
+      { type: "heading", label: "門市營運", roles: ["admin", "store_staff"] },
       { href: "/admin/store", label: "門市總覽", roles: ["admin", "store_staff"] },
       { href: "/admin/store/batches", label: "批次管理", roles: ["admin", "store_staff"] },
+      { href: "/admin/orders", label: "門市訂單", roles: ["admin", "store_staff"] },
+      { href: "/admin/pickup", label: "取貨核銷", roles: ["admin", "store_staff"] },
+
+      { type: "heading", label: "庫存與效期", roles: ["admin", "store_staff"] },
       { href: "/admin/store/inventory", label: "庫存管理", roles: ["admin", "store_staff"] },
       { href: "/admin/store/expiry", label: "效期管理", roles: ["admin", "store_staff"] },
+      { href: "/admin/store/stocktake", label: "盤點管理", roles: ["admin", "store_staff"] },
       { href: "/admin/store/disposals", label: "報廢管理", roles: ["admin", "store_staff"] },
       { href: "/admin/store/issues", label: "異常登記", roles: ["admin", "store_staff"] },
       { href: "/admin/store/returns", label: "退貨管理", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/stocktake", label: "盤點管理", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/suppliers", label: "廠商管理", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/backups", label: "備份管理", roles: ["admin", "store_staff"] },
+
+      { type: "heading", label: "商品與廠商", roles: ["admin", "store_staff"] },
       { href: "/admin/products", label: "商品主檔", roles: ["admin", "store_staff"] },
+      { href: "/admin/store/suppliers", label: "廠商管理", roles: ["admin", "store_staff"] },
       { href: "/admin/products/labels", label: "價格牌列印", roles: ["admin", "store_staff"] },
+
+      { type: "heading", label: "系統工具", roles: ["admin", "store_staff"] },
+      { href: "/admin/store/backups", label: "備份管理", roles: ["admin", "store_staff"] },
     ],
   },
   {
     id: "group-buy",
     label: "團購管理",
+    icon: "ShoppingBag",
     roles: ["admin"],
     items: [
       { href: "/admin/group-buy/overview", label: "團購總覽", roles: ["admin"] },
@@ -137,6 +159,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     id: "orders",
     label: "訂單與取貨",
+    icon: "Package",
     roles: ["admin", "store_staff", "customer_service"],
     items: [
       { href: "/admin/orders", label: "App 訂單", roles: ["admin", "store_staff", "customer_service"] },
@@ -151,6 +174,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     id: "members",
     label: "會員管理",
+    icon: "Users",
     roles: ["admin", "customer_service"],
     items: [
       { href: "/admin/members", label: "會員列表", roles: ["admin", "customer_service"] },
@@ -165,46 +189,112 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     id: "recipes",
     label: "食譜中心",
+    icon: "BookOpen",
     roles: ["admin", "content_editor"],
     items: [
       { href: "/admin/recipes", label: "食譜管理", roles: ["admin", "content_editor"] },
-      { href: "/admin/recipes", label: "Story Builder", roles: ["admin", "content_editor"] },
-      { href: "/admin/recipes", label: "食譜提問", roles: ["admin", "content_editor"] },
-      { href: "/admin/recipes", label: "成品分享", roles: ["admin", "content_editor"] },
       { href: "/admin/challenges", label: "食譜挑戰", roles: ["admin", "content_editor"] },
     ],
   },
   {
     id: "frontend-cms",
     label: "前台內容管理",
+    icon: "LayoutTemplate",
     roles: ["admin", "content_editor"],
     items: [
       { href: "/admin/home", label: "首頁 CMS", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop", label: "商城頁面 CMS", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/categories", label: "商城主分類", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/features", label: "商城特色區塊", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/promo-banners", label: "商城活動 Banner", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/popular-products", label: "商城熱門商品", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/new-products", label: "商城新品上架", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/inspiration", label: "烘焙靈感牆", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/recipe-categories", label: "商城食譜分類", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/info-banners", label: "訂購／企業 Banner", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/appearance", label: "商城頁首外觀", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/hero-banners", label: "商城 Hero Banner", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/ai-assistant", label: "AI 食譜助手", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop/ai-chips", label: "AI 推薦 Chip", roles: ["admin", "content_editor"] },
-      { href: "/admin/recipes", label: "食譜頁面 CMS", roles: ["admin", "content_editor"] },
-      { href: "/admin/group-buy/settings", label: "團購頁面 CMS", roles: ["admin"] },
-      { href: "/admin/members", label: "會員頁面 CMS", roles: ["admin", "customer_service"] },
-      { href: "/admin/navigation", label: "導覽列與選單", roles: ["admin", "content_editor"] },
-      { href: "/admin/banners", label: "共用素材庫", roles: ["admin", "content_editor"] },
+      { href: "/admin/shop", label: "商城 CMS", roles: ["admin", "content_editor"] },
+      { href: "/admin/group-buy/settings", label: "團購頁 CMS", roles: ["admin"] },
+      { href: "/admin/side-menu", label: "全站側選單", roles: ["admin", "content_editor"] },
+      { href: "/admin/banners", label: "共用 Banner", roles: ["admin", "content_editor"] },
       { href: "/admin/home/preview", label: "首頁預覽", roles: ["admin", "content_editor"] },
-      { href: "/admin/content/popups", label: "首頁彈跳公告", roles: ["admin", "content_editor"] },
+      { href: "/admin/content/popups", label: "彈跳公告", roles: ["admin", "content_editor"] },
+
+      /* Shop detail routes — reachable from /admin/shop hub, not primary sidebar */
+      {
+        href: "/admin/shop/categories",
+        label: "商城主分類",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/features",
+        label: "商城特色區塊",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/promo-banners",
+        label: "商城活動 Banner",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/popular-products",
+        label: "商城熱門商品",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/new-products",
+        label: "商城新品上架",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/inspiration",
+        label: "烘焙靈感牆",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/recipe-categories",
+        label: "商城食譜分類",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/info-banners",
+        label: "訂購／企業 Banner",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/appearance",
+        label: "商城頁首外觀",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/hero-banners",
+        label: "商城 Hero Banner",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/ai-assistant",
+        label: "AI 食譜助手",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop/ai-chips",
+        label: "AI 推薦 Chip",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/navigation",
+        label: "導覽列與選單",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
     ],
   },
   {
     id: "content",
     label: "內容管理",
+    icon: "Newspaper",
     roles: ["admin", "content_editor", "customer_service"],
     items: [
       { href: "/admin/news", label: "公告／最新資訊", roles: ["admin", "content_editor"] },
@@ -221,7 +311,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     id: "catalog",
-    label: "商品主檔（進階）",
+    label: "商品主檔",
+    icon: "Boxes",
     roles: ["admin"],
     items: [
       { href: "/admin/products", label: "商品總覽", roles: ["admin"] },
@@ -239,6 +330,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     id: "system",
     label: "系統管理",
+    icon: "Settings",
     roles: ["admin"],
     items: [
       { href: "/admin/staff", label: "帳號與權限", roles: ["admin"] },
@@ -251,10 +343,17 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
 ];
 
+function isLinkItem(item: AdminNavItem): item is AdminNavItem & { href: string } {
+  return item.type !== "heading" && typeof item.href === "string" && item.href.length > 0;
+}
+
 /** Flat nav derived from groups — kept for backward compatibility */
-export const ADMIN_NAV: AdminNavItem[] = ADMIN_NAV_GROUPS.flatMap((g) => g.items).filter(
-  (item, index, arr) => arr.findIndex((i) => i.href === item.href && i.label === item.label) === index
-);
+export const ADMIN_NAV: AdminNavItem[] = ADMIN_NAV_GROUPS.flatMap((g) => g.items)
+  .filter(isLinkItem)
+  .filter(
+    (item, index, arr) =>
+      arr.findIndex((i) => i.href === item.href && i.label === item.label) === index
+  );
 
 function itemVisibleForRole(item: AdminNavItem, role: string): boolean {
   if (role === "admin") return true;
@@ -270,14 +369,57 @@ function groupVisibleForRole(group: AdminNavGroup, role: string): boolean {
   return group.roles.includes(role as AdminRole);
 }
 
+/** Sidebar-facing groups: role filter + hide detail routes marked hiddenFromSidebar. */
 export function navGroupsForRole(role: string): AdminNavGroup[] {
-  if (role === "admin") return ADMIN_NAV_GROUPS;
-  return ADMIN_NAV_GROUPS.map((group) => ({
-    ...group,
-    items: group.items.filter((item) => itemVisibleForRole(item, role)),
-  })).filter((group) => groupVisibleForRole(group, role) && group.items.length > 0);
+  const source = role === "admin" ? ADMIN_NAV_GROUPS : ADMIN_NAV_GROUPS;
+
+  return source
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        if (item.hiddenFromSidebar) return false;
+        if (role === "admin") return true;
+        return itemVisibleForRole(item, role);
+      }),
+    }))
+    .filter((group) => {
+      if (role === "admin") return true;
+      return groupVisibleForRole(group, role) && group.items.some((i) => i.type !== "heading");
+    })
+    .map((group) => {
+      // Drop orphan headings (no following link items before next heading / end)
+      const cleaned: AdminNavItem[] = [];
+      for (let i = 0; i < group.items.length; i++) {
+        const item = group.items[i]!;
+        if (item.type === "heading") {
+          const hasChild = group.items
+            .slice(i + 1)
+            .some((next) => next.type !== "heading" && itemVisibleForRole(next, role === "admin" ? "admin" : role));
+          // Simpler: heading kept if any subsequent non-heading before next heading
+          let hasLink = false;
+          for (let j = i + 1; j < group.items.length; j++) {
+            const n = group.items[j]!;
+            if (n.type === "heading") break;
+            hasLink = true;
+            break;
+          }
+          if (hasLink) cleaned.push(item);
+          void hasChild;
+        } else {
+          cleaned.push(item);
+        }
+      }
+      return { ...group, items: cleaned };
+    })
+    .filter((group) => group.items.length > 0);
 }
 
 export function navForRole(role: string): AdminNavItem[] {
-  return navGroupsForRole(role).flatMap((g) => g.items);
+  return navGroupsForRole(role).flatMap((g) => g.items).filter(isLinkItem);
+}
+
+export function isAdminNavLinkItem(
+  item: AdminNavItem
+): item is AdminNavItem & { href: string } {
+  return isLinkItem(item);
 }

@@ -323,8 +323,7 @@ export function resolveHomeBlock(
 }
 
 /**
- * Visible homepage sections in canonical primary order.
- * Legacy / non-primary keys are ignored — new architecture only.
+ * Visible homepage sections ordered by sort_order (admin drag).
  * Missing primary keys fall back to SECTION_DEFAULTS so the live page stays complete.
  */
 export function listOrderedHomeSections(
@@ -337,19 +336,23 @@ export function listOrderedHomeSections(
     if (!byKey.has(row.block_key)) byKey.set(row.block_key, row);
   }
 
-  return PRIMARY_HOME_SECTION_KEYS.map((key) => {
+  const resolved = PRIMARY_HOME_SECTION_KEYS.map((key) => {
     const row = byKey.get(key);
     if (row) {
-      const resolved = resolveHomeBlockRow(row);
-      if (!resolved || !resolved.visible) return null;
+      const resolvedRow = resolveHomeBlockRow(row);
+      if (!resolvedRow || !resolvedRow.visible) return null;
       return {
-        ...resolved,
-        sortOrder: HOME_SECTION_SORT_DEFAULT[key],
+        ...resolvedRow,
+        sortOrder: Number(row.sort_order ?? HOME_SECTION_SORT_DEFAULT[key]),
       };
     }
     const fallback = resolveHomeBlock([], key);
-    return fallback.visible ? fallback : null;
+    return fallback.visible
+      ? { ...fallback, sortOrder: HOME_SECTION_SORT_DEFAULT[key] }
+      : null;
   }).filter((b): b is ResolvedHomeBlock => Boolean(b));
+
+  return resolved.sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 export function warnUnknownHomeSection(key: string) {

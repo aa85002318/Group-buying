@@ -5,14 +5,14 @@ import { AdminDesktopSidebar, AdminMobileDrawer } from "@/components/layout/Admi
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminShell>
-      <div className="min-h-screen overflow-x-hidden bg-background">
-        <div className="flex min-h-screen w-full">
+      <div className="min-h-[100dvh] overflow-x-hidden bg-[#F7F8FA]">
+        <div className="flex min-h-[100dvh] w-full">
           <AdminDesktopSidebar />
           <div className="flex min-w-0 flex-1 flex-col">
             <AdminTopBar />
             <AdminMobileDrawer />
             <main className="min-w-0 flex-1 overflow-x-hidden p-4 md:p-6">
-              <div className="mx-auto w-full max-w-7xl">{children}</div>
+              <div className="mx-auto w-full max-w-[1600px]">{children}</div>
             </main>
           </div>
         </div>
