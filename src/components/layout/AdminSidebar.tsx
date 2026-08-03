@@ -48,7 +48,7 @@ const EXPANDED_STORAGE_KEY = "chimeidiy-admin-nav-expanded-v2";
 const COLLAPSED_STORAGE_KEY = "chimeidiy-admin-sidebar-collapsed";
 
 function pathnameMatchesHref(pathname: string, href: string): boolean {
-  const pathOnly = href.split("?")[0] || href;
+  const pathOnly = (href.split("?")[0] || href).split("#")[0] || href;
   if (pathname === pathOnly) return true;
   // Exact-only hubs so children don't light up the parent incorrectly
   if (

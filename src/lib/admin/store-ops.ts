@@ -20,16 +20,26 @@ export const STORE_RESOURCE_TABLE: Record<StoreResource, string> = {
 };
 
 export const STORE_QUICK_ACTIONS = [
-  { href: "/admin/store/batches?receive=1", label: "快速進貨" },
-  { href: "/admin/store/expiry?new=1", label: "新增效期批次" },
-  { href: "/admin/store/batches", label: "批次管理" },
-  { href: "/admin/store/disposals?new=1", label: "報廢（選批次）" },
-  { href: "/admin/store/returns?new=1", label: "退貨（選批次）" },
-  { href: "/admin/store/issues?new=1", label: "異常（選批次）" },
-  { href: "/admin/store/stocktake", label: "盤點管理" },
-  { href: "/admin/store/batches?tab=import", label: "批次匯入" },
-  { href: "/admin/products", label: "商品主檔" },
-  { href: "/admin/store/backups", label: "立即備份" },
+  { href: "/admin/orders", label: "新訂單", icon: "orders" },
+  { href: "/admin/pickup", label: "取貨", icon: "pickup" },
+  { href: "/admin/store/issues?new=1", label: "商品異常", icon: "issue" },
+  { href: "/admin/store/disposals?new=1", label: "商品報廢", icon: "disposal" },
+  { href: "/admin/store/returns?new=1", label: "商品退貨", icon: "return" },
+  { href: "/admin/store/issues?new=1&type=repair", label: "商品報修", icon: "repair" },
+  { href: "/admin/store#quick-entry", label: "工作紀錄", icon: "log" },
+  { href: "/admin/store/inventory", label: "庫存", icon: "stock" },
+] as const;
+
+/** Phase A: field entry types — deep-link to existing forms where available. */
+export const STORE_QUICK_ENTRY_TYPES = [
+  { id: "issue", label: "商品異常", href: "/admin/store/issues?new=1" },
+  { id: "disposal", label: "商品報廢", href: "/admin/store/disposals?new=1" },
+  { id: "return", label: "商品退貨", href: "/admin/store/returns?new=1" },
+  { id: "repair", label: "商品報修", href: "/admin/store/issues?new=1&type=repair" },
+  { id: "special", label: "客人特殊需求", href: "/admin/store/issues?new=1&type=special" },
+  { id: "request", label: "分店需求", href: "/admin/store/inventory" },
+  { id: "worklog", label: "每日工作紀錄", href: "/admin/store#checklist" },
+  { id: "message", label: "留言", href: "/admin/store#messages" },
 ] as const;
 
 export function daysFromNow(n: number): string {
@@ -57,6 +67,12 @@ export function expiryStatusLabel(days: number | null): string {
   if (days <= 14) return "14天內";
   if (days <= 30) return "即將到期";
   return "正常";
+}
+
+export function greetingForHour(hour = new Date().getHours()): string {
+  if (hour < 11) return "早安";
+  if (hour < 17) return "午安";
+  return "晚安";
 }
 
 export type MovementType =

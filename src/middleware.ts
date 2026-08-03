@@ -96,8 +96,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    if (role === "store_staff" && !isStoreStaffAllowedPath(path)) {
-      return NextResponse.redirect(new URL("/admin", request.url));
+    if (role === "store_staff") {
+      if (path === "/admin" || path === "/admin/") {
+        return NextResponse.redirect(new URL("/admin/store", request.url));
+      }
+      if (!isStoreStaffAllowedPath(path)) {
+        return NextResponse.redirect(new URL("/admin/store", request.url));
+      }
     }
     if (role === "content_editor" && !isContentEditorAllowedPath(path)) {
       return NextResponse.redirect(new URL("/admin", request.url));
