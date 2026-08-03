@@ -131,6 +131,7 @@ export async function PATCH(
     "inspiration_difficulty",
     "ingredient_product_ids",
     "inspiration_use_ip_image",
+    "inspiration_banner_url",
     "reading_mode_default",
     "flip_mode_enabled",
     "full_reading_enabled",

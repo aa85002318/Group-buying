@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Gift, Heart, Package, ShieldCheck, Star, Truck } from "lucide-react";
 import {
   DEFAULT_SHOP_FEATURES,
   isExternalShopFeatureLink,
@@ -10,23 +10,9 @@ import {
 } from "@/lib/shop/features";
 import { cn } from "@/lib/utils";
 
-const ICON_MAP = {
-  truck: Truck,
-  shield: ShieldCheck,
-  gift: Gift,
-  package: Package,
-  star: Star,
-  heart: Heart,
-} as const;
-
-function FeatureIcon({ name }: { name: string }) {
-  const Icon = ICON_MAP[name as keyof typeof ICON_MAP] ?? Truck;
-  return <Icon className="h-6 w-6 text-[#153E73] md:h-7 md:w-7" strokeWidth={1.75} aria-hidden />;
-}
-
 /**
- * Shop home 3 feature blocks — no section title.
- * Desktop & mobile: single row of 3.
+ * Shop home 3 feature blocks — banner images only, no section title.
+ * Desktop & mobile: single row of 3. Slots without image_url are skipped.
  */
 export function ShopFeatureBlocks({
   features: featuresProp,
@@ -60,37 +46,29 @@ export function ShopFeatureBlocks({
   }, [featuresProp]);
 
   const visible = features
-    .filter((f) => f.is_active !== false)
+    .filter((f) => f.is_active !== false && Boolean(f.image_url?.trim()))
     .sort((a, b) => a.sort_order - b.sort_order)
     .slice(0, 3);
 
   if (!visible.length) return null;
 
   return (
-    <section
-      className={cn("w-full bg-white", className)}
-      aria-label="商城特色"
-    >
+    <section className={cn("w-full bg-white", className)} aria-label="商城特色">
       <div className="mx-auto grid max-w-[1200px] grid-cols-3 gap-2 px-4 md:gap-4 md:px-6">
         {visible.map((item) => {
           const href = (item.link_url || "/").trim() || "/";
           const external = isExternalShopFeatureLink(href, item.link_type);
-          const inner = (
-            <>
-              <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/70 md:mb-3 md:h-11 md:w-11">
-                <FeatureIcon name={item.icon} />
-              </div>
-              <p className="text-[11px] font-bold leading-snug text-[#153E73] md:text-sm">
-                {item.title}
-              </p>
-              <p className="mt-0.5 text-[10px] leading-snug text-[#687386] md:mt-1 md:text-xs">
-                {item.subtitle}
-              </p>
-            </>
-          );
-          const boxClass = cn(
-            "flex min-h-[88px] flex-col items-start rounded-[16px] p-2.5 transition",
-            "hover:-translate-y-0.5 active:scale-[0.99] md:min-h-[108px] md:p-4"
+          const alt = item.title?.trim() || item.subtitle?.trim() || "商城特色";
+          const img = (
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[16px] bg-[#F7F8FB] md:aspect-[5/3]">
+              <Image
+                src={item.image_url!}
+                alt={alt}
+                fill
+                className="object-cover object-center transition duration-200 group-hover:scale-[1.02]"
+                sizes="(max-width:768px) 33vw, 380px"
+              />
+            </div>
           );
 
           if (external) {
@@ -100,10 +78,10 @@ export function ShopFeatureBlocks({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={boxClass}
-                style={{ backgroundColor: item.background_color || "#F1F6FF" }}
+                className="group block min-w-0"
+                aria-label={alt}
               >
-                {inner}
+                {img}
               </a>
             );
           }
@@ -112,10 +90,10 @@ export function ShopFeatureBlocks({
             <Link
               key={item.id}
               href={href}
-              className={boxClass}
-              style={{ backgroundColor: item.background_color || "#F1F6FF" }}
+              className="group block min-w-0"
+              aria-label={alt}
             >
-              {inner}
+              {img}
             </Link>
           );
         })}

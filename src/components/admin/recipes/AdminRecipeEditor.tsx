@@ -244,7 +244,8 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     inspiration_category: "",
     duration_minutes: "",
     inspiration_difficulty: "",
-    inspiration_use_ip_image: true,
+    inspiration_use_ip_image: false,
+    inspiration_banner_url: "",
     seo_title: "",
     seo_description: "",
     author_label: "",
@@ -345,7 +346,8 @@ export function AdminRecipeEditor({ recipeId }: Props) {
             : "",
       inspiration_difficulty:
         r.inspiration_difficulty != null ? String(r.inspiration_difficulty) : "",
-      inspiration_use_ip_image: r.inspiration_use_ip_image !== false,
+      inspiration_use_ip_image: r.inspiration_use_ip_image === true,
+      inspiration_banner_url: r.inspiration_banner_url ?? "",
       seo_title: r.seo_title ?? "",
       seo_description: r.seo_description ?? "",
       author_label: r.author_label ?? "",
@@ -478,6 +480,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
       ? Number(form.inspiration_difficulty)
       : null,
     inspiration_use_ip_image: form.inspiration_use_ip_image,
+    inspiration_banner_url: form.inspiration_banner_url.trim() || null,
     ingredient_product_ids: ingredients
       .map((ing) => String(ing.product_id ?? "").trim())
       .filter(Boolean),
@@ -2396,10 +2399,21 @@ export function AdminRecipeEditor({ recipeId }: Props) {
                 }
               />
               <Toggle
-                label="今日推薦顯示 IP 圖（關閉則用封面）"
+                label="今日推薦顯示 IP 圖（建議關閉；請改用下方滿版 Banner）"
                 checked={form.inspiration_use_ip_image}
                 onChange={(v) => setForm({ ...form, inspiration_use_ip_image: v })}
               />
+              <label className="block text-xs font-medium text-[#687386]">
+                精選滿版 Banner URL
+                <Input
+                  className="mt-1"
+                  placeholder="/images/… 或上傳後貼上"
+                  value={form.inspiration_banner_url}
+                  onChange={(e) =>
+                    setForm({ ...form, inspiration_banner_url: e.target.value })
+                  }
+                />
+              </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-xs font-medium text-[#687386]">
                   靈感牆排序

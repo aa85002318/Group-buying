@@ -38,6 +38,7 @@ export function InspirationCategoryMenu({
     >
       {categories.map((cat) => {
         const active = cat.slug === activeSlug;
+        const img = cat.image_url?.trim();
         return (
           <button
             key={cat.id}
@@ -49,13 +50,18 @@ export function InspirationCategoryMenu({
           >
             <span
               className={cn(
-                "flex h-[58px] w-[58px] items-center justify-center rounded-full text-[22px] transition duration-200 md:h-[68px] md:w-[68px] md:text-[26px]",
+                "relative flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full text-[22px] transition duration-200 md:h-[68px] md:w-[68px] md:text-[26px]",
                 active
                   ? "bg-[#FFD84D] text-[#153E73] shadow-[0_6px_16px_rgba(255,216,77,0.45)]"
                   : "bg-[#FFF7E3] text-[#153E73]"
               )}
             >
-              {cat.icon}
+              {img ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={img} alt="" className="h-full w-full object-cover" />
+              ) : (
+                cat.icon
+              )}
             </span>
             <span
               className={cn(

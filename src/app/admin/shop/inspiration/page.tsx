@@ -1,67 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { ShopInspirationPost } from "@/lib/shop/inspiration";
 import { cn } from "@/lib/utils";
 
-type FormState = {
-  category: string;
-  card_type: string;
+type RecipeRow = {
+  id: string;
   title: string;
-  image_url: string;
-  aspect: string;
-  author_name: string;
-  materials: string;
-  href: string;
-  sort_order: string;
-  is_featured: boolean;
-  is_active: boolean;
-  tip_body: string;
-  cook_time: string;
-  difficulty: string;
-  product_name: string;
-  product_href: string;
-};
-
-const emptyForm: FormState = {
-  category: "community",
-  card_type: "community",
-  title: "",
-  image_url: "",
-  aspect: "4/5",
-  author_name: "",
-  materials: "",
-  href: "/recipes",
-  sort_order: "100",
-  is_featured: false,
-  is_active: true,
-  tip_body: "",
-  cook_time: "",
-  difficulty: "",
-  product_name: "",
-  product_href: "",
+  slug: string;
+  cover_image?: string | null;
+  status?: string | null;
+  show_in_inspiration_wall?: boolean;
+  is_featured_inspiration?: boolean;
+  inspiration_sort_order?: number | null;
+  inspiration_category?: string | null;
+  inspiration_banner_url?: string | null;
 };
 
 export default function AdminShopInspirationPage() {
-  const [posts, setPosts] = useState<ShopInspirationPost[]>([]);
+  const [recipes, setRecipes] = useState<RecipeRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<RecipeRow | null>(null);
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [sortOrder, setSortOrder] = useState("0");
+  const [category, setCategory] = useState("");
+  const [onWall, setOnWall] = useState(true);
+  const [featured, setFeatured] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [q, setQ] = useState("");
 
   const load = () => {
     setLoading(true);
     fetch("/api/admin/shop/inspiration")
       .then((r) => r.json())
-      .then((d) => setPosts(d.posts ?? []))
-      .catch(() => setPosts([]))
+      .then((d) => setRecipes(d.recipes ?? []))
+      .catch(() => setRecipes([]))
       .finally(() => setLoading(false));
   };
 
@@ -69,63 +48,35 @@ export default function AdminShopInspirationPage() {
     load();
   }, []);
 
-  const openEdit = (p: ShopInspirationPost) => {
-    setEditingId(p.id);
-    setForm({
-      category: p.category,
-      card_type: p.card_type,
-      title: p.title,
-      image_url: p.image_url,
-      aspect: p.aspect,
-      author_name: p.author_name,
-      materials: p.materials.join("、"),
-      href: p.href,
-      sort_order: String(p.sort_order),
-      is_featured: p.is_featured,
-      is_active: p.is_active,
-      tip_body: p.tip_body ?? "",
-      cook_time: p.cook_time ?? "",
-      difficulty: p.difficulty ?? "",
-      product_name: p.product_name ?? "",
-      product_href: p.product_href ?? "",
-    });
-    setShowForm(true);
-  };
-
-  const openCreate = () => {
-    setEditingId(null);
-    setForm({ ...emptyForm, sort_order: String(posts.length + 1) });
-    setShowForm(true);
+  const openEdit = (r: RecipeRow) => {
+    setEditing(r);
+    setBannerUrl(r.inspiration_banner_url || "");
+    setSortOrder(String(r.inspiration_sort_order ?? 0));
+    setCategory(r.inspiration_category || "");
+    setOnWall(r.show_in_inspiration_wall !== false);
+    setFeatured(Boolean(r.is_featured_inspiration));
   };
 
   const save = async () => {
-    if (!form.title.trim()) {
-      alert("請填寫標題");
-      return;
-    }
+    if (!editing) return;
     setSaving(true);
     try {
-      const payload = {
-        ...form,
-        title: form.title.trim(),
-        author_name: form.author_name.trim() || "CHIMEIDIY",
-        materials: form.materials,
-        sort_order: Number(form.sort_order) || 100,
-      };
-      const res = await fetch(
-        editingId
-          ? `/api/admin/shop/inspiration/${editingId}`
-          : "/api/admin/shop/inspiration",
-        {
-          method: editingId ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "儲存失敗");
-      setShowForm(false);
-      setEditingId(null);
+      const res = await fetch("/api/admin/shop/inspiration", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editing.id,
+          inspiration_banner_url: bannerUrl.trim() || null,
+          inspiration_sort_order: Number(sortOrder) || 0,
+          inspiration_category: category.trim() || null,
+          show_in_inspiration_wall: onWall,
+          is_featured_inspiration: featured,
+          inspiration_use_ip_image: false,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "儲存失敗");
+      setEditing(null);
       load();
     } catch (e) {
       alert(e instanceof Error ? e.message : "儲存失敗");
@@ -134,136 +85,159 @@ export default function AdminShopInspirationPage() {
     }
   };
 
-  const toggleActive = async (p: ShopInspirationPost) => {
-    await fetch(`/api/admin/shop/inspiration/${p.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_active: !p.is_active }),
-    });
-    load();
-  };
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return recipes;
+    return recipes.filter((r) => r.title.toLowerCase().includes(needle));
+  }, [recipes, q]);
 
   return (
     <div className="space-y-4">
       <AdminPageHeader
         title="烘焙靈感牆"
-        description="管理商城靈感卡片：圖片、作者、分類、心得與精選排序。"
+        description="管理牆上食譜露出、精選與滿版 banner。新增食譜請至食譜主檔；此處調整牆面欄位。"
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               返回商城 CMS
             </Link>
-            <Button size="sm" onClick={openCreate}>
-              新增卡片
-            </Button>
+            <Link
+              href="/admin/shop/recipe-categories"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              食譜分類
+            </Link>
+            <Link href="/admin/recipes" className={cn(buttonVariants({ size: "sm" }))}>
+              食譜主檔
+            </Link>
           </div>
         }
       />
 
-      {showForm ? (
-        <div className="space-y-3 rounded-xl border border-border bg-white p-4">
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="text-sm">
-              標題
-              <Input className="mt-1" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            </label>
-            <label className="text-sm">
-              作者
-              <Input className="mt-1" value={form.author_name} onChange={(e) => setForm({ ...form, author_name: e.target.value })} />
-            </label>
-            <label className="text-sm">
-              分類
-              <select
-                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value, card_type: e.target.value })}
-              >
-                <option value="community">大家作品</option>
-                <option value="recipe">食譜靈感</option>
-                <option value="teacher">老師作品</option>
-                <option value="tip">烘焙心得</option>
-                <option value="knowledge">烘焙知識</option>
-              </select>
-            </label>
-            <label className="text-sm">
-              圖片比例
-              <select
-                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                value={form.aspect}
-                onChange={(e) => setForm({ ...form, aspect: e.target.value })}
-              >
-                <option value="1/1">1:1</option>
-                <option value="4/5">4:5</option>
-                <option value="3/4">3:4</option>
-              </select>
-            </label>
-            <label className="text-sm md:col-span-2">
-              圖片 URL
-              <Input className="mt-1" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
-            </label>
-            <label className="text-sm md:col-span-2">
-              使用材料（逗號分隔）
-              <Input className="mt-1" value={form.materials} onChange={(e) => setForm({ ...form, materials: e.target.value })} />
-            </label>
-            <label className="text-sm">
-              連結
-              <Input className="mt-1" value={form.href} onChange={(e) => setForm({ ...form, href: e.target.value })} />
-            </label>
-            <label className="text-sm">
-              排序
-              <Input className="mt-1" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: e.target.value })} />
-            </label>
-            <label className="text-sm md:col-span-2">
-              心得內容
-              <Input className="mt-1" value={form.tip_body} onChange={(e) => setForm({ ...form, tip_body: e.target.value })} />
+      {editing ? (
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-3 rounded-xl bg-white p-4 shadow-card">
+            <p className="text-sm font-medium text-coffee">編輯：{editing.title}</p>
+            <AdminImageUpload
+              label="精選滿版 Banner（建議 5:2）"
+              images={bannerUrl ? [bannerUrl] : []}
+              onChange={(images) => setBannerUrl(images[0] ?? "")}
+              uploadFolder="shop/inspiration"
+              maxImages={1}
+              multiple={false}
+            />
+            <Input
+              placeholder="靈感分類 slug（如 cake）"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            />
+            <Input
+              placeholder="牆上排序（數字越小越前）"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            />
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={onWall} onChange={(e) => setOnWall(e.target.checked)} />
+              顯示於靈感牆
             </label>
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} />
-              精選
+              <input
+                type="checkbox"
+                checked={featured}
+                onChange={(e) => setFeatured(e.target.checked)}
+              />
+              設為精選（AI 今日推薦）
             </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-              上架
-            </label>
+            <div className="flex gap-2">
+              <Button onClick={save} disabled={saving}>
+                {saving ? "儲存中…" : "儲存"}
+              </Button>
+              <Button variant="outline" onClick={() => setEditing(null)}>
+                取消
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={save} disabled={saving}>{saving ? "儲存中…" : "儲存"}</Button>
-            <Button variant="outline" onClick={() => setShowForm(false)}>取消</Button>
+          <div className="rounded-xl bg-white p-4 shadow-card">
+            <p className="mb-2 text-sm font-medium text-coffee">Banner 預覽</p>
+            {bannerUrl || editing.cover_image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={bannerUrl || editing.cover_image || ""}
+                alt=""
+                className="aspect-[5/2] w-full rounded-2xl object-cover"
+              />
+            ) : (
+              <div className="flex aspect-[5/2] items-center justify-center rounded-2xl bg-[#FFF7E3] text-sm text-muted-foreground">
+                尚未設定 banner（將使用封面）
+              </div>
+            )}
           </div>
         </div>
       ) : null}
 
+      <Input
+        placeholder="搜尋食譜標題…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        className="max-w-sm"
+      />
+
       <AdminTable
         loading={loading}
-        rows={posts}
+        emptyText="尚無食譜"
         columns={[
-          { key: "title", header: "標題", render: (p) => p.title },
-          { key: "category", header: "分類", render: (p) => p.category },
-          { key: "author", header: "作者", render: (p) => p.author_name },
+          {
+            key: "cover",
+            header: "圖",
+            render: (r) =>
+              r.inspiration_banner_url || r.cover_image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={r.inspiration_banner_url || r.cover_image || ""}
+                  alt=""
+                  className="h-10 w-16 rounded object-cover"
+                />
+              ) : (
+                "—"
+              ),
+          },
+          { key: "title", header: "食譜", render: (r) => r.title },
+          {
+            key: "wall",
+            header: "牆上",
+            render: (r) => (r.show_in_inspiration_wall ? "是" : "否"),
+          },
+          {
+            key: "feat",
+            header: "精選",
+            render: (r) => (r.is_featured_inspiration ? "是" : "—"),
+          },
+          {
+            key: "sort",
+            header: "排序",
+            render: (r) => r.inspiration_sort_order ?? 0,
+          },
           {
             key: "status",
             header: "狀態",
-            render: (p) => (
+            render: (r) => (
               <StatusBadge
-                label={p.is_active ? "上架" : "下架"}
-                variant={p.is_active ? "success" : "secondary"}
+                label={r.status === "published" ? "已發布" : String(r.status || "草稿")}
+                variant={r.status === "published" ? "success" : "secondary"}
               />
             ),
           },
-          { key: "sort", header: "排序", render: (p) => p.sort_order },
           {
             key: "actions",
             header: "操作",
-            render: (p) => (
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => openEdit(p)}>編輯</Button>
-                <Button size="sm" variant="outline" onClick={() => toggleActive(p)}>
-                  {p.is_active ? "下架" : "上架"}
-                </Button>
-              </div>
+            render: (r) => (
+              <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
+                編輯牆面
+              </Button>
             ),
           },
         ]}
+        rows={filtered}
       />
     </div>
   );

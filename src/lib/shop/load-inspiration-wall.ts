@@ -7,7 +7,7 @@ import {
 } from "@/lib/shop/inspiration-wall";
 
 const RECIPE_SELECT =
-  "id, title, slug, summary, cover_image, difficulty, prep_time, cook_time, total_time, duration_minutes, inspiration_difficulty, inspiration_category, inspiration_sort_order, is_featured_inspiration, show_in_inspiration_wall, ingredient_product_ids, inspiration_use_ip_image, is_featured, published_at, recipe_categories(id, name, slug)";
+  "id, title, slug, summary, cover_image, difficulty, prep_time, cook_time, total_time, duration_minutes, inspiration_difficulty, inspiration_category, inspiration_sort_order, is_featured_inspiration, show_in_inspiration_wall, ingredient_product_ids, inspiration_use_ip_image, inspiration_banner_url, is_featured, published_at, recipe_categories(id, name, slug)";
 
 async function favoriteCounts(
   supabase: Awaited<ReturnType<typeof createClient>>,

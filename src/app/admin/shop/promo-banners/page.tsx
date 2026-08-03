@@ -201,7 +201,7 @@ export default function AdminShopPromoBannersPage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="商城 5:2 活動 Banner"
-        description="顯示於商品分類選單下方。建議桌面 1500×600、手機 1080×432（皆 5:2）。"
+        description="可新增多張、刪除或停用。顯示於商品分類下方，建議桌面 1500×600、手機 1080×432（皆 5:2）。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>

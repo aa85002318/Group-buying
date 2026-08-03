@@ -762,6 +762,7 @@ export interface Recipe {
   inspiration_difficulty?: number | null;
   ingredient_product_ids?: string[] | null;
   inspiration_use_ip_image?: boolean;
+  inspiration_banner_url?: string | null;
   reading_mode_default?: "flip" | "full";
   flip_mode_enabled?: boolean;
   full_reading_enabled?: boolean;

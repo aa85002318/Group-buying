@@ -18,6 +18,8 @@ export type InspirationRecipe = {
   inspiration_sort_order?: number;
   ingredient_product_ids?: string[];
   inspiration_use_ip_image?: boolean;
+  /** Full-bleed featured card banner (preferred over IP / cover) */
+  inspiration_banner_url?: string | null;
   favorite_count?: number;
   href: string;
 };
@@ -26,10 +28,18 @@ export type InspirationCategoryItem = {
   id: string;
   label: string;
   slug: string;
+  /** Emoji fallback when image_url empty */
   icon: string;
+  image_url?: string | null;
 };
 
 export const INSPIRATION_IP_IMAGE = "/branding/chimeidiy-ip-angel.png";
+
+/** System pins always first / last when DB categories load */
+export const INSPIRATION_SYSTEM_CATEGORIES: InspirationCategoryItem[] = [
+  { id: "hot", label: "熱門推薦", slug: "hot", icon: "🔥" },
+  { id: "all", label: "全部", slug: "all", icon: "✨" },
+];
 
 export const INSPIRATION_WALL_CATEGORIES: InspirationCategoryItem[] = [
   { id: "hot", label: "熱門推薦", slug: "hot", icon: "🔥" },
@@ -217,7 +227,10 @@ export function mapRecipeRowToInspiration(
     is_featured_inspiration: row.is_featured_inspiration === true,
     inspiration_sort_order: Number(row.inspiration_sort_order ?? 0) || 0,
     ingredient_product_ids: productIds,
-    inspiration_use_ip_image: row.inspiration_use_ip_image !== false,
+    inspiration_use_ip_image: row.inspiration_use_ip_image === true,
+    inspiration_banner_url: row.inspiration_banner_url
+      ? String(row.inspiration_banner_url)
+      : null,
     favorite_count: favoriteCount,
     href: `/recipes/${slug}`,
   };

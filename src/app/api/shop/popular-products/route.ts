@@ -2,42 +2,19 @@ import { NextResponse } from "next/server";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import { mockProducts } from "@/lib/mock-data";
-import type { Product } from "@/lib/types/database";
+import {
+  engagementScore,
+  isSellableShopProduct,
+  normalizeShopProductRow,
+  sortProductsByShopHomeCategories,
+} from "@/lib/shop/home-product-rails";
 
 const SELECT =
-  "id, name, slug, price, sale_price, website_price, original_price, msrp, image_url, stock, status, is_active, is_hot, is_new, is_popular, popular_sort_order, hot_sort_order, new_sort_order, package_spec, unit, specifications, publish_website, product_scope, view_count, cart_add_count, favorite_count, allow_oversell, inventory_mode, brands:brand_id(name)";
-
-function isSellable(p: Product): boolean {
-  if (p.is_active === false) return false;
-  if (p.status && ["archived", "draft", "inactive"].includes(String(p.status))) {
-    return false;
-  }
-  const stock = Number(p.stock ?? 0);
-  if (stock <= 0 && !p.allow_oversell && p.inventory_mode !== "preorder") {
-    return false;
-  }
-  return true;
-}
-
-function rankAuto(a: Product, b: Product) {
-  const score = (p: Product) =>
-    Number(p.cart_add_count ?? 0) * 3 +
-    Number(p.view_count ?? 0) +
-    Number(p.favorite_count ?? 0) * 2;
-  return score(b) - score(a);
-}
-
-function normalizeProduct(row: Record<string, unknown>): Product {
-  const brandsRaw = row.brands;
-  const brands = Array.isArray(brandsRaw)
-    ? (brandsRaw[0] as Product["brands"])
-    : (brandsRaw as Product["brands"]);
-  return { ...(row as unknown as Product), brands };
-}
+  "id, name, slug, price, sale_price, website_price, original_price, msrp, image_url, stock, status, is_active, is_hot, is_new, is_popular, popular_sort_order, hot_sort_order, new_sort_order, package_spec, unit, specifications, publish_website, product_scope, view_count, cart_add_count, favorite_count, allow_oversell, inventory_mode, category_id, brands:brand_id(name)";
 
 /**
  * GET /api/shop/popular-products
- * Prefer is_hot / is_popular (hot_sort_order / popular_sort_order), then auto-fill.
+ * Auto: products in shop-home categories, ordered by category sort then engagement.
  */
 export async function GET(request: Request) {
   const limit = Math.min(
@@ -47,7 +24,7 @@ export async function GET(request: Request) {
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json({
-      products: mockProducts.filter(isSellable).slice(0, limit),
+      products: mockProducts.filter(isSellableShopProduct).slice(0, limit),
       source: "fallback",
     });
   }
@@ -55,69 +32,49 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
-    const { data: hotRows } = await supabase
+    const { data: cats } = await supabase
+      .from("product_categories")
+      .select("id, shop_home_sort_order")
+      .eq("show_on_shop_home", true)
+      .eq("is_active", true)
+      .order("shop_home_sort_order", { ascending: true });
+
+    const categories = (cats ?? []).map((c) => ({
+      id: String(c.id),
+      shop_home_sort_order: Number(c.shop_home_sort_order ?? 100),
+    }));
+    const catIds = categories.map((c) => c.id);
+
+    let query = supabase
       .from("products")
       .select(SELECT)
       .eq("is_active", true)
       .eq("publish_website", true)
-      .eq("is_hot", true)
-      .order("hot_sort_order", { ascending: true })
-      .limit(limit);
+      .limit(Math.max(limit * 8, 40));
 
-    const { data: popularRows } = await supabase
-      .from("products")
-      .select(SELECT)
-      .eq("is_active", true)
-      .eq("publish_website", true)
-      .eq("is_popular", true)
-      .order("popular_sort_order", { ascending: true })
-      .limit(limit);
-
-    const seen = new Set<string>();
-    const manual: Product[] = [];
-    for (const row of [...(hotRows ?? []), ...(popularRows ?? [])] as Record<
-      string,
-      unknown
-    >[]) {
-      const p = normalizeProduct(row);
-      if (seen.has(p.id) || !isSellable(p)) continue;
-      seen.add(p.id);
-      manual.push(p);
-      if (manual.length >= limit) break;
+    if (catIds.length === 1) {
+      query = query.eq("category_id", catIds[0]);
+    } else if (catIds.length > 1) {
+      query = query.in("category_id", catIds);
     }
 
-    const remaining = limit - manual.length;
-
-    if (remaining <= 0) {
-      return NextResponse.json({ products: manual.slice(0, limit), source: "manual" });
+    const { data, error } = await query;
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const excludeIds = manual.map((p) => p.id);
-    let autoQuery = supabase
-      .from("products")
-      .select(SELECT)
-      .eq("is_active", true)
-      .eq("publish_website", true)
-      .order("cart_add_count", { ascending: false })
-      .order("view_count", { ascending: false })
-      .limit(Math.max(remaining * 3, remaining));
-
-    if (excludeIds.length === 1) {
-      autoQuery = autoQuery.neq("id", excludeIds[0]);
-    } else if (excludeIds.length > 1) {
-      autoQuery = autoQuery.not("id", "in", `(${excludeIds.join(",")})`);
-    }
-
-    const { data: autoRows } = await autoQuery;
-    const auto = ((autoRows ?? []) as Record<string, unknown>[])
-      .map(normalizeProduct)
-      .filter(isSellable)
-      .sort(rankAuto)
-      .slice(0, remaining);
+    const products = sortProductsByShopHomeCategories(
+      ((data ?? []) as Record<string, unknown>[])
+        .map(normalizeShopProductRow)
+        .filter(isSellableShopProduct),
+      categories,
+      engagementScore
+    ).slice(0, limit);
 
     return NextResponse.json({
-      products: [...manual, ...auto].slice(0, limit),
-      source: manual.length ? "mixed" : "auto",
+      products,
+      source: "category_auto",
+      categories: categories.length,
     });
   } catch (e) {
     return NextResponse.json(

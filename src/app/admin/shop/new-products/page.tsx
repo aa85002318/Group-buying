@@ -14,55 +14,31 @@ type PreviewRow = {
   price?: number | null;
   sale_price?: number | null;
   website_price?: number | null;
-  category_id?: string | null;
+  is_new?: boolean;
 };
 
-type CategoryRow = {
-  id: string;
-  name: string;
-  shop_home_sort_order?: number | null;
-};
-
-export default function AdminShopPopularProductsPage() {
+export default function AdminShopNewProductsPage() {
   const [products, setProducts] = useState<PreviewRow[]>([]);
-  const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState("");
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([
-      fetch("/api/shop/popular-products?limit=10", { cache: "no-store" }).then((r) =>
-        r.json()
-      ),
-      fetch("/api/admin/shop/categories").then((r) => r.json()),
-    ])
-      .then(([rail, cats]) => {
-        setProducts(Array.isArray(rail.products) ? rail.products : []);
-        setSource(String(rail.source ?? ""));
-        const list = (cats.categories ?? []) as CategoryRow[];
-        setCategories(
-          list
-            .filter((c) => (c as { show_on_shop_home?: boolean }).show_on_shop_home !== false)
-            .sort(
-              (a, b) =>
-                Number(a.shop_home_sort_order ?? 100) -
-                Number(b.shop_home_sort_order ?? 100)
-            )
-        );
+    fetch("/api/shop/new-products?limit=10", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        setProducts(Array.isArray(d.products) ? d.products : []);
+        setSource(String(d.source ?? ""));
       })
-      .catch(() => {
-        setProducts([]);
-        setCategories([]);
-      })
+      .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, []);
 
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title="熱門商品（自動）"
-        description="依商城主分類排序自動撈取可售商品，同分類內依瀏覽／加購／收藏分數排序。請至「商品分類」調整主分類露出與順序。"
+        title="新品上架（自動）"
+        description="依商城主分類排序自動撈取；優先 is_new 商品，不足時以各分類近期上架補足。請至商品主檔標記新品，並於「商品分類」調整主分類順序。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
@@ -84,13 +60,13 @@ export default function AdminShopPopularProductsPage() {
       <div className="rounded-xl border border-border bg-white p-4 text-sm text-muted-foreground shadow-card">
         <p>
           目前前台來源：<span className="font-semibold text-coffee">{source || "—"}</span>
-          ，共 {products.length} 件。參與主分類 {categories.length} 個。
+          ，共 {products.length} 件。
         </p>
       </div>
 
       <AdminTable
         loading={loading}
-        emptyText="尚無可預覽商品（請確認主分類有對應商品）"
+        emptyText="尚無可預覽新品"
         columns={[
           {
             key: "img",
@@ -104,6 +80,11 @@ export default function AdminShopPopularProductsPage() {
               ),
           },
           { key: "name", header: "商品", render: (p) => p.name },
+          {
+            key: "flag",
+            header: "新品",
+            render: (p) => (p.is_new ? "是" : "—"),
+          },
           {
             key: "price",
             header: "售價",

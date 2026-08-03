@@ -19,6 +19,9 @@ export async function PATCH(request: Request, context: Ctx) {
   if (body.icon !== undefined) updates.icon = String(body.icon).trim() || "truck";
   if (body.title !== undefined) updates.title = String(body.title).trim();
   if (body.subtitle !== undefined) updates.subtitle = String(body.subtitle).trim();
+  if (body.image_url !== undefined) {
+    updates.image_url = String(body.image_url).trim() || null;
+  }
   if (body.link_type !== undefined) {
     updates.link_type = body.link_type === "external" ? "external" : "internal";
   }

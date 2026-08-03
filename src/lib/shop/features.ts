@@ -1,15 +1,16 @@
-/** Shop home feature highlight blocks (fixed 3 slots). */
+/** Shop home feature highlight blocks (fixed 3 slots — banner images). */
 
 export type ShopFeatureIconKey = "truck" | "shield" | "gift" | "package" | "star" | "heart";
 
 export type ShopFeature = {
   id: string;
-  icon: ShopFeatureIconKey | string;
-  title: string;
-  subtitle: string;
+  icon?: ShopFeatureIconKey | string;
+  title?: string;
+  subtitle?: string;
+  image_url?: string | null;
   link_type: "internal" | "external";
   link_url: string;
-  background_color: string;
+  background_color?: string;
   sort_order: number;
   is_active: boolean;
 };
@@ -32,6 +33,7 @@ export const DEFAULT_SHOP_FEATURES: ShopFeature[] = [
     icon: "truck",
     title: "滿額 $1500 免運",
     subtitle: "全程冷鏈配送",
+    image_url: null,
     link_type: "internal",
     link_url: "/shop/categories",
     background_color: "#F1F6FF",
@@ -43,6 +45,7 @@ export const DEFAULT_SHOP_FEATURES: ShopFeature[] = [
     icon: "shield",
     title: "快速出貨",
     subtitle: "天天出貨更安心",
+    image_url: null,
     link_type: "internal",
     link_url: "/support/shipping",
     background_color: "#FFF6E6",
@@ -54,6 +57,7 @@ export const DEFAULT_SHOP_FEATURES: ShopFeature[] = [
     icon: "gift",
     title: "會員專屬優惠",
     subtitle: "點數回饋折抵",
+    image_url: null,
     link_type: "internal",
     link_url: "/member/benefits",
     background_color: "#FFF1F3",

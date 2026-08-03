@@ -4,11 +4,14 @@ import Link from "next/link";
 import { ArrowRight, Clock, Star } from "lucide-react";
 import {
   difficultyStars,
-  INSPIRATION_IP_IMAGE,
   type InspirationRecipe,
 } from "@/lib/shop/inspiration-wall";
 import { cn } from "@/lib/utils";
 
+/**
+ * Featured inspiration card — full-bleed banner media (no default IP logo).
+ * Priority: inspiration_banner_url → cover_image_url.
+ */
 export function AIFeaturedRecipe({
   recipe,
   loading,
@@ -19,14 +22,15 @@ export function AIFeaturedRecipe({
   if (loading) {
     return (
       <div
-        className="animate-pulse rounded-[24px] bg-[#FFF9E8] p-5 md:p-6"
+        className="animate-pulse overflow-hidden rounded-[24px] bg-[#FFF9E8]"
         style={{ minHeight: 220 }}
         aria-hidden
       >
-        <div className="h-5 w-28 rounded-full bg-[#FFE9A8]" />
-        <div className="mt-4 h-8 w-3/5 rounded bg-[#FFE9A8]" />
-        <div className="mt-3 h-4 w-2/5 rounded bg-[#FFF3C4]" />
-        <div className="mt-6 h-12 w-full rounded-full bg-[#FFD84D]/60 md:w-44" />
+        <div className="aspect-[5/2] w-full bg-[#FFE9A8]" />
+        <div className="space-y-3 p-5">
+          <div className="h-5 w-28 rounded-full bg-[#FFE9A8]" />
+          <div className="h-8 w-3/5 rounded bg-[#FFE9A8]" />
+        </div>
       </div>
     );
   }
@@ -34,16 +38,28 @@ export function AIFeaturedRecipe({
   if (!recipe) return null;
 
   const mediaSrc =
-    recipe.inspiration_use_ip_image !== false
-      ? INSPIRATION_IP_IMAGE
-      : recipe.cover_image_url;
+    (recipe.inspiration_banner_url || "").trim() ||
+    recipe.cover_image_url ||
+    "";
   const minutes = recipe.duration_minutes;
   const rating = recipe.rating ?? 4.8;
   const ratingCount = recipe.rating_count;
 
   return (
-    <article className="overflow-hidden rounded-[24px] bg-[#FFF9E8] p-5 md:flex md:min-h-[280px] md:items-stretch md:gap-6 md:p-6 lg:min-h-[300px]">
-      <div className="flex min-w-0 flex-[0_0_55%] flex-col justify-center md:pr-2">
+    <article className="overflow-hidden rounded-[24px] bg-[#FFF9E8]">
+      {mediaSrc ? (
+        <Link href={recipe.href} className="relative block aspect-[5/2] w-full overflow-hidden bg-[#FFF3C4]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={mediaSrc}
+            alt={recipe.title}
+            className="h-full w-full object-cover object-center"
+            loading="eager"
+          />
+        </Link>
+      ) : null}
+
+      <div className="flex min-w-0 flex-col justify-center p-5 md:p-6">
         <span className="inline-flex w-fit items-center rounded-full bg-[#FFD84D] px-3 py-1 text-[12px] font-bold text-[#153E73]">
           AI 今日推薦
         </span>
@@ -97,16 +113,6 @@ export function AIFeaturedRecipe({
             </Link>
           ) : null}
         </div>
-      </div>
-
-      <div className="relative mt-5 flex flex-[0_0_45%] items-end justify-center md:mt-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={mediaSrc}
-          alt=""
-          className="h-[180px] w-auto max-w-full object-contain object-bottom md:h-[240px] lg:h-[260px]"
-          loading="lazy"
-        />
       </div>
     </article>
   );

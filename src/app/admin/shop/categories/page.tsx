@@ -275,7 +275,7 @@ export default function AdminShopCategoriesPage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="商城主分類"
-        description="控制 /shop 搜尋欄下方圓形主分類（最多 8 個＋系統「全部分類」）。素材建議透明 PNG／WebP 256×256，最大 1MB。"
+        description="控制 /shop 搜尋欄下方圓形主分類（最多 8 個＋系統「全部分類」）。可更換文字與 logo 圖；素材建議透明 PNG／WebP 256×256。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>

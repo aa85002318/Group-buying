@@ -33,14 +33,15 @@ export async function POST(request: Request) {
   if (authError) return authError;
 
   const body = await request.json();
-  const title = String(body.title ?? "").trim();
-  if (!title) {
-    return NextResponse.json({ error: "標題必填" }, { status: 400 });
+  const title = String(body.title ?? "").trim() || "商城特色";
+  const imageUrl = String(body.image_url ?? "").trim();
+  if (!imageUrl && !title) {
+    return NextResponse.json({ error: "請上傳 banner 圖" }, { status: 400 });
   }
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
-      { feature: { id: `mock-${Date.now()}`, title } },
+      { feature: { id: `mock-${Date.now()}`, title, image_url: imageUrl } },
       { status: 201 }
     );
   }
@@ -57,12 +58,13 @@ export async function POST(request: Request) {
   }
 
   const payload = {
-    icon: String(body.icon ?? "truck").trim() || "truck",
+    icon: String(body.icon ?? "star").trim() || "star",
     title,
     subtitle: String(body.subtitle ?? "").trim(),
+    image_url: imageUrl || null,
     link_type: body.link_type === "external" ? "external" : "internal",
     link_url: String(body.link_url ?? "/").trim() || "/",
-    background_color: String(body.background_color ?? "#E8F3FF").trim() || "#E8F3FF",
+    background_color: String(body.background_color ?? "#F7F8FB").trim() || "#F7F8FB",
     sort_order: Number(body.sort_order ?? 1) || 1,
     is_active: body.is_active !== false,
   };
