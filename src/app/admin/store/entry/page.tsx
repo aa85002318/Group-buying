@@ -1,0 +1,36 @@
+"use client";
+
+import { Suspense } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { StoreQuickEntryForm } from "@/components/admin/store/StoreQuickEntryForm";
+
+function EntryInner() {
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type");
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-bold text-[#153E73]">現場快速輸入</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            共用表單 · 寫入既有門市資料表 · 商品主檔不另建
+          </p>
+        </div>
+        <Link href="/admin/store" className="text-sm font-semibold text-[#153E73] underline">
+          回工作台
+        </Link>
+      </div>
+      <StoreQuickEntryForm initialType={type} />
+    </div>
+  );
+}
+
+export default function StoreQuickEntryPage() {
+  return (
+    <Suspense fallback={<p className="text-sm text-muted-foreground">載入中…</p>}>
+      <EntryInner />
+    </Suspense>
+  );
+}

@@ -17,6 +17,7 @@ import {
   STORE_QUICK_ENTRY_TYPES,
   greetingForHour,
 } from "@/lib/admin/store-ops";
+import { STORE_REQUEST_STATUS_LABEL } from "@/lib/admin/store-entry";
 import { cn } from "@/lib/utils";
 
 type Metrics = {
@@ -34,6 +35,7 @@ type Metrics = {
   pendingRestock: number;
   todayReceive: number;
   lastBackupAt: string | null;
+  pendingRequests?: number;
 };
 
 type OrdersToday = {
@@ -46,25 +48,28 @@ type OrdersToday = {
 };
 
 type Todo = { priority: number; label: string; href: string; count?: number };
-type ChecklistItem = { id: string; label: string; href: string };
-
-const CHECKLIST_STORAGE = "chimeidiy-store-checklist";
-
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function loadChecked(): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const raw = window.localStorage.getItem(`${CHECKLIST_STORAGE}:${todayKey()}`);
-    if (!raw) return new Set();
-    const parsed = JSON.parse(raw) as string[];
-    return new Set(Array.isArray(parsed) ? parsed : []);
-  } catch {
-    return new Set();
-  }
-}
+type ChecklistItem = {
+  id: string;
+  label: string;
+  href?: string | null;
+  is_done?: boolean;
+};
+type StoreRequest = {
+  id: string;
+  product_label?: string | null;
+  quantity?: number | null;
+  note?: string | null;
+  status?: string;
+  requested_by_name?: string | null;
+  created_at?: string;
+  products?: { name?: string } | null;
+};
+type StoreMessage = {
+  id: string;
+  body: string;
+  author_name?: string | null;
+  created_at?: string;
+};
 
 function StatPill({
   label,
@@ -128,11 +133,14 @@ export default function AdminStoreHomePage() {
   const [ordersToday, setOrdersToday] = useState<OrdersToday | null>(null);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [requests, setRequests] = useState<StoreRequest[]>([]);
+  const [messages, setMessages] = useState<StoreMessage[]>([]);
   const [staffName, setStaffName] = useState("店長");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entryOpen, setEntryOpen] = useState(false);
-  const [checked, setChecked] = useState<Set<string>>(() => new Set());
+  const [messageDraft, setMessageDraft] = useState("");
+  const [msgBusy, setMsgBusy] = useState(false);
 
   const greeting = useMemo(() => greetingForHour(), []);
 
@@ -147,6 +155,8 @@ export default function AdminStoreHomePage() {
       setOrdersToday(data.ordersToday ?? null);
       setTodos(data.todos ?? []);
       setChecklist(data.checklist ?? []);
+      setRequests(data.requests ?? []);
+      setMessages(data.messages ?? []);
       setStaffName(data.staffName || "店長");
     } catch (e) {
       setError(e instanceof Error ? e.message : "載入失敗");
@@ -157,32 +167,72 @@ export default function AdminStoreHomePage() {
 
   useEffect(() => {
     void load();
-    setChecked(loadChecked());
   }, [load]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.location.hash === "#quick-entry") {
+    const hash = window.location.hash;
+    if (hash === "#quick-entry") {
       setEntryOpen(true);
       document.getElementById("quick-entry")?.scrollIntoView({ behavior: "smooth" });
+    } else if (hash === "#requests" || hash === "#messages" || hash === "#checklist") {
+      document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth" });
     }
   }, [loading]);
 
-  const toggleCheck = (id: string) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      try {
-        window.localStorage.setItem(
-          `${CHECKLIST_STORAGE}:${todayKey()}`,
-          JSON.stringify(Array.from(next))
-        );
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
+  const toggleCheck = async (item: ChecklistItem) => {
+    const nextDone = !item.is_done;
+    setChecklist((prev) =>
+      prev.map((t) => (t.id === item.id ? { ...t, is_done: nextDone } : t))
+    );
+    try {
+      const res = await fetch("/api/admin/store/todos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, is_done: nextDone }),
+      });
+      if (!res.ok) throw new Error("更新失敗");
+    } catch {
+      setChecklist((prev) =>
+        prev.map((t) => (t.id === item.id ? { ...t, is_done: item.is_done } : t))
+      );
+    }
+  };
+
+  const reviewRequest = async (id: string, status: "approved" | "rejected") => {
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    try {
+      const res = await fetch("/api/admin/store/requests", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) throw new Error("更新失敗");
+      void load();
+    } catch {
+      void load();
+    }
+  };
+
+  const sendMessage = async () => {
+    const text = messageDraft.trim();
+    if (!text) return;
+    setMsgBusy(true);
+    try {
+      const res = await fetch("/api/admin/store/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: text }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "送出失敗");
+      setMessageDraft("");
+      setMessages((prev) => [...prev, data.item]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "留言失敗");
+    } finally {
+      setMsgBusy(false);
+    }
   };
 
   const attention = [
@@ -295,14 +345,13 @@ export default function AdminStoreHomePage() {
         id="quick-entry"
         title="現場快速輸入"
         action={
-          <button
-            type="button"
+          <Link
+            href="/admin/store/entry"
             className="inline-flex items-center gap-1 rounded-lg border border-[#FFE149] bg-[#FFE149] px-3 py-1.5 text-sm font-bold text-[#153E73]"
-            onClick={() => setEntryOpen((v) => !v)}
           >
             <Plus className="h-4 w-4" />
             新增紀錄
-          </button>
+          </Link>
         }
       >
         {entryOpen ? (
@@ -318,9 +367,18 @@ export default function AdminStoreHomePage() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            點「新增紀錄」選擇異常、報廢、退貨、報修等（約 30 秒完成）。
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm text-muted-foreground">
+              共用表單：異常／報廢／退貨／報修／留言（約 30 秒）。
+            </p>
+            <button
+              type="button"
+              className="text-sm font-semibold text-[#153E73] underline"
+              onClick={() => setEntryOpen(true)}
+            >
+              展開類型
+            </button>
+          </div>
         )}
       </SectionCard>
 
@@ -382,41 +440,155 @@ export default function AdminStoreHomePage() {
         </div>
       </SectionCard>
 
-      {/* 5. Branch requests placeholder */}
-      <SectionCard title="分店需求">
-        <p className="rounded-[12px] border border-dashed border-[#E8EBF0] bg-[#F7F8FA] px-3 py-4 text-sm text-muted-foreground">
-          Phase C 將加入叫貨需求（同意／退回）。目前請用「目前庫存」與批次進貨處理補貨。
-        </p>
-        <Link
-          href="/admin/store/inventory"
-          className="mt-3 inline-block text-sm font-semibold text-[#153E73] underline"
-        >
-          前往庫存 →
-        </Link>
+      {/* 5. Branch requests */}
+      <SectionCard
+        id="requests"
+        title="分店需求"
+        action={
+          <Link
+            href="/admin/store/entry?type=request"
+            className="text-xs font-semibold text-[#153E73] underline"
+          >
+            新增需求
+          </Link>
+        }
+      >
+        {requests.length === 0 ? (
+          <p className="rounded-[12px] border border-dashed border-[#E8EBF0] bg-[#F7F8FA] px-3 py-4 text-sm text-muted-foreground">
+            尚無待處理叫貨需求。
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {requests.map((r) => {
+              const name =
+                r.products?.name || r.product_label || "未指定商品";
+              const status = r.status ?? "pending";
+              return (
+                <li
+                  key={r.id}
+                  className="rounded-[12px] border border-[#E8EBF0] px-3 py-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#153E73]">{name}</p>
+                      <p className="mt-0.5 text-sm text-[#153E73]/80">
+                        數量 {r.quantity ?? 1}
+                        {r.note ? ` · ${r.note}` : ""}
+                      </p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        {r.requested_by_name || "門市"} ·{" "}
+                        {r.created_at
+                          ? new Date(r.created_at).toLocaleString("zh-TW", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : ""}
+                        {" · "}
+                        {STORE_REQUEST_STATUS_LABEL[status] ?? status}
+                      </p>
+                    </div>
+                    {status === "pending" ? (
+                      <div className="flex gap-1.5">
+                        <button
+                          type="button"
+                          className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800"
+                          onClick={() => void reviewRequest(r.id, "approved")}
+                        >
+                          同意
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700"
+                          onClick={() => void reviewRequest(r.id, "rejected")}
+                        >
+                          退回
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </SectionCard>
 
-      {/* 6. Messages placeholder */}
-      <SectionCard id="messages" title="今日留言">
-        <p className="rounded-[12px] border border-dashed border-[#E8EBF0] bg-[#F7F8FA] px-3 py-4 text-sm text-muted-foreground">
-          Phase C 將加入店內留言串。目前緊急事項請用「商品異常」登記。
-        </p>
+      {/* 6. Messages */}
+      <SectionCard
+        id="messages"
+        title="今日留言"
+        action={
+          <Link
+            href="/admin/store/entry?type=message"
+            className="text-xs font-semibold text-[#153E73] underline"
+          >
+            完整輸入
+          </Link>
+        }
+      >
+        <div className="max-h-64 space-y-2 overflow-y-auto rounded-[12px] bg-[#F7F8FA] p-3">
+          {messages.length === 0 ? (
+            <p className="text-sm text-muted-foreground">今天還沒有留言。</p>
+          ) : (
+            messages.map((m) => (
+              <div key={m.id} className="rounded-xl border border-white bg-white px-3 py-2 shadow-sm">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="text-sm font-bold text-[#153E73]">
+                    {m.author_name || "門市"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {m.created_at
+                      ? new Date(m.created_at).toLocaleTimeString("zh-TW", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
+                  </p>
+                </div>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-[#153E73]/90">{m.body}</p>
+              </div>
+            ))
+          )}
+        </div>
+        <div className="mt-3 flex gap-2">
+          <input
+            className="h-10 min-w-0 flex-1 rounded-xl border border-[#E7EAF0] px-3 text-sm"
+            placeholder="快速留言…"
+            value={messageDraft}
+            onChange={(e) => setMessageDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void sendMessage();
+              }
+            }}
+          />
+          <button
+            type="button"
+            disabled={msgBusy}
+            className="shrink-0 rounded-xl border border-[#FFE149] bg-[#FFE149] px-3 text-sm font-bold text-[#153E73]"
+            onClick={() => void sendMessage()}
+          >
+            送出
+          </button>
+        </div>
       </SectionCard>
 
       {/* 7. Checklist */}
-      <SectionCard id="checklist" title="明日／今日待辦">
+      <SectionCard id="checklist" title="今日待辦">
         {checklist.length === 0 ? (
           <p className="text-sm text-muted-foreground">尚無待辦清單</p>
         ) : (
           <ul className="space-y-2">
             {checklist.map((item) => {
-              const done = checked.has(item.id);
+              const done = Boolean(item.is_done);
               return (
                 <li key={item.id}>
                   <label className="flex cursor-pointer items-center gap-3 rounded-[12px] border border-[#E8EBF0] px-3 py-2.5 hover:bg-[#FFFBEA]">
                     <input
                       type="checkbox"
                       checked={done}
-                      onChange={() => toggleCheck(item.id)}
+                      onChange={() => void toggleCheck(item)}
                       className="h-4 w-4 accent-[#FFE149]"
                     />
                     <span
@@ -427,13 +599,15 @@ export default function AdminStoreHomePage() {
                     >
                       {item.label}
                     </span>
-                    <Link
-                      href={item.href}
-                      className="text-xs font-semibold text-[#153E73]/60 underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      前往
-                    </Link>
+                    {item.href ? (
+                      <Link
+                        href={item.href}
+                        className="text-xs font-semibold text-[#153E73]/60 underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        前往
+                      </Link>
+                    ) : null}
                   </label>
                 </li>
               );

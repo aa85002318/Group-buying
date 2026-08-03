@@ -31,13 +31,15 @@ const EMPTY = {
     total: 0,
   },
   todos: [] as Array<{ priority: number; label: string; href: string; count?: number }>,
-  checklist: [
-    { id: "order", label: "點貨", href: "/admin/store/batches?receive=1" },
-    { id: "fridge", label: "清冰箱", href: "/admin/store/expiry" },
-    { id: "cream", label: "補奶油", href: "/admin/store/inventory" },
-    { id: "returns", label: "清退貨", href: "/admin/store/returns" },
-    { id: "labels", label: "更新價格牌", href: "/admin/products/labels" },
-  ],
+  checklist: [] as Array<{
+    id: string;
+    label: string;
+    href?: string | null;
+    is_done?: boolean;
+  }>,
+  requests: [] as Array<Record<string, unknown>>,
+  messages: [] as Array<Record<string, unknown>>,
+  workLogs: [] as Array<Record<string, unknown>>,
 };
 
 export async function GET() {
@@ -243,6 +245,86 @@ export async function GET() {
 
   todos.sort((a, b) => a.priority - b.priority);
 
+  const { data: store } = await admin
+    .from("stores")
+    .select("id")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  const storeId = store?.id ?? null;
+
+  let checklist: Array<{
+    id: string;
+    label: string;
+    href?: string | null;
+    is_done?: boolean;
+  }> = [];
+  let requests: Array<Record<string, unknown>> = [];
+  let messages: Array<Record<string, unknown>> = [];
+  let workLogs: Array<Record<string, unknown>> = [];
+  let pendingRequests = 0;
+
+  if (storeId) {
+    await admin.rpc("ensure_store_daily_todos", { p_store_id: storeId, p_date: today });
+
+    const [todoRows, reqRows, msgRows, logRows, pendingCount] = await Promise.all([
+      admin
+        .from("store_todos")
+        .select("id, label, href, is_done, sort_order")
+        .eq("store_id", storeId)
+        .eq("todo_date", today)
+        .order("sort_order", { ascending: true }),
+      admin
+        .from("store_requests")
+        .select("*, products(id, name, sku)")
+        .eq("store_id", storeId)
+        .in("status", ["pending", "approved"])
+        .order("created_at", { ascending: false })
+        .limit(10),
+      admin
+        .from("store_messages")
+        .select("*")
+        .eq("store_id", storeId)
+        .gte("created_at", dayStart)
+        .lte("created_at", dayEnd)
+        .order("created_at", { ascending: true })
+        .limit(40),
+      admin
+        .from("store_work_logs")
+        .select("*")
+        .eq("store_id", storeId)
+        .eq("log_date", today)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      admin
+        .from("store_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", storeId)
+        .eq("status", "pending"),
+    ]);
+
+    checklist = (todoRows.data ?? []).map((t) => ({
+      id: t.id,
+      label: t.label,
+      href: t.href,
+      is_done: Boolean(t.is_done),
+    }));
+    requests = (reqRows.data ?? []) as Array<Record<string, unknown>>;
+    messages = (msgRows.data ?? []) as Array<Record<string, unknown>>;
+    workLogs = (logRows.data ?? []) as Array<Record<string, unknown>>;
+    pendingRequests = pendingCount.count ?? 0;
+
+    if (pendingRequests > 0) {
+      todos.unshift({
+        priority: 0,
+        label: "待審核叫貨需求",
+        href: "/admin/store#requests",
+        count: pendingRequests,
+      });
+      todos.sort((a, b) => a.priority - b.priority);
+    }
+  }
+
   return NextResponse.json({
     staffName,
     metrics: {
@@ -257,12 +339,16 @@ export async function GET() {
       openReturns: returns.count ?? 0,
       lowStock: low,
       outOfStock,
-      pendingRestock,
+      pendingRestock: Math.max(pendingRestock, pendingRequests),
       todayReceive: todayReceive.count ?? 0,
       lastBackupAt: backup.data?.finished_at ?? backup.data?.created_at ?? null,
+      pendingRequests,
     },
     ordersToday,
     todos,
-    checklist: EMPTY.checklist,
+    checklist,
+    requests,
+    messages,
+    workLogs,
   });
 }

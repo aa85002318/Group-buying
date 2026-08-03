@@ -22,24 +22,24 @@ export const STORE_RESOURCE_TABLE: Record<StoreResource, string> = {
 export const STORE_QUICK_ACTIONS = [
   { href: "/admin/orders", label: "新訂單", icon: "orders" },
   { href: "/admin/pickup", label: "取貨", icon: "pickup" },
-  { href: "/admin/store/issues?new=1", label: "商品異常", icon: "issue" },
-  { href: "/admin/store/disposals?new=1", label: "商品報廢", icon: "disposal" },
-  { href: "/admin/store/returns?new=1", label: "商品退貨", icon: "return" },
-  { href: "/admin/store/issues?new=1&type=repair", label: "商品報修", icon: "repair" },
-  { href: "/admin/store#quick-entry", label: "工作紀錄", icon: "log" },
+  { href: "/admin/store/entry?type=issue", label: "商品異常", icon: "issue" },
+  { href: "/admin/store/entry?type=disposal", label: "商品報廢", icon: "disposal" },
+  { href: "/admin/store/entry?type=return", label: "商品退貨", icon: "return" },
+  { href: "/admin/store/entry?type=repair", label: "商品報修", icon: "repair" },
+  { href: "/admin/store/entry?type=worklog", label: "工作紀錄", icon: "log" },
   { href: "/admin/store/inventory", label: "庫存", icon: "stock" },
 ] as const;
 
-/** Phase A: field entry types — deep-link to existing forms where available. */
+/** Phase B: field entry types — shared form at /admin/store/entry */
 export const STORE_QUICK_ENTRY_TYPES = [
-  { id: "issue", label: "商品異常", href: "/admin/store/issues?new=1" },
-  { id: "disposal", label: "商品報廢", href: "/admin/store/disposals?new=1" },
-  { id: "return", label: "商品退貨", href: "/admin/store/returns?new=1" },
-  { id: "repair", label: "商品報修", href: "/admin/store/issues?new=1&type=repair" },
-  { id: "special", label: "客人特殊需求", href: "/admin/store/issues?new=1&type=special" },
-  { id: "request", label: "分店需求", href: "/admin/store/inventory" },
-  { id: "worklog", label: "每日工作紀錄", href: "/admin/store#checklist" },
-  { id: "message", label: "留言", href: "/admin/store#messages" },
+  { id: "issue", label: "商品異常", href: "/admin/store/entry?type=issue" },
+  { id: "disposal", label: "商品報廢", href: "/admin/store/entry?type=disposal" },
+  { id: "return", label: "商品退貨", href: "/admin/store/entry?type=return" },
+  { id: "repair", label: "商品報修", href: "/admin/store/entry?type=repair" },
+  { id: "special", label: "客人特殊需求", href: "/admin/store/entry?type=special" },
+  { id: "request", label: "分店需求", href: "/admin/store/entry?type=request" },
+  { id: "worklog", label: "每日工作紀錄", href: "/admin/store/entry?type=worklog" },
+  { id: "message", label: "留言", href: "/admin/store/entry?type=message" },
 ] as const;
 
 export function daysFromNow(n: number): string {

@@ -121,7 +121,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/orders", label: "App 訂單", roles: ["admin", "store_staff"] },
       { href: "/admin/pickup", label: "取貨核銷", roles: ["admin", "store_staff"] },
       {
-        href: "/admin/store#quick-entry",
+        href: "/admin/store/entry",
         label: "現場輸入",
         roles: ["admin", "store_staff"],
       },
@@ -137,10 +137,37 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/store/stocktake", label: "盤點", roles: ["admin", "store_staff"] },
       { href: "/admin/store/batches", label: "批次管理", roles: ["admin", "store_staff"] },
 
+      { type: "heading", label: "工作紀錄", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/store#requests",
+        label: "分店需求",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store#messages",
+        label: "每日留言",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store#checklist",
+        label: "今日待辦",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/entry?type=worklog",
+        label: "工作紀錄",
+        roles: ["admin", "store_staff"],
+      },
+
       { type: "heading", label: "批次／匯入匯出", roles: ["admin", "store_staff"] },
       {
-        href: "/admin/store/batches?tab=import",
-        label: "Excel 匯入匯出",
+        href: "/admin/store/excel",
+        label: "Excel 匯入",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/excel#export",
+        label: "Excel 匯出",
         roles: ["admin", "store_staff"],
       },
 

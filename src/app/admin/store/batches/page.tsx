@@ -143,8 +143,13 @@ function BatchesPageInner() {
             <Button type="button" onClick={() => setShowReceive((v) => !v)}>
               {showReceive ? "關閉進貨" : "快速進貨"}
             </Button>
+            <Link href="/admin/store/excel">
+              <Button type="button" variant="outline">
+                Excel 匯入匯出
+              </Button>
+            </Link>
             <Button type="button" variant="outline" onClick={() => setShowImport((v) => !v)}>
-              批次匯入
+              {showImport ? "關閉快速匯入" : "快速效期匯入"}
             </Button>
             <Link href="/admin/products">
               <Button type="button" variant="secondary">
@@ -222,12 +227,11 @@ function BatchesPageInner() {
 
       {showImport ? (
         <section className="rounded-[16px] border border-[#E9DED4] bg-white p-4">
-          <h2 className="mb-2 font-semibold text-[#2F2925]">批次匯入（依條碼找商品）</h2>
+          <h2 className="mb-2 font-semibold text-[#2F2925]">快速效期匯入</h2>
           <p className="mb-3 text-sm text-[#756B64]">
-            欄位：條碼、批次、數量、製造日、效期、位置、成本。找不到商品的列會列入錯誤，不會新建商品。
-            商品主檔匯入請用{" "}
-            <Link href="/admin/products/import" className="text-primary underline">
-              /admin/products/import
+            中文欄位：條碼、SKU、商品名稱、批號、到期日、數量。完整範本與報廢／退貨／價格匯入請到{" "}
+            <Link href="/admin/store/excel" className="text-primary underline">
+              Excel 匯入匯出
             </Link>
             。
           </p>

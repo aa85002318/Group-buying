@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import type { StoreExcelImportType } from "@/lib/admin/store-excel";
 
 type PreviewRow = {
   row: number;
   product_name?: string;
   barcode?: string;
+  batch_no?: string;
   quantity?: number;
   expiry_date?: string;
   errors: string[];
@@ -24,7 +26,7 @@ type Summary = {
 };
 
 type AdminImportPreviewProps = {
-  importType: "expiry" | "disposal";
+  importType: StoreExcelImportType;
   onCommitted?: () => void;
 };
 
@@ -89,7 +91,7 @@ export function AdminImportPreview({ importType, onCommitted }: AdminImportPrevi
           href={`/api/admin/store/import?type=${importType}`}
           className="text-sm font-medium text-[#6F4E37] underline"
         >
-          下載 Excel 範本
+          下載中文 Excel 範本
         </a>
       </div>
       <input
@@ -136,6 +138,7 @@ export function AdminImportPreview({ importType, onCommitted }: AdminImportPrevi
                 <th className="px-3 py-2">列</th>
                 <th className="px-3 py-2">商品</th>
                 <th className="px-3 py-2">條碼</th>
+                <th className="px-3 py-2">批號</th>
                 <th className="px-3 py-2">數量</th>
                 <th className="px-3 py-2">效期</th>
                 <th className="px-3 py-2">狀態</th>
@@ -147,6 +150,7 @@ export function AdminImportPreview({ importType, onCommitted }: AdminImportPrevi
                   <td className="px-3 py-2">{p.row}</td>
                   <td className="px-3 py-2">{p.product_name ?? "—"}</td>
                   <td className="px-3 py-2">{p.barcode ?? "—"}</td>
+                  <td className="px-3 py-2">{p.batch_no ?? "—"}</td>
                   <td className="px-3 py-2">{p.quantity ?? "—"}</td>
                   <td className="px-3 py-2">{p.expiry_date ?? "—"}</td>
                   <td className="px-3 py-2">

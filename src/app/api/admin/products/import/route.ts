@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    const name = pick(row, "名稱", "name", "商品名稱");
+    const name = pick(row, "商品名稱", "名稱", "name");
     const price = pick(row, "售價", "price", "團購價");
 
     if (!name || !price) {
@@ -59,12 +59,20 @@ export async function POST(request: Request) {
     const images = pick(row, "圖片", "image", "image_url");
     const batchNumber = pick(row, "批號", "batch");
     const expiry = pick(row, "效期", "expiry");
+    const brand = pick(row, "品牌", "brand");
+    const spec = pick(row, "規格", "spec", "unit");
+    const barcode = pick(row, "條碼", "barcode");
+    const safetyStock = pick(row, "安全庫存", "safety_stock");
 
     const productRow = {
       name,
-      sku: pick(row, "SKU", "sku") || null,
+      sku: pick(row, "商品編號", "SKU", "sku") || null,
+      barcode: barcode || null,
+      brand: brand || null,
+      unit: spec || null,
       price: Number(price),
       cost_price: pick(row, "成本", "cost") ? Number(pick(row, "成本", "cost")) : null,
+      safety_stock: safetyStock ? Number(safetyStock) : 0,
       stock: Number(pick(row, "現貨", "stock") || 0),
       preorder_stock: Number(pick(row, "預購", "preorder") || 0),
       description: pick(row, "介紹", "description") || null,
