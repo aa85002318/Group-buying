@@ -38,7 +38,7 @@ function resolvePlaneYellow(settings: ShopPageSettings) {
 }
 
 /**
- * Shop hub layout — from search bar to footer, every major block is 15px apart.
+ * Shop hub layout — from search bar to footer, every major block is 20px apart.
  */
 export function ShopHubClient() {
   const [pageSettings, setPageSettings] = useState<ShopPageSettings>(
@@ -77,8 +77,8 @@ export function ShopHubClient() {
         <ShopHeroBanner backgroundColor={planeYellow} />
       </div>
 
-      {/* Search → footer: every major block spaced 15px apart */}
-      <main className="shop-hub-main flex flex-col gap-[15px] pb-[15px]">
+      {/* Search → footer: every major block spaced 20px apart */}
+      <main className="shop-hub-main flex flex-col gap-[20px] pb-[20px]">
         <ShopMainCategoryMenu />
         <ShopFeatureBlocks />
         <ShopPromoCarousel />

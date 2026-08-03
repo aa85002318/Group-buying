@@ -31,8 +31,8 @@ export const DEFAULT_SHOP_HERO_BANNERS: ShopHeroBanner[] = [
     title: "烘焙材料商城",
     alt_text: "烘焙材料商城 · 烘焙好物一站購足",
     subtitle: "烘焙好物一站購足，讓您的每一次烘焙都更簡單、更美味！",
-    desktop_image: "/images/shop/hero-desktop.jpg?v=20260802h",
-    mobile_image: "/images/shop/hero-mobile.jpg?v=20260802h",
+    desktop_image: "/images/shop/hero-desktop.jpg?v=20260803a",
+    mobile_image: "/images/shop/hero-mobile.jpg?v=20260803a",
     link: "/shop/categories",
     link_target: "_self",
     button_text: "探索更多好物",
@@ -56,11 +56,17 @@ export function mapCmsRowToShopHero(row: Record<string, unknown>): ShopHeroBanne
   if (!desktop && !row.title) return null;
   let mobile = String(row.mobile_image ?? row.mobile_image_url ?? row.mobileImage ?? "").trim();
 
-  // Legacy mall asset had baked-in rounded white corners — remap to square-edge shop heroes.
-  if (desktop.includes("/images/mall/hero-banner")) {
+  // Legacy mall / homepage brand assets had soft-rounded look — force shop square heroes.
+  if (
+    desktop.includes("/images/mall/hero-banner") ||
+    desktop.includes("/brand/hero-home")
+  ) {
     desktop = DEFAULT_SHOP_HERO_BANNERS[0].desktop_image;
   }
-  if (mobile.includes("/images/mall/hero-banner")) {
+  if (
+    mobile.includes("/images/mall/hero-banner") ||
+    mobile.includes("/brand/hero-home")
+  ) {
     mobile = DEFAULT_SHOP_HERO_BANNERS[0].mobile_image || "";
   }
   // Keep static shop hero assets on the latest cache-busted defaults.

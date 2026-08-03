@@ -33,7 +33,7 @@ export function ShopCorporateInquiry({ className }: { className?: string }) {
   const href = (banner.link_url || "/contact/business").trim() || "/contact/business";
   const external = /^https?:\/\//i.test(href);
   const img = (
-    <span className="relative block aspect-[5/2] w-full overflow-hidden rounded-[16px] bg-transparent">
+    <span className="relative block aspect-[5/2] w-full overflow-hidden rounded-none bg-transparent">
       <Image
         src={banner.image_url}
         alt={banner.alt_text || banner.title || "企業訂購詢問"}

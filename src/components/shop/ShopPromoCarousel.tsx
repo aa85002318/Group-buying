@@ -18,8 +18,8 @@ const FALLBACK_SLIDES: ShopPromoBanner[] = [
   {
     id: "fallback-1",
     title: "會員日全館免運",
-    desktop_image_url: "/images/shop/promo/member-day-5x2.jpg?v=20260802a",
-    mobile_image_url: "/images/shop/promo/member-day-5x2.jpg?v=20260802a",
+    desktop_image_url: "/images/shop/promo/member-day-5x2.jpg?v=20260803a",
+    mobile_image_url: "/images/shop/promo/member-day-5x2.jpg?v=20260803a",
     link_type: "page",
     link_url: "/auth/register",
     button_text: "加入會員",
@@ -141,7 +141,7 @@ export function ShopPromoCarousel() {
   }, [emblaApi, onSelect]);
 
   const slideClass =
-    "shop-promo-carousel__frame relative min-w-0 flex-[0_0_100%] overflow-hidden rounded-2xl bg-[#F7F8FB]";
+    "shop-promo-carousel__frame relative min-w-0 flex-[0_0_100%] overflow-hidden rounded-none bg-[#F7F8FB]";
 
   return (
     <section

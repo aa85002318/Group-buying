@@ -33,7 +33,7 @@ export function ShopOrderingInfo({ className }: { className?: string }) {
   const href = (banner.link_url || "/help/order-guide").trim() || "/help/order-guide";
   const external = /^https?:\/\//i.test(href);
   const img = (
-    <span className="relative block aspect-[5/2] w-full overflow-hidden rounded-[16px] bg-transparent">
+    <span className="relative block aspect-[5/2] w-full overflow-hidden rounded-none bg-transparent">
       <Image
         src={banner.image_url}
         alt={banner.alt_text || banner.title || "商品訂購須知"}
