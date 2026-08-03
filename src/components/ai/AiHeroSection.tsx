@@ -4,8 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { SearchScope } from "@/components/brand/search/types";
 import {
   HOME_HERO_DEFAULTS,
-  HOME_HERO_DESKTOP_IMAGE,
-  HOME_HERO_MOBILE_IMAGE,
   type HomeHeroData,
   type HomeHeroObjectPosition,
 } from "@/types/home-hero";
@@ -17,6 +15,10 @@ import { HeroBottomTransition } from "@/components/home/HeroBottomTransition";
 import { HeroTextContent } from "@/components/home/HeroTextContent";
 import { HeroTopActions } from "@/components/home/HeroTopActions";
 import { ResponsiveHeroImage } from "@/components/home/ResponsiveHeroImage";
+
+/** Dedicated /ai hero art — not tied to home CMS images. */
+const AI_HERO_IMAGE = "/brand/hero-ai-banner.jpg?v=20260803a";
+const AI_HERO_ALT = "CHIMEIDIY AI 烘焙小幫手主視覺";
 
 function normalizePosition(
   value: unknown,
@@ -37,19 +39,13 @@ function normalizePosition(
   return fallback;
 }
 
-/** Same mapper as homepage — keeps /ai in sync with home hero CMS. */
+/**
+ * Maps home hero CMS for chrome/settings only.
+ * Image URLs are always the dedicated AI banner (caller overrides).
+ */
 function mapApiToHomeHero(raw: Record<string, unknown> | null): HomeHeroData {
   const base = { ...HOME_HERO_DEFAULTS };
   if (!raw) return base;
-
-  const desktop =
-    (typeof raw.desktopImageUrl === "string" && raw.desktopImageUrl) ||
-    (typeof raw.desktop_image_url === "string" && raw.desktop_image_url) ||
-    base.desktopImageUrl;
-  const mobile =
-    (typeof raw.mobileImageUrl === "string" && raw.mobileImageUrl) ||
-    (typeof raw.mobile_image_url === "string" && raw.mobile_image_url) ||
-    base.mobileImageUrl;
 
   const imagePosition =
     (typeof raw.imagePosition === "string" && raw.imagePosition) ||
@@ -72,12 +68,9 @@ function mapApiToHomeHero(raw: Record<string, unknown> | null): HomeHeroData {
       (typeof raw.description === "string" && raw.description) ||
       (typeof raw.subtitle === "string" && raw.subtitle) ||
       base.description,
-    desktopImageUrl: desktop || HOME_HERO_DESKTOP_IMAGE,
-    mobileImageUrl: mobile || HOME_HERO_MOBILE_IMAGE,
-    imageAlt:
-      (typeof raw.imageAlt === "string" && raw.imageAlt) ||
-      (typeof raw.image_alt === "string" && raw.image_alt) ||
-      base.imageAlt,
+    desktopImageUrl: AI_HERO_IMAGE,
+    mobileImageUrl: AI_HERO_IMAGE,
+    imageAlt: AI_HERO_ALT,
     desktopObjectPosition: desktopPos,
     mobileObjectPosition: mobilePos,
     searchPlaceholder:
@@ -111,11 +104,16 @@ function mapApiToHomeHero(raw: Record<string, unknown> | null): HomeHeroData {
 }
 
 /**
- * AI hub hero — copies homepage hero art + search chrome (same CMS source).
+ * AI hub hero — same chrome as homepage; dedicated AI banner art.
  * Yellow plane → full-bleed art → blur seam → floating search.
  */
 export function AiHeroSection() {
-  const [data, setData] = useState<HomeHeroData>(HOME_HERO_DEFAULTS);
+  const [data, setData] = useState<HomeHeroData>(() => ({
+    ...HOME_HERO_DEFAULTS,
+    desktopImageUrl: AI_HERO_IMAGE,
+    mobileImageUrl: AI_HERO_IMAGE,
+    imageAlt: AI_HERO_ALT,
+  }));
   const searchRef = useRef<HeroSearchBarHandle>(null);
 
   useEffect(() => {
@@ -144,9 +142,9 @@ export function AiHeroSection() {
     searchRef.current?.focus();
   }, []);
 
-  const desktopUrl = data.desktopImageUrl || HOME_HERO_DESKTOP_IMAGE;
-  const mobileUrl = data.mobileImageUrl || HOME_HERO_MOBILE_IMAGE || desktopUrl;
-  const alt = data.imageAlt || "AI 烘焙助手主視覺";
+  const desktopUrl = AI_HERO_IMAGE;
+  const mobileUrl = AI_HERO_IMAGE;
+  const alt = AI_HERO_ALT;
 
   return (
     <section className="home-hero home-hero-section home-hero-wrapper" aria-label="AI 主視覺">
