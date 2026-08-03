@@ -24,26 +24,27 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     pathname === "/group-buy" ||
     pathname === "/group-buy/" ||
     pathname.startsWith("/group-buy?");
-  const fullBleedPage = isHome || isShopHub || isGroupBuyHub;
+  const isAiHub =
+    pathname === "/ai" || pathname === "/ai/" || pathname.startsWith("/ai?");
+  const yellowPlane = isHome || isShopHub || isGroupBuyHub || isAiHub;
+  const fullBleedPage = yellowPlane;
   const showChrome = !isMinimalChromePath(pathname);
 
   return (
     <div
       className={cn(
         "min-h-dvh w-full overflow-x-clip",
-        isHome || isShopHub || isGroupBuyHub ? "bg-[#FDE045]" : "bg-background"
+        yellowPlane ? "bg-[#FDE045]" : "bg-background"
       )}
     >
       <div
         className={cn(
           "relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip",
-          isHome || isShopHub || isGroupBuyHub
-            ? "max-w-none bg-[#FDE045]"
-            : "app-shell bg-background md:shadow-lift"
+          yellowPlane ? "max-w-none bg-[#FDE045]" : "app-shell bg-background md:shadow-lift"
         )}
       >
-        {/* Homepage, shop hub, and group-buy hub render their own yellow-plane headers. */}
-        {!isHome && !isShopHub && !isGroupBuyHub ? <AppHeader /> : null}
+        {/* Homepage / shop / group-buy / AI render their own yellow-plane headers. */}
+        {!yellowPlane ? <AppHeader /> : null}
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",
