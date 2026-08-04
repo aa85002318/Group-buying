@@ -9,7 +9,8 @@ const PRODUCT_FIELDS =
 function withBrand<T extends Record<string, unknown>>(row: T) {
   const brands = row.brands as { name?: string } | { name?: string }[] | null | undefined;
   const brandName = Array.isArray(brands) ? brands[0]?.name : brands?.name;
-  const { brands: _b, ...rest } = row;
+  const rest = { ...row };
+  delete rest.brands;
   return { ...rest, brand: brandName ?? null };
 }
 
