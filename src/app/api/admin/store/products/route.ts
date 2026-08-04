@@ -3,6 +3,9 @@ import { requireStoreOps } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+const PRODUCT_SELECT =
+  "id, name, sku, barcode, image_url, stock, publish_store, supplier_id, supplier_name, brand_id, unit, short_name, safety_stock, is_active, price, cost_price, specifications, package_spec, brands(name)";
+
 export async function GET(request: Request) {
   const { error } = await requireStoreOps();
   if (error) return error;
@@ -18,9 +21,7 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
   let query = admin
     .from("products")
-    .select(
-      "id, name, sku, barcode, image_url, stock, publish_store, supplier_name, unit, short_name, safety_stock, is_active"
-    )
+    .select(PRODUCT_SELECT)
     .order("updated_at", { ascending: false })
     .limit(limit);
 
@@ -32,5 +33,16 @@ export async function GET(request: Request) {
 
   const { data, error: dbError } = await query;
   if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
-  return NextResponse.json({ products: data ?? [] });
+
+  const products = (data ?? []).map((row) => {
+    const brands = row.brands as { name?: string } | { name?: string }[] | null;
+    const brandName = Array.isArray(brands) ? brands[0]?.name : brands?.name;
+    return {
+      ...row,
+      brand: brandName ?? null,
+      brands: undefined,
+    };
+  });
+
+  return NextResponse.json({ products });
 }

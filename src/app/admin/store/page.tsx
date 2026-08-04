@@ -641,21 +641,23 @@ export default function AdminStoreHomePage() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {STORE_QUICK_ACTIONS.map((a) => {
             const Icon =
-              a.icon === "orders"
-                ? ShoppingCart
-                : a.icon === "pickup"
-                  ? Package
-                  : a.icon === "issue"
-                    ? AlertTriangle
-                    : a.icon === "disposal"
-                      ? Trash2
-                      : a.icon === "repair"
-                        ? Wrench
-                        : a.icon === "log"
-                          ? ClipboardList
+              a.icon === "pos"
+                ? MessageSquare
+                : a.icon === "orders"
+                  ? ShoppingCart
+                  : a.icon === "pickup"
+                    ? Package
+                    : a.icon === "issue"
+                      ? AlertTriangle
+                      : a.icon === "disposal"
+                        ? Trash2
+                        : a.icon === "repair"
+                          ? Wrench
                           : a.icon === "return"
                             ? Package
-                            : MessageSquare;
+                            : a.icon === "stock"
+                              ? ClipboardList
+                              : MessageSquare;
             return (
               <Link
                 key={a.href + a.label}

@@ -116,13 +116,30 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     icon: "Store",
     roles: ["admin", "store_staff"],
     items: [
-      { type: "heading", label: "今日工作", roles: ["admin", "store_staff"] },
+      { type: "heading", label: "門市總覽", roles: ["admin", "store_staff"] },
       { href: "/admin/store", label: "今日工作台", roles: ["admin", "store_staff"] },
       { href: "/admin/orders", label: "App 訂單", roles: ["admin", "store_staff"] },
       { href: "/admin/pickup", label: "取貨核銷", roles: ["admin", "store_staff"] },
+
+      { type: "heading", label: "現場客戶服務", roles: ["admin", "store_staff"] },
       {
-        href: "/admin/store/entry",
-        label: "現場輸入",
+        href: "/admin/store/pos",
+        label: "現場客戶訂單",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/pos?type=price_inquiry&new=1",
+        label: "價格詢問",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/pos?type=order&new=1",
+        label: "商品訂購",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/pos",
+        label: "今日服務紀錄",
         roles: ["admin", "store_staff"],
       },
 
@@ -130,44 +147,49 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/store/issues", label: "商品異常", roles: ["admin", "store_staff"] },
       { href: "/admin/store/disposals", label: "商品報廢", roles: ["admin", "store_staff"] },
       { href: "/admin/store/returns", label: "商品退貨", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/store/entry?type=repair",
+        label: "商品報修",
+        roles: ["admin", "store_staff"],
+      },
       { href: "/admin/store/expiry", label: "效期管理", roles: ["admin", "store_staff"] },
 
       { type: "heading", label: "庫存管理", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/inventory", label: "目前庫存", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/stocktake", label: "盤點", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/batches", label: "批次管理", roles: ["admin", "store_staff"] },
-
-      { type: "heading", label: "工作紀錄", roles: ["admin", "store_staff"] },
+      { href: "/admin/store/inventory", label: "分店目前庫存", roles: ["admin", "store_staff"] },
       {
         href: "/admin/store#requests",
         label: "分店需求",
         roles: ["admin", "store_staff"],
       },
+      { href: "/admin/store/stocktake", label: "盤點管理", roles: ["admin", "store_staff"] },
+      { href: "/admin/store/batches", label: "批次管理", roles: ["admin", "store_staff"] },
+
+      { type: "heading", label: "工作紀錄", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/store/entry?type=worklog",
+        label: "每日工作紀錄",
+        roles: ["admin", "store_staff"],
+      },
       {
         href: "/admin/store#messages",
-        label: "每日留言",
+        label: "留言板",
         roles: ["admin", "store_staff"],
       },
       {
         href: "/admin/store#checklist",
-        label: "今日待辦",
-        roles: ["admin", "store_staff"],
-      },
-      {
-        href: "/admin/store/entry?type=worklog",
-        label: "工作紀錄",
+        label: "明日待辦",
         roles: ["admin", "store_staff"],
       },
 
-      { type: "heading", label: "批次／匯入匯出", roles: ["admin", "store_staff"] },
+      { type: "heading", label: "Excel 批次", roles: ["admin", "store_staff"] },
       {
         href: "/admin/store/excel",
-        label: "Excel 匯入",
+        label: "中文範本／匯入",
         roles: ["admin", "store_staff"],
       },
       {
         href: "/admin/store/excel#export",
-        label: "Excel 匯出",
+        label: "匯出",
         roles: ["admin", "store_staff"],
       },
 
@@ -175,6 +197,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/products", label: "商品主檔", roles: ["admin", "store_staff"] },
       { href: "/admin/store/suppliers", label: "廠商管理", roles: ["admin", "store_staff"] },
       { href: "/admin/products/labels", label: "價格牌列印", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/store/entry",
+        label: "現場輸入（異常／報廢等）",
+        roles: ["admin", "store_staff"],
+      },
       { href: "/admin/store/backups", label: "備份管理", roles: ["admin", "store_staff"] },
     ],
   },

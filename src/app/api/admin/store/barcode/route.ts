@@ -3,6 +3,16 @@ import { requireStoreOps } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+const PRODUCT_FIELDS =
+  "id, name, sku, barcode, image_url, unit, specifications, package_spec, supplier_id, supplier_name, brand_id, category_id, cost_price, price, stock, short_name, brands(name)";
+
+function withBrand<T extends Record<string, unknown>>(row: T) {
+  const brands = row.brands as { name?: string } | { name?: string }[] | null | undefined;
+  const brandName = Array.isArray(brands) ? brands[0]?.name : brands?.name;
+  const { brands: _b, ...rest } = row;
+  return { ...rest, brand: brandName ?? null };
+}
+
 export async function GET(request: Request) {
   const { error } = await requireStoreOps();
   if (error) return error;
@@ -19,7 +29,9 @@ export async function GET(request: Request) {
         name: "DEMO 商品",
         sku: q,
         barcode: q,
+        brand: "DEMO",
         stock: 12,
+        price: 100,
         nearest_expiry: null,
         batch_qty: 0,
         matched_via: "mock",
@@ -31,9 +43,7 @@ export async function GET(request: Request) {
 
   const { data: byBarcode } = await admin
     .from("products")
-    .select(
-      "id, name, sku, barcode, image_url, unit, specifications, package_spec, supplier_id, supplier_name, category_id, cost_price, stock, short_name"
-    )
+    .select(PRODUCT_FIELDS)
     .eq("barcode", q)
     .maybeSingle();
 
@@ -43,9 +53,7 @@ export async function GET(request: Request) {
   if (!product) {
     const { data: bySku } = await admin
       .from("products")
-      .select(
-        "id, name, sku, barcode, image_url, unit, specifications, package_spec, supplier_id, supplier_name, category_id, cost_price, stock, short_name"
-      )
+      .select(PRODUCT_FIELDS)
       .eq("sku", q)
       .maybeSingle();
     product = bySku;
@@ -55,7 +63,7 @@ export async function GET(request: Request) {
   if (!product) {
     const { data: batch } = await admin
       .from("store_batches")
-      .select("product_id, products(id, name, sku, barcode, image_url, unit, specifications, package_spec, supplier_id, supplier_name, category_id, cost_price, stock, short_name)")
+      .select(`product_id, products(${PRODUCT_FIELDS})`)
       .eq("barcode", q)
       .limit(1)
       .maybeSingle();
@@ -86,7 +94,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     product: {
-      ...product,
+      ...withBrand(product as Record<string, unknown>),
       nearest_expiry: nearest,
       batch_qty: batchQty,
       matched_via: matchedVia,

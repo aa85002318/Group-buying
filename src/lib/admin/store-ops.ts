@@ -20,13 +20,13 @@ export const STORE_RESOURCE_TABLE: Record<StoreResource, string> = {
 };
 
 export const STORE_QUICK_ACTIONS = [
-  { href: "/admin/orders", label: "新訂單", icon: "orders" },
+  { href: "/admin/store/pos", label: "現場客戶服務", icon: "pos" },
+  { href: "/admin/orders", label: "App 訂單", icon: "orders" },
   { href: "/admin/pickup", label: "取貨", icon: "pickup" },
   { href: "/admin/store/entry?type=issue", label: "商品異常", icon: "issue" },
   { href: "/admin/store/entry?type=disposal", label: "商品報廢", icon: "disposal" },
   { href: "/admin/store/entry?type=return", label: "商品退貨", icon: "return" },
   { href: "/admin/store/entry?type=repair", label: "商品報修", icon: "repair" },
-  { href: "/admin/store/entry?type=worklog", label: "工作紀錄", icon: "log" },
   { href: "/admin/store/inventory", label: "庫存", icon: "stock" },
 ] as const;
 
