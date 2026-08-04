@@ -1,10 +1,12 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminTopBar } from "@/components/admin/AdminTopBar";
+import { BrandingCssVars } from "@/components/branding/BrandingCssVars";
 import { AdminDesktopSidebar, AdminMobileDrawer } from "@/components/layout/AdminSidebar";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminShell>
+      <BrandingCssVars />
       <div className="min-h-[100dvh] overflow-x-hidden bg-[#F7F8FA]">
         <div className="flex min-h-[100dvh] w-full">
           <AdminDesktopSidebar />

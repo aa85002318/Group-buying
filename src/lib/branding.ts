@@ -1,5 +1,11 @@
 /** Site branding tokens from site_settings.branding (with safe defaults). */
 
+import {
+  BRAND_FONT_OPTIONS,
+  getBrandFont,
+  type BrandFontId,
+} from "@/lib/branding/fonts";
+
 export type BrandingSettings = {
   primary: string;
   primaryHover: string;
@@ -17,6 +23,10 @@ export type BrandingSettings = {
   logoUrl?: string | null;
   mobileLogoUrl?: string | null;
   faviconUrl?: string | null;
+  /** Body / UI font — shared by website, APP, PWA */
+  bodyFont?: BrandFontId;
+  /** Heading / display font */
+  headingFont?: BrandFontId;
 };
 
 export const DEFAULT_BRANDING: BrandingSettings = {
@@ -36,6 +46,8 @@ export const DEFAULT_BRANDING: BrandingSettings = {
   logoUrl: null,
   mobileLogoUrl: null,
   faviconUrl: null,
+  bodyFont: "noto-sans-tc",
+  headingFont: "noto-sans-tc",
 };
 
 function asHex(value: unknown, fallback: string): string {
@@ -50,6 +62,13 @@ function asCssLength(value: unknown, fallback: string): string {
   const v = value.trim();
   if (/^\d+(\.\d+)?(px|rem|em|%)$/.test(v)) return v;
   return fallback;
+}
+
+function asFontId(value: unknown, fallback: BrandFontId): BrandFontId {
+  if (typeof value !== "string") return fallback;
+  return BRAND_FONT_OPTIONS.some((f) => f.id === value)
+    ? (value as BrandFontId)
+    : fallback;
 }
 
 export function mergeBrandingSettings(raw: unknown): BrandingSettings {
@@ -74,11 +93,15 @@ export function mergeBrandingSettings(raw: unknown): BrandingSettings {
     logoUrl: typeof src.logoUrl === "string" ? src.logoUrl : null,
     mobileLogoUrl: typeof src.mobileLogoUrl === "string" ? src.mobileLogoUrl : null,
     faviconUrl: typeof src.faviconUrl === "string" ? src.faviconUrl : null,
+    bodyFont: asFontId(src.bodyFont, DEFAULT_BRANDING.bodyFont!),
+    headingFont: asFontId(src.headingFont, DEFAULT_BRANDING.headingFont!),
   };
 }
 
 /** CSS custom properties injected into :root */
 export function brandingToCssVars(b: BrandingSettings): Record<string, string> {
+  const body = getBrandFont(b.bodyFont);
+  const heading = getBrandFont(b.headingFont);
   return {
     "--brand-primary": b.primary,
     "--brand-primary-hover": b.primaryHover,
@@ -93,5 +116,11 @@ export function brandingToCssVars(b: BrandingSettings): Record<string, string> {
     "--brand-border": b.border,
     "--page-padding-x": b.pagePaddingX,
     "--card-radius": b.cardRadius,
+    "--font-sans": body.family,
+    "--font-brand": body.family,
+    "--font-heading": heading.family,
   };
 }
+
+export { BRAND_FONT_OPTIONS, getBrandFont };
+export type { BrandFontId };

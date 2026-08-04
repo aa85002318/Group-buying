@@ -345,6 +345,7 @@
   /* —— Typography —— */
   --font-sans: "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
+  --font-heading: var(--font-sans);
 
   /* ═══════════════════════════════════════════
    * 十五、Spec aliases (--color-*)

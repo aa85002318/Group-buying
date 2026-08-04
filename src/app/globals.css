@@ -69,6 +69,13 @@
     overflow-wrap: anywhere;
   }
 
+  h1,
+  h2,
+  h3,
+  .font-heading {
+    font-family: var(--font-heading, var(--font-sans));
+  }
+
   img,
   video,
   canvas,

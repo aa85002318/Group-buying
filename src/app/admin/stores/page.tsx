@@ -1,235 +1,158 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { MapPin, Plus } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { StoreCreateWizard } from "@/components/admin/stores/StoreCreateWizard";
+import { StoreProfileEditor } from "@/components/admin/stores/StoreProfileEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { AdminTable } from "@/components/admin/AdminTable";
-import { StatusBadge } from "@/components/admin/StatusBadge";
-import { useAdminList } from "@/hooks/useAdminList";
-
-type StoreRow = {
-  id: string;
-  name: string;
-  address: string;
-  phone: string | null;
-  notes: string | null;
-  business_hours: string | null;
-  cover_image_url: string | null;
-  navigation_url: string | null;
-  services: unknown;
-  daily_highlights: unknown;
-  is_active: boolean;
-};
-
-const emptyForm = {
-  name: "",
-  address: "",
-  phone: "",
-  notes: "",
-  business_hours: "",
-  cover_image_url: "",
-  navigation_url: "",
-  services_json: "[]",
-  daily_highlights_json: "{}",
-  is_active: true,
-};
-
-function formatJsonField(value: unknown, fallback: string): string {
-  if (value == null) return fallback;
-  if (typeof value === "string") return value;
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return fallback;
-  }
-}
+import {
+  isStoreOpenNow,
+  summarizeTodayHours,
+  type StoreProfile,
+} from "@/lib/admin/store-profile";
+import { cn } from "@/lib/utils";
 
 export default function AdminStoresPage() {
-  const { paginated, search, setSearch, page, setPage, totalPages, refresh, loading } =
-    useAdminList<StoreRow>("/api/admin/stores", "stores", ["name", "address", "phone"]);
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<StoreRow | null>(null);
-  const [selected, setSelected] = useState<StoreRow | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState(emptyForm);
+  const [stores, setStores] = useState<StoreProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [wizardOpen, setWizardOpen] = useState(false);
 
-  const openCreate = () => {
-    setEditing(null);
-    setForm(emptyForm);
-    setShowForm(true);
-  };
-
-  const openEdit = (s: StoreRow) => {
-    setEditing(s);
-    setForm({
-      name: s.name,
-      address: s.address,
-      phone: s.phone ?? "",
-      notes: s.notes ?? "",
-      business_hours: s.business_hours ?? "",
-      cover_image_url: s.cover_image_url ?? "",
-      navigation_url: s.navigation_url ?? "",
-      services_json: formatJsonField(s.services, "[]"),
-      daily_highlights_json: formatJsonField(s.daily_highlights, "{}"),
-      is_active: s.is_active,
-    });
-    setShowForm(true);
-  };
-
-  const parseJsonField = (text: string, label: string) => {
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      return JSON.parse(text || (label === "services" ? "[]" : "{}"));
-    } catch {
-      throw new Error(`${label} 須為合法 JSON`);
-    }
-  };
-
-  const save = async () => {
-    if (!form.name.trim() || !form.address.trim()) {
-      alert("請填寫名稱與地址");
-      return;
-    }
-    setSaving(true);
-    try {
-      let services: unknown;
-      let daily_highlights: unknown;
-      try {
-        services = parseJsonField(form.services_json, "services");
-        daily_highlights = parseJsonField(form.daily_highlights_json, "daily_highlights");
-      } catch (e) {
-        alert(e instanceof Error ? e.message : "JSON 格式錯誤");
-        return;
-      }
-      const payload = {
-        name: form.name.trim(),
-        address: form.address.trim(),
-        phone: form.phone.trim(),
-        notes: form.notes.trim(),
-        business_hours: form.business_hours.trim(),
-        cover_image_url: form.cover_image_url.trim() || null,
-        navigation_url: form.navigation_url.trim() || null,
-        services,
-        daily_highlights,
-        is_active: form.is_active,
-      };
-      const res = editing
-        ? await fetch(`/api/admin/stores/${editing.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          })
-        : await fetch("/api/admin/stores", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+      const res = await fetch("/api/admin/stores");
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "儲存失敗");
-      setShowForm(false);
-      setSelected(data.store ?? null);
-      refresh();
+      if (!res.ok) throw new Error(data.error ?? "載入失敗");
+      const list = (data.stores ?? []) as StoreProfile[];
+      setStores(list);
+      setSelectedId((prev) => {
+        if (prev && list.some((s) => s.id === prev)) return prev;
+        return list[0]?.id ?? null;
+      });
     } catch (e) {
-      alert(e instanceof Error ? e.message : "儲存失敗");
+      setError(e instanceof Error ? e.message : "載入失敗");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const remove = async (s: StoreRow) => {
-    if (!confirm(`確定停用取貨點「${s.name}」？\n（不會刪除歷史訂單關聯，僅改為停用）`)) return;
-    const res = await fetch(`/api/admin/stores/${s.id}`, { method: "DELETE" });
-    const data = await res.json();
-    if (!res.ok) {
-      alert(data.error ?? "刪除失敗");
-      return;
-    }
-    if (selected?.id === s.id) setSelected(null);
-    refresh();
-  };
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return stores;
+    return stores.filter(
+      (s) =>
+        s.name.toLowerCase().includes(needle) ||
+        s.address.toLowerCase().includes(needle) ||
+        (s.code ?? "").toLowerCase().includes(needle) ||
+        (s.phone ?? "").includes(needle)
+    );
+  }, [stores, q]);
+
+  const selected = stores.find((s) => s.id === selectedId) ?? null;
 
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title="門市／取貨點管理"
-        description="首頁門市資訊與取貨點設定；含封面圖、導航連結、服務項目與每日亮點。"
-        actions={<Button onClick={openCreate}>新增門市</Button>}
+        title="分店資訊"
+        description="門市／取貨點共用主檔：官網、APP 取貨、Google 導航、社群、營業時間與公告皆維護於此。"
+        actions={
+          <Button type="button" onClick={() => setWizardOpen(true)}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            新增分店
+          </Button>
+        }
       />
 
-      {showForm && (
-        <div className="space-y-3 rounded-xl bg-white p-4 shadow-card">
-          <h2 className="font-medium text-coffee">{editing ? "編輯門市" : "新增門市"}</h2>
-          <Input placeholder="名稱" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <Input placeholder="地址" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-          <Input placeholder="電話" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-          <Input placeholder="營業時間" value={form.business_hours} onChange={(e) => setForm({ ...form, business_hours: e.target.value })} />
-          <Input placeholder="封面圖網址" value={form.cover_image_url} onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })} />
-          <Input placeholder="導航連結（Google Maps 等）" value={form.navigation_url} onChange={(e) => setForm({ ...form, navigation_url: e.target.value })} />
-          <textarea className="input-field min-h-[100px]" placeholder="注意事項" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-          <textarea className="input-field min-h-[100px] font-mono text-xs" placeholder='服務項目 JSON（例：[{"label":"手作體驗"}]）' value={form.services_json} onChange={(e) => setForm({ ...form, services_json: e.target.value })} />
-          <textarea className="input-field min-h-[100px] font-mono text-xs" placeholder='每日亮點 JSON（例：{"today":"限時優惠"}）' value={form.daily_highlights_json} onChange={(e) => setForm({ ...form, daily_highlights_json: e.target.value })} />
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-            啟用
-          </label>
-          <div className="flex gap-2">
-            <Button onClick={save} disabled={saving}>{saving ? "儲存中…" : "儲存"}</Button>
-            <Button variant="secondary" onClick={() => setShowForm(false)}>取消</Button>
-          </div>
-        </div>
-      )}
+      {error ? <p className="text-sm text-[#C94C4C]">{error}</p> : null}
 
-      {selected && (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
-          <p className="text-sm font-medium text-coffee">已選取：{selected.name}</p>
-          <p className="mt-2 text-sm text-muted-foreground">地址：{selected.address}</p>
-          {selected.navigation_url && (
-            <p className="text-sm text-muted-foreground">導航：{selected.navigation_url}</p>
+      <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="space-y-3 rounded-[16px] border border-[#E9DED4] bg-white p-3">
+          <div className="flex items-center gap-2 px-1">
+            <MapPin className="h-4 w-4 text-[#6F4E37]" />
+            <h2 className="font-semibold text-[#2F2925]">分店列表</h2>
+          </div>
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="搜尋分店…"
+            className="rounded-[10px]"
+          />
+          {loading ? (
+            <p className="px-2 py-6 text-center text-sm text-[#756B64]">載入中…</p>
+          ) : filtered.length === 0 ? (
+            <p className="px-2 py-6 text-center text-sm text-[#756B64]">尚無分店</p>
+          ) : (
+            <ul className="max-h-[70vh] space-y-2 overflow-y-auto">
+              {filtered.map((s) => {
+                const open = isStoreOpenNow(s.weekly_hours, s.holidays);
+                const hours = summarizeTodayHours(s.weekly_hours, s.holidays);
+                const active = s.id === selectedId;
+                return (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(s.id)}
+                      className={cn(
+                        "w-full rounded-[14px] border px-3 py-3 text-left transition",
+                        active
+                          ? "border-[#FFE149] bg-[#FFF5C7]"
+                          : "border-[#E9DED4] bg-white hover:bg-[#FFFBEA]",
+                        !s.is_active && "opacity-60"
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium text-[#2F2925]">{s.name}</p>
+                        <span className="shrink-0 text-xs">
+                          {s.is_active ? (open ? "營業中 🟢" : "休息中") : "已停用"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-[#756B64]">{hours}</p>
+                      <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-[#756B64]">
+                        <span>今天訂單 {s.today_orders ?? "—"}</span>
+                        <span>庫存 {s.inventory_qty ?? "—"}</span>
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </aside>
+
+        <div>
+          {selected ? (
+            <StoreProfileEditor
+              key={selected.id}
+              store={selected}
+              onUpdated={(next) => {
+                setStores((list) => list.map((s) => (s.id === next.id ? { ...s, ...next } : s)));
+              }}
+            />
+          ) : (
+            <div className="flex min-h-[360px] items-center justify-center rounded-[16px] border border-dashed border-[#E9DED4] bg-white text-sm text-[#756B64]">
+              請選擇左側分店，或新增分店開始編輯
+            </div>
           )}
         </div>
-      )}
+      </div>
 
-      <AdminTable
-        columns={[
-          {
-            key: "name",
-            header: "名稱",
-            render: (s) => (
-              <button type="button" className="text-left font-medium text-primary hover:underline" onClick={() => setSelected(s)}>
-                {s.name}
-              </button>
-            ),
-          },
-          { key: "address", header: "地址", render: (s) => <span className="text-xs">{s.address}</span> },
-          {
-            key: "status",
-            header: "狀態",
-            render: (s) => (
-              <StatusBadge label={s.is_active ? "啟用" : "停用"} variant={s.is_active ? "success" : "secondary"} />
-            ),
-          },
-          {
-            key: "actions",
-            header: "操作",
-            render: (s) => (
-              <div className="flex flex-wrap gap-1">
-                <Button size="sm" variant="secondary" onClick={() => setSelected(s)}>查看</Button>
-                <Button size="sm" variant="secondary" onClick={() => openEdit(s)}>編輯</Button>
-                {s.is_active && (
-                  <Button size="sm" variant="outline" onClick={() => remove(s)}>停用</Button>
-                )}
-              </div>
-            ),
-          },
-        ]}
-        rows={paginated}
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="搜尋名稱、地址…"
-        loading={loading}
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
+      <StoreCreateWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreated={(store) => {
+          setStores((list) => [...list, store]);
+          setSelectedId(store.id);
+        }}
       />
     </div>
   );

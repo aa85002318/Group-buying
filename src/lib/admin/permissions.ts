@@ -206,7 +206,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/pickup", label: "取貨", roles: ["admin", "store_staff"] },
       { href: "/admin/payment-records", label: "金流紀錄", roles: ["admin"] },
       { href: "/admin/integrations/ecpay", label: "綠界串接", roles: ["admin"] },
-      { href: "/admin/stores", label: "取貨點", roles: ["admin"] },
+      { href: "/admin/stores", label: "門市／取貨點", roles: ["admin"] },
       { href: "/admin/corporate", label: "企業詢價", roles: ["admin"] },
     ],
   },
@@ -373,6 +373,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin"],
     items: [
       { href: "/admin/staff", label: "帳號與權限", roles: ["admin"] },
+      { href: "/admin/stores", label: "分店資訊", roles: ["admin"] },
+      { href: "/admin/settings/branding", label: "品牌設定", roles: ["admin"] },
       { href: "/admin/store/backups", label: "Google Drive 備份", roles: ["admin"] },
       { href: "/admin/email-templates", label: "系統設定／郵件", roles: ["admin"] },
       { href: "/admin/audit-logs", label: "操作紀錄", roles: ["admin"] },
