@@ -20,9 +20,9 @@ export const GROUP_BUY_HERO_MOBILE_HEIGHT = HOME_HERO_MOBILE_HEIGHT;
  */
 export const DEFAULT_GROUP_BUY_HERO = {
   title: "團購優惠",
-  alt_text: HOME_HERO_DEFAULTS.imageAlt || "CHIMEiDIY Lifestyle 團購主視覺",
-  desktop_image: "/images/group-buy/hero-desktop.png?v=20260802home",
-  mobile_image: "/images/group-buy/hero-mobile.png?v=20260802home",
+  alt_text: "CHIMEIDIY 人氣好物團購主視覺",
+  desktop_image: "/images/group-buy/hero-desktop.png?v=20260805a",
+  mobile_image: "/images/group-buy/hero-mobile.png?v=20260805a",
   link: "/group-buy",
   searchPlaceholder:
     HOME_HERO_DEFAULTS.searchPlaceholder ||
