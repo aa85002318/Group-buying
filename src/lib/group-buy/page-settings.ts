@@ -343,6 +343,34 @@ export function formatCountdown(targetIso: string, now = new Date()): string {
   return `${Math.max(1, mins)}分鐘`;
 }
 
+/** Live countdown: 「剩餘 01天 08:35:20」— never negative. */
+export function formatCountdownDetailed(
+  targetIso: string,
+  now = new Date()
+): { text: string; expired: boolean; urgent: boolean } {
+  const diff = new Date(targetIso).getTime() - now.getTime();
+  if (!Number.isFinite(diff) || diff <= 0) {
+    return { text: "已結束", expired: true, urgent: false };
+  }
+  const totalSec = Math.floor(diff / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const clock = `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+  const text = days > 0 ? `剩餘 ${pad(days)}天 ${clock}` : `剩餘 ${clock}`;
+  const urgent = diff <= 48 * 60 * 60 * 1000;
+  return { text, expired: false, urgent };
+}
+
+export function extractCampaignProductId(campaign: {
+  group_buy_products?: Array<{ product_id?: string; products?: { id?: string } | null }> | null;
+}): string | null {
+  const row = campaign.group_buy_products?.[0];
+  return row?.product_id || row?.products?.id || null;
+}
+
 export function formatPriceTwd(n: number): string {
   return `$${Math.round(Number(n) || 0).toLocaleString("zh-TW")}`;
 }

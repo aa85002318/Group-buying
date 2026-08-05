@@ -17,7 +17,7 @@ import { HeroTopActions } from "@/components/home/HeroTopActions";
 import { ResponsiveHeroImage } from "@/components/home/ResponsiveHeroImage";
 
 /** Dedicated /ai hero art — not tied to home CMS images. */
-const AI_HERO_IMAGE = "/brand/hero-ai-banner.jpg?v=20260803a";
+const AI_HERO_IMAGE = "/brand/hero-ai-banner.jpg?v=20260805a";
 const AI_HERO_ALT = "CHIMEIDIY AI 烘焙小幫手主視覺";
 
 function normalizePosition(

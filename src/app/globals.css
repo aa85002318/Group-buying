@@ -552,6 +552,13 @@
     padding-bottom: 15px;
   }
 
+  .group-buy-hero .group-buy-search-wrap,
+  .group-buy-hero .home-hero-search-wrap {
+    background: #fffefa;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
   .shop-category-menu {
     padding-top: 0;
     padding-bottom: 0;

@@ -22,10 +22,14 @@ export function GroupBuyHeroBanner({
   backgroundColor = GROUP_BUY_BRAND_YELLOW,
   searchPlaceholder = DEFAULT_GROUP_BUY_HERO.searchPlaceholder,
   onSearch,
+  onOpenFilters,
+  filterActive = false,
 }: {
   backgroundColor?: string;
   searchPlaceholder?: string;
   onSearch?: (query: string) => void;
+  onOpenFilters?: () => void;
+  filterActive?: boolean;
 }) {
   const bg = backgroundColor || GROUP_BUY_BRAND_YELLOW;
   const art = DEFAULT_GROUP_BUY_HERO;
@@ -64,10 +68,12 @@ export function GroupBuyHeroBanner({
         <HeroBottomTransition />
       </div>
 
-      <div className="home-hero-search-wrap">
+      <div className="home-hero-search-wrap group-buy-search-wrap">
         <GroupBuySearchBar
           placeholder={searchPlaceholder}
           onSearch={onSearch}
+          onOpenFilters={onOpenFilters}
+          filterActive={filterActive}
         />
       </div>
     </section>

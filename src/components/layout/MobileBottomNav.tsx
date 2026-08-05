@@ -30,10 +30,11 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed bottom-0 left-1/2 z-50 w-full max-w-[var(--app-max-width)] -translate-x-1/2 border-t border-[var(--brand-border,#F2E7DF)] bg-[var(--brand-surface,#fff)]"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#E9EDF2] bg-[rgba(255,255,255,0.96)] backdrop-blur-md"
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
         minHeight: "var(--header-height-mobile, 64px)",
+        boxShadow: "0 -4px 16px rgba(21, 62, 115, 0.06)",
       }}
     >
       <ul className="mx-auto grid h-16 max-w-lg grid-cols-5">
@@ -45,14 +46,20 @@ export function MobileBottomNav() {
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
+                aria-label={item.label}
                 className={cn(
                   "brand-focus-ring flex h-full flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-bold transition",
-                  active
-                    ? "text-[var(--brand-primary,#FF6B5B)]"
-                    : "text-[var(--brand-text-secondary,#6D5C53)]"
+                  active ? "text-[#F16458]" : "text-[#687386]"
                 )}
               >
-                <Icon className="h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden />
+                <span
+                  className={cn(
+                    "inline-flex h-8 w-8 items-center justify-center rounded-full",
+                    active && "bg-[#F16458]/10"
+                  )}
+                >
+                  <Icon className="h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden />
+                </span>
                 <span className="max-w-full truncate">{item.label}</span>
               </Link>
             </li>

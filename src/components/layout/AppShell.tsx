@@ -29,6 +29,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const yellowPlane = isHome || isShopHub || isGroupBuyHub || isAiHub;
   const fullBleedPage = yellowPlane;
   const showChrome = !isMinimalChromePath(pathname);
+  const showSiteFooter = showChrome && !isGroupBuyHub;
 
   return (
     <div
@@ -61,7 +62,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           ) : (
             <div className="mx-auto w-full min-w-0 max-w-full">{children}</div>
           )}
-          {showChrome ? <HomeFooter /> : null}
+          {showSiteFooter ? <HomeFooter /> : null}
         </main>
         <MobileBottomNav />
       </div>

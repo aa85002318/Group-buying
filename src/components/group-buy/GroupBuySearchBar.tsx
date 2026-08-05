@@ -1,29 +1,33 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Search, Sparkles } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
- * Group-buy hub search — same chrome as shop / homepage FloatingSearchBar.
- * `seam` enables negative-margin overlap under the hero blur boundary.
+ * Group-buy hub floating search — overlaps hero bottom; filter opens sheet/panel.
  */
 export function GroupBuySearchBar({
-  placeholder = "搜尋團購活動…",
+  placeholder = "搜尋團購商品、品牌或關鍵字",
   seam = true,
   defaultValue = "",
   onSearch,
+  onOpenFilters,
+  filterActive = false,
 }: {
   placeholder?: string;
   seam?: boolean;
   defaultValue?: string;
   onSearch?: (query: string) => void;
+  onOpenFilters?: () => void;
+  filterActive?: boolean;
 }) {
   const [q, setQ] = useState(defaultValue);
+  const [focused, setFocused] = useState(false);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const query = q.trim();
-    onSearch?.(query);
+    onSearch?.(q.trim());
   };
 
   return (
@@ -31,13 +35,16 @@ export function GroupBuySearchBar({
       onSubmit={onSubmit}
       role="search"
       aria-label="團購搜尋"
-      className={
-        seam
-          ? "relative z-10 mx-auto flex h-[54px] w-full max-w-[1280px] -mt-[26px] min-w-0 items-center gap-2 border border-[#E9EDF2] bg-white px-4 pr-2.5 md:h-16 md:-mt-[38px] md:gap-3 md:px-[18px] md:pr-2.5"
-          : "relative z-10 mx-auto flex h-[54px] w-full max-w-[1280px] min-w-0 items-center gap-2 border border-[#E9EDF2] bg-white px-4 pr-2.5 md:h-16 md:gap-3 md:px-[18px] md:pr-2.5"
-      }
+      className={cn(
+        "relative z-10 mx-auto flex w-full min-w-0 items-center gap-2 bg-white pl-4 pr-2",
+        "h-14 md:h-[60px] md:max-w-[960px]",
+        seam && "-mt-7 md:-mt-8"
+      )}
       style={{
-        borderRadius: "999px",
+        borderRadius: 9999,
+        boxShadow: "0 6px 20px rgba(21, 62, 115, 0.08)",
+        outline: focused ? "3px solid rgba(121, 199, 232, 0.3)" : undefined,
+        outlineOffset: 0,
       }}
     >
       <Search className="h-5 w-5 shrink-0 text-[#153E73]" strokeWidth={1.75} aria-hidden />
@@ -49,18 +56,26 @@ export function GroupBuySearchBar({
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         placeholder={placeholder}
-        className="min-w-0 flex-1 bg-transparent text-[14px] text-[#153E73] outline-none placeholder:text-[#687386] sm:text-[15px]"
+        className="min-w-0 flex-1 border-0 bg-transparent text-[14px] text-[#153E73] outline-none ring-0 placeholder:text-[#687386] sm:text-[15px]"
         autoComplete="off"
-        style={{ height: "100%" }}
+        style={{ height: "100%", boxShadow: "none" }}
       />
       <button
-        type="submit"
-        aria-label="搜尋團購"
-        className="inline-flex shrink-0 items-center justify-center rounded-full bg-[#EEF8FC] text-[#79C7E8] transition hover:bg-[#d9f0f9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#79C7E8]/50"
-        style={{ width: "44px", height: "44px", flex: "0 0 44px" }}
+        type="button"
+        aria-label="開啟篩選"
+        aria-expanded={filterActive}
+        onClick={() => onOpenFilters?.()}
+        className={cn(
+          "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition",
+          "bg-[#EEF8FC] text-[#153E73] hover:bg-[#d9f0f9]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#79C7E8]/50",
+          filterActive && "ring-2 ring-[#79C7E8]/40"
+        )}
       >
-        <Sparkles className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+        <SlidersHorizontal className="h-5 w-5" strokeWidth={1.75} aria-hidden />
       </button>
     </form>
   );
