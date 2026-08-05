@@ -24,12 +24,14 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     pathname === "/group-buy" ||
     pathname === "/group-buy/" ||
     pathname.startsWith("/group-buy?");
+  const isRecipesHub =
+    pathname === "/recipes" || pathname === "/recipes/" || pathname.startsWith("/recipes?");
   const isAiHub =
     pathname === "/ai" || pathname === "/ai/" || pathname.startsWith("/ai?");
   const yellowPlane = isHome || isShopHub || isGroupBuyHub || isAiHub;
-  const fullBleedPage = yellowPlane;
+  const fullBleedPage = yellowPlane || isRecipesHub;
   const showChrome = !isMinimalChromePath(pathname);
-  const showSiteFooter = showChrome && !isGroupBuyHub;
+  const showSiteFooter = showChrome && !isGroupBuyHub && !isRecipesHub;
 
   return (
     <div
@@ -45,7 +47,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         )}
       >
         {/* Homepage / shop / group-buy / AI render their own yellow-plane headers. */}
-        {!yellowPlane ? <AppHeader /> : null}
+        {!yellowPlane && !isRecipesHub ? <AppHeader /> : null}
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",

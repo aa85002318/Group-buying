@@ -59,7 +59,12 @@ export default function AdminRecipesPage() {
         title="食譜管理"
         description="新增、草稿、發布與下架烘焙食譜（不含 AI 生成）"
         actions={
-          <Button onClick={() => router.push("/admin/recipes/new")}>新增食譜</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => router.push("/admin/recipes/settings")}>
+              食譜頁設定
+            </Button>
+            <Button onClick={() => router.push("/admin/recipes/new")}>新增食譜</Button>
+          </div>
         }
       />
 

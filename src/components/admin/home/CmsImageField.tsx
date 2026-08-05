@@ -25,6 +25,7 @@ type Props = {
   bucket?: string;
   className?: string;
   deviceLabel?: "桌面版" | "手機版" | string;
+  enforceMaxKb?: boolean;
 };
 
 /**
@@ -40,6 +41,7 @@ export function CmsImageField({
   bucket = "product-images",
   className,
   deviceLabel,
+  enforceMaxKb = false,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -55,6 +57,10 @@ export function CmsImageField({
     setWarn(null);
     try {
       if (file.size > maxKb * 1024) {
+        if (enforceMaxKb) {
+          setError(`圖片不可超過 ${maxKb}KB`);
+          return;
+        }
         setWarn(`檔案約 ${Math.round(file.size / 1024)}KB，建議 ${maxKb}KB 以下`);
       }
       const formData = new FormData();

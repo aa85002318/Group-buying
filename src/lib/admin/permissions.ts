@@ -242,6 +242,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin", "content_editor"],
     items: [
       { href: "/admin/recipes", label: "食譜管理", roles: ["admin", "content_editor"] },
+      { href: "/admin/recipes/settings", label: "食譜頁設定", roles: ["admin"] },
       { href: "/admin/challenges", label: "食譜挑戰", roles: ["admin", "content_editor"] },
     ],
   },
