@@ -121,32 +121,19 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/orders", label: "App 訂單", roles: ["admin", "store_staff"] },
       { href: "/admin/pickup", label: "取貨核銷", roles: ["admin", "store_staff"] },
 
-      { type: "heading", label: "現場客戶服務", roles: ["admin", "store_staff"] },
       {
         href: "/admin/store/pos",
-        label: "現場客戶訂單",
-        roles: ["admin", "store_staff"],
-      },
-      {
-        href: "/admin/store/pos?type=price_inquiry&new=1",
-        label: "價格詢問",
-        roles: ["admin", "store_staff"],
-      },
-      {
-        href: "/admin/store/pos?type=order&new=1",
-        label: "商品訂購",
-        roles: ["admin", "store_staff"],
-      },
-      {
-        href: "/admin/store/pos",
-        label: "今日服務紀錄",
+        label: "現場客戶服務",
         roles: ["admin", "store_staff"],
       },
 
       { type: "heading", label: "商品處理", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/issues", label: "商品異常", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/store/entry?type=issue_return",
+        label: "異常／退貨",
+        roles: ["admin", "store_staff"],
+      },
       { href: "/admin/store/disposals", label: "商品報廢", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/returns", label: "商品退貨", roles: ["admin", "store_staff"] },
       {
         href: "/admin/store/entry?type=repair",
         label: "商品報修",
@@ -154,30 +141,27 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       },
       { href: "/admin/store/expiry", label: "效期管理", roles: ["admin", "store_staff"] },
 
-      { type: "heading", label: "庫存管理", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/inventory", label: "分店目前庫存", roles: ["admin", "store_staff"] },
+      { type: "heading", label: "分店商品需求／缺貨通知", roles: ["admin", "store_staff"] },
       {
-        href: "/admin/store#requests",
-        label: "分店需求",
+        href: "/admin/store/demand?type=out_of_stock",
+        label: "商品缺貨",
         roles: ["admin", "store_staff"],
       },
-      { href: "/admin/store/stocktake", label: "盤點管理", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/batches", label: "批次管理", roles: ["admin", "store_staff"] },
-
-      { type: "heading", label: "工作紀錄", roles: ["admin", "store_staff"] },
       {
-        href: "/admin/store/entry?type=worklog",
-        label: "每日工作紀錄",
+        href: "/admin/store/demand?type=restock",
+        label: "門市商品叫貨需求",
+        roles: ["admin", "store_staff"],
+      },
+
+      { type: "heading", label: "門市行事曆", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/store#calendar",
+        label: "待辦／工作紀錄／作廢發票",
         roles: ["admin", "store_staff"],
       },
       {
         href: "/admin/store#messages",
         label: "留言板",
-        roles: ["admin", "store_staff"],
-      },
-      {
-        href: "/admin/store#checklist",
-        label: "明日待辦",
         roles: ["admin", "store_staff"],
       },
 

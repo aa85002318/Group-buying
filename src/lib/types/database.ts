@@ -147,6 +147,10 @@ export interface Article {
   status: ArticleStatus;
   sort_order: number;
   is_featured?: boolean;
+  /** BrandFontId; null/undefined = follow site branding */
+  title_font?: string | null;
+  /** BrandFontId; null/undefined = follow site branding */
+  body_font?: string | null;
   created_at: string;
   updated_at: string;
   product_categories?: ProductCategory;

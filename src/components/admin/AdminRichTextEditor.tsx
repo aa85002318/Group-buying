@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { AdminBrandFontSelect, useBrandFontPreviewCss } from "@/components/admin/AdminBrandFontPicker";
+import { getBrandFont, type BrandFontId } from "@/lib/branding";
 
 const SIZES = [
   { label: "小", value: "2" },
@@ -24,7 +26,7 @@ interface AdminRichTextEditorProps {
   placeholder?: string;
 }
 
-/** Lightweight HTML editor (bold / size / color) without extra packages. */
+/** Lightweight HTML editor (bold / size / color / font) without extra packages. */
 export function AdminRichTextEditor({
   value,
   onChange,
@@ -32,6 +34,7 @@ export function AdminRichTextEditor({
 }: AdminRichTextEditorProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [htmlMode, setHtmlMode] = useState(false);
+  useBrandFontPreviewCss();
 
   useEffect(() => {
     if (!htmlMode && ref.current && ref.current.innerHTML !== value) {
@@ -46,6 +49,37 @@ export function AdminRichTextEditor({
   const run = (command: string, arg?: string) => {
     ref.current?.focus();
     document.execCommand(command, false, arg);
+    emit();
+  };
+
+  const applyFont = (id: BrandFontId) => {
+    const opt = getBrandFont(id);
+    const familyCss = opt.family.replace(/"/g, "'");
+    const familyName = opt.family.split(",")[0]!.replace(/"/g, "").trim();
+    ref.current?.focus();
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+      const range = sel.getRangeAt(0);
+      const span = document.createElement("span");
+      span.style.fontFamily = familyCss;
+      try {
+        range.surroundContents(span);
+      } catch {
+        const frag = range.extractContents();
+        span.appendChild(frag);
+        range.insertNode(span);
+      }
+      sel.removeAllRanges();
+      const after = document.createRange();
+      after.selectNodeContents(span);
+      after.collapse(false);
+      sel.addRange(after);
+      emit();
+      return;
+    }
+    // No selection: set font for subsequent typing
+    document.execCommand("styleWithCSS", false, "true");
+    document.execCommand("fontName", false, familyName);
     emit();
   };
 
@@ -95,6 +129,7 @@ export function AdminRichTextEditor({
           H3
         </Button>
         <span className="mx-1 h-5 w-px bg-border" />
+        <AdminBrandFontSelect onChange={applyFont} placeholder="字型" />
         <select
           className="rounded border border-border bg-white px-2 py-1 text-xs"
           defaultValue=""

@@ -1,13 +1,23 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { StoreQuickEntryForm } from "@/components/admin/store/StoreQuickEntryForm";
 
 function EntryInner() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const type = searchParams.get("type");
+
+  useEffect(() => {
+    if (type === "worklog") router.replace("/admin/store#calendar");
+    if (type === "request") router.replace("/admin/store/demand?type=restock");
+  }, [type, router]);
+
+  if (type === "worklog" || type === "request") {
+    return <p className="text-sm text-muted-foreground">導向中…</p>;
+  }
 
   return (
     <div className="space-y-4">

@@ -51,6 +51,8 @@ export async function POST(request: Request) {
       status: body.status ?? "draft",
       sort_order: body.sort_order ?? 0,
       is_featured: Boolean(body.is_featured),
+      title_font: body.title_font ?? null,
+      body_font: body.body_font ?? null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -70,6 +72,8 @@ export async function POST(request: Request) {
       status: body.status ?? "draft",
       sort_order: body.sort_order ?? 0,
       is_featured: Boolean(body.is_featured),
+      title_font: body.title_font || null,
+      body_font: body.body_font || null,
     })
     .select()
     .single();

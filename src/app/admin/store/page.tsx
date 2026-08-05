@@ -18,6 +18,7 @@ import {
   greetingForHour,
 } from "@/lib/admin/store-ops";
 import { STORE_REQUEST_STATUS_LABEL } from "@/lib/admin/store-entry";
+import { StoreTodoCalendar } from "@/components/admin/store/StoreTodoCalendar";
 import { cn } from "@/lib/utils";
 
 type Metrics = {
@@ -48,12 +49,6 @@ type OrdersToday = {
 };
 
 type Todo = { priority: number; label: string; href: string; count?: number };
-type ChecklistItem = {
-  id: string;
-  label: string;
-  href?: string | null;
-  is_done?: boolean;
-};
 type StoreRequest = {
   id: string;
   product_label?: string | null;
@@ -132,7 +127,6 @@ export default function AdminStoreHomePage() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [ordersToday, setOrdersToday] = useState<OrdersToday | null>(null);
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [requests, setRequests] = useState<StoreRequest[]>([]);
   const [messages, setMessages] = useState<StoreMessage[]>([]);
   const [staffName, setStaffName] = useState("店長");
@@ -154,7 +148,6 @@ export default function AdminStoreHomePage() {
       setMetrics(data.metrics);
       setOrdersToday(data.ordersToday ?? null);
       setTodos(data.todos ?? []);
-      setChecklist(data.checklist ?? []);
       setRequests(data.requests ?? []);
       setMessages(data.messages ?? []);
       setStaffName(data.staffName || "店長");
@@ -175,29 +168,10 @@ export default function AdminStoreHomePage() {
     if (hash === "#quick-entry") {
       setEntryOpen(true);
       document.getElementById("quick-entry")?.scrollIntoView({ behavior: "smooth" });
-    } else if (hash === "#requests" || hash === "#messages" || hash === "#checklist") {
-      document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth" });
+    } else if (hash === "#requests" || hash === "#messages" || hash === "#calendar" || hash === "#checklist") {
+      document.getElementById(hash === "#checklist" ? "calendar" : hash.slice(1))?.scrollIntoView({ behavior: "smooth" });
     }
   }, [loading]);
-
-  const toggleCheck = async (item: ChecklistItem) => {
-    const nextDone = !item.is_done;
-    setChecklist((prev) =>
-      prev.map((t) => (t.id === item.id ? { ...t, is_done: nextDone } : t))
-    );
-    try {
-      const res = await fetch("/api/admin/store/todos", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: item.id, is_done: nextDone }),
-      });
-      if (!res.ok) throw new Error("更新失敗");
-    } catch {
-      setChecklist((prev) =>
-        prev.map((t) => (t.id === item.id ? { ...t, is_done: item.is_done } : t))
-      );
-    }
-  };
 
   const reviewRequest = async (id: string, status: "approved" | "rejected") => {
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
@@ -411,51 +385,36 @@ export default function AdminStoreHomePage() {
         </div>
       </SectionCard>
 
-      {/* 4. Inventory */}
-      <SectionCard title="庫存中心">
-        <div className="flex flex-wrap gap-2">
-          <StatPill
-            label="缺貨"
-            value={metrics?.outOfStock ?? 0}
-            href="/admin/store/inventory"
-            tone={(metrics?.outOfStock ?? 0) > 0 ? "danger" : "default"}
-          />
-          <StatPill
-            label="低庫存"
-            value={metrics?.lowStock ?? 0}
-            href="/admin/store/inventory"
-            tone={(metrics?.lowStock ?? 0) > 0 ? "warn" : "default"}
-          />
-          <StatPill
-            label="待叫貨"
-            value={metrics?.pendingRestock ?? 0}
-            href="/admin/store/inventory"
-          />
-          <StatPill
-            label="今日進貨"
-            value={metrics?.todayReceive ?? 0}
-            href="/admin/store/batches"
-            tone="ok"
-          />
-        </div>
-      </SectionCard>
-
-      {/* 5. Branch requests */}
+      {/* 4. Demand / out of stock */}
       <SectionCard
         id="requests"
-        title="分店需求"
+        title="分店商品需求／缺貨通知"
         action={
           <Link
-            href="/admin/store/entry?type=request"
+            href="/admin/store/demand"
             className="text-xs font-semibold text-[#153E73] underline"
           >
-            新增需求
+            開啟完整頁面
           </Link>
         }
       >
+        <div className="mb-3 flex flex-wrap gap-2">
+          <Link
+            href="/admin/store/demand?type=out_of_stock"
+            className="rounded-xl border border-[#E8EBF0] bg-[#FFFBEA] px-3 py-2 text-sm font-bold text-[#153E73]"
+          >
+            ＋商品缺貨
+          </Link>
+          <Link
+            href="/admin/store/demand?type=restock"
+            className="rounded-xl border border-[#FFE149] bg-[#FFE149] px-3 py-2 text-sm font-bold text-[#153E73]"
+          >
+            ＋門市叫貨需求
+          </Link>
+        </div>
         {requests.length === 0 ? (
           <p className="rounded-[12px] border border-dashed border-[#E8EBF0] bg-[#F7F8FA] px-3 py-4 text-sm text-muted-foreground">
-            尚無待處理叫貨需求。
+            尚無待處理缺貨／叫貨。
           </p>
         ) : (
           <ul className="space-y-2">
@@ -477,13 +436,6 @@ export default function AdminStoreHomePage() {
                       </p>
                       <p className="mt-1 text-[11px] text-muted-foreground">
                         {r.requested_by_name || "門市"} ·{" "}
-                        {r.created_at
-                          ? new Date(r.created_at).toLocaleString("zh-TW", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : ""}
-                        {" · "}
                         {STORE_REQUEST_STATUS_LABEL[status] ?? status}
                       </p>
                     </div>
@@ -574,46 +526,9 @@ export default function AdminStoreHomePage() {
         </div>
       </SectionCard>
 
-      {/* 7. Checklist */}
-      <SectionCard id="checklist" title="今日待辦">
-        {checklist.length === 0 ? (
-          <p className="text-sm text-muted-foreground">尚無待辦清單</p>
-        ) : (
-          <ul className="space-y-2">
-            {checklist.map((item) => {
-              const done = Boolean(item.is_done);
-              return (
-                <li key={item.id}>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-[12px] border border-[#E8EBF0] px-3 py-2.5 hover:bg-[#FFFBEA]">
-                    <input
-                      type="checkbox"
-                      checked={done}
-                      onChange={() => void toggleCheck(item)}
-                      className="h-4 w-4 accent-[#FFE149]"
-                    />
-                    <span
-                      className={cn(
-                        "flex-1 text-sm font-medium text-[#153E73]",
-                        done && "text-muted-foreground line-through"
-                      )}
-                    >
-                      {item.label}
-                    </span>
-                    {item.href ? (
-                      <Link
-                        href={item.href}
-                        className="text-xs font-semibold text-[#153E73]/60 underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        前往
-                      </Link>
-                    ) : null}
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+      {/* 7. Store calendar */}
+      <SectionCard id="calendar" title="門市行事曆">
+        <StoreTodoCalendar />
         {todos.length > 0 ? (
           <div className="mt-4 border-t border-[#E8EBF0] pt-3">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[#153E73]/50">
@@ -653,11 +568,9 @@ export default function AdminStoreHomePage() {
                         ? Trash2
                         : a.icon === "repair"
                           ? Wrench
-                          : a.icon === "return"
-                            ? Package
-                            : a.icon === "stock"
-                              ? ClipboardList
-                              : MessageSquare;
+                          : a.icon === "stock"
+                            ? ClipboardList
+                            : MessageSquare;
             return (
               <Link
                 key={a.href + a.label}

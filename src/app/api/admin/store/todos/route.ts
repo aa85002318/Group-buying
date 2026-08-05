@@ -111,3 +111,25 @@ export async function POST(request: Request) {
   await logAudit(auth!.profile.id, "create", "store_todos", data.id, null, data, request as never);
   return NextResponse.json({ item: data }, { status: 201 });
 }
+
+export async function DELETE(request: Request) {
+  const { error, auth } = await requireStoreOps();
+  if (error) return error;
+
+  const body = await request.json().catch(() => ({}));
+  const url = new URL(request.url);
+  const id = String(body.id ?? url.searchParams.get("id") ?? "").trim();
+  if (!id) return NextResponse.json({ error: "缺少 id" }, { status: 400 });
+
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const admin = createAdminClient();
+  const { data: old } = await admin.from("store_todos").select("*").eq("id", id).single();
+  const { error: delError } = await admin.from("store_todos").delete().eq("id", id);
+  if (delError) return NextResponse.json({ error: delError.message }, { status: 500 });
+
+  await logAudit(auth!.profile.id, "delete", "store_todos", id, old, null, request as never);
+  return NextResponse.json({ ok: true });
+}

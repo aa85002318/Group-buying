@@ -34,6 +34,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { id } = await params;
   const body = await request.json();
 
+  // Normalize article font fields (empty → null)
+  if ("title_font" in body) body.title_font = body.title_font || null;
+  if ("body_font" in body) body.body_font = body.body_font || null;
+
   if (!isSupabaseConfigured()) {
     const idx = mockArticles.findIndex((a) => a.id === id);
     if (idx < 0) return NextResponse.json({ error: "文章不存在" }, { status: 404 });

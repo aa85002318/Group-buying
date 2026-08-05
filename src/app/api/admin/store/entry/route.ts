@@ -4,9 +4,34 @@ import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStoreEntryDef, type StoreEntryType } from "@/lib/admin/store-entry";
 
+type AdminClient = ReturnType<typeof createAdminClient>;
+
+async function logStatusChange(args: {
+  admin: AdminClient;
+  storeId: string;
+  resourceType: "store_anomalies" | "store_returns" | "store_disposals";
+  resourceId: string;
+  fromStatus: string | null;
+  toStatus: string;
+  changedBy: string;
+  changedByName: string;
+  note?: string | null;
+}) {
+  await args.admin.from("store_status_logs").insert({
+    store_id: args.storeId,
+    resource_type: args.resourceType,
+    resource_id: args.resourceId,
+    from_status: args.fromStatus,
+    to_status: args.toStatus,
+    note: args.note ?? null,
+    changed_by: args.changedBy,
+    changed_by_name: args.changedByName,
+  });
+}
+
 /**
  * Unified field entry — maps quick-entry types onto existing store_* tables.
- * Does not create products; product_id must reference Product Master.
+ * May create products only via /api/admin/store/products; entry expects product_id.
  */
 export async function POST(request: Request) {
   const { error, auth } = await requireStoreOps();
@@ -24,8 +49,29 @@ export async function POST(request: Request) {
   const quantity = body.quantity != null ? Number(body.quantity) : null;
   const reason = String(body.reason ?? body.description ?? "").trim();
   const photoUrl = (body.photo_url as string | undefined)?.trim() || null;
+  const photoUrls = Array.isArray(body.photo_urls)
+    ? (body.photo_urls as string[]).filter((u) => typeof u === "string" && u.trim())
+    : photoUrl
+      ? [photoUrl]
+      : [];
   const anomalyType =
-    (body.anomaly_type as string | undefined)?.trim() || def.anomalyType || "other";
+    (body.anomaly_type as string | undefined)?.trim() ||
+    (body.case_kind as string | undefined)?.trim() ||
+    def.anomalyType ||
+    "other";
+  const caseKind = (body.case_kind as string | undefined)?.trim() || anomalyType;
+  const status = (body.status as string | undefined)?.trim() || "pending";
+  const invoiceNo = (body.invoice_no as string | undefined)?.trim() || null;
+  const location = (body.location as string | undefined)?.trim() || null;
+  const productExpiry = (body.product_expiry as string | undefined)?.trim() || null;
+  const customerName = (body.customer_name as string | undefined)?.trim() || null;
+  const customerPhone = (body.customer_phone as string | undefined)?.trim() || null;
+  const vendorName = (body.vendor_name as string | undefined)?.trim() || null;
+  const piecesCount = body.pieces_count != null ? Number(body.pieces_count) : null;
+  const receivedAtRaw = (body.received_at as string | undefined)?.trim() || null;
+  const receivedAt = receivedAtRaw
+    ? new Date(receivedAtRaw).toISOString()
+    : null;
 
   if (!reason) {
     return NextResponse.json({ error: "請填寫原因／說明" }, { status: 400 });
@@ -37,7 +83,7 @@ export async function POST(request: Request) {
   if (def.requiresBatch && !batchId) {
     return NextResponse.json({ error: "請選擇批次" }, { status: 400 });
   }
-  if (def.requiresQuantity) {
+  if (def.requiresQuantity || def.id === "issue_return") {
     if (!quantity || quantity <= 0) {
       return NextResponse.json({ error: "數量必須大於 0" }, { status: 400 });
     }
@@ -67,6 +113,7 @@ export async function POST(request: Request) {
 
   const staffName =
     (auth!.profile as { full_name?: string | null }).full_name?.trim() || "門市人員";
+  const now = new Date().toISOString();
 
   try {
     if (def.resource === "store_messages") {
@@ -95,84 +142,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ item: data, resource: "store_messages", message: "留言已送出" });
     }
 
-    if (def.resource === "store_work_logs") {
-      const { data, error: insertError } = await admin
-        .from("store_work_logs")
-        .insert({
-          store_id: storeId,
-          log_date: new Date().toISOString().slice(0, 10),
-          body: reason,
-          author_id: auth!.profile.id,
-          author_name: staffName,
-        })
-        .select()
-        .single();
-      if (insertError) {
-        return NextResponse.json({ error: insertError.message }, { status: 500 });
-      }
-      await logAudit(
-        auth!.profile.id,
-        "create",
-        "store_work_logs",
-        data.id,
-        null,
-        data,
-        request as never
-      );
-      return NextResponse.json({ item: data, resource: "store_work_logs", message: "工作紀錄已儲存" });
-    }
-
-    if (def.resource === "store_requests") {
-      const qty = quantity && quantity > 0 ? quantity : 1;
-      const productLabel =
-        (body.product_label as string | undefined)?.trim() ||
-        (body.product_name as string | undefined)?.trim() ||
-        null;
-      const { data, error: insertError } = await admin
-        .from("store_requests")
-        .insert({
-          store_id: storeId,
-          product_id: productId,
-          product_label: productLabel,
-          quantity: qty,
-          unit: (body.unit as string | undefined)?.trim() || null,
-          note: reason,
-          status: "pending",
-          requested_by: auth!.profile.id,
-          requested_by_name: staffName,
-        })
-        .select()
-        .single();
-      if (insertError) {
-        return NextResponse.json({ error: insertError.message }, { status: 500 });
-      }
-      await logAudit(
-        auth!.profile.id,
-        "create",
-        "store_requests",
-        data.id,
-        null,
-        data,
-        request as never
-      );
-      return NextResponse.json({ item: data, resource: "store_requests", message: "叫貨需求已送出" });
-    }
-
     if (def.resource === "disposals") {
       const unitCost = body.unit_cost != null ? Number(body.unit_cost) : null;
       const qty = quantity!;
+      const disposalStatus = status || "pending";
       const payload = {
         store_id: storeId,
         product_id: productId!,
-        batch_id: batchId!,
+        batch_id: batchId,
         quantity: qty,
         reason,
         unit_cost: unitCost,
         total_loss: unitCost != null ? unitCost * qty : null,
-        photo_url: photoUrl,
-        status: "open",
+        photo_url: photoUrls[0] ?? null,
+        photo_urls: photoUrls,
+        product_expiry: productExpiry,
+        location,
+        status: disposalStatus,
+        status_changed_at: now,
         created_by: auth!.profile.id,
-        disposed_at: new Date().toISOString(),
+        disposed_at: disposalStatus === "disposed" ? now : null,
       };
       const { data, error: insertError } = await admin
         .from("store_disposals")
@@ -182,16 +171,28 @@ export async function POST(request: Request) {
       if (insertError) {
         return NextResponse.json({ error: insertError.message }, { status: 500 });
       }
-      await applyBatchMovement({
+      if (batchId) {
+        await applyBatchMovement({
+          admin,
+          storeId,
+          productId: productId!,
+          batchId,
+          qty,
+          movementType: "disposal",
+          referenceType: "store_disposals",
+          referenceId: data.id,
+          createdBy: auth!.profile.id,
+        });
+      }
+      await logStatusChange({
         admin,
         storeId,
-        productId: productId!,
-        batchId: batchId!,
-        qty,
-        movementType: "disposal",
-        referenceType: "store_disposals",
-        referenceId: data.id,
-        createdBy: auth!.profile.id,
+        resourceType: "store_disposals",
+        resourceId: data.id,
+        fromStatus: null,
+        toStatus: disposalStatus,
+        changedBy: auth!.profile.id,
+        changedByName: staffName,
       });
       await logAudit(
         auth!.profile.id,
@@ -205,55 +206,130 @@ export async function POST(request: Request) {
       return NextResponse.json({ item: data, resource: "disposals", message: "報廢已登記" });
     }
 
-    if (def.resource === "returns") {
+    // Unified issue / return
+    if (def.resource === "issue_return") {
       const qty = quantity!;
+      const isCustomerReturn = caseKind === "customer_return";
+
+      if (isCustomerReturn) {
+        const payload = {
+          store_id: storeId,
+          product_id: productId!,
+          batch_id: batchId,
+          quantity: qty,
+          reason,
+          status,
+          case_kind: caseKind,
+          invoice_no: invoiceNo,
+          location,
+          product_expiry: productExpiry,
+          photo_url: photoUrls[0] ?? null,
+          photo_urls: photoUrls,
+          status_changed_at: now,
+          created_by: auth!.profile.id,
+          returned_at: now,
+        };
+        const { data, error: insertError } = await admin
+          .from("store_returns")
+          .insert(payload)
+          .select()
+          .single();
+        if (insertError) {
+          return NextResponse.json({ error: insertError.message }, { status: 500 });
+        }
+        if (batchId) {
+          await applyBatchMovement({
+            admin,
+            storeId,
+            productId: productId!,
+            batchId,
+            qty,
+            movementType: "return",
+            referenceType: "store_returns",
+            referenceId: data.id,
+            createdBy: auth!.profile.id,
+          });
+        }
+        await logStatusChange({
+          admin,
+          storeId,
+          resourceType: "store_returns",
+          resourceId: data.id,
+          fromStatus: null,
+          toStatus: status,
+          changedBy: auth!.profile.id,
+          changedByName: staffName,
+        });
+        await logAudit(
+          auth!.profile.id,
+          "create",
+          "store_returns",
+          data.id,
+          null,
+          data,
+          request as never
+        );
+        return NextResponse.json({
+          item: data,
+          resource: "issue_return",
+          message: "客戶退貨已登記",
+        });
+      }
+
       const payload = {
         store_id: storeId,
-        product_id: productId!,
-        batch_id: batchId!,
+        product_id: productId,
+        batch_id: batchId,
+        anomaly_type: anomalyType,
+        case_kind: caseKind,
+        description: reason,
         quantity: qty,
-        reason,
-        status: "open",
-        created_by: auth!.profile.id,
-        returned_at: new Date().toISOString(),
+        photo_url: photoUrls[0] ?? null,
+        photo_urls: photoUrls,
+        invoice_no: invoiceNo,
+        location,
+        product_expiry: productExpiry,
+        status,
+        status_changed_at: now,
+        reported_by: auth!.profile.id,
+        reported_at: now,
       };
       const { data, error: insertError } = await admin
-        .from("store_returns")
+        .from("store_anomalies")
         .insert(payload)
         .select()
         .single();
       if (insertError) {
         return NextResponse.json({ error: insertError.message }, { status: 500 });
       }
-      await applyBatchMovement({
+      await logStatusChange({
         admin,
         storeId,
-        productId: productId!,
-        batchId: batchId!,
-        qty,
-        movementType: "return",
-        referenceType: "store_returns",
-        referenceId: data.id,
-        createdBy: auth!.profile.id,
+        resourceType: "store_anomalies",
+        resourceId: data.id,
+        fromStatus: null,
+        toStatus: status,
+        changedBy: auth!.profile.id,
+        changedByName: staffName,
       });
       await logAudit(
         auth!.profile.id,
         "create",
-        "store_returns",
+        "store_anomalies",
         data.id,
         null,
         data,
         request as never
       );
-      return NextResponse.json({ item: data, resource: "returns", message: "退貨已登記" });
+      return NextResponse.json({
+        item: data,
+        resource: "issue_return",
+        message: "異常已登記",
+      });
     }
 
-    // anomalies (issue / repair / special)
-    const useBatch = Boolean(batchId);
-    if ((type === "issue" || type === "repair") && !useBatch) {
-      return NextResponse.json({ error: "請選擇批次" }, { status: 400 });
-    }
-
+    // anomalies (repair / special)
+    const repairStatus = type === "repair" ? status || "notified_vendor" : "open";
     const payload: Record<string, unknown> = {
       store_id: storeId,
       product_id: productId,
@@ -261,10 +337,20 @@ export async function POST(request: Request) {
       anomaly_type: anomalyType,
       description: reason,
       quantity: quantity && quantity > 0 ? quantity : null,
-      photo_url: photoUrl,
-      status: "open",
+      photo_url: photoUrls[0] ?? null,
+      photo_urls: photoUrls,
+      invoice_no: invoiceNo,
+      location,
+      product_expiry: productExpiry,
+      customer_name: customerName,
+      customer_phone: customerPhone,
+      vendor_name: vendorName,
+      pieces_count: piecesCount && piecesCount > 0 ? piecesCount : null,
+      received_at: receivedAt,
+      status: type === "repair" ? repairStatus : "open",
+      status_changed_at: now,
       reported_by: auth!.profile.id,
-      reported_at: new Date().toISOString(),
+      reported_at: now,
     };
 
     const { data, error: insertError } = await admin
@@ -275,6 +361,21 @@ export async function POST(request: Request) {
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
+
+    if (type === "repair") {
+      await logStatusChange({
+        admin,
+        storeId,
+        resourceType: "store_anomalies",
+        resourceId: data.id,
+        fromStatus: null,
+        toStatus: repairStatus,
+        changedBy: auth!.profile.id,
+        changedByName: staffName,
+        note: "報修建立",
+      });
+    }
+
     await logAudit(
       auth!.profile.id,
       "create",
@@ -284,7 +385,11 @@ export async function POST(request: Request) {
       data,
       request as never
     );
-    return NextResponse.json({ item: data, resource: "anomalies", message: "已登記" });
+    return NextResponse.json({
+      item: data,
+      resource: "anomalies",
+      message: type === "repair" ? "報修已登記" : "已登記",
+    });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "送出失敗" },
@@ -294,7 +399,7 @@ export async function POST(request: Request) {
 }
 
 async function applyBatchMovement(args: {
-  admin: ReturnType<typeof createAdminClient>;
+  admin: AdminClient;
   storeId: string;
   productId: string;
   batchId: string;

@@ -5,6 +5,22 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Article } from "@/lib/types/database";
 import { mockArticles } from "@/lib/mock-data";
+import { getBrandFont } from "@/lib/branding";
+import { brandGoogleFontsHref } from "@/lib/branding/fonts";
+
+function ensureArticleFonts(titleFont?: string | null, bodyFont?: string | null) {
+  const href = brandGoogleFontsHref([titleFont, bodyFont]);
+  if (!href) return;
+  const id = "article-google-fonts";
+  let link = document.getElementById(id) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+  }
+  if (link.href !== href) link.href = href;
+}
 
 export default function ArticleDetailPage({ params }: { params: { slug: string } }) {
   const [article, setArticle] = useState<Article | null>(
@@ -18,7 +34,15 @@ export default function ArticleDetailPage({ params }: { params: { slug: string }
       .catch(() => {});
   }, [params.slug]);
 
+  useEffect(() => {
+    if (!article) return;
+    ensureArticleFonts(article.title_font, article.body_font);
+  }, [article]);
+
   if (!article) return <p>載入中…</p>;
+
+  const titleFamily = article.title_font ? getBrandFont(article.title_font).family : undefined;
+  const bodyFamily = article.body_font ? getBrandFont(article.body_font).family : undefined;
 
   return (
     <article className="space-y-4">
@@ -28,12 +52,18 @@ export default function ArticleDetailPage({ params }: { params: { slug: string }
           <Image src={article.cover_image} alt={article.title} fill className="object-cover" unoptimized />
         </div>
       )}
-      <h1 className="text-xl font-bold text-coffee">{article.title}</h1>
+      <h1
+        className="text-xl font-bold text-coffee"
+        style={titleFamily ? { fontFamily: titleFamily } : undefined}
+      >
+        {article.title}
+      </h1>
       <p className="text-xs text-muted-foreground">
         {new Date(article.created_at).toLocaleDateString("zh-TW")}
       </p>
       <div
         className="prose prose-sm max-w-none text-coffee"
+        style={bodyFamily ? { fontFamily: bodyFamily } : undefined}
         dangerouslySetInnerHTML={{ __html: article.content }}
       />
     </article>
