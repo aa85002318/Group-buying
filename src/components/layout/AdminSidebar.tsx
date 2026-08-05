@@ -111,8 +111,8 @@ function AdminNavItemLink({
       className={cn(
         "relative flex items-center gap-2 rounded-lg px-3 py-2 text-[14px] transition-colors",
         active
-          ? "bg-[#FFF5C7] font-semibold text-[#153E73] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r before:bg-[#FFE149]"
-          : "text-[#153E73]/85 hover:bg-[#FFFBEA]",
+          ? "bg-[var(--admin-active,#FFF5C7)] font-semibold text-[var(--admin-title,#153E73)] before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[5px] before:rounded-r before:bg-[#FFE149]"
+          : "text-[var(--admin-title,#153E73)]/85 hover:bg-[var(--admin-sidebar-hover,#FFF4B5)]",
         collapsed && "justify-center px-2"
       )}
     >
@@ -154,8 +154,8 @@ function AdminNavGroupSection({
           className={cn(
             "relative flex items-center justify-center rounded-lg p-2.5 transition-colors",
             isNavItemActive(pathname, item.href)
-              ? "bg-[#FFF5C7] text-[#153E73] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r before:bg-[#FFE149]"
-              : "text-[#153E73]/80 hover:bg-[#FFFBEA]"
+              ? "bg-[var(--admin-active,#FFF5C7)] text-[var(--admin-title,#153E73)] before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[5px] before:rounded-r before:bg-[#FFE149]"
+              : "text-[var(--admin-title,#153E73)]/80 hover:bg-[var(--admin-sidebar-hover,#FFF4B5)]"
           )}
         >
           <GroupIcon name={group.icon || item.icon} />
@@ -176,8 +176,8 @@ function AdminNavGroupSection({
         className={cn(
           "relative flex w-full items-center justify-center rounded-lg p-2.5 transition-colors",
           hasActive
-            ? "bg-[#FFF5C7] text-[#153E73] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r before:bg-[#FFE149]"
-            : "text-[#153E73]/80 hover:bg-[#FFFBEA]"
+            ? "bg-[var(--admin-active,#FFF5C7)] text-[var(--admin-title,#153E73)] before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[5px] before:rounded-r before:bg-[#FFE149]"
+            : "text-[var(--admin-title,#153E73)]/80 hover:bg-[var(--admin-sidebar-hover,#FFF4B5)]"
         )}
       >
         <GroupIcon name={group.icon} />
@@ -192,21 +192,23 @@ function AdminNavGroupSection({
         aria-expanded={expanded}
         onClick={onToggle}
         className={cn(
-          "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[14px] font-semibold transition-colors",
-          hasActive ? "text-[#153E73]" : "text-[#153E73]/80 hover:bg-[#FFFBEA]"
+          "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[14px] font-semibold transition-colors",
+          hasActive
+            ? "bg-[var(--admin-active,#FFF5C7)] text-[var(--admin-title,#153E73)]"
+            : "text-[var(--admin-title,#153E73)]/80 hover:bg-[var(--admin-sidebar-hover,#FFF4B5)]"
         )}
       >
-        <GroupIcon name={group.icon} className="text-[#153E73]/70" />
+        <GroupIcon name={group.icon} className="text-[var(--admin-title,#153E73)]" />
         <span className="min-w-0 flex-1 truncate">{group.label}</span>
         <ChevronDown
           className={cn(
-            "h-4 w-4 shrink-0 text-[#153E73]/50 transition-transform",
+            "h-4 w-4 shrink-0 text-[var(--admin-muted,#8A94A6)] transition-transform",
             expanded && "rotate-180"
           )}
         />
       </button>
       {expanded ? (
-        <div className="ml-2 space-y-0.5 border-l border-[#E8EBF0] pl-2">
+        <div className="ml-2 space-y-0.5 border-l-2 border-[#FFE149]/50 pl-2">
           {group.items.map((item, idx) => {
             if (item.type === "heading") {
               return (
@@ -428,22 +430,22 @@ export function AdminDesktopSidebar() {
     }
     document.documentElement.style.setProperty(
       "--admin-sidebar-width",
-      collapsed ? "72px" : "252px"
+      collapsed ? "72px" : "260px"
     );
   }, [collapsed, hydrated]);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--admin-sidebar-width",
-      collapsed ? "72px" : "252px"
+      collapsed ? "72px" : "260px"
     );
   }, [collapsed]);
 
   return (
     <aside
       className={cn(
-        "sticky top-0 z-30 hidden h-[100dvh] shrink-0 flex-col border-r border-[#E8EBF0] bg-white lg:flex",
-        collapsed ? "w-[72px]" : "w-[252px]"
+        "sticky top-0 z-30 hidden h-[100dvh] shrink-0 flex-col border-r border-[var(--admin-border,#ECECEC)] bg-white lg:flex",
+        collapsed ? "w-[72px]" : "w-[260px]"
       )}
     >
       <SidebarBrand
@@ -452,7 +454,7 @@ export function AdminDesktopSidebar() {
           <button
             type="button"
             aria-label={collapsed ? "展開側欄" : "收合側欄"}
-            className="rounded-md p-1.5 text-[#153E73]/60 hover:bg-[#FFFBEA] hover:text-[#153E73]"
+            className="rounded-xl p-1.5 text-[var(--admin-muted)] hover:bg-[var(--admin-sidebar-hover,#FFF4B5)] hover:text-[var(--admin-title)]"
             onClick={() => setCollapsed((v) => !v)}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -517,10 +519,10 @@ export function AdminMobileMenuButton() {
     <button
       type="button"
       aria-label="開啟選單"
-      className="rounded-lg border border-[#E8EBF0] p-2 hover:bg-[#FFFBEA] lg:hidden"
+      className="admin-icon-btn lg:hidden"
       onClick={() => setMobileNavOpen(true)}
     >
-      <Menu className="h-5 w-5 text-[#153E73]" />
+      <Menu className="h-5 w-5" aria-hidden />
     </button>
   );
 }

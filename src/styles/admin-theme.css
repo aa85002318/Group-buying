@@ -1,0 +1,249 @@
+/* CHIMEIDIY Admin UI — scoped under .admin-app only */
+
+.admin-app {
+  --admin-primary-yellow: #ffe149;
+  --admin-bg: #fffdf6;
+  --admin-card: #ffffff;
+  --admin-border: #ececec;
+  --admin-title: #153e73;
+  --admin-text: #44506a;
+  --admin-muted: #8a94a6;
+  --admin-success: #43c47b;
+  --admin-warning: #ffb238;
+  --admin-danger: #f35b5b;
+  --admin-info: #5ca8ff;
+  --admin-hover: #fff7cc;
+  --admin-sidebar-hover: #fff4b5;
+  --admin-active: #fff5c7;
+  --admin-shadow: 0 10px 35px rgba(0, 0, 0, 0.05);
+  --admin-radius-card: 24px;
+  --admin-radius-btn: 18px;
+  --admin-radius-input: 16px;
+  --admin-header-h: 72px;
+  --admin-sidebar-width: 260px;
+
+  /* Soft remap so existing primary utilities lean brand-yellow in admin */
+  --primary: #ffe149;
+  --primary-rgb: 255 225 73;
+  --primary-hover: #f5d63a;
+  --primary-hover-rgb: 245 214 58;
+  --primary-active: #ebcc2e;
+  --primary-active-rgb: 235 204 46;
+  --primary-soft: #fff7cc;
+  --primary-subtle: #fff7cc;
+  --primary-light: #fff7cc;
+  --primary-foreground: #153e73;
+  --background: #fffdf6;
+  --surface: #ffffff;
+  --border: #ececec;
+  --text-primary: #153e73;
+  --text-primary-rgb: 21 62 115;
+  --text-secondary: #44506a;
+  --text-muted: #8a94a6;
+  --admin-page-bg: #fffdf6;
+  --admin-sidebar-active: #fff5c7;
+  --admin-active-border: #ffe149;
+  --admin-table-header: #f4f6f9;
+
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+.admin-app h1,
+.admin-app h2,
+.admin-app h3,
+.admin-app .admin-title {
+  color: var(--admin-title);
+  font-weight: 700;
+}
+
+/* Primary buttons → yellow + navy text (override text-white) */
+.admin-app button.bg-primary,
+.admin-app a.bg-primary,
+.admin-app .bg-primary {
+  background-color: #ffe149 !important;
+  color: #153e73 !important;
+  border-radius: var(--admin-radius-btn);
+  box-shadow: var(--admin-shadow);
+}
+
+.admin-app button.bg-primary:hover,
+.admin-app a.bg-primary:hover,
+.admin-app .bg-primary:hover {
+  background-color: #f5d63a !important;
+}
+
+.admin-app button.border-2.border-primary,
+.admin-app .border-2.border-primary {
+  border-radius: var(--admin-radius-btn);
+  color: #153e73 !important;
+  background: #fff !important;
+}
+
+.admin-app button.bg-danger,
+.admin-app .bg-danger {
+  background-color: #f35b5b !important;
+  color: #fff !important;
+  border-radius: var(--admin-radius-btn);
+}
+
+/* Inputs */
+.admin-app input:not([type="checkbox"]):not([type="radio"]),
+.admin-app select,
+.admin-app textarea {
+  min-height: 48px;
+  border-radius: var(--admin-radius-input) !important;
+  border-color: var(--admin-border) !important;
+  color: var(--admin-title);
+}
+
+.admin-app input:not([type="checkbox"]):not([type="radio"]):focus,
+.admin-app select:focus,
+.admin-app textarea:focus {
+  border-color: #ffe149 !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 225, 73, 0.35);
+}
+
+.admin-app input::placeholder,
+.admin-app textarea::placeholder {
+  color: var(--admin-muted);
+}
+
+/* Cards */
+.admin-app .admin-surface-card,
+.admin-app .shadow-card {
+  border-radius: var(--admin-radius-card);
+  border-color: var(--admin-border);
+  box-shadow: var(--admin-shadow);
+  background: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-app .admin-surface-card:hover,
+.admin-app .admin-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* Table */
+.admin-app .admin-table-wrap {
+  border-radius: var(--admin-radius-card);
+  border: 1px solid var(--admin-border);
+  background: #fff;
+  box-shadow: var(--admin-shadow);
+  overflow: hidden;
+}
+
+.admin-app .admin-table-wrap thead {
+  background: var(--admin-table-header);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.admin-app .admin-table-wrap tbody tr {
+  transition: background 0.15s ease;
+}
+
+.admin-app .admin-table-wrap tbody tr:hover {
+  background: var(--admin-hover);
+}
+
+/* Status pills */
+.admin-app .admin-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.admin-app .admin-pill-success {
+  background: rgba(67, 196, 123, 0.14);
+  color: #1f8a4c;
+}
+
+.admin-app .admin-pill-warning {
+  background: rgba(255, 178, 56, 0.18);
+  color: #b87400;
+}
+
+.admin-app .admin-pill-danger {
+  background: rgba(243, 91, 91, 0.14);
+  color: #c0392b;
+}
+
+.admin-app .admin-pill-info {
+  background: rgba(92, 168, 255, 0.16);
+  color: #1f6fbf;
+}
+
+.admin-app .admin-pill-secondary {
+  background: #f1f3f6;
+  color: #687386;
+}
+
+.admin-app .admin-pill-primary {
+  background: rgba(255, 225, 73, 0.45);
+  color: #153e73;
+}
+
+/* Icon action buttons */
+.admin-app .admin-icon-btn {
+  display: inline-flex;
+  height: 40px;
+  width: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 1px solid var(--admin-border);
+  background: #fff;
+  color: var(--admin-title);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.admin-app .admin-icon-btn:hover {
+  background: var(--admin-hover);
+}
+
+.admin-app .admin-icon-btn:active {
+  transform: scale(0.96);
+}
+
+/* Skeleton */
+.admin-app .admin-skeleton {
+  border-radius: 16px;
+  background: linear-gradient(90deg, #f1f3f6 25%, #e8ecf1 37%, #f1f3f6 63%);
+  background-size: 400% 100%;
+  animation: admin-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes admin-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+.admin-app .admin-page-enter {
+  animation: admin-page-fade 0.35s ease both;
+}
+
+@keyframes admin-page-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

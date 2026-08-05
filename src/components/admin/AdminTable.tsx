@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export type AdminColumn<T> = {
   key: string;
@@ -37,35 +38,41 @@ export function AdminTable<T extends { id: string }>({
   toolbar?: ReactNode;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {(onSearchChange || toolbar) && (
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           {onSearchChange ? (
             <Input
-              className="w-full sm:max-w-xs"
+              className="h-12 w-full rounded-[16px] sm:max-w-xs"
               placeholder={searchPlaceholder}
               value={search ?? ""}
               onChange={(e) => onSearchChange(e.target.value)}
             />
           ) : null}
-          {toolbar ? <div className="flex flex-wrap items-center gap-2">{toolbar}</div> : null}
+          {toolbar ? <div className="flex flex-wrap items-center gap-3">{toolbar}</div> : null}
         </div>
       )}
 
       {/* Mobile card list */}
-      <div className="rounded-xl border border-border bg-white shadow-card md:hidden">
+      <div className="admin-table-wrap md:hidden">
         {loading ? (
-          <p className="p-6 text-center text-sm text-muted-foreground">載入中…</p>
+          <div className="space-y-3 p-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="admin-skeleton h-24 w-full" />
+            ))}
+          </div>
         ) : rows.length === 0 ? (
-          <p className="p-6 text-center text-sm text-muted-foreground">{emptyText}</p>
+          <p className="p-8 text-center text-sm text-[var(--admin-muted)]">{emptyText}</p>
         ) : (
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-[var(--admin-border)]">
             {rows.map((row) => (
-              <div key={row.id} className="space-y-2 p-4">
+              <div key={row.id} className="space-y-2.5 p-4 transition hover:bg-[var(--admin-hover)]">
                 {columns.map((col) => (
                   <div key={col.key} className="flex items-start justify-between gap-3 text-sm">
-                    <span className="shrink-0 text-muted-foreground">{col.header}</span>
-                    <div className="min-w-0 text-right">{col.render(row)}</div>
+                    <span className="shrink-0 text-[var(--admin-muted)]">{col.header}</span>
+                    <div className="min-w-0 text-right text-[var(--admin-title)]">
+                      {col.render(row)}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -75,51 +82,65 @@ export function AdminTable<T extends { id: string }>({
       </div>
 
       {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded-xl border border-border bg-white shadow-card md:block">
-        <table className="w-full min-w-[640px] text-sm">
-          <thead className="bg-muted">
-            <tr>
-              {columns.map((col) => (
-                <th key={col.key} className={`p-3 text-left font-medium ${col.className ?? ""}`}>
-                  {col.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+      <div className="admin-table-wrap hidden md:block">
+        <div className="max-h-[70vh] overflow-auto">
+          <table className="w-full min-w-[640px] text-sm">
+            <thead>
               <tr>
-                <td colSpan={columns.length} className="p-6 text-center text-muted-foreground">
-                  載入中…
-                </td>
+                {columns.map((col) => (
+                  <th
+                    key={col.key}
+                    className={cn(
+                      "sticky top-0 z-[1] bg-[var(--admin-table-header)] p-3.5 text-left text-xs font-bold uppercase tracking-wide text-[var(--admin-muted)]",
+                      col.className
+                    )}
+                  >
+                    {col.header}
+                  </th>
+                ))}
               </tr>
-            ) : rows.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className="p-6 text-center text-muted-foreground">
-                  {emptyText}
-                </td>
-              </tr>
-            ) : (
-              rows.map((row) => (
-                <tr key={row.id} className="border-t border-border">
-                  {columns.map((col) => (
-                    <td key={col.key} className={`p-3 align-middle ${col.className ?? ""}`}>
-                      {col.render(row)}
-                    </td>
-                  ))}
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={columns.length} className="p-8 text-center text-[var(--admin-muted)]">
+                    載入中…
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : rows.length === 0 ? (
+                <tr>
+                  <td colSpan={columns.length} className="p-8 text-center text-[var(--admin-muted)]">
+                    {emptyText}
+                  </td>
+                </tr>
+              ) : (
+                rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-t border-[var(--admin-border)] transition hover:bg-[var(--admin-hover)]"
+                  >
+                    {columns.map((col) => (
+                      <td
+                        key={col.key}
+                        className={cn("p-3.5 align-middle text-[var(--admin-text)]", col.className)}
+                      >
+                        {col.render(row)}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {totalPages && totalPages > 1 && page && onPageChange ? (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-3">
           <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
             上一頁
           </Button>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-[var(--admin-muted)]">
             {page} / {totalPages}
           </span>
           <Button

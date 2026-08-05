@@ -144,7 +144,8 @@ export async function GET(request: Request) {
 
   if (search) query = query.ilike("name", `%${search}%`);
 
-  let { data, error: fetchError } = await query;
+  const { data: firstData, error: fetchError } = await query;
+  let data = firstData;
   if (fetchError) {
     // Soft fallback if group_buy_categories embed is unavailable
     let fallback = admin
