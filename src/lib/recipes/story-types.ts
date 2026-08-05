@@ -93,6 +93,9 @@ export type StoryContentConfig = {
   skipAllowed?: boolean;
   chapterAccent?: string;
   overlayOpacity?: number;
+  /** Optional per-page color overrides (admin flipbook editor). */
+  backgroundColor?: string;
+  textColor?: string;
   startSeconds?: number;
   endSeconds?: number;
   /** V3: per-page caution popup (代替獨立「容易失敗」頁) */

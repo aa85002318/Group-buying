@@ -9,6 +9,24 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,6 +50,8 @@ import type {
   RecipeStoryPageMedia,
 } from "@/lib/types/database";
 import { AdminRecipeVideoUpload } from "@/components/admin/recipes/AdminRecipeVideoUpload";
+import { RecipePagePreview } from "@/components/admin/recipes/RecipePagePreview";
+import { cn } from "@/lib/utils";
 
 type PageWithMedia = RecipeStoryPage & {
   recipe_story_page_media: RecipeStoryPageMedia[];
@@ -111,9 +131,20 @@ type Props = {
   recipeId: string;
   recipeMedia: RecipeMediaOption[];
   steps: RecipeStep[];
+  /** Recipe title/cover for the live preview panel (optional; falls back to sensible defaults). */
+  recipeTitle?: string;
+  coverImage?: string | null;
 };
 
-export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
+type MobilePanel = "toc" | "preview" | "settings";
+
+export function AdminStoryBuilder({
+  recipeId,
+  recipeMedia,
+  steps,
+  recipeTitle,
+  coverImage,
+}: Props) {
   const [chapters, setChapters] = useState<ChapterWithPages[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -121,11 +152,18 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
   const [selection, setSelection] = useState<Selection>(null);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("phone");
   const [wizardChapterId, setWizardChapterId] = useState<string | null>(null);
-  const [listMode, setListMode] = useState<"pages" | "chapters">("pages");
+  const [listMode, setListMode] = useState<"pages" | "chapters">("chapters");
   const [mediaUrlDraft, setMediaUrlDraft] = useState("");
   const [mediaTypeDraft, setMediaTypeDraft] = useState<"image" | "video" | "keyframe">("image");
   const [pickRecipeMedia, setPickRecipeMedia] = useState("");
+  /** Below `xl`, only one of the three panels is shown at a time (tabs). */
+  const [mobilePanel, setMobilePanel] = useState<MobilePanel>("preview");
   const uploadRef = useRef<HTMLInputElement>(null);
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const loadStories = useCallback(async () => {
     setLoading(true);
@@ -302,7 +340,13 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
   };
 
   const deleteChapter = async (chapterId: string) => {
-    if (!confirm("確定刪除此章節及其頁面？")) return;
+    const chapter = chapters.find((c) => c.id === chapterId);
+    const pageCount = chapter?.recipe_story_pages?.length ?? 0;
+    const message =
+      pageCount > 0
+        ? `確定刪除章節？此章節內的 ${pageCount} 個頁面將一併刪除，此操作無法復原。`
+        : "確定刪除此章節？";
+    if (!confirm(message)) return;
     await postAction({ action: "delete_chapter", id: chapterId });
     setSelection(null);
   };
@@ -370,6 +414,53 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
       chapter_id: neighbor.chapter.id,
       sort_order: dir > 0 ? targetPages.length : 0,
     });
+  };
+
+  /** Chapter-tree drag & drop: reorder pages within a chapter, or move them across chapters. */
+  const handlePageDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    const sourceRow = flatPages.find((r) => r.page.id === activeId);
+    if (!sourceRow) return;
+
+    const overRow = flatPages.find((r) => r.page.id === overId);
+    const targetChapterId = overRow
+      ? overRow.chapter.id
+      : overId.startsWith("chapter-drop-")
+        ? overId.slice("chapter-drop-".length)
+        : null;
+    if (!targetChapterId) return;
+
+    const targetChapter = chapters.find((c) => c.id === targetChapterId);
+    if (!targetChapter) return;
+
+    const targetPageIds = [...(targetChapter.recipe_story_pages ?? [])]
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((p) => p.id)
+      .filter((id) => id !== activeId);
+    const insertIndex = overRow ? targetPageIds.indexOf(overId) : targetPageIds.length;
+    targetPageIds.splice(insertIndex < 0 ? targetPageIds.length : insertIndex, 0, activeId);
+
+    const pages = targetPageIds.map((id, i) => ({
+      id,
+      chapter_id: targetChapterId,
+      sort_order: i,
+    }));
+
+    if (sourceRow.chapter.id !== targetChapterId) {
+      const sourcePageIds = [...(sourceRow.chapter.recipe_story_pages ?? [])]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .filter((p) => p.id !== activeId)
+        .map((p) => p.id);
+      pages.push(
+        ...sourcePageIds.map((id, i) => ({ id, chapter_id: sourceRow.chapter.id, sort_order: i }))
+      );
+    }
+
+    await postAction({ action: "reorder", chapters: [], pages });
   };
 
   const saveChapter = async (patch: Partial<RecipeStoryChapter>) => {
@@ -475,19 +566,14 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
     ? parseCompletionConfig(selectedPage.completion_config)
     : {};
   const pageMedia = selectedPage?.recipe_story_page_media ?? [];
-  const previewImage =
-    pageMedia.find((m) => m.media_type === "image")?.url ??
-    pageMedia[0]?.thumbnail_url ??
-    pageMedia[0]?.url ??
-    null;
 
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="font-medium">圖文影音教學集</h3>
+          <h3 className="font-medium">翻頁編輯器</h3>
           <p className="text-sm text-muted-foreground">
-            V3：一頁就是一頁。左側頁面列表 · 中央預覽 · 右側完整內容（類型／圖／影／文／Popup）
+            三欄式編輯：左側章節樹／頁面列表 · 中央即時預覽（實際翻頁效果） · 右側頁面設定
           </p>
         </div>
         <div className="flex gap-2">
@@ -519,9 +605,40 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
         </p>
       ) : null}
 
+      {/* Below xl: single-panel tab switcher (目錄／預覽／設定) instead of 3 columns */}
+      <div className="flex gap-1 rounded-lg border bg-white p-1 xl:hidden">
+        {(
+          [
+            { id: "toc", label: "目錄" },
+            { id: "preview", label: "預覽" },
+            { id: "settings", label: "設定" },
+          ] as { id: MobilePanel; label: string }[]
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={cn(
+              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              mobilePanel === tab.id
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted"
+            )}
+            onClick={() => setMobilePanel(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid gap-3 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
         {/* Left: flat pages (default) or chapter tree */}
-        <aside className="space-y-2 rounded-lg border bg-white p-3">
+        <aside
+          className={cn(
+            "space-y-2 rounded-lg border bg-white p-3",
+            mobilePanel === "toc" ? "block" : "hidden",
+            "xl:block"
+          )}
+        >
           {listMode === "pages" ? (
             <>
               <div className="flex items-center justify-between gap-2">
@@ -606,6 +723,15 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
             <p className="text-sm text-muted-foreground">尚無章節，請先新增章節。</p>
           )}
 
+          <DndContext
+            sensors={dndSensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(event) => void handlePageDragEnd(event)}
+          >
+          <SortableContext
+            items={flatPages.map((r) => r.page.id)}
+            strategy={verticalListSortingStrategy}
+          >
           <div className="max-h-[70vh] space-y-2 overflow-y-auto">
             {chapters.map((ch, chIdx) => {
               const pages = [...(ch.recipe_story_pages ?? [])].sort(
@@ -651,53 +777,27 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
                       </Button>
                     </div>
                   </div>
-                  <div className="space-y-1 border-t px-1 py-1">
-                    {pages.map((page, pageIdx) => {
+                  <ChapterPagesDropzone chapterId={ch.id}>
+                    {pages.length === 0 ? (
+                      <p className="px-1.5 py-2 text-[11px] text-muted-foreground">
+                        拖曳頁面到此處，或點「新增頁面」
+                      </p>
+                    ) : null}
+                    {pages.map((page) => {
                       const pageSelected =
                         selection?.kind === "page" && selection.pageId === page.id;
                       const typeLabel =
                         STORY_PAGE_TYPE_LABELS[page.page_type as RecipeStoryPageType] ??
                         page.page_type;
                       return (
-                        <div
+                        <SortablePageRow
                           key={page.id}
-                          className={`flex items-center gap-1 rounded-md px-1.5 py-1 ${
-                            pageSelected ? "bg-primary/10" : "hover:bg-muted/40"
-                          }`}
-                        >
-                          <button
-                            type="button"
-                            className="min-w-0 flex-1 text-left"
-                            onClick={() => setSelection({ kind: "page", pageId: page.id })}
-                          >
-                            <span className="block truncate text-sm">
-                              {page.title || "未命名頁面"}
-                            </span>
-                            <span className="block text-[11px] text-muted-foreground">
-                              {typeLabel}
-                            </span>
-                          </button>
-                          <div className="flex shrink-0 flex-col">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-5 px-1 text-[10px]"
-                              disabled={busy || pageIdx === 0}
-                              onClick={() => void movePage(page.id, -1)}
-                            >
-                              ↑
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-5 px-1 text-[10px]"
-                              disabled={busy || pageIdx === pages.length - 1}
-                              onClick={() => void movePage(page.id, 1)}
-                            >
-                              ↓
-                            </Button>
-                          </div>
-                        </div>
+                          pageId={page.id}
+                          title={page.title}
+                          typeLabel={typeLabel}
+                          selected={pageSelected}
+                          onSelect={() => setSelection({ kind: "page", pageId: page.id })}
+                        />
                       );
                     })}
                     <div className="flex flex-wrap gap-1 px-1 pb-1 pt-0.5">
@@ -720,17 +820,25 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
                         刪章節
                       </Button>
                     </div>
-                  </div>
+                  </ChapterPagesDropzone>
                 </div>
               );
             })}
           </div>
+          </SortableContext>
+          </DndContext>
             </>
           )}
         </aside>
 
         {/* Center: preview */}
-        <div className="space-y-2 rounded-lg border bg-slate-50 p-3">
+        <div
+          className={cn(
+            "space-y-2 rounded-lg border bg-slate-50 p-3",
+            mobilePanel === "preview" ? "block" : "hidden",
+            "xl:block"
+          )}
+        >
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium">即時預覽</p>
             <div className="flex gap-1">
@@ -756,20 +864,16 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
               className={`overflow-hidden rounded-[28px] border-2 border-slate-800 bg-white shadow-lg ${
                 previewMode === "phone" ? "w-[390px]" : "w-full max-w-3xl rounded-xl"
               }`}
-              style={
-                previewMode === "phone"
-                  ? { minHeight: 720, aspectRatio: "390 / 844" }
-                  : { minHeight: 480 }
-              }
+              style={previewMode === "phone" ? { height: 844 } : { height: 640 }}
             >
               {!selectedPage && selection?.kind === "chapter" && selectedChapter ? (
                 <ChapterPreview chapter={selectedChapter} />
               ) : selectedPage ? (
-                <PagePreview
-                  page={selectedPage}
-                  imageUrl={previewImage}
-                  content={content}
-                  completion={completion}
+                <RecipePagePreview
+                  page={{ ...selectedPage, chapter: selectedChapter ?? null }}
+                  recipeTitle={recipeTitle}
+                  coverImage={coverImage}
+                  bookFit
                 />
               ) : (
                 <div className="flex h-full min-h-[420px] items-center justify-center p-6 text-sm text-muted-foreground">
@@ -781,7 +885,13 @@ export function AdminStoryBuilder({ recipeId, recipeMedia, steps }: Props) {
         </div>
 
         {/* Right: editor */}
-        <aside className="max-h-[78vh] space-y-3 overflow-y-auto rounded-lg border bg-white p-3">
+        <aside
+          className={cn(
+            "max-h-[78vh] space-y-3 overflow-y-auto rounded-lg border bg-white p-3",
+            mobilePanel === "settings" ? "block" : "hidden",
+            "xl:block"
+          )}
+        >
           {selection?.kind === "chapter" && selectedChapter ? (
             <ChapterEditor
               chapter={selectedChapter}
@@ -886,240 +996,67 @@ function ChapterPreview({ chapter }: { chapter: ChapterWithPages }) {
   );
 }
 
-function PagePreview({
-  page,
-  imageUrl,
-  content,
-  completion,
+/** Droppable zone for a chapter's page list (chapter-tree drag & drop). */
+function ChapterPagesDropzone({
+  chapterId,
+  children,
 }: {
-  page: PageWithMedia;
-  imageUrl: string | null;
-  content: StoryContentConfig;
-  completion: StoryCompletionConfig;
+  chapterId: string;
+  children: ReactNode;
 }) {
-  const typeLabel =
-    STORY_PAGE_TYPE_LABELS[page.page_type as RecipeStoryPageType] ?? page.page_type;
-  const align = page.alignment ?? "bottom_left";
-  const alignClass =
-    align === "center"
-      ? "items-center justify-center text-center"
-      : align === "top_left"
-        ? "items-start justify-start"
-        : align === "bottom_right"
-          ? "items-end justify-end text-right"
-          : "items-start justify-end";
-
-  if (page.layout_type === "full_bleed" || page.page_type === "full_image") {
-    return (
-      <div className="relative flex h-full min-h-[420px] flex-col bg-slate-900 text-white">
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-600 to-slate-900" />
-        )}
-        <div className={`relative z-10 flex flex-1 flex-col p-6 ${alignClass}`}>
-          <div className="max-w-sm space-y-2 rounded-lg bg-black/45 p-4 backdrop-blur-sm">
-            {page.eyebrow ? <p className="text-xs opacity-80">{page.eyebrow}</p> : null}
-            <h3 className="text-2xl font-semibold">{page.title || typeLabel}</h3>
-            {page.subtitle ? <p className="text-sm opacity-90">{page.subtitle}</p> : null}
-            {page.body ? <p className="text-sm opacity-85">{page.body}</p> : null}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (page.layout_type === "timer" || page.page_type === "timer") {
-    const seconds = content.timerSeconds ?? 60;
-    return (
-      <div className="flex h-full min-h-[420px] flex-col bg-white p-6">
-        <p className="text-xs text-muted-foreground">{typeLabel}</p>
-        <h3 className="mt-2 text-xl font-semibold">{page.title || "計時"}</h3>
-        {page.body ? <p className="mt-2 text-sm text-muted-foreground">{page.body}</p> : null}
-        <div className="mt-10 flex flex-1 flex-col items-center justify-center">
-          <p className="text-sm text-muted-foreground">{content.timerLabel || "倒數"}</p>
-          <p className="mt-2 text-5xl font-semibold tabular-nums">
-            {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")}
-          </p>
-          <div className="mt-6 flex gap-2">
-            <span className="rounded-md border px-3 py-1.5 text-sm">
-              {content.ctaPrimary || "開始"}
-            </span>
-            <span className="rounded-md border px-3 py-1.5 text-sm text-muted-foreground">
-              {content.ctaSecondary || "略過"}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (page.layout_type === "comparison" || page.page_type === "comparison") {
-    const options = content.comparisonOptions ?? [];
-    return (
-      <div className="flex h-full min-h-[420px] flex-col bg-white p-5">
-        <p className="text-xs text-muted-foreground">{typeLabel}</p>
-        <h3 className="mt-1 text-xl font-semibold">{page.title || "狀態比較"}</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {content.comparisonPrompt || page.subtitle || "請選擇最接近的狀態"}
-        </p>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {(options.length ? options : [{ id: "a", label: "選項 A" }, { id: "b", label: "選項 B" }]).map(
-            (opt) => (
-              <div key={opt.id} className="overflow-hidden rounded-lg border">
-                <div className="aspect-[4/3] bg-slate-100">
-                  {opt.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={opt.imageUrl} alt="" className="h-full w-full object-cover" />
-                  ) : null}
-                </div>
-                <div className="p-2">
-                  <p className="text-sm font-medium">{opt.label}</p>
-                  {opt.caption ? (
-                    <p className="text-xs text-muted-foreground">{opt.caption}</p>
-                  ) : null}
-                </div>
-              </div>
-            )
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (page.layout_type === "checkpoint" || page.page_type === "checkpoint") {
-    const items = completion.checklist ?? [];
-    return (
-      <div className="flex h-full min-h-[420px] flex-col bg-white p-5">
-        <p className="text-xs text-muted-foreground">{typeLabel}</p>
-        <h3 className="mt-1 text-xl font-semibold">{page.title || "完成檢查"}</h3>
-        {page.body ? <p className="mt-2 text-sm text-muted-foreground">{page.body}</p> : null}
-        <ul className="mt-4 space-y-2">
-          {(items.length ? items : [{ id: "1", text: "檢查項目" }]).map((item) => (
-            <li key={item.id} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
-              <span className="inline-block h-4 w-4 rounded border" />
-              {item.text}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-auto pt-6">
-          <span className="inline-block rounded-md border px-3 py-1.5 text-sm">
-            {completion.continueLabel || content.ctaPrimary || "繼續"}
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  if (page.layout_type === "gallery" || page.page_type === "gallery") {
-    const frames = content.frames ?? [];
-    return (
-      <div className="flex h-full min-h-[420px] flex-col bg-white p-5">
-        <p className="text-xs text-muted-foreground">{typeLabel}</p>
-        <h3 className="mt-1 text-xl font-semibold">{page.title || "多圖步驟"}</h3>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {(frames.length
-            ? frames
-            : page.recipe_story_page_media.map((m, i) => ({
-                id: m.id,
-                title: `圖 ${i + 1}`,
-                imageUrl: m.url,
-                caption: m.caption ?? undefined,
-              }))
-          )
-            .slice(0, 4)
-            .map((frame, i) => (
-              <div key={frame.id ?? i} className="overflow-hidden rounded-lg border">
-                <div className="aspect-square bg-slate-100">
-                  {frame.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={frame.imageUrl} alt="" className="h-full w-full object-cover" />
-                  ) : null}
-                </div>
-                <div className="p-2">
-                  <p className="text-xs font-medium">{frame.title || `步驟 ${i + 1}`}</p>
-                  {frame.caption ? (
-                    <p className="text-[11px] text-muted-foreground">{frame.caption}</p>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (page.layout_type === "video_lead" || page.page_type === "step_video" || page.page_type === "full_video") {
-    return (
-      <div className="flex h-full min-h-[420px] flex-col bg-black text-white">
-        <div className="relative aspect-video bg-slate-800">
-          {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="" className="h-full w-full object-cover opacity-80" />
-          ) : null}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="rounded-full border border-white/70 px-4 py-2 text-sm">播放</span>
-          </div>
-          {(content.startSeconds != null || content.endSeconds != null) && (
-            <p className="absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 text-[11px]">
-              {content.startSeconds ?? 0}s – {content.endSeconds ?? "…"}s
-            </p>
-          )}
-        </div>
-        <div className="space-y-2 p-5">
-          {page.eyebrow ? <p className="text-xs opacity-70">{page.eyebrow}</p> : null}
-          <h3 className="text-xl font-semibold">{page.title || typeLabel}</h3>
-          {page.subtitle ? <p className="text-sm opacity-80">{page.subtitle}</p> : null}
-          {page.body ? <p className="text-sm opacity-75">{page.body}</p> : null}
-        </div>
-      </div>
-    );
-  }
-
-  // Default: image + text split / introduction mock
-  const imageLeft =
-    content.splitDirection === "image_right" || content.splitDirection === "image_bottom"
-      ? false
-      : true;
-  const vertical =
-    content.splitDirection === "image_top" || content.splitDirection === "image_bottom";
-
+  const { setNodeRef, isOver } = useDroppable({ id: `chapter-drop-${chapterId}` });
   return (
     <div
-      className={`flex h-full min-h-[420px] bg-white ${
-        vertical ? "flex-col" : imageLeft ? "flex-col sm:flex-row" : "flex-col-reverse sm:flex-row-reverse"
-      }`}
+      ref={setNodeRef}
+      className={`space-y-1 border-t px-1 py-1 ${isOver ? "bg-primary/5" : ""}`}
     >
-      <div className={`bg-slate-100 ${vertical ? "aspect-[16/10]" : "min-h-[200px] flex-1"}`}>
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            尚無媒體
-          </div>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col justify-center space-y-2 p-5">
-        <p className="text-xs text-muted-foreground">{typeLabel}</p>
-        {page.eyebrow ? <p className="text-xs font-medium text-primary">{page.eyebrow}</p> : null}
-        <h3 className="text-xl font-semibold">{page.title || "未命名頁面"}</h3>
-        {page.subtitle ? <p className="text-sm text-muted-foreground">{page.subtitle}</p> : null}
-        {page.body ? <p className="text-sm leading-relaxed text-slate-700">{page.body}</p> : null}
-        {(content.ctaPrimary || content.ctaSecondary) && (
-          <div className="flex gap-2 pt-2">
-            {content.ctaPrimary ? (
-              <span className="rounded-md border px-3 py-1.5 text-sm">{content.ctaPrimary}</span>
-            ) : null}
-            {content.ctaSecondary ? (
-              <span className="rounded-md border px-3 py-1.5 text-sm text-muted-foreground">
-                {content.ctaSecondary}
-              </span>
-            ) : null}
-          </div>
-        )}
-      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Draggable page row for the chapter tree (within/across-chapter reordering). */
+function SortablePageRow({
+  pageId,
+  title,
+  typeLabel,
+  selected,
+  onSelect,
+}: {
+  pageId: string;
+  title: string | null;
+  typeLabel: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: pageId,
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-1 rounded-md px-1.5 py-1 ${
+        selected ? "bg-primary/10" : "hover:bg-muted/40"
+      } ${isDragging ? "z-10 opacity-90 shadow-md" : ""}`}
+    >
+      <button
+        type="button"
+        className="shrink-0 touch-none rounded p-1 text-muted-foreground/40 hover:bg-white hover:text-foreground"
+        aria-label="拖曳排序"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
+      <button type="button" className="min-w-0 flex-1 text-left" onClick={onSelect}>
+        <span className="block truncate text-sm">{title || "未命名頁面"}</span>
+        <span className="block text-[11px] text-muted-foreground">{typeLabel}</span>
+      </button>
     </div>
   );
 }
@@ -1297,6 +1234,8 @@ function PageEditor({
   const [cautionItemsText, setCautionItemsText] = useState(
     (content.cautionItems ?? []).join("\n")
   );
+  const [backgroundColor, setBackgroundColor] = useState(content.backgroundColor ?? "");
+  const [textColor, setTextColor] = useState(content.textColor ?? "");
 
   useEffect(() => {
     setTitle(page.title ?? "");
@@ -1326,6 +1265,8 @@ function PageEditor({
     setCautionEnabled(Boolean(c.cautionEnabled));
     setCautionTitle(c.cautionTitle ?? "容易失敗");
     setCautionItemsText((c.cautionItems ?? []).join("\n"));
+    setBackgroundColor(c.backgroundColor ?? "");
+    setTextColor(c.textColor ?? "");
   }, [page]);
 
   const saveBasics = () => {
@@ -1361,6 +1302,8 @@ function PageEditor({
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean),
+      backgroundColor: backgroundColor || undefined,
+      textColor: textColor || undefined,
     });
     await onUpdateCompletion({
       checklist,
@@ -1527,6 +1470,61 @@ function PageEditor({
           ))}
         </select>
       </Field>
+
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="背景色 backgroundColor">
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              className="h-9 w-10 shrink-0 cursor-pointer rounded-md border p-0.5"
+              value={backgroundColor || "#ffffff"}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+            />
+            <Input
+              placeholder="（預設）"
+              value={backgroundColor}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+            />
+            {backgroundColor ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                type="button"
+                className="shrink-0 px-2 text-xs"
+                onClick={() => setBackgroundColor("")}
+              >
+                清除
+              </Button>
+            ) : null}
+          </div>
+        </Field>
+        <Field label="文字色 textColor">
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              className="h-9 w-10 shrink-0 cursor-pointer rounded-md border p-0.5"
+              value={textColor || "#000000"}
+              onChange={(e) => setTextColor(e.target.value)}
+            />
+            <Input
+              placeholder="（預設）"
+              value={textColor}
+              onChange={(e) => setTextColor(e.target.value)}
+            />
+            {textColor ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                type="button"
+                className="shrink-0 px-2 text-xs"
+                onClick={() => setTextColor("")}
+              >
+                清除
+              </Button>
+            ) : null}
+          </div>
+        </Field>
+      </div>
 
       <div className="grid grid-cols-2 gap-2">
         <Field label="timerSeconds">

@@ -176,7 +176,21 @@ export interface GroupBuyCategory {
   is_active: boolean;
 }
 
-export type ContentPublishStatus = "draft" | "scheduled" | "published" | "archived";
+export type ContentPublishStatus =
+  | "draft"
+  | "preview"
+  | "scheduled"
+  | "published"
+  | "archived";
+
+export type RecipeAccessPermission =
+  | "public"
+  | "member"
+  | "membership"
+  | "purchase"
+  | "code"
+  | "allowlist"
+  | "scheduled_access";
 
 export interface NewsCategoryRow {
   id: string;
@@ -794,6 +808,8 @@ export interface Recipe {
   tips: string | null;
   storage_method: string | null;
   status: ContentPublishStatus;
+  access_permission?: RecipeAccessPermission;
+  allergens?: string[];
   published_at: string | null;
   seo_title: string | null;
   seo_description: string | null;
@@ -851,6 +867,7 @@ export interface RecipeIngredient {
   substitution_notes?: string | null;
   quantity_numeric?: number | null;
   used_in_step_ids?: string[];
+  seed_key?: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -878,6 +895,7 @@ export interface RecipeStep {
   ai_enabled?: boolean;
   ai_context?: string | null;
   ai_keywords?: string[];
+  seed_key?: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -890,6 +908,7 @@ export interface RecipeTool {
   name: string;
   notes: string | null;
   product_id: string | null;
+  seed_key?: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -998,6 +1017,7 @@ export interface RecipeStoryPage {
   content_config: Record<string, unknown>;
   completion_config: Record<string, unknown>;
   ai_context: string | null;
+  seed_key?: string | null;
   sort_order: number;
   active: boolean;
   created_at: string;

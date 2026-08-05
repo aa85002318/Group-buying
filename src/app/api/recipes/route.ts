@@ -8,6 +8,7 @@ import {
 } from "@/lib/mock/recipes";
 import type { RecipeSummary } from "@/lib/consumer-hub";
 import type { Recipe } from "@/lib/types/database";
+import { canViewRecipeByAccess, isPublicListableAccess } from "@/lib/recipes/access";
 
 function toSummary(r: Recipe): RecipeSummary {
   const minutes = r.total_time ?? (r.prep_time ?? 0) + (r.cook_time ?? 0);
@@ -90,7 +91,16 @@ export async function GET(request: Request) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   let recipes = (data ?? []) as Recipe[];
+  recipes = recipes.filter((r) => {
+    const access = r.access_permission ?? "public";
+    if (isPublicListableAccess(access)) return true;
+    return canViewRecipeByAccess(access, Boolean(user));
+  });
   if (category && category !== "all") {
     recipes = recipes.filter((r) => r.recipe_categories?.slug === category);
   }

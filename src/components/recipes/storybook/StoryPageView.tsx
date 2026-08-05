@@ -74,10 +74,15 @@ export type StoryPageViewProps = {
   readerSettings?: RecipeReaderSettings;
   /** Flip book: fill parent frame, no 100dvh min-heights */
   bookFit?: boolean;
+  /** Admin preview: disables live panels, AI, and cover CTAs. */
+  previewMode?: boolean;
+  /** Set false to render as a non-interactive static preview. Defaults to true. */
+  interactive?: boolean;
 };
 
 export function StoryPageView(props: StoryPageViewProps) {
   const { page, data, bookFit } = props;
+  const isPreview = props.previewMode === true || props.interactive === false;
   const config = parseContentConfig(page);
   const completion = parseCompletionConfig(page);
   const media = page.recipe_story_page_media ?? [];
@@ -90,7 +95,7 @@ export function StoryPageView(props: StoryPageViewProps) {
     pageType === "step";
   const primary = primaryMedia(media, preferVideo ? "video" : "any");
   const hideScaling = props.hideScaling !== false;
-  const showAsk = props.readerSettings?.showAskTeacher !== false;
+  const showAsk = props.readerSettings?.showAskTeacher !== false && !isPreview;
   const shell = bookFit
     ? "flex h-full min-h-0 w-full flex-col overflow-hidden"
     : "flex min-h-[min(100dvh,820px)] w-full flex-col";
@@ -109,26 +114,28 @@ export function StoryPageView(props: StoryPageViewProps) {
         overlayOpacity={config.overlayOpacity}
         bookFit={bookFit}
       >
-        <div className="flex flex-wrap gap-3 pt-4">
-          {props.onStartFree ? (
-            <button
-              type="button"
-              onClick={props.onStartFree}
-              className="min-h-12 rounded-full border border-white/40 bg-white/15 px-5 text-sm font-bold backdrop-blur"
-            >
-              看看食譜
-            </button>
-          ) : null}
-          {props.onStartGuided ? (
-            <button
-              type="button"
-              onClick={props.onStartGuided}
-              className="min-h-12 rounded-full bg-[#FF5A5F] px-5 text-sm font-bold text-white"
-            >
-              開始跟做
-            </button>
-          ) : null}
-        </div>
+        {!isPreview ? (
+          <div className="flex flex-wrap gap-3 pt-4">
+            {props.onStartFree ? (
+              <button
+                type="button"
+                onClick={props.onStartFree}
+                className="min-h-12 rounded-full border border-white/40 bg-white/15 px-5 text-sm font-bold backdrop-blur"
+              >
+                看看食譜
+              </button>
+            ) : null}
+            {props.onStartGuided ? (
+              <button
+                type="button"
+                onClick={props.onStartGuided}
+                className="min-h-12 rounded-full bg-[#FF5A5F] px-5 text-sm font-bold text-white"
+              >
+                開始跟做
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </FullBleedVisual>
     );
   }
@@ -163,12 +170,18 @@ export function StoryPageView(props: StoryPageViewProps) {
           <p className="text-sm text-[#6B3F24]/80">
             {page.body || `完成即可取得${badge}`}
           </p>
-          <Link
-            href={challengeHref}
-            className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF5A5F] px-5 text-sm font-bold text-white"
-          >
-            查看挑戰活動
-          </Link>
+          {isPreview ? (
+            <span className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF5A5F] px-5 text-sm font-bold text-white">
+              查看挑戰活動
+            </span>
+          ) : (
+            <Link
+              href={challengeHref}
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF5A5F] px-5 text-sm font-bold text-white"
+            >
+              查看挑戰活動
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -177,11 +190,15 @@ export function StoryPageView(props: StoryPageViewProps) {
   if (pageType === "discussion") {
     return (
       <EmbedShell title={page.title || "問題討論"} subtitle={page.subtitle} bookFit={bookFit}>
-        <RecipeDiscussionPanel
-          recipeId={data.recipe.id}
-          steps={data.recipe.recipe_steps ?? []}
-          compact
-        />
+        {isPreview ? (
+          <PreviewPanelPlaceholder text="預覽模式：討論已停用" />
+        ) : (
+          <RecipeDiscussionPanel
+            recipeId={data.recipe.id}
+            steps={data.recipe.recipe_steps ?? []}
+            compact
+          />
+        )}
       </EmbedShell>
     );
   }
@@ -193,12 +210,16 @@ export function StoryPageView(props: StoryPageViewProps) {
           {page.body ||
             "完成這份食譜了嗎？歡迎上傳成品照片與製作心得，與大家交流；也可以設定為只限自己查看。此步驟可以略過。"}
         </p>
-        <RecipeSubmissionsPanel
-          recipeId={data.recipe.id}
-          compact
-          defaultShowForm
-          skippable
-        />
+        {isPreview ? (
+          <PreviewPanelPlaceholder text="預覽模式：投稿已停用" />
+        ) : (
+          <RecipeSubmissionsPanel
+            recipeId={data.recipe.id}
+            compact
+            defaultShowForm
+            skippable
+          />
+        )}
       </EmbedShell>
     );
   }
@@ -439,7 +460,7 @@ export function StoryPageView(props: StoryPageViewProps) {
         pageActive={props.pageActive}
         startSeconds={clip.startSeconds}
         endSeconds={clip.endSeconds}
-        muted={props.muted}
+        muted={isPreview ? true : props.muted}
         bookFit={bookFit}
         markers={markers}
         onPlaybackContext={props.onPlaybackContext}
@@ -592,6 +613,14 @@ function EmbedShell({
         ) : null}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
+    </div>
+  );
+}
+
+function PreviewPanelPlaceholder({ text }: { text: string }) {
+  return (
+    <div className="flex min-h-[120px] items-center justify-center rounded-xl border border-dashed border-[#C4A484] bg-white/60 px-4 text-center text-sm text-[#6B3F24]/70">
+      {text}
     </div>
   );
 }
