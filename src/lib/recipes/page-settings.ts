@@ -56,13 +56,20 @@ export const RECIPE_PAGE_CATEGORY_CHIPS: RecipeCategoryChip[] = [
   },
 ];
 
+/** Bundled fallback heroes when CMS has no upload. */
+export const DEFAULT_RECIPE_HERO_DESKTOP =
+  "/images/recipes/CHIMEIDIY_recipes_hero_desktop_1500x664.png";
+export const DEFAULT_RECIPE_HERO_MOBILE =
+  "/images/recipes/CHIMEIDIY_recipes_hero_mobile_885x392.png";
+export const DEFAULT_RECIPE_CARD_IMAGE = "/images/recipes/recipe-card-default.png";
+
 export const DEFAULT_RECIPE_PAGE_SETTINGS: RecipePageSettings = {
   page_key: "recipes",
   section_key: "hero",
   hero: {
     title: "烘焙圖書館主視覺",
-    desktop_image_url: null,
-    mobile_image_url: null,
+    desktop_image_url: DEFAULT_RECIPE_HERO_DESKTOP,
+    mobile_image_url: DEFAULT_RECIPE_HERO_MOBILE,
     alt_text: "CHIMEIDIY 烘焙圖書館",
     link_type: "none",
     link_value: null,
@@ -112,8 +119,10 @@ export function mergeRecipePageSettings(raw: unknown): RecipePageSettings {
     section_key: "hero",
     hero: {
       title: asString(hero.title).trim() || base.hero.title,
-      desktop_image_url: asNullableString(hero.desktop_image_url),
-      mobile_image_url: asNullableString(hero.mobile_image_url),
+      desktop_image_url:
+        asNullableString(hero.desktop_image_url) ?? base.hero.desktop_image_url,
+      mobile_image_url:
+        asNullableString(hero.mobile_image_url) ?? base.hero.mobile_image_url,
       alt_text: asString(hero.alt_text).trim() || base.hero.alt_text,
       link_type: asLinkType(hero.link_type),
       link_value: asNullableString(hero.link_value),

@@ -20,19 +20,19 @@ type ArticleOption = { id: string; title: string; slug?: string | null };
 type ProductOption = { id: string; name: string; slug?: string | null };
 
 const HERO_DESKTOP_SPEC: CmsImageSpec = {
-  label: "Hero Banner",
+  label: "Hero Banner 桌面版",
   width: 1500,
-  height: 600,
-  ratioLabel: "5:2",
+  height: 664,
+  ratioLabel: "1500×664",
   maxKb: 2048,
   formats: "WebP／JPG／PNG",
 };
 
 const HERO_MOBILE_SPEC: CmsImageSpec = {
-  label: "Hero Banner",
+  label: "Hero Banner 手機版",
   width: 885,
-  height: 917,
-  ratioLabel: "885:917",
+  height: 392,
+  ratioLabel: "885×392",
   maxKb: 2048,
   formats: "WebP／JPG／PNG",
 };

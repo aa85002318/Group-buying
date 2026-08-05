@@ -17,13 +17,15 @@ import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { APP_ROUTES } from "@/lib/site-links";
 import type { Article, RecipeDifficulty } from "@/lib/types/database";
 import {
+  DEFAULT_RECIPE_CARD_IMAGE,
+  DEFAULT_RECIPE_HERO_DESKTOP,
+  DEFAULT_RECIPE_HERO_MOBILE,
   DEFAULT_RECIPE_PAGE_SETTINGS,
   RECIPE_PAGE_CATEGORY_CHIPS,
   normalizeRecipeCategorySlug,
   type RecipePageSettings,
 } from "@/lib/recipes/page-settings";
 import { cn } from "@/lib/utils";
-import { BrandHeroWave } from "@/components/brand/hero/BrandHeroWave";
 
 type RecipeListItem = {
   id: string;
@@ -31,6 +33,11 @@ type RecipeListItem = {
   slug?: string | null;
   href?: string;
   cover_image?: string | null;
+  cover_image_url?: string | null;
+  coverImage?: string | null;
+  featured_image?: string | null;
+  image_url?: string | null;
+  thumbnail_url?: string | null;
   summary?: string | null;
   difficulty: RecipeDifficulty;
   published_at?: string | null;
@@ -126,6 +133,43 @@ function isKnowledgeArticle(article: Article) {
   );
 }
 
+function getRecipeImage(recipe: RecipeListItem) {
+  return (
+    recipe.cover_image_url ||
+    recipe.cover_image ||
+    recipe.coverImage ||
+    recipe.featured_image ||
+    recipe.image_url ||
+    recipe.thumbnail_url ||
+    DEFAULT_RECIPE_CARD_IMAGE
+  );
+}
+
+function RecipeCoverImage({
+  recipe,
+  sizes,
+  className,
+}: {
+  recipe: RecipeListItem;
+  sizes: string;
+  className?: string;
+}) {
+  const [src, setSrc] = useState(() => getRecipeImage(recipe));
+  return (
+    <Image
+      src={src}
+      alt={recipe.title}
+      fill
+      sizes={sizes}
+      className={cn("object-cover", className)}
+      unoptimized
+      onError={() => {
+        if (src !== DEFAULT_RECIPE_CARD_IMAGE) setSrc(DEFAULT_RECIPE_CARD_IMAGE);
+      }}
+    />
+  );
+}
+
 function SectionTitle({
   title,
   href,
@@ -152,59 +196,29 @@ function SectionTitle({
 }
 
 function RecipeHeroBanner({ hero }: { hero: RecipesPageSettingsResponse["hero"] }) {
-  if (!hero.is_live || (!hero.desktop_image_url && !hero.mobile_image_url)) return null;
+  // Hidden only when CMS explicitly turns the banner off.
+  if (hero.is_live === false || hero.is_active === false) return null;
+
   const alt = hero.alt_text || "CHIMEIDIY 烘焙圖書館";
   const href = hero.href ?? null;
   const openInNewTab = hero.open_in_new_tab && Boolean(href);
+  const desktopHero = hero.desktop_image_url || DEFAULT_RECIPE_HERO_DESKTOP;
+  const mobileHero = hero.mobile_image_url || DEFAULT_RECIPE_HERO_MOBILE;
 
   const media = (
-    <div className="relative bg-[#FEE169]">
-      {hero.desktop_image_url ? (
-        <Image
-          src={hero.desktop_image_url}
+    <section className="relative w-full overflow-hidden bg-[#FEE169]">
+      <picture>
+        <source media="(min-width: 768px)" srcSet={desktopHero} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={mobileHero}
           alt={alt}
-          width={1500}
-          height={600}
-          priority
-          unoptimized
-          className="hidden h-auto w-full md:block"
-        />
-      ) : hero.mobile_image_url ? (
-        <Image
-          src={hero.mobile_image_url}
-          alt={alt}
+          className="block h-auto w-full"
           width={885}
-          height={917}
-          priority
-          unoptimized
-          className="mx-auto hidden h-auto w-full max-w-[620px] md:block"
+          height={392}
         />
-      ) : null}
-
-      {hero.mobile_image_url ? (
-        <Image
-          src={hero.mobile_image_url}
-          alt={alt}
-          width={885}
-          height={917}
-          priority
-          unoptimized
-          className="block h-auto w-full md:hidden"
-        />
-      ) : hero.desktop_image_url ? (
-        <Image
-          src={hero.desktop_image_url}
-          alt={alt}
-          width={1500}
-          height={600}
-          priority
-          unoptimized
-          className="block h-auto w-full md:hidden"
-        />
-      ) : null}
-
-      <BrandHeroWave />
-    </div>
+      </picture>
+    </section>
   );
 
   if (!href) return media;
@@ -236,21 +250,33 @@ function LatestCardSkeleton() {
   return <div className="h-[112px] animate-pulse rounded-[16px] bg-[#F4EFE6]" />;
 }
 
-function EmptyRecipesState({ onClear }: { onClear: () => void }) {
+function EmptyRecipesState({
+  onClear,
+  filtered = true,
+}: {
+  onClear: () => void;
+  filtered?: boolean;
+}) {
   return (
     <div className="rounded-[20px] border border-[#E8E1D7] bg-white px-6 py-10 text-center shadow-[0_10px_24px_rgba(21,62,115,0.05)]">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF5CC] text-[#153E73]">
         <BookOpen className="h-6 w-6" aria-hidden />
       </div>
-      <h3 className="mt-4 text-lg font-bold text-[#153E73]">書架上還沒有符合的食譜</h3>
-      <p className="mt-2 text-sm leading-7 text-[#5E6B84]">換個關鍵字或分類，再找找看吧！</p>
-      <button
-        type="button"
-        onClick={onClear}
-        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full border border-[#153E73] px-5 text-sm font-semibold text-[#153E73]"
-      >
-        清除篩選
-      </button>
+      <h3 className="mt-4 text-lg font-bold text-[#153E73]">
+        {filtered ? "書架上還沒有符合的食譜" : "尚無食譜"}
+      </h3>
+      <p className="mt-2 text-sm leading-7 text-[#5E6B84]">
+        {filtered ? "換個關鍵字或分類，再找找看吧！" : "新食譜準備中，請稍後再來逛逛。"}
+      </p>
+      {filtered ? (
+        <button
+          type="button"
+          onClick={onClear}
+          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full border border-[#153E73] px-5 text-sm font-semibold text-[#153E73]"
+        >
+          清除篩選
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -305,13 +331,15 @@ export function RecipesClient() {
         authRes.json().catch(() => ({})),
       ]);
 
-      if (!settingsRes.ok) throw new Error(settingsJson.error ?? "食譜設定載入失敗");
       if (!recipesRes.ok) throw new Error(recipesJson.error ?? "食譜載入失敗");
-      if (!articlesRes.ok) throw new Error(articlesJson.error ?? "文章載入失敗");
 
-      setSettings((settingsJson.settings ?? DEFAULT_RECIPE_PAGE_SETTINGS) as RecipesPageSettingsResponse);
+      setSettings(
+        (settingsRes.ok
+          ? settingsJson.settings ?? DEFAULT_RECIPE_PAGE_SETTINGS
+          : DEFAULT_RECIPE_PAGE_SETTINGS) as RecipesPageSettingsResponse
+      );
       setRecipes((recipesJson.recipes ?? []) as RecipeListItem[]);
-      setArticles((articlesJson.articles ?? []) as Article[]);
+      setArticles(articlesRes.ok ? ((articlesJson.articles ?? []) as Article[]) : []);
       setLoggedIn(authRes.ok && Boolean(authJson.user));
       setAuthResolved(true);
     } catch (loadError) {
@@ -350,11 +378,11 @@ export function RecipesClient() {
   const recommendedRecipes = useMemo(() => {
     const featured = filteredRecipes.filter((recipe) => recipe.is_featured && recipeHref(recipe));
     const source = featured.length > 0 ? featured : filteredRecipes.filter((recipe) => recipeHref(recipe));
-    return source.slice(0, 6);
+    return source.slice(0, 3);
   }, [filteredRecipes]);
 
   const latestRecipes = useMemo(
-    () => filteredRecipes.filter((recipe) => recipeHref(recipe)).slice(0, 4),
+    () => filteredRecipes.filter((recipe) => recipeHref(recipe)).slice(0, 3),
     [filteredRecipes]
   );
 
@@ -369,25 +397,32 @@ export function RecipesClient() {
     return (preferred.length ? preferred : filtered).slice(0, 2);
   }, [articles, category, debouncedQuery]);
 
-  const showRecipeEmpty = !loading && !error && category !== "knowledge" && filteredRecipes.length === 0;
-  const showKnowledgeEmpty =
-    !loading && !error && category === "knowledge" && visibleKnowledgeArticles.length === 0;
+  const hasActiveFilter = Boolean(debouncedQuery) || (category !== "all" && category !== "knowledge");
+  const showRecipeEmpty =
+    !loading && !error && category !== "knowledge" && filteredRecipes.length === 0;
+  const showKnowledgeEmpty = !loading && !error && visibleKnowledgeArticles.length === 0;
+  const heroVisible = settings.hero.is_live !== false && settings.hero.is_active !== false;
   const loginHref = `${APP_ROUTES.login}?next=${encodeURIComponent(
     searchParams.toString() ? `${pathname}?${searchParams}` : pathname
   )}`;
 
   return (
-    <div className="min-h-screen bg-[#FFFEFA] pb-8 text-[#153E73]">
+    <div className="min-h-screen overflow-x-clip bg-[#FFFEFA] pb-[calc(96px+env(safe-area-inset-bottom))] text-[#153E73] md:pb-10">
       <RecipeHeroBanner hero={settings.hero} />
 
-      <div className="mx-auto w-full max-w-[1200px] px-5 pb-10 md:px-8 xl:px-0">
-        <div className="relative z-10 -mt-8 md:-mt-10">
+      <div className="mx-auto w-full max-w-[1120px] px-5 pb-10 md:px-8">
+        <div
+          className={cn(
+            "relative z-20 mx-auto w-full",
+            heroVisible ? "-mt-5 md:-mt-7" : "mt-5"
+          )}
+        >
           <form
             onSubmit={(e) => {
               e.preventDefault();
               syncUrl(rawQuery.trim(), category);
             }}
-            className="flex min-h-[60px] items-center gap-3 rounded-[20px] bg-white px-4 shadow-[0_16px_36px_rgba(21,62,115,0.10)] ring-1 ring-black/0 md:px-5"
+            className="flex min-h-[56px] items-center gap-3 rounded-[20px] bg-white px-4 shadow-[0_12px_28px_rgba(21,62,115,0.10)] md:min-h-[60px] md:px-5"
             role="search"
           >
             <Search className="h-5 w-5 shrink-0 text-[#6F7B90]" aria-hidden />
@@ -415,8 +450,8 @@ export function RecipesClient() {
           </form>
         </div>
 
-        <div className="mt-6 -mx-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:-mx-8 md:px-8 xl:mx-0 xl:px-0">
-          <div className="flex min-w-max items-center gap-3">
+        <div className="mt-6 -mx-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:px-0">
+          <div className="flex min-w-max items-center gap-3 md:min-w-0 md:flex-wrap">
             {RECIPE_PAGE_CATEGORY_CHIPS.map((chip) => (
               <button
                 key={chip.slug}
@@ -461,13 +496,14 @@ export function RecipesClient() {
                   >
                     <SectionTitle title="推薦食譜" href="/recipes" />
                     {loading ? (
-                      <div className="flex gap-4 overflow-hidden md:grid md:grid-cols-3 xl:grid-cols-4">
-                        {Array.from({ length: 4 }).map((_, index) => (
+                      <div className="flex gap-4 overflow-hidden md:grid md:grid-cols-3 md:gap-5">
+                        {Array.from({ length: 3 }).map((_, index) => (
                           <RecipeCardSkeleton key={index} />
                         ))}
                       </div>
                     ) : showRecipeEmpty ? (
                       <EmptyRecipesState
+                        filtered={hasActiveFilter}
                         onClear={() => {
                           setRawQuery("");
                           setCategory("all");
@@ -475,7 +511,7 @@ export function RecipesClient() {
                       />
                     ) : recommendedRecipes.length > 0 ? (
                       <>
-                        <div className="flex gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:overflow-visible xl:grid-cols-4">
+                        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:pb-0">
                           {recommendedRecipes.map((recipe, index) => {
                             const href = recipeHref(recipe);
                             return (
@@ -484,29 +520,25 @@ export function RecipesClient() {
                                 initial={{ opacity: 0, y: 14 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.24, delay: index * 0.04 }}
-                                className="w-[82%] shrink-0 rounded-[16px] border border-[#E8E1D7] bg-white p-3 shadow-[0_10px_24px_rgba(21,62,115,0.06)] sm:w-[320px] md:w-auto"
+                                className="w-[78vw] max-w-[320px] shrink-0 snap-start rounded-[16px] border border-[#E8E1D7] bg-white p-3 shadow-[0_10px_24px_rgba(21,62,115,0.06)] md:w-auto md:max-w-none"
                               >
                                 <div className="relative">
                                   {href ? (
                                     <Link href={href} className="block" aria-label={recipe.title}>
                                       <div className="relative aspect-[4/3] overflow-hidden rounded-[14px] bg-[#FFF5CC]">
-                                        {recipe.cover_image ? (
-                                          <Image
-                                            src={recipe.cover_image}
-                                            alt={recipe.title}
-                                            fill
-                                            className="object-cover"
-                                            unoptimized
-                                          />
-                                        ) : (
-                                          <div className="flex h-full items-center justify-center bg-[#FFF5CC] text-sm font-semibold text-[#153E73]">
-                                            {recipe.title}
-                                          </div>
-                                        )}
+                                        <RecipeCoverImage
+                                          recipe={recipe}
+                                          sizes="(max-width: 767px) 80vw, 33vw"
+                                        />
                                       </div>
                                     </Link>
                                   ) : (
-                                    <div className="relative aspect-[4/3] overflow-hidden rounded-[14px] bg-[#FFF5CC]" />
+                                    <div className="relative aspect-[4/3] overflow-hidden rounded-[14px] bg-[#FFF5CC]">
+                                      <RecipeCoverImage
+                                        recipe={recipe}
+                                        sizes="(max-width: 767px) 80vw, 33vw"
+                                      />
+                                    </div>
                                   )}
                                   <div className="absolute right-2 top-2">
                                     <FavoriteButton
@@ -543,7 +575,7 @@ export function RecipesClient() {
                             );
                           })}
                         </div>
-                        <div className="h-[6px] rounded-full bg-[#D8A66A]" aria-hidden />
+                        <div className="mt-3 h-2 w-full rounded-full bg-[#D8A66A]" aria-hidden />
                       </>
                     ) : null}
                   </motion.section>
@@ -557,7 +589,7 @@ export function RecipesClient() {
                     <SectionTitle title="最新食譜" href="/recipes" />
                     {loading ? (
                       <div className="grid gap-3 md:grid-cols-2">
-                        {Array.from({ length: 4 }).map((_, index) => (
+                        {Array.from({ length: 3 }).map((_, index) => (
                           <LatestCardSkeleton key={index} />
                         ))}
                       </div>
@@ -571,29 +603,23 @@ export function RecipesClient() {
                               initial={{ opacity: 0, y: 14 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ duration: 0.24, delay: index * 0.05 }}
-                              className="flex min-h-[112px] items-center gap-3 rounded-[16px] border border-[#E8E1D7] bg-white p-3 shadow-[0_6px_18px_rgba(21,62,115,0.05)]"
+                              className="grid grid-cols-[96px_1fr_auto] items-center gap-4 rounded-2xl border border-[#E8E1D7] bg-white p-3 shadow-[0_6px_18px_rgba(21,62,115,0.05)]"
                             >
                               {href ? (
                                 <Link
                                   href={href}
-                                  className="relative block h-[88px] w-[104px] shrink-0 overflow-hidden rounded-[14px] bg-[#FFF5CC]"
+                                  className="relative block h-[72px] w-[96px] shrink-0 overflow-hidden rounded-xl bg-[#FFF5CC]"
                                   aria-label={recipe.title}
                                 >
-                                  {recipe.cover_image ? (
-                                    <Image
-                                      src={recipe.cover_image}
-                                      alt={recipe.title}
-                                      fill
-                                      className="object-cover"
-                                      unoptimized
-                                    />
-                                  ) : null}
+                                  <RecipeCoverImage recipe={recipe} sizes="96px" />
                                 </Link>
                               ) : (
-                                <div className="h-[88px] w-[104px] shrink-0 rounded-[14px] bg-[#FFF5CC]" />
+                                <div className="relative h-[72px] w-[96px] shrink-0 overflow-hidden rounded-xl bg-[#FFF5CC]">
+                                  <RecipeCoverImage recipe={recipe} sizes="96px" />
+                                </div>
                               )}
 
-                              <div className="min-w-0 flex-1">
+                              <div className="min-w-0">
                                 {href ? (
                                   <Link href={href}>
                                     <h3 className="line-clamp-2 text-sm font-bold leading-6 text-[#153E73]">
@@ -631,7 +657,11 @@ export function RecipesClient() {
                           );
                         })}
                       </div>
-                    ) : null}
+                    ) : (
+                      <div className="rounded-[18px] border border-[#E8E1D7] bg-white px-5 py-8 text-center text-sm text-[#5E6B84]">
+                        尚無最新食譜
+                      </div>
+                    )}
                   </motion.section>
                 </>
               ) : null}
@@ -655,7 +685,7 @@ export function RecipesClient() {
                   </div>
                 ) : showKnowledgeEmpty ? (
                   <div className="rounded-[18px] border border-[#E8E1D7] bg-white px-5 py-8 text-center text-sm text-[#5E6B84]">
-                    目前尚無烘焙知識文章
+                    烘焙知識文章準備中
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
@@ -716,19 +746,21 @@ export function RecipesClient() {
                   transition={{ duration: 0.28, delay: 0.12 }}
                   className="rounded-[16px] border border-[#153E73] bg-[#FFF5CC] p-5"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[#153E73]">
-                      <SquarePen className="h-5 w-5" aria-hidden />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-lg font-bold text-[#153E73]">收藏你的烘焙靈感</h3>
-                      <p className="mt-1 text-sm leading-7 text-[#5E6B84]">
-                        登入後即可收藏食譜，隨時回來繼續閱讀
-                      </p>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <div className="flex min-w-0 flex-1 items-start gap-4 sm:items-center">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[#153E73]">
+                        <SquarePen className="h-5 w-5" aria-hidden />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-bold text-[#153E73]">收藏你的烘焙靈感</h3>
+                        <p className="mt-1 text-sm leading-7 text-[#5E6B84]">
+                          登入後即可收藏食譜，隨時回來繼續閱讀
+                        </p>
+                      </div>
                     </div>
                     <Link
                       href={loginHref}
-                      className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-[#153E73] px-4 text-sm font-semibold text-white"
+                      className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-full bg-[#153E73] px-4 text-sm font-semibold text-white sm:w-auto"
                     >
                       立即登入
                     </Link>
@@ -739,7 +771,7 @@ export function RecipesClient() {
           ) : null}
         </div>
 
-        <footer className="mt-12 border-t border-[#EFE6DB] pt-8 text-center text-sm text-[#667085]">
+        <footer className="mt-12 border-t border-[#EFE6DB] pt-8 pb-4 text-center text-sm text-[#667085]">
           <p className="font-semibold text-[#153E73]">CHIMEIDIY Lifestyle</p>
           <div className="mt-3 flex items-center justify-center gap-4">
             <span>關於我們</span>

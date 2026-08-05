@@ -51,11 +51,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",
-            showChrome && !fullBleedPage && "site-main"
+            showChrome && !fullBleedPage && "site-main",
+            "pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:pb-0"
           )}
-          style={{
-            paddingBottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px))",
-          }}
         >
           {showChrome && !fullBleedPage ? (
             <div className="site-container mx-auto w-full min-w-0 max-w-full">

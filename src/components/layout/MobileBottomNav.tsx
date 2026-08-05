@@ -61,7 +61,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="主要導覽"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-[#E9EDF2] bg-[rgba(255,255,255,0.96)] backdrop-blur-md"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-[#E9EDF2] bg-white/95 backdrop-blur-md md:hidden"
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
         minHeight: "var(--header-height-mobile, 64px)",
