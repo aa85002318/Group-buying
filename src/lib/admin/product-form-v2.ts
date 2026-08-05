@@ -380,10 +380,10 @@ export function validateProductFormV2(form: AdminProductFormV2): string | null {
   if (form.stock === "" || Number(form.stock) < 0) return "請填寫現貨庫存";
   if (form.is_group_buy) {
     if (!form.group_buy_start_at || !form.group_buy_end_at) {
-      return "團購商品請填寫開始與結束時間";
+      return "團購商品請填寫團購區間（開始與結束）";
     }
     if (new Date(form.group_buy_start_at) >= new Date(form.group_buy_end_at)) {
-      return "團購結束時間需晚於開始時間";
+      return "團購區間結束時間需晚於開始時間";
     }
     if (!form.group_buy_category_id) {
       return "請選擇團購分類";

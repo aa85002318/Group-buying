@@ -53,9 +53,15 @@ export default function AdminProductsPage() {
               </Button>
             </Link>
             <Link href="/admin/products/new">
+              <Button variant="secondary">
+                <PackagePlus className="mr-1.5 h-4 w-4" />
+                商品新增
+              </Button>
+            </Link>
+            <Link href="/admin/products/new?mode=group-buy">
               <Button className="bg-primary hover:bg-[#E63D6A]">
                 <PackagePlus className="mr-1.5 h-4 w-4" />
-                新增商品
+                團購新增
               </Button>
             </Link>
           </div>

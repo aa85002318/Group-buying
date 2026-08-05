@@ -132,16 +132,23 @@ export function AdminCheckbox({
   label,
   checked,
   onChange,
+  disabled = false,
 }: {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-divider bg-background px-3 py-2.5 text-sm font-medium text-[#334155]">
+    <label
+      className={`flex items-center gap-2.5 rounded-xl border border-divider bg-background px-3 py-2.5 text-sm font-medium text-[#334155] ${
+        disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+      }`}
+    >
       <input
         type="checkbox"
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
         className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
       />

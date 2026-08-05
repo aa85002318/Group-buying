@@ -196,7 +196,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin"],
     items: [
       { href: "/admin/articles?category=latest-group-buy", label: "團購活動", roles: ["admin"] },
-      { href: "/admin/products", label: "團購商品", roles: ["admin"] },
+      { href: "/admin/group-buy/products", label: "團購商品", roles: ["admin"] },
       { href: "/admin/group-buy/settings", label: "團購頁面設定", roles: ["admin"] },
       { href: "/admin/group-buy/categories", label: "團購分類", roles: ["admin"] },
       { href: "/admin/orders?type=group_buy", label: "團購訂單", roles: ["admin"] },

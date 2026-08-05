@@ -138,14 +138,27 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
   let query = admin
     .from("products")
-    .select("*, product_categories(name, slug)")
+    .select("*, product_categories(name, slug), group_buy_categories(name, slug)")
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
   if (search) query = query.ilike("name", `%${search}%`);
 
-  const { data, error: fetchError } = await query;
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
+  let { data, error: fetchError } = await query;
+  if (fetchError) {
+    // Soft fallback if group_buy_categories embed is unavailable
+    let fallback = admin
+      .from("products")
+      .select("*, product_categories(name, slug)")
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
+    if (search) fallback = fallback.ilike("name", `%${search}%`);
+    const second = await fallback;
+    if (second.error) {
+      return NextResponse.json({ error: second.error.message }, { status: 500 });
+    }
+    data = second.data;
+  }
 
   const normalized = (data ?? []).map((p) => ({
     ...p,

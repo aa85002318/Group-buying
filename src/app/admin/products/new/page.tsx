@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -20,7 +20,16 @@ type Supplier = { id: string; name: string };
 
 export default function AdminProductNewPage() {
   const router = useRouter();
-  const [form, setForm] = useState<AdminProductFormV2>(emptyProductFormV2());
+  const searchParams = useSearchParams();
+  const isGroupBuyMode = searchParams.get("mode") === "group-buy";
+
+  const [form, setForm] = useState<AdminProductFormV2>(() => {
+    const base = emptyProductFormV2();
+    if (isGroupBuyMode) {
+      return { ...base, is_group_buy: true };
+    }
+    return base;
+  });
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [groupBuyCategories, setGroupBuyCategories] = useState<GroupBuyCategory[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
@@ -28,6 +37,22 @@ export default function AdminProductNewPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const backHref = useMemo(
+    () => (isGroupBuyMode ? "/admin/group-buy/products" : "/admin/products"),
+    [isGroupBuyMode]
+  );
+
+  useEffect(() => {
+    // Keep mode in sync if query changes after mount
+    setForm((prev) =>
+      isGroupBuyMode
+        ? { ...prev, is_group_buy: true }
+        : prev.is_group_buy
+          ? { ...prev, is_group_buy: false }
+          : prev
+    );
+  }, [isGroupBuyMode]);
 
   useEffect(() => {
     Promise.all([
@@ -48,7 +73,8 @@ export default function AdminProductNewPage() {
   }, []);
 
   const save = async () => {
-    const validationError = validateProductFormV2(form);
+    const nextForm = isGroupBuyMode ? { ...form, is_group_buy: true } : form;
+    const validationError = validateProductFormV2(nextForm);
     if (validationError) {
       setError(validationError);
       return;
@@ -57,10 +83,19 @@ export default function AdminProductNewPage() {
     setSaving(true);
     setError(null);
     try {
+      const base = formV2ToPayload(nextForm);
+      const payload = isGroupBuyMode
+        ? {
+            ...base,
+            is_group_buy: true,
+            publish_group_buy: true,
+            channels: ["group_buy", "website"],
+          }
+        : base;
       const res = await fetch("/api/admin/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formV2ToPayload(form)),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "儲存失敗");
@@ -75,11 +110,15 @@ export default function AdminProductNewPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="新增商品"
-        description="分區塊填寫商品資料，支援自動儲存與拖曳排序"
+        title={isGroupBuyMode ? "團購新增" : "商品新增"}
+        description={
+          isGroupBuyMode
+            ? "建立團購商品：需填寫團購區間、團購分類等欄位（共用商品主檔）"
+            : "分區塊填寫商品資料，支援自動儲存與拖曳排序"
+        }
         actions={
           <div className="flex gap-2">
-            <Link href="/admin/products">
+            <Link href={backHref}>
               <Button variant="outline">
                 <ArrowLeft className="mr-1.5 h-4 w-4" />
                 返回列表
@@ -87,7 +126,7 @@ export default function AdminProductNewPage() {
             </Link>
             <Button onClick={save} disabled={saving} className="bg-primary hover:bg-[#E63D6A]">
               <Save className="mr-1.5 h-4 w-4" />
-              {saving ? "儲存中…" : "儲存商品"}
+              {saving ? "儲存中…" : isGroupBuyMode ? "儲存團購商品" : "儲存商品"}
             </Button>
           </div>
         }
@@ -106,6 +145,7 @@ export default function AdminProductNewPage() {
         brands={brands}
         suppliers={suppliers}
         saving={saving}
+        mode={isGroupBuyMode ? "group-buy" : "product"}
       />
     </div>
   );

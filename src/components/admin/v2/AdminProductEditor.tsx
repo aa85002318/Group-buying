@@ -54,6 +54,8 @@ type AdminProductEditorProps = {
   productId?: string;
   onAutoSave?: (form: AdminProductFormV2) => Promise<void>;
   saving?: boolean;
+  /** group-buy mode locks is_group_buy on and emphasizes period fields */
+  mode?: "product" | "group-buy";
 };
 
 function TagInput({
@@ -218,7 +220,9 @@ export function AdminProductEditor({
   productId,
   onAutoSave,
   saving,
+  mode = "product",
 }: AdminProductEditorProps) {
+  const lockGroupBuy = mode === "group-buy";
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const patch = useCallback(
     (partial: Partial<AdminProductFormV2>) => onChange({ ...form, ...partial }),
@@ -318,7 +322,15 @@ export function AdminProductEditor({
             <AdminCheckbox label="NEW 新品" checked={form.is_new} onChange={(v) => patch({ is_new: v })} />
             <AdminCheckbox label="本週精選" checked={form.is_weekly_pick} onChange={(v) => patch({ is_weekly_pick: v })} />
             <AdminCheckbox label="即將收單" checked={form.is_closing_soon} onChange={(v) => patch({ is_closing_soon: v })} />
-            <AdminCheckbox label="團購商品" checked={form.is_group_buy} onChange={(v) => patch({ is_group_buy: v })} />
+            <AdminCheckbox
+              label="團購商品"
+              checked={lockGroupBuy ? true : form.is_group_buy}
+              onChange={(v) => {
+                if (lockGroupBuy) return;
+                patch({ is_group_buy: v });
+              }}
+              disabled={lockGroupBuy}
+            />
           </div>
           {(form.is_hot || form.is_new) && (
             <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
@@ -342,12 +354,12 @@ export function AdminProductEditor({
               ) : null}
             </div>
           )}
-          {form.is_group_buy && (
+          {(lockGroupBuy || form.is_group_buy) && (
             <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
-              <AdminField label="團購時間（開始）" required>
+              <AdminField label="團購區間（開始）" required>
                 <AdminInput type="datetime-local" value={form.group_buy_start_at} onChange={(e) => patch({ group_buy_start_at: e.target.value })} />
               </AdminField>
-              <AdminField label="團購時間（結束）" required>
+              <AdminField label="團購區間（結束）" required>
                 <AdminInput type="datetime-local" value={form.group_buy_end_at} onChange={(e) => patch({ group_buy_end_at: e.target.value })} />
               </AdminField>
               <AdminField label="團購分類" required className="md:col-span-2">
