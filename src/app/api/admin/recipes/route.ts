@@ -21,54 +21,13 @@ export async function GET() {
   const [{ data: recipes, error: fetchError }, { data: categories }] = await Promise.all([
     admin
       .from("recipes")
-      .select(
-        "*, recipe_categories(id, name, slug), recipe_story_chapters(id, recipe_story_pages(id))"
-      )
+      .select("*, recipe_categories(id, name, slug)")
       .order("updated_at", { ascending: false }),
     admin.from("recipe_categories").select("*").order("sort_order"),
   ]);
 
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
-
-  const updaterIds = Array.from(
-    new Set(
-      (recipes ?? [])
-        .map((r) => (r as { updated_by?: string | null }).updated_by)
-        .filter((id): id is string => Boolean(id))
-    )
-  );
-  const profileById = new Map<string, { id: string; full_name: string | null }>();
-  if (updaterIds.length) {
-    const { data: profiles } = await admin
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", updaterIds);
-    for (const p of profiles ?? []) {
-      profileById.set(p.id, p);
-    }
-  }
-
-  const enriched = (recipes ?? []).map((row) => {
-    const r = row as {
-      recipe_story_chapters?: Array<{ recipe_story_pages?: Array<{ id: string }> | null } | null>;
-      updated_by?: string | null;
-      [key: string]: unknown;
-    };
-    const chapters = r.recipe_story_chapters ?? [];
-    const story_page_count = chapters.reduce(
-      (sum, ch) => sum + (ch?.recipe_story_pages?.length ?? 0),
-      0
-    );
-    return {
-      ...r,
-      recipe_story_chapters: undefined,
-      story_page_count,
-      story_chapter_count: chapters.length,
-      updated_by_profile: r.updated_by ? profileById.get(r.updated_by) ?? null : null,
-    };
-  });
-
-  return NextResponse.json({ recipes: enriched, categories: categories ?? [] });
+  return NextResponse.json({ recipes: recipes ?? [], categories: categories ?? [] });
 }
 
 export async function POST(request: Request) {
@@ -116,8 +75,6 @@ export async function POST(request: Request) {
     is_demo: Boolean(body.is_demo),
     author_label: body.author_label ?? null,
     tags: Array.isArray(body.tags) ? body.tags : [],
-    allergens: Array.isArray(body.allergens) ? body.allergens : [],
-    access_permission: body.access_permission ?? "public",
     created_by: auth!.profile.id,
     updated_by: auth!.profile.id,
   };

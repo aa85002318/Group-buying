@@ -4,7 +4,6 @@ import { isSupabaseConfigured } from "@/lib/config";
 import { getMockRecipeBySlug, MOCK_RECIPES_DB } from "@/lib/mock/recipes";
 import { rankRecipeRecommendations } from "@/lib/recipes/recommendations";
 import { nestChaptersWithPages } from "@/lib/recipes/storybook";
-import { canViewRecipeByAccess } from "@/lib/recipes/access";
 import type {
   RecipeProductRecommendation,
   RecipeStoryChapter,
@@ -77,16 +76,6 @@ export async function GET(
 
   if (error || !data) {
     return NextResponse.json({ error: "食譜不存在或尚未發布" }, { status: 404 });
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!canViewRecipeByAccess(data.access_permission, Boolean(user))) {
-    return NextResponse.json(
-      { error: user ? "此食譜目前無法瀏覽" : "請先登入後再查看此食譜" },
-      { status: user ? 403 : 401 }
-    );
   }
 
   const recipeId = data.id as string;
