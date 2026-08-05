@@ -26,14 +26,16 @@ interface AdminRichTextEditorProps {
   placeholder?: string;
 }
 
-/** Lightweight HTML editor (bold / size / color / font) without extra packages. */
+/** Lightweight HTML editor (bold / size / color / font / image) without extra packages. */
 export function AdminRichTextEditor({
   value,
   onChange,
   placeholder = "輸入文章內容…",
 }: AdminRichTextEditorProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [htmlMode, setHtmlMode] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   useBrandFontPreviewCss();
 
   useEffect(() => {
@@ -77,7 +79,6 @@ export function AdminRichTextEditor({
       emit();
       return;
     }
-    // No selection: set font for subsequent typing
     document.execCommand("styleWithCSS", false, "true");
     document.execCommand("fontName", false, familyName);
     emit();
@@ -106,6 +107,43 @@ export function AdminRichTextEditor({
         "</tr></tbody>",
         "</table>",
       ].join("")
+    );
+    emit();
+  };
+
+  const insertImageFile = async (file: File) => {
+    setUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "product-images");
+      fd.append("folder", "articles/inline");
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error ?? "上傳失敗");
+      ref.current?.focus();
+      document.execCommand(
+        "insertHTML",
+        false,
+        `<p><img src="${data.url}" alt="" style="max-width:100%;height:auto;border-radius:12px;margin:12px 0;" /></p>`
+      );
+      emit();
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "圖片上傳失敗");
+    } finally {
+      setUploadingImage(false);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
+  };
+
+  const insertImageByUrl = () => {
+    const url = window.prompt("請輸入圖片網址", "https://");
+    if (!url) return;
+    ref.current?.focus();
+    document.execCommand(
+      "insertHTML",
+      false,
+      `<p><img src="${url}" alt="" style="max-width:100%;height:auto;border-radius:12px;margin:12px 0;" /></p>`
     );
     emit();
   };
@@ -169,6 +207,28 @@ export function AdminRichTextEditor({
         </Button>
         <Button type="button" size="sm" variant="secondary" onClick={() => insertLink()}>
           連結
+        </Button>
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void insertImageFile(file);
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          disabled={uploadingImage}
+          onClick={() => imageInputRef.current?.click()}
+        >
+          {uploadingImage ? "上傳中…" : "插入圖片"}
+        </Button>
+        <Button type="button" size="sm" variant="secondary" onClick={() => insertImageByUrl()}>
+          圖片網址
         </Button>
         <Button type="button" size="sm" variant="secondary" onClick={() => insertTable()}>
           表格

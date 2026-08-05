@@ -195,8 +195,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     icon: "ShoppingBag",
     roles: ["admin"],
     items: [
-      { href: "/admin/group-buy/overview", label: "團購總覽", roles: ["admin"] },
-      { href: "/admin/group-buy", label: "團購活動", roles: ["admin"] },
+      { href: "/admin/articles?category=latest-group-buy", label: "團購活動", roles: ["admin"] },
       { href: "/admin/products", label: "團購商品", roles: ["admin"] },
       { href: "/admin/group-buy/settings", label: "團購頁面設定", roles: ["admin"] },
       { href: "/admin/group-buy/categories", label: "團購分類", roles: ["admin"] },
@@ -349,6 +348,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { href: "/admin/news", label: "公告／最新資訊", roles: ["admin", "content_editor"] },
       { href: "/admin/articles", label: "文章管理", roles: ["admin", "content_editor"] },
+      { href: "/admin/articles/categories", label: "文章分類", roles: ["admin", "content_editor"] },
+      { href: "/admin/articles?category=latest-group-buy", label: "團購活動（文章）", roles: ["admin", "content_editor"] },
       { href: "/admin/videos", label: "影音", roles: ["admin", "content_editor"] },
       { href: "/admin/livestreams", label: "直播", roles: ["admin", "content_editor"] },
       { href: "/admin/themes", label: "季節主題", roles: ["admin", "content_editor"] },

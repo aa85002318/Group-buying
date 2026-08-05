@@ -9,11 +9,11 @@ import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminRichTextEditor } from "@/components/admin/AdminRichTextEditor";
 import type { BrandFontId } from "@/lib/branding";
-import type { Article, ProductCategory } from "@/lib/types/database";
+import type { Article, ArticleCategory } from "@/lib/types/database";
 
 export default function AdminArticleEditPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [categories, setCategories] = useState<ArticleCategory[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
@@ -32,7 +32,7 @@ export default function AdminArticleEditPage({ params }: { params: { id: string 
   useEffect(() => {
     Promise.all([
       fetch(`/api/admin/articles/${params.id}`).then((r) => r.json()),
-      fetch("/api/admin/categories").then((r) => r.json()),
+      fetch("/api/admin/article-categories").then((r) => r.json()),
     ])
       .then(([articleRes, catRes]) => {
         const a = articleRes.article as Article | undefined;
@@ -81,16 +81,18 @@ export default function AdminArticleEditPage({ params }: { params: { id: string 
 
   return (
     <div className="space-y-4">
-      <AdminPageHeader title="編輯文章" description="修改文章內容與字型" />
+      <AdminPageHeader title="編輯文章" description="修改內容、分類與 5:2 封面" />
 
       <div className="rounded-xl bg-white p-4 shadow-card space-y-4">
         <AdminImageUpload
-          label="封面圖片"
-          hint="選填，建議 16:9"
+          label="首頁／封面 Banner"
+          hint="建議比例 5:2"
+          aspectRatio="banner52"
           images={form.cover_image ? [form.cover_image] : []}
           onChange={(images) => setForm({ ...form, cover_image: images[0] ?? "" })}
           uploadFolder="articles"
           maxImages={1}
+          multiple={false}
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -101,7 +103,7 @@ export default function AdminArticleEditPage({ params }: { params: { id: string 
             value={form.category_id}
             onChange={(e) => setForm({ ...form, category_id: e.target.value })}
           >
-            <option value="">選擇分類（選填）</option>
+            <option value="">選擇文章分類</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -126,17 +128,12 @@ export default function AdminArticleEditPage({ params }: { params: { id: string 
               checked={form.is_featured}
               onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
             />
-            置頂顯示於首頁「最新資訊」
+            置頂顯示於首頁
           </label>
         </div>
 
         <section className="space-y-4 rounded-xl border border-[#E9DED4] bg-[#FFFCF7] p-4">
-          <div>
-            <h2 className="text-base font-bold text-coffee">文章字型</h2>
-            <p className="mt-1 text-sm text-foreground-secondary">
-              標題與內文可分開選擇；預設跟隨「品牌設定」。內文段落也可在編輯器工具列套用字型。
-            </p>
-          </div>
+          <h2 className="text-base font-bold text-coffee">文章字型</h2>
           <AdminBrandFontPicker
             label="標題字型"
             value={form.title_font}
@@ -156,7 +153,7 @@ export default function AdminArticleEditPage({ params }: { params: { id: string 
           <AdminRichTextEditor
             value={form.content}
             onChange={(content) => setForm({ ...form, content })}
-            placeholder="輸入文章內容，可調整字型、大小與顏色…"
+            placeholder="輸入文章內容，可插入圖片…"
           />
         </div>
 

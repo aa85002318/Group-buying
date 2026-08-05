@@ -19,7 +19,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const admin = createAdminClient();
   const { data, error: fetchError } = await admin
     .from("articles")
-    .select("*, product_categories(name, slug)")
+    .select("*, article_categories(id, name, slug)")
     .eq("id", id)
     .single();
 

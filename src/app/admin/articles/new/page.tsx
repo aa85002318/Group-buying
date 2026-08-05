@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminBrandFontPicker } from "@/components/admin/AdminBrandFontPicker";
@@ -9,11 +9,12 @@ import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminRichTextEditor } from "@/components/admin/AdminRichTextEditor";
 import type { BrandFontId } from "@/lib/branding";
-import type { ProductCategory } from "@/lib/types/database";
+import type { ArticleCategory } from "@/lib/types/database";
 
-export default function AdminArticleNewPage() {
+function NewArticleInner() {
   const router = useRouter();
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const search = useSearchParams();
+  const [categories, setCategories] = useState<ArticleCategory[]>([]);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -29,11 +30,19 @@ export default function AdminArticleNewPage() {
   });
 
   useEffect(() => {
-    fetch("/api/admin/categories")
+    fetch("/api/admin/article-categories")
       .then((r) => r.json())
-      .then((d) => setCategories(d.categories ?? []))
+      .then((d) => {
+        const cats = (d.categories ?? []) as ArticleCategory[];
+        setCategories(cats);
+        const pref = search.get("category");
+        if (pref) {
+          const hit = cats.find((c) => c.slug === pref);
+          if (hit) setForm((f) => ({ ...f, category_id: hit.id }));
+        }
+      })
       .catch(() => {});
-  }, []);
+  }, [search]);
 
   const save = async () => {
     setSaving(true);
@@ -59,18 +68,25 @@ export default function AdminArticleNewPage() {
     }
   };
 
+  const isGroupBuy = categories.find((c) => c.id === form.category_id)?.slug === "latest-group-buy";
+
   return (
     <div className="space-y-4">
-      <AdminPageHeader title="新增文章" description="建立新文章，可設定標題／內文字型" />
+      <AdminPageHeader
+        title={isGroupBuy ? "新增團購活動（文章）" : "新增文章"}
+        description="以文章方式管理；封面建議 5:2 banner。可於內文插入圖片。"
+      />
 
       <div className="rounded-xl bg-white p-4 shadow-card space-y-4">
         <AdminImageUpload
-          label="封面圖片"
-          hint="選填，建議 16:9"
+          label="首頁／封面 Banner"
+          hint="建議比例 5:2"
+          aspectRatio="banner52"
           images={form.cover_image ? [form.cover_image] : []}
           onChange={(images) => setForm({ ...form, cover_image: images[0] ?? "" })}
           uploadFolder="articles"
           maxImages={1}
+          multiple={false}
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -81,8 +97,8 @@ export default function AdminArticleNewPage() {
             value={form.category_id}
             onChange={(e) => setForm({ ...form, category_id: e.target.value })}
           >
-            <option value="">選擇分類（選填）</option>
-            {categories.map((c) => (
+            <option value="">選擇文章分類</option>
+            {categories.filter((c) => c.is_active !== false).map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -106,17 +122,12 @@ export default function AdminArticleNewPage() {
               checked={form.is_featured}
               onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
             />
-            置頂顯示於首頁「最新資訊」
+            置頂顯示於首頁
           </label>
         </div>
 
         <section className="space-y-4 rounded-xl border border-[#E9DED4] bg-[#FFFCF7] p-4">
-          <div>
-            <h2 className="text-base font-bold text-coffee">文章字型</h2>
-            <p className="mt-1 text-sm text-foreground-secondary">
-              標題與內文可分開選擇；預設跟隨「品牌設定」。內文段落也可在編輯器工具列套用字型。
-            </p>
-          </div>
+          <h2 className="text-base font-bold text-coffee">文章字型</h2>
           <AdminBrandFontPicker
             label="標題字型"
             value={form.title_font}
@@ -136,7 +147,7 @@ export default function AdminArticleNewPage() {
           <AdminRichTextEditor
             value={form.content}
             onChange={(content) => setForm({ ...form, content })}
-            placeholder="輸入文章內容，可調整字型、大小與顏色…"
+            placeholder="輸入文章內容，可插入圖片、調整字型…"
           />
         </div>
 
@@ -146,5 +157,13 @@ export default function AdminArticleNewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminArticleNewPage() {
+  return (
+    <Suspense fallback={<p>載入中…</p>}>
+      <NewArticleInner />
+    </Suspense>
   );
 }

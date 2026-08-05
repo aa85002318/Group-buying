@@ -84,6 +84,9 @@ export type AdminProductFormV2 = {
   is_group_buy: boolean;
   group_buy_start_at: string;
   group_buy_end_at: string;
+  is_monthly_group_buy: boolean;
+  is_limited_product: boolean;
+  group_buy_category_id: string;
   max_quantity_per_user: string;
   product_info: string;
 };
@@ -149,6 +152,9 @@ export const emptyProductFormV2 = (): AdminProductFormV2 => ({
   is_group_buy: false,
   group_buy_start_at: "",
   group_buy_end_at: "",
+  is_monthly_group_buy: false,
+  is_limited_product: false,
+  group_buy_category_id: "",
   max_quantity_per_user: "",
   product_info: "",
 });
@@ -276,6 +282,9 @@ export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
     group_buy_end_at: p.group_buy_end_at
       ? new Date(p.group_buy_end_at).toISOString().slice(0, 16)
       : "",
+    is_monthly_group_buy: Boolean(p.is_monthly_group_buy),
+    is_limited_product: Boolean(p.is_limited_product),
+    group_buy_category_id: p.group_buy_category_id ?? "",
     max_quantity_per_user:
       p.max_quantity_per_user != null ? String(p.max_quantity_per_user) : "",
     product_info: p.product_info ?? p.disclaimer ?? "",
@@ -349,6 +358,12 @@ export function formV2ToPayload(form: AdminProductFormV2) {
     group_buy_end_at: form.is_group_buy && form.group_buy_end_at
       ? new Date(form.group_buy_end_at).toISOString()
       : null,
+    is_monthly_group_buy: form.is_group_buy ? form.is_monthly_group_buy : false,
+    is_limited_product: form.is_group_buy ? form.is_limited_product : false,
+    group_buy_category_id:
+      form.is_group_buy && form.group_buy_category_id
+        ? form.group_buy_category_id
+        : null,
     max_quantity_per_user: form.max_quantity_per_user
       ? Number(form.max_quantity_per_user)
       : null,
@@ -369,6 +384,9 @@ export function validateProductFormV2(form: AdminProductFormV2): string | null {
     }
     if (new Date(form.group_buy_start_at) >= new Date(form.group_buy_end_at)) {
       return "團購結束時間需晚於開始時間";
+    }
+    if (!form.group_buy_category_id) {
+      return "請選擇團購分類";
     }
   }
   return null;

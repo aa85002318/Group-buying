@@ -137,6 +137,16 @@ export type ProductStatus = "draft" | "active" | "inactive" | "sold_out";
 
 export type ArticleStatus = "draft" | "published";
 
+export interface ArticleCategory {
+  id: string;
+  name: string;
+  slug: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -153,7 +163,17 @@ export interface Article {
   body_font?: string | null;
   created_at: string;
   updated_at: string;
+  article_categories?: ArticleCategory | null;
+  /** @deprecated use article_categories */
   product_categories?: ProductCategory;
+}
+
+export interface GroupBuyCategory {
+  id: string;
+  name: string;
+  slug: string;
+  sort_order: number;
+  is_active: boolean;
 }
 
 export type ContentPublishStatus = "draft" | "scheduled" | "published" | "archived";
@@ -417,6 +437,9 @@ export interface Product {
   is_group_buy?: boolean;
   group_buy_start_at?: string | null;
   group_buy_end_at?: string | null;
+  is_monthly_group_buy?: boolean;
+  is_limited_product?: boolean;
+  group_buy_category_id?: string | null;
   max_quantity_per_user?: number | null;
   supplier_name?: string | null;
   product_info?: string | null;

@@ -38,7 +38,7 @@ import {
   type AdminProductFormV2,
 } from "@/lib/admin/product-form-v2";
 import { formatCurrency } from "@/lib/utils";
-import type { ProductCategory, ProductScope, ProductStatus, Store } from "@/lib/types/database";
+import type { GroupBuyCategory, ProductCategory, ProductScope, ProductStatus, Store } from "@/lib/types/database";
 
 type Brand = { id: string; name: string };
 type Supplier = { id: string; name: string };
@@ -47,6 +47,7 @@ type AdminProductEditorProps = {
   form: AdminProductFormV2;
   onChange: (form: AdminProductFormV2) => void;
   categories: ProductCategory[];
+  groupBuyCategories?: GroupBuyCategory[];
   stores: Store[];
   brands: Brand[];
   suppliers: Supplier[];
@@ -210,6 +211,7 @@ export function AdminProductEditor({
   form,
   onChange,
   categories,
+  groupBuyCategories = [],
   stores,
   brands,
   suppliers,
@@ -341,13 +343,36 @@ export function AdminProductEditor({
             </div>
           )}
           {form.is_group_buy && (
-            <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
-              <AdminField label="團購開始">
+            <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
+              <AdminField label="團購時間（開始）" required>
                 <AdminInput type="datetime-local" value={form.group_buy_start_at} onChange={(e) => patch({ group_buy_start_at: e.target.value })} />
               </AdminField>
-              <AdminField label="團購結束">
+              <AdminField label="團購時間（結束）" required>
                 <AdminInput type="datetime-local" value={form.group_buy_end_at} onChange={(e) => patch({ group_buy_end_at: e.target.value })} />
               </AdminField>
+              <AdminField label="團購分類" required className="md:col-span-2">
+                <AdminSelect
+                  value={form.group_buy_category_id}
+                  onChange={(e) => patch({ group_buy_category_id: e.target.value })}
+                >
+                  <option value="">選擇團購分類</option>
+                  {groupBuyCategories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </AdminSelect>
+              </AdminField>
+              <div className="grid gap-2 sm:grid-cols-2 md:col-span-2">
+                <AdminCheckbox
+                  label="本月團購"
+                  checked={form.is_monthly_group_buy}
+                  onChange={(v) => patch({ is_monthly_group_buy: v })}
+                />
+                <AdminCheckbox
+                  label="限定商品"
+                  checked={form.is_limited_product}
+                  onChange={(v) => patch({ is_limited_product: v })}
+                />
+              </div>
               <AdminField label="每人限購">
                 <AdminInput type="number" value={form.max_quantity_per_user} onChange={(e) => patch({ max_quantity_per_user: e.target.value })} />
               </AdminField>

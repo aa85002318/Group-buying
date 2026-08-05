@@ -1,19 +1,44 @@
 "use client";
 
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { useAdminList } from "@/hooks/useAdminList";
-import type { Article } from "@/lib/types/database";
+import type { Article, ArticleCategory } from "@/lib/types/database";
+import { cn } from "@/lib/utils";
 
-export default function AdminArticlesPage() {
+function ArticlesInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const categorySlug = searchParams.get("category") ?? "";
+  const [categories, setCategories] = useState<ArticleCategory[]>([]);
+
+  const apiPath = useMemo(
+    () =>
+      categorySlug
+        ? `/api/admin/articles?category=${encodeURIComponent(categorySlug)}`
+        : "/api/admin/articles",
+    [categorySlug]
+  );
+
   const { items, paginated, search, setSearch, page, setPage, totalPages, refresh, loading } =
-    useAdminList<Article>("/api/admin/articles", "articles", ["title", "slug"]);
+    useAdminList<Article>(apiPath, "articles", ["title", "slug"]);
+
+  useEffect(() => {
+    fetch("/api/admin/article-categories")
+      .then((r) => r.json())
+      .then((d) => setCategories(d.categories ?? []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [apiPath]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const remove = async (id: string) => {
     if (!confirm("確定要刪除此文章？")) return;
@@ -41,27 +66,69 @@ export default function AdminArticlesPage() {
     ]);
   };
 
+  const activeCat = categories.find((c) => c.slug === categorySlug);
+  const newHref = categorySlug
+    ? `/admin/articles/new?category=${encodeURIComponent(categorySlug)}`
+    : "/admin/articles/new";
+
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title="文章管理"
-        description="首頁「最新資訊」由此管理：新增文章、置頂、調整排序。"
+        title={activeCat?.slug === "latest-group-buy" ? "團購活動（文章）" : "文章管理"}
+        description="分類：最新團購／最新資訊／新品介紹。封面使用 5:2 banner；內文可插入圖片。"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => router.push("/admin/articles/new")}>新增文章</Button>
+            <Button onClick={() => router.push(newHref)}>
+              {activeCat?.slug === "latest-group-buy" ? "新增團購活動" : "新增文章"}
+            </Button>
             <Link
-              href="/admin/home"
+              href="/admin/articles/categories"
               className="inline-flex h-10 items-center rounded-xl border border-border bg-white px-4 text-sm font-semibold text-caramel"
             >
-              返回首頁管理
+              文章分類
             </Link>
           </div>
         }
       />
 
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => router.push("/admin/articles")}
+          className={cn(
+            "rounded-full border px-3 py-1.5 text-sm font-semibold",
+            !categorySlug
+              ? "border-[#FFE149] bg-[#FFE149] text-[#153E73]"
+              : "border-border bg-white text-coffee"
+          )}
+        >
+          全部
+        </button>
+        {categories.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => router.push(`/admin/articles?category=${c.slug}`)}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-sm font-semibold",
+              categorySlug === c.slug
+                ? "border-[#FFE149] bg-[#FFE149] text-[#153E73]"
+                : "border-border bg-white text-coffee"
+            )}
+          >
+            {c.name}
+          </button>
+        ))}
+      </div>
+
       <AdminTable
         columns={[
           { key: "title", header: "標題", render: (a) => a.title },
+          {
+            key: "category",
+            header: "分類",
+            render: (a) => a.article_categories?.name ?? "—",
+          },
           { key: "slug", header: "網址代稱", render: (a) => a.slug },
           {
             key: "featured",
@@ -121,13 +188,14 @@ export default function AdminArticlesPage() {
         totalPages={totalPages}
         onPageChange={setPage}
       />
-
-      <p className="text-sm text-muted-foreground">
-        前台預覽：
-        <Link href="/articles" className="text-primary">
-          /articles
-        </Link>
-      </p>
     </div>
+  );
+}
+
+export default function AdminArticlesPage() {
+  return (
+    <Suspense fallback={<p>載入中…</p>}>
+      <ArticlesInner />
+    </Suspense>
   );
 }

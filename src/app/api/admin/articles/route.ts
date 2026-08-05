@@ -22,12 +22,25 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
   let query = admin
     .from("articles")
-    .select("*, product_categories(name, slug)")
+    .select("*, article_categories(id, name, slug)")
     .order("is_featured", { ascending: false })
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
   if (search) query = query.or(`title.ilike.%${search}%,slug.ilike.%${search}%`);
+  const categorySlug = searchParams.get("category");
+  const categoryId = searchParams.get("category_id");
+  if (categoryId) {
+    query = query.eq("category_id", categoryId);
+  } else if (categorySlug) {
+    const { data: cat } = await admin
+      .from("article_categories")
+      .select("id")
+      .eq("slug", categorySlug)
+      .maybeSingle();
+    if (cat?.id) query = query.eq("category_id", cat.id);
+    else return NextResponse.json({ articles: [] });
+  }
 
   const { data, error: fetchError } = await query;
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });

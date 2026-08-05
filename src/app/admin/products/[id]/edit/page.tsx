@@ -14,7 +14,7 @@ import {
   validateProductFormV2,
   type AdminProductFormV2,
 } from "@/lib/admin/product-form-v2";
-import type { ProductCategory, Store } from "@/lib/types/database";
+import type { GroupBuyCategory, ProductCategory, Store } from "@/lib/types/database";
 
 type Brand = { id: string; name: string };
 type Supplier = { id: string; name: string };
@@ -25,6 +25,7 @@ export default function AdminProductEditPage() {
 
   const [form, setForm] = useState<AdminProductFormV2>(emptyProductFormV2());
   const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [groupBuyCategories, setGroupBuyCategories] = useState<GroupBuyCategory[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -40,8 +41,9 @@ export default function AdminProductEditPage() {
       fetch("/api/admin/brands").then((r) => r.json()),
       fetch("/api/admin/suppliers").then((r) => r.json()),
       fetch("/api/admin/products").then((r) => r.json()),
+      fetch("/api/admin/group-buy-categories").then((r) => r.json()),
     ])
-      .then(([bakingRes, allCatRes, storeRes, brandRes, supplierRes, productRes]) => {
+      .then(([bakingRes, allCatRes, storeRes, brandRes, supplierRes, productRes, gbCatRes]) => {
         const merged = new Map<string, ProductCategory>();
         for (const c of [
           ...((bakingRes.categories ?? []) as ProductCategory[]),
@@ -53,6 +55,7 @@ export default function AdminProductEditPage() {
         setStores(storeRes.stores ?? []);
         setBrands(brandRes.brands ?? []);
         setSuppliers(supplierRes.suppliers ?? []);
+        setGroupBuyCategories(gbCatRes.categories ?? []);
         const product = (productRes.products ?? []).find(
           (p: { id: string }) => p.id === productId
         );
@@ -131,6 +134,7 @@ export default function AdminProductEditPage() {
         form={form}
         onChange={setForm}
         categories={categories}
+        groupBuyCategories={groupBuyCategories}
         stores={stores}
         brands={brands}
         suppliers={suppliers}

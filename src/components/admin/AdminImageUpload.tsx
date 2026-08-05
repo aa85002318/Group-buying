@@ -12,7 +12,7 @@ interface AdminImageUploadProps {
   onChange: (images: string[]) => void;
   multiple?: boolean;
   maxImages?: number;
-  aspectRatio?: "square" | "video";
+  aspectRatio?: "square" | "video" | "banner52";
   label?: string;
   hint?: string;
   uploadFolder?: string;
@@ -104,7 +104,12 @@ export function AdminImageUpload({
     onChange(copy);
   };
 
-  const aspectClass = aspectRatio === "video" ? "aspect-video" : "aspect-square";
+  const aspectClass =
+    aspectRatio === "video"
+      ? "aspect-video"
+      : aspectRatio === "banner52"
+        ? "aspect-[5/2]"
+        : "aspect-square";
 
   return (
     <div className="space-y-3">
