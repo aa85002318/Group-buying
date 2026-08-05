@@ -146,6 +146,8 @@ export async function PATCH(
     "is_demo",
     "author_label",
     "tags",
+    "allergens",
+    "access_permission",
   ] as const;
 
   for (const key of fields) {

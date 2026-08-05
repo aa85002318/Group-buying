@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminStoryBuilder } from "@/components/admin/recipes/AdminStoryBuilder";
 import { AdminRecipeVideoUpload } from "@/components/admin/recipes/AdminRecipeVideoUpload";
 import {
@@ -16,6 +15,7 @@ import {
 } from "@/lib/recipes/reader-settings";
 import type {
   Recipe,
+  RecipeAccessPermission,
   RecipeCategory,
   RecipeDiscussion,
   RecipeDiscussionStatus,
@@ -35,20 +35,24 @@ import type {
 
 const TABS = [
   { id: "basic", label: "基本資料" },
-  { id: "flip", label: "翻頁設定" },
-  { id: "media", label: "封面與完整影片" },
-  { id: "storybook", label: "圖文影音教學集" },
-  { id: "ingredients", label: "材料" },
-  { id: "tools", label: "器具" },
-  { id: "preparations", label: "前置作業" },
+  { id: "ingredients", label: "材料與器具" },
   { id: "steps", label: "製作步驟" },
-  { id: "ai", label: "AI 設定" },
-  { id: "recommendations", label: "商品推薦" },
-  { id: "faq", label: "常見問題" },
-  { id: "discussions", label: "學生提問" },
-  { id: "submissions", label: "成品分享" },
-  { id: "seo", label: "SEO 與發布" },
+  { id: "storybook", label: "翻頁編輯器" },
+  { id: "engagement", label: "互動與商品" },
+  { id: "publish", label: "發布設定" },
 ] as const;
+
+const ACCESS_PERMISSION_OPTIONS: { value: RecipeAccessPermission; label: string }[] = [
+  { value: "public", label: "公開" },
+  { value: "member", label: "會員專屬" },
+  { value: "membership", label: "付費會員限定" },
+  { value: "purchase", label: "購買後解鎖" },
+  { value: "code", label: "序號兌換" },
+  { value: "allowlist", label: "白名單限定" },
+  { value: "scheduled_access", label: "時間限定開放" },
+];
+
+type SaveStatus = "idle" | "dirty" | "saving" | "saved" | "error";
 
 type TabId = (typeof TABS)[number]["id"];
 
@@ -222,6 +226,12 @@ export function AdminRecipeEditor({ recipeId }: Props) {
   const [saving, setSaving] = useState(false);
   const [persistedSteps, setPersistedSteps] = useState<RecipeStep[]>([]);
 
+  const [dirty, setDirty] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [lastSaveKind, setLastSaveKind] = useState<"auto" | "manual" | null>(null);
+  const initializedRef = useRef(false);
+
   const [form, setForm] = useState({
     title: "",
     slug: "",
@@ -250,6 +260,8 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     seo_description: "",
     author_label: "",
     tags: "",
+    allergens: "",
+    access_permission: "public" as RecipeAccessPermission,
     reading_mode_default: "flip" as "flip" | "full",
     flip_mode_enabled: true,
     full_reading_enabled: true,
@@ -352,6 +364,8 @@ export function AdminRecipeEditor({ recipeId }: Props) {
       seo_description: r.seo_description ?? "",
       author_label: r.author_label ?? "",
       tags: (r.tags ?? []).join(", "),
+      allergens: (r.allergens ?? []).join(", "),
+      access_permission: (r.access_permission as RecipeAccessPermission) ?? "public",
       reading_mode_default: r.reading_mode_default === "full" ? "full" : "flip",
       flip_mode_enabled: r.flip_mode_enabled !== false,
       full_reading_enabled: r.full_reading_enabled !== false,
@@ -452,8 +466,28 @@ export function AdminRecipeEditor({ recipeId }: Props) {
   }, [recipeId, loadRecipe, loadRecommendations, loadDiscussions, loadSubmissions]);
 
   useEffect(() => {
-    if (tab === "ai" && aiStepId) void loadAiPrompts(aiStepId);
+    if (tab === "engagement" && aiStepId) void loadAiPrompts(aiStepId);
   }, [tab, aiStepId, loadAiPrompts]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      return;
+    }
+    setDirty(true);
+    setSaveStatus("dirty");
+  }, [loading, form, ingredients, steps, tools, preparations, faq, readerSettings]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
 
   const corePayload = () => ({
     title: form.title,
@@ -491,11 +525,17 @@ export function AdminRecipeEditor({ recipeId }: Props) {
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean),
+    allergens: form.allergens
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean),
+    access_permission: form.access_permission,
     reading_mode_default: form.reading_mode_default,
     flip_mode_enabled: form.flip_mode_enabled,
     full_reading_enabled: form.full_reading_enabled,
     is_smart_recipe: form.is_smart_recipe,
-                ingredient_scaling_enabled: false,
+    // V3 flipbook material intentionally keeps ingredient scaling disabled.
+    ingredient_scaling_enabled: false,
     discussion_enabled: form.discussion_enabled,
     submission_enabled: form.submission_enabled,
     ai_enabled: form.ai_enabled,
@@ -503,8 +543,13 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     reader_settings: readerSettings,
   });
 
-  const patchRecipe = async (extra: Record<string, unknown> = {}) => {
+  const patchRecipe = async (
+    extra: Record<string, unknown> = {},
+    options: { silent?: boolean } = {}
+  ) => {
+    const { silent } = options;
     setSaving(true);
+    setSaveStatus("saving");
     try {
       const res = await fetch(`/api/admin/recipes/${recipeId}`, {
         method: "PATCH",
@@ -513,72 +558,144 @@ export function AdminRecipeEditor({ recipeId }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "儲存失敗");
-      alert("已儲存");
+      if (!silent) alert("已儲存");
+      setDirty(false);
+      setSaveStatus("saved");
+      setLastSavedAt(new Date());
+      setLastSaveKind(silent ? "auto" : "manual");
       if (extra.steps || extra.ingredients || extra.tools || extra.preparations || extra.faq) {
+        // Reload rebuilds child-table drafts from the server; skip the next
+        // dirty-detection pass so the reload itself isn't flagged as an edit.
+        initializedRef.current = false;
         await loadRecipe();
       }
     } catch (e) {
-      alert(e instanceof Error ? e.message : "儲存失敗");
+      if (!silent) alert(e instanceof Error ? e.message : "儲存失敗");
+      setSaveStatus("error");
     } finally {
       setSaving(false);
     }
   };
 
+  const ingredientsPayload = () =>
+    ingredients
+      .filter((i) => i.name.trim())
+      .map((ing, i) => ({
+        group_name: ing.group_name || null,
+        name: ing.name.trim(),
+        amount: ing.amount || null,
+        unit: ing.unit || null,
+        product_id: ing.product_id || null,
+        is_required: ing.is_required,
+        substitution_notes: ing.substitution_notes || null,
+        quantity_numeric: ing.quantity_numeric ? Number(ing.quantity_numeric) : null,
+        sort_order: i,
+      }));
+
+  const toolsPayload = () =>
+    tools
+      .filter((t) => t.name.trim())
+      .map((t, i) => ({
+        name: t.name.trim(),
+        notes: t.notes || null,
+        product_id: t.product_id || null,
+        sort_order: i,
+      }));
+
+  const preparationsPayload = () =>
+    preparations
+      .filter((p) => p.content.trim() || p.title.trim())
+      .map((p, i) => ({
+        title: p.title || null,
+        content: p.content,
+        sort_order: i,
+      }));
+
+  const faqPayload = () =>
+    faq
+      .filter((f) => f.question.trim())
+      .map((f, i) => ({
+        question: f.question.trim(),
+        answer: f.answer,
+        is_active: f.is_active,
+        sort_order: i,
+      }));
+
+  const stepsPayload = () =>
+    steps
+      .filter((s) => s.description.trim())
+      .map((s, i) => ({
+        step_number: i + 1,
+        sort_order: i,
+        title: s.title || null,
+        description: s.description,
+        note: s.note || null,
+        chef_notes: s.chef_notes || null,
+        safety_notes: s.safety_notes || null,
+        duration_seconds: s.duration_seconds ? Number(s.duration_seconds) : null,
+        temperature_value: s.temperature_value ? Number(s.temperature_value) : null,
+        temperature_unit: s.temperature_unit || "C",
+        timer_enabled: s.timer_enabled,
+        common_failures: linesToArray(s.common_failures),
+        recovery_actions: linesToArray(s.recovery_actions),
+        prohibited_actions: linesToArray(s.prohibited_actions),
+        ai_enabled: s.ai_enabled,
+        ai_context: s.ai_context || null,
+        ai_keywords: s.ai_keywords
+          .split(",")
+          .map((k) => k.trim())
+          .filter(Boolean),
+        image_url: s.image_url || null,
+      }));
+
   const saveBasic = () => patchRecipe();
   const saveFlip = () => patchRecipe();
   const saveSeo = () => patchRecipe();
 
-  const saveIngredients = () =>
-    patchRecipe({
-      ingredients: ingredients
-        .filter((i) => i.name.trim())
-        .map((ing, i) => ({
-          group_name: ing.group_name || null,
-          name: ing.name.trim(),
-          amount: ing.amount || null,
-          unit: ing.unit || null,
-          product_id: ing.product_id || null,
-          is_required: ing.is_required,
-          substitution_notes: ing.substitution_notes || null,
-          quantity_numeric: ing.quantity_numeric ? Number(ing.quantity_numeric) : null,
-          sort_order: i,
-        })),
-    });
+  const saveDraft = () => {
+    setForm((f) => ({ ...f, status: "draft" }));
+    return patchRecipe({ status: "draft" });
+  };
 
-  const saveTools = () =>
-    patchRecipe({
-      tools: tools
-        .filter((t) => t.name.trim())
-        .map((t, i) => ({
-          name: t.name.trim(),
-          notes: t.notes || null,
-          product_id: t.product_id || null,
-          sort_order: i,
-        })),
-    });
+  const publishRecipe = () => {
+    setForm((f) => ({ ...f, status: "published" }));
+    return patchRecipe({ status: "published" });
+  };
 
-  const savePreparations = () =>
-    patchRecipe({
-      preparations: preparations
-        .filter((p) => p.content.trim() || p.title.trim())
-        .map((p, i) => ({
-          title: p.title || null,
-          content: p.content,
-          sort_order: i,
-        })),
-    });
+  const performAutoSave = async () => {
+    await patchRecipe(
+      {
+        ingredients: ingredientsPayload(),
+        tools: toolsPayload(),
+        preparations: preparationsPayload(),
+        faq: faqPayload(),
+        steps: stepsPayload(),
+      },
+      { silent: true }
+    );
+  };
 
-  const saveFaq = () =>
-    patchRecipe({
-      faq: faq
-        .filter((f) => f.question.trim())
-        .map((f, i) => ({
-          question: f.question.trim(),
-          answer: f.answer,
-          is_active: f.is_active,
-          sort_order: i,
-        })),
-    });
+  const performAutoSaveRef = useRef(performAutoSave);
+  performAutoSaveRef.current = performAutoSave;
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  const savingRef = useRef(saving);
+  savingRef.current = saving;
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (dirtyRef.current && !savingRef.current) void performAutoSaveRef.current();
+    }, 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const saveIngredients = () => patchRecipe({ ingredients: ingredientsPayload() });
+
+  const saveTools = () => patchRecipe({ tools: toolsPayload() });
+
+  const savePreparations = () => patchRecipe({ preparations: preparationsPayload() });
+
+  const saveFaq = () => patchRecipe({ faq: faqPayload() });
 
   const saveSteps = () => {
     if (
@@ -588,33 +705,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
     ) {
       return;
     }
-    return patchRecipe({
-      steps: steps
-        .filter((s) => s.description.trim())
-        .map((s, i) => ({
-          step_number: i + 1,
-          sort_order: i,
-          title: s.title || null,
-          description: s.description,
-          note: s.note || null,
-          chef_notes: s.chef_notes || null,
-          safety_notes: s.safety_notes || null,
-          duration_seconds: s.duration_seconds ? Number(s.duration_seconds) : null,
-          temperature_value: s.temperature_value ? Number(s.temperature_value) : null,
-          temperature_unit: s.temperature_unit || "C",
-          timer_enabled: s.timer_enabled,
-          common_failures: linesToArray(s.common_failures),
-          recovery_actions: linesToArray(s.recovery_actions),
-          prohibited_actions: linesToArray(s.prohibited_actions),
-          ai_enabled: s.ai_enabled,
-          ai_context: s.ai_context || null,
-          ai_keywords: s.ai_keywords
-            .split(",")
-            .map((k) => k.trim())
-            .filter(Boolean),
-          image_url: s.image_url || null,
-        })),
-    });
+    return patchRecipe({ steps: stepsPayload() });
   };
 
   const saveMediaItem = async (item: MediaDraft, index: number) => {
@@ -909,6 +1000,21 @@ export function AdminRecipeEditor({ recipeId }: Props) {
 
   if (loading) return <p className="text-sm text-muted-foreground">載入中…</p>;
 
+  const saveStatusLabel = () => {
+    switch (saveStatus) {
+      case "saving":
+        return "儲存中…";
+      case "error":
+        return "儲存失敗";
+      case "dirty":
+        return "尚有未儲存內容";
+      case "saved":
+        return lastSaveKind === "auto" ? "已自動儲存" : "已儲存";
+      default:
+        return "已儲存";
+    }
+  };
+
   const Toggle = ({
     label,
     checked,
@@ -926,22 +1032,44 @@ export function AdminRecipeEditor({ recipeId }: Props) {
 
   return (
     <div className="space-y-4">
-      <AdminPageHeader
-        title={`編輯食譜：${form.title || recipeId}`}
-        description="智慧食譜編輯器 — 分頁管理基本資料、翻頁、媒體、步驟與社群內容"
-        actions={
-          <div className="flex flex-wrap gap-2">
-            {form.slug ? (
-              <Link href={`/recipes/${form.slug}`} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline">預覽</Button>
-              </Link>
-            ) : null}
-            <Button variant="secondary" onClick={() => router.push("/admin/recipes")}>
-              返回列表
-            </Button>
-          </div>
-        }
-      />
+      <div className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center gap-3 border-b border-border bg-white/95 px-4 py-3 shadow-sm backdrop-blur sm:-mx-6 sm:px-6">
+        <Button
+          size="sm"
+          variant="secondary"
+          type="button"
+          onClick={() => router.push("/admin/recipes")}
+        >
+          ← 返回列表
+        </Button>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-base font-bold text-[#153E73]">
+            {form.title || "（未命名食譜）"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {saveStatusLabel()}
+            {lastSavedAt ? ` · 上次儲存 ${lastSavedAt.toLocaleTimeString("zh-TW")}` : ""}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" type="button" onClick={saveDraft} disabled={saving}>
+            儲存草稿
+          </Button>
+          {form.slug ? (
+            <Link
+              href={`/recipes/${form.slug}?view=flip`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button size="sm" variant="outline" type="button">
+                預覽
+              </Button>
+            </Link>
+          ) : null}
+          <Button size="sm" type="button" onClick={publishRecipe} disabled={saving}>
+            發布
+          </Button>
+        </div>
+      </div>
 
       <div className="-mx-1 overflow-x-auto pb-1">
         <div className="flex min-w-max gap-2 px-1">
@@ -1062,14 +1190,20 @@ export function AdminRecipeEditor({ recipeId }: Props) {
               value={form.storage_method}
               onChange={(e) => setForm({ ...form, storage_method: e.target.value })}
             />
+            <Input
+              placeholder="過敏原標示（逗號分隔，例如：麩質, 蛋, 牛奶）"
+              value={form.allergens}
+              onChange={(e) => setForm({ ...form, allergens: e.target.value })}
+            />
             <Button onClick={saveBasic} disabled={saving}>
               {saving ? "儲存中…" : "儲存基本資料"}
             </Button>
           </section>
         )}
 
-        {tab === "flip" && (
+        {tab === "engagement" && (
           <section className="space-y-4">
+            <h3 className="font-medium">翻頁與功能開關</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <Toggle
                 label="智慧食譜 is_smart_recipe"
@@ -1183,11 +1317,12 @@ export function AdminRecipeEditor({ recipeId }: Props) {
           </section>
         )}
 
-        {tab === "media" && (
+        {tab === "basic" && (
           <section className="space-y-4">
+            <h3 className="font-medium">封面與完整影片</h3>
             <div className="flex justify-between gap-2">
               <p className="text-sm text-muted-foreground">
-                封面圖可在「基本資料」設定；教學影片請直接上傳 MP4／WebM／MOV，不支援 YouTube。
+                封面圖可在上方設定；教學影片請直接上傳 MP4／WebM／MOV，不支援 YouTube。
               </p>
               <Button
                 size="sm"
@@ -1474,6 +1609,8 @@ export function AdminRecipeEditor({ recipeId }: Props) {
             recipeId={recipeId}
             recipeMedia={mediaList}
             steps={persistedSteps}
+            recipeTitle={form.title}
+            coverImage={form.cover_image || null}
           />
         )}
 
@@ -1598,7 +1735,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
           </section>
         )}
 
-        {tab === "tools" && (
+        {tab === "ingredients" && (
           <section className="space-y-3">
             <div className="flex justify-between">
               <h3 className="font-medium">器具</h3>
@@ -1656,7 +1793,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
           </section>
         )}
 
-        {tab === "preparations" && (
+        {tab === "ingredients" && (
           <section className="space-y-3">
             <div className="flex justify-between">
               <h3 className="font-medium">前置作業</h3>
@@ -1925,10 +2062,11 @@ export function AdminRecipeEditor({ recipeId }: Props) {
           </section>
         )}
 
-        {tab === "ai" && (
+        {tab === "engagement" && (
           <section className="space-y-4">
+            <h3 className="font-medium">AI 設定</h3>
             <p className="text-sm text-muted-foreground">
-              管理各步驟的快速提示詞（需先儲存步驟以取得 step id）。食譜級 AI 開關在「翻頁設定」。
+              管理各步驟的快速提示詞（需先儲存步驟以取得 step id）。食譜級 AI 開關見上方「翻頁與功能開關」。
             </p>
             <select
               className="input-field max-w-md"
@@ -1989,8 +2127,9 @@ export function AdminRecipeEditor({ recipeId }: Props) {
           </section>
         )}
 
-        {tab === "recommendations" && (
+        {tab === "engagement" && (
           <section className="space-y-4">
+            <h3 className="font-medium">商品推薦</h3>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <Input
                 placeholder="product_id"
@@ -2085,7 +2224,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
           </section>
         )}
 
-        {tab === "faq" && (
+        {tab === "engagement" && (
           <section className="space-y-3">
             <div className="flex justify-between">
               <h3 className="font-medium">常見問題</h3>
@@ -2148,7 +2287,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
           </section>
         )}
 
-        {tab === "discussions" && (
+        {tab === "engagement" && (
           <section className="space-y-3">
             <div className="flex justify-between">
               <div>
@@ -2301,7 +2440,7 @@ export function AdminRecipeEditor({ recipeId }: Props) {
           </section>
         )}
 
-        {tab === "submissions" && (
+        {tab === "engagement" && (
           <section className="space-y-3">
             <div className="flex justify-between">
               <h3 className="font-medium">成品分享審核</h3>
@@ -2350,8 +2489,21 @@ export function AdminRecipeEditor({ recipeId }: Props) {
           </section>
         )}
 
-        {tab === "seo" && (
+        {tab === "publish" && (
           <section className="space-y-4">
+            <div className="rounded-xl border border-border p-4 space-y-2">
+              <p className="text-sm font-semibold">發布檢查清單</p>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>{form.title.trim() && form.slug.trim() ? "✅" : "⬜"} 標題與網址代稱（slug）</li>
+                <li>{form.cover_image ? "✅" : "⬜"} 已設定封面圖</li>
+                <li>{ingredients.some((i) => i.name.trim()) ? "✅" : "⬜"} 至少 1 項材料</li>
+                <li>{steps.some((s) => s.description.trim()) ? "✅" : "⬜"} 至少 1 個製作步驟</li>
+                <li>
+                  {form.flip_mode_enabled ? "✅" : "⬜"} 翻頁模式已啟用（若此食譜預期使用翻頁教材）
+                </li>
+              </ul>
+              <p className="text-xs text-muted-foreground">此清單僅供參考，不會阻擋發布。</p>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
                 placeholder="SEO 標題"
@@ -2364,10 +2516,30 @@ export function AdminRecipeEditor({ recipeId }: Props) {
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
               >
                 <option value="draft">草稿</option>
+                <option value="preview">預覽</option>
                 <option value="scheduled">排程</option>
                 <option value="published">發布</option>
                 <option value="archived">下架</option>
               </select>
+              <label className="block text-xs font-medium text-[#687386] sm:col-span-2">
+                存取權限 access_permission
+                <select
+                  className="input-field mt-1"
+                  value={form.access_permission}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      access_permission: e.target.value as RecipeAccessPermission,
+                    })
+                  }
+                >
+                  {ACCESS_PERMISSION_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
             <textarea
               className="input-field min-h-[72px]"

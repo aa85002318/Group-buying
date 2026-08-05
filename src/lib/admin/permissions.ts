@@ -241,7 +241,17 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     icon: "BookOpen",
     roles: ["admin", "content_editor"],
     items: [
-      { href: "/admin/recipes", label: "食譜管理", roles: ["admin", "content_editor"] },
+      { href: "/admin/recipes", label: "全部食譜", roles: ["admin", "content_editor"] },
+      { href: "/admin/recipes/new", label: "新增食譜", roles: ["admin", "content_editor"] },
+      {
+        href: "/admin/shop/recipe-categories",
+        label: "食譜分類",
+        roles: ["admin", "content_editor"],
+      },
+      { href: "/admin/recipes/layouts", label: "翻頁版型", roles: ["admin", "content_editor"] },
+      { href: "/admin/recipes/media", label: "食譜素材庫", roles: ["admin", "content_editor"] },
+      { href: "/admin/recipes/submissions", label: "作品審核", roles: ["admin", "content_editor"] },
+      { href: "/admin/recipes/discussions", label: "問題與討論", roles: ["admin", "content_editor"] },
       { href: "/admin/recipes/settings", label: "食譜頁設定", roles: ["admin"] },
       { href: "/admin/challenges", label: "食譜挑戰", roles: ["admin", "content_editor"] },
     ],
