@@ -118,6 +118,8 @@ export async function POST(request: Request) {
     tags: Array.isArray(body.tags) ? body.tags : [],
     allergens: Array.isArray(body.allergens) ? body.allergens : [],
     access_permission: body.access_permission ?? "public",
+    bake_time: body.bake_time != null ? Number(body.bake_time) : null,
+    story_layout_mode: body.story_layout_mode === "manual" ? "manual" : "auto",
     created_by: auth!.profile.id,
     updated_by: auth!.profile.id,
   };

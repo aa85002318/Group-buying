@@ -809,6 +809,9 @@ export interface Recipe {
   storage_method: string | null;
   status: ContentPublishStatus;
   access_permission?: RecipeAccessPermission;
+  bake_time?: number | null;
+  /** auto = content-driven flipbook; manual = advanced story editor */
+  story_layout_mode?: "auto" | "manual";
   allergens?: string[];
   published_at: string | null;
   seo_title: string | null;
@@ -882,6 +885,7 @@ export interface RecipeStep {
   /** Step body (spec alias: content) */
   description: string;
   image_url: string | null;
+  video_url?: string | null;
   note: string | null;
   duration_seconds?: number | null;
   temperature_value?: number | null;
@@ -907,6 +911,7 @@ export interface RecipeTool {
   recipe_id: string;
   name: string;
   notes: string | null;
+  quantity?: number | null;
   product_id: string | null;
   seed_key?: string | null;
   sort_order: number;

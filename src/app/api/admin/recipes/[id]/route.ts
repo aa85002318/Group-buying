@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
+import { syncRecipeStoryFromContent } from "@/lib/recipes/auto-story-sync";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getMockRecipeBySlug, MOCK_RECIPES_DB } from "@/lib/mock/recipes";
 import { sanitizeAuditPayload } from "@/lib/services/auditService";
@@ -148,6 +149,8 @@ export async function PATCH(
     "tags",
     "allergens",
     "access_permission",
+    "bake_time",
+    "story_layout_mode",
   ] as const;
 
   for (const key of fields) {
@@ -224,6 +227,7 @@ export async function PATCH(
           ai_enabled: step.ai_enabled !== false,
           ai_context: step.ai_context ?? null,
           ai_keywords: Array.isArray(step.ai_keywords) ? step.ai_keywords : [],
+          video_url: step.video_url ? String(step.video_url) : null,
           sort_order: Number(step.sort_order ?? i),
         }))
       );
@@ -239,6 +243,10 @@ export async function PATCH(
           name: String(tool.name ?? ""),
           notes: tool.notes ?? null,
           product_id: tool.product_id || null,
+          quantity:
+            tool.quantity != null && tool.quantity !== ""
+              ? Number(tool.quantity)
+              : null,
           sort_order: Number(tool.sort_order ?? i),
         }))
       );
@@ -290,7 +298,22 @@ export async function PATCH(
     sanitizeAuditPayload(data)
   );
 
-  return NextResponse.json({ recipe: data });
+  let storySync: Awaited<ReturnType<typeof syncRecipeStoryFromContent>> | null = null;
+  const shouldSyncStory =
+    body.sync_story === true ||
+    body.sync_story === "1" ||
+    Array.isArray(body.ingredients) ||
+    Array.isArray(body.steps) ||
+    Array.isArray(body.tools) ||
+    body.force_story_sync === true;
+
+  if (shouldSyncStory) {
+    storySync = await syncRecipeStoryFromContent(admin, id, {
+      force: body.force_story_sync === true,
+    });
+  }
+
+  return NextResponse.json({ recipe: data, storySync });
 }
 
 export async function DELETE(
