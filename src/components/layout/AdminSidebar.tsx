@@ -44,7 +44,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Settings,
 };
 
-const EXPANDED_STORAGE_KEY = "chimeidiy-admin-nav-expanded-v3";
+const EXPANDED_STORAGE_KEY = "chimeidiy-admin-nav-expanded-v4";
 const COLLAPSED_STORAGE_KEY = "chimeidiy-admin-sidebar-collapsed";
 const SIDEBAR_EXPANDED_WIDTH = "240px";
 const SIDEBAR_COLLAPSED_WIDTH = "72px";
