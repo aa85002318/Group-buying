@@ -220,7 +220,7 @@ export const CONSUMER_SECONDARY_NAV = [
   { href: "/ai-tools", label: "AI 助手" },
 ] as const;
 
-/** Mobile bottom nav — 首頁／商城／食譜／AI／我的 */
+/** Mobile bottom nav — 首頁／商城／食譜／收藏／我的 */
 export const CONSUMER_BOTTOM_NAV = [
   { href: "/", label: "首頁", match: (p: string) => p === "/", accent: "primary" as const },
   {
@@ -240,15 +240,17 @@ export const CONSUMER_BOTTOM_NAV = [
     featured: true as const,
   },
   {
-    href: "/ai",
-    label: "AI",
-    match: (p: string) => p.startsWith("/ai") || p.startsWith("/ai-tools"),
+    href: "/member/favorites",
+    label: "收藏",
+    match: (p: string) => p.startsWith("/member/favorites"),
     accent: "primary" as const,
   },
   {
     href: "/member",
     label: "我的",
-    match: (p: string) => p.startsWith("/member") || p.startsWith("/profile"),
+    match: (p: string) =>
+      (p.startsWith("/member") || p.startsWith("/profile")) &&
+      !p.startsWith("/member/favorites"),
     accent: "primary" as const,
   },
 ] as const;

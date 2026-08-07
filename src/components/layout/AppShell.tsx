@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { HomeFooter } from "@/components/home/HomeFooter";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { AppBottomNavigation } from "@/components/layout/AppBottomNavigation";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
@@ -52,7 +52,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",
             showChrome && !fullBleedPage && "site-main",
-            "pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:pb-0"
+            "pb-[calc(112px+env(safe-area-inset-bottom,0px))] md:pb-0"
           )}
         >
           {showChrome && !fullBleedPage ? (
@@ -64,7 +64,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           )}
           {showSiteFooter ? <HomeFooter /> : null}
         </main>
-        <MobileBottomNav />
+        <AppBottomNavigation />
       </div>
     </div>
   );

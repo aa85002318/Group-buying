@@ -334,7 +334,8 @@
 
   /* —— Layout —— */
   --header-height: 4rem;
-  --bottom-nav-height: 5rem;
+  /* 底部選單：76px 列高 + 中央凸出約 18px + 餘裕 → 內容避讓用 112px */
+  --bottom-nav-height: 112px;
   --touch-min: 44px;
   --input-min: 48px;
   --app-max-width: 960px;

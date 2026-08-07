@@ -4,6 +4,7 @@ import {
   CookingPot,
   Droplets,
   Flame,
+  Heart,
   Home,
   Leaf,
   Package,
@@ -109,17 +110,35 @@ export const HEADER_CATEGORY_LINKS: HeaderCategoryLink[] = [
   },
 ];
 
-/** Mobile bottom tab bar */
+/** Mobile bottom tab bar — mirrors AppBottomNavigation */
 export const BOTTOM_NAV_ITEMS: BottomNavItem[] = [
   { href: APP_ROUTES.home, label: "首頁", icon: Home, match: (p) => p === "/" },
   {
-    href: "/categories",
-    label: "分類",
-    icon: Package,
-    match: (p) => p.startsWith("/categories") || p.startsWith("/category"),
+    href: APP_ROUTES.shop,
+    label: "商城",
+    icon: ShoppingBag,
+    match: (p) => p.startsWith("/shop") || p.startsWith("/products"),
   },
-  { href: APP_ROUTES.cart, label: "購物車", icon: ShoppingBag, match: (p) => p.startsWith("/cart") },
-  { href: APP_ROUTES.profile, label: "我的", icon: User, match: (p) => p.startsWith("/profile") },
+  {
+    href: APP_ROUTES.recipes,
+    label: "食譜",
+    icon: BookOpen,
+    match: (p) => p.startsWith("/recipes"),
+  },
+  {
+    href: APP_ROUTES.memberFavorites,
+    label: "收藏",
+    icon: Heart,
+    match: (p) => p.startsWith("/member/favorites"),
+  },
+  {
+    href: APP_ROUTES.member,
+    label: "我的",
+    icon: User,
+    match: (p) =>
+      (p.startsWith("/member") || p.startsWith("/profile")) &&
+      !p.startsWith("/member/favorites"),
+  },
 ];
 
 /** Homepage quick entry cards */
