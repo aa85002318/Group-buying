@@ -370,6 +370,14 @@ export function HomeCmsStudio() {
             title="首頁 CMS"
             description="拖拉排序核心區塊，右側預覽草稿。AI 頁（/ai）Hero 為靜態素材，搜尋與頁首部分沿用首頁 Hero 設定。"
             status={dirtyHint ? (saveStatus === "saving" ? "saving" : "dirty") : saveStatus}
+            actions={
+              <Link
+                href="/admin/frontend-cms/home"
+                className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+              >
+                開啟畫布編輯器
+              </Link>
+            }
             notice={
               <div className="space-y-2">
                 <CmsWorkflowSteps
@@ -382,7 +390,7 @@ export function HomeCmsStudio() {
                   }
                 />
                 <p className="rounded-lg border border-[#FFE149]/60 bg-[#FFFBEA] px-3 py-2 text-xs text-[#153E73]">
-                  提示：商城 AI 卡（/admin/shop/ai-assistant）僅管理商城內卡片，不是 /ai 頁 CMS。
+                  提示：商城 AI 卡（/admin/shop/ai-assistant）僅管理商城內卡片，不是 /ai 頁 CMS。新畫布入口見側欄「CMS 管理中心」。
                 </p>
               </div>
             }

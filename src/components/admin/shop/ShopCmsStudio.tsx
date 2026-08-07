@@ -278,6 +278,12 @@ export function ShopCmsStudio() {
             actions={
               <>
                 <Link
+                  href="/admin/frontend-cms/shop"
+                  className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+                >
+                  開啟畫布編輯器
+                </Link>
+                <Link
                   href={previewHref}
                   target="_blank"
                   className={cn(buttonVariants({ size: "sm", variant: "outline" }))}

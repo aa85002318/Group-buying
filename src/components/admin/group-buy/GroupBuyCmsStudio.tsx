@@ -159,6 +159,12 @@ export function GroupBuyCmsStudio() {
             actions={
               <>
                 <Link
+                  href="/admin/frontend-cms/group_buy"
+                  className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+                >
+                  開啟畫布編輯器
+                </Link>
+                <Link
                   href="/admin/group-buy"
                   className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
                 >

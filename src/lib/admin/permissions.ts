@@ -20,6 +20,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/videos",
   "/admin/news",
   "/admin/banners",
+  "/admin/frontend-cms",
   "/admin/home",
   "/admin/shop",
   "/admin/shop/categories",
@@ -345,13 +346,49 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     icon: "LayoutTemplate",
     roles: ["admin", "content_editor"],
     items: [
-      { href: "/admin/home", label: "首頁 CMS", roles: ["admin", "content_editor"] },
-      { href: "/admin/shop", label: "商城 CMS", roles: ["admin", "content_editor"] },
-      { href: "/admin/group-buy/settings", label: "團購頁 CMS", roles: ["admin"] },
+      {
+        href: "/admin/frontend-cms",
+        label: "CMS 管理中心",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/frontend-cms/home",
+        label: "首頁畫布",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/frontend-cms/shop",
+        label: "商城畫布",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/frontend-cms/group_buy",
+        label: "團購畫布",
+        roles: ["admin"],
+      },
       { href: "/admin/media", label: "素材庫", roles: ["admin", "content_editor"] },
       { href: "/admin/side-menu", label: "全站側選單", roles: ["admin", "content_editor"] },
       { href: "/admin/banners", label: "共用 Banner", roles: ["admin", "content_editor"] },
       { href: "/admin/content/popups", label: "彈跳公告", roles: ["admin", "content_editor"] },
+      /* Legacy studios — keep routes, hide from primary sidebar */
+      {
+        href: "/admin/home",
+        label: "首頁 CMS（經典）",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/shop",
+        label: "商城 CMS（經典）",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/group-buy/settings",
+        label: "團購頁 CMS（經典）",
+        roles: ["admin"],
+        hiddenFromSidebar: true,
+      },
       /* Preview is inside Home CMS studio — keep route, hide from sidebar */
       {
         href: "/admin/home/preview",
