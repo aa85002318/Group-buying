@@ -45,16 +45,10 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient();
 
-  type FilterableQuery = {
-    eq: (column: string, value: unknown) => FilterableQuery;
-    or: (filters: string) => FilterableQuery;
-    gte: (column: string, value: string) => FilterableQuery;
-    lte: (column: string, value: string) => FilterableQuery;
-    in: (column: string, values: readonly string[]) => FilterableQuery;
-  };
-
-  const applyFilters = <T extends FilterableQuery>(query: T): T => {
-    let qy: FilterableQuery = query;
+  /** Apply shared filters without binding Supabase builder generics (avoids deep instantiation). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const applyFilters = (query: any) => {
+    let qy = query;
     if (entityType) {
       qy = qy.eq("entity_type", entityType);
     } else if (moduleId && moduleId !== "other") {
@@ -72,21 +66,19 @@ export async function GET(request: Request) {
         );
       }
     }
-    return qy as T;
+    return qy;
   };
 
   let data: Array<Record<string, unknown>> | null = null;
   let count: number | null = null;
 
-  const query = applyFilters(
+  const primary = await applyFilters(
     admin
       .from("audit_logs")
       .select(SELECT_WITH_PROFILE, { count: "exact" })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1)
   );
-
-  const primary = await query;
   if (primary.error) {
     const fallback = await applyFilters(
       admin
