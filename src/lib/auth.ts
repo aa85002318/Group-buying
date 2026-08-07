@@ -8,6 +8,7 @@ export type UserRole =
   | "member"
   | "admin"
   | "store_staff"
+  | "store_manager"
   | "content_editor"
   | "customer_service"
   | "group_leader"
@@ -115,22 +116,22 @@ export async function requireOpsAdmin() {
   if (!isSupabaseConfigured()) {
     return { error: null, auth: getMockAdminAuth() };
   }
-  return requireRole(["admin", "customer_service", "store_staff"]);
+  return requireRole(["admin", "customer_service", "store_staff", "store_manager"]);
 }
 
 export async function requireStaffOrAdmin() {
   if (!isSupabaseConfigured()) {
     return { error: null, auth: getMockAdminAuth() };
   }
-  return requireRole(["admin", "store_staff", "customer_service"]);
+  return requireRole(["admin", "store_staff", "store_manager", "customer_service"]);
 }
 
-/** Store ops module — admin or store_staff only (no customer_service writes). */
+/** Store ops module — admin or store staff/manager only (no customer_service writes). */
 export async function requireStoreOps() {
   if (!isSupabaseConfigured()) {
     return { error: null, auth: getMockAdminAuth() };
   }
-  return requireRole(["admin", "store_staff"]);
+  return requireRole(["admin", "store_staff", "store_manager"]);
 }
 
 export async function requireRole(roles: UserRole | UserRole[]) {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireStaffOrAdmin, logAudit } from "@/lib/auth";
+import { logAudit } from "@/lib/auth";
+import { requireGiftRedeem } from "@/lib/gifts/permissions";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStaffStoreId } from "@/lib/services/pickupService";
@@ -9,16 +10,17 @@ import { maskMemberName, memberNumberTail } from "@/lib/gifts/status";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const { error, auth } = await requireStaffOrAdmin();
+  const { error, auth } = await requireGiftRedeem();
   if (error) return error;
-  if (auth!.profile.role === "customer_service") {
-    return NextResponse.json({ error: "客服帳號不可核銷會員禮" }, { status: 403 });
+  if (auth!.profile.role === "content_editor") {
+    return NextResponse.json({ error: "行銷帳號不可核銷會員禮" }, { status: 403 });
   }
 
   const body = await request.json().catch(() => null);
   const claimId = String(body?.claim_id ?? "").trim();
   const token = String(body?.token ?? "").trim();
   const code = String(body?.code ?? "").trim();
+  const giftItemId = String(body?.gift_item_id ?? "").trim() || null;
   const idempotencyKey = String(body?.idempotency_key ?? "").trim() || null;
   const confirmed = Boolean(body?.confirmed);
 
@@ -75,6 +77,40 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "尚未綁定門市" }, { status: 403 });
   }
 
+  if (giftItemId) {
+    const { data: claimRow } = await admin
+      .from("member_gift_claims")
+      .select("id, gift_item_id, campaign_id, gift_campaigns(item_selection_mode)")
+      .eq("id", resolvedClaimId)
+      .maybeSingle();
+    const mode = (claimRow?.gift_campaigns as { item_selection_mode?: string } | null)
+      ?.item_selection_mode;
+    if (claimRow && (mode === "staff_pick" || !claimRow.gift_item_id)) {
+      const { data: items } = await admin
+        .from("gift_campaign_items")
+        .select("*")
+        .eq("campaign_id", claimRow.campaign_id)
+        .eq("is_active", true);
+      const list = items ?? [];
+      let item = list.find((i) => i.id === giftItemId) ?? null;
+      if (item) {
+        const { resolveItemWithSubstitute } = await import("@/lib/gifts/publish-check");
+        item = resolveItemWithSubstitute(list as never, item as never) as typeof item;
+      }
+      if (!item) {
+        return NextResponse.json({ error: "贈品不存在、已停用或已缺貨" }, { status: 400 });
+      }
+      await admin
+        .from("member_gift_claims")
+        .update({
+          gift_item_id: item.id,
+          quantity: item.quantity_per_redeem ?? 1,
+        })
+        .eq("id", resolvedClaimId)
+        .eq("status", "available");
+    }
+  }
+
   const { data: store } = await admin.from("stores").select("id, name").eq("id", storeId).maybeSingle();
   const staffCode =
     (auth!.profile as { staff_code?: string }).staff_code ||
@@ -104,12 +140,14 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     const messages: Record<string, string> = {
-      already_redeemed: "此會員禮已兌換",
-      expired: "兌換券已過期",
-      cancelled: "兌換券已作廢",
-      store_mismatch: "此兌換券不適用於本門市",
-      out_of_stock: "庫存不足",
+      already_redeemed: "此兌換券已使用",
+      expired: "此兌換券已過期",
+      cancelled: "此兌換券已作廢",
+      store_mismatch: "非指定兌換門市",
+      out_of_stock: "活動庫存不足",
       not_found: "找不到兌換券",
+      campaign_inactive: "活動未開放或已暫停",
+      not_started: "兌換尚未開始",
     };
 
     return NextResponse.json(
@@ -133,9 +171,33 @@ export async function POST(request: Request) {
 
   const { data: claim } = await admin
     .from("member_gift_claims")
-    .select("*, gift_campaigns(gift_name, campaign_type), profiles:member_id(full_name, member_number, member_code)")
+    .select(
+      "*, gift_campaigns(gift_name, campaign_type, inventory_reservation_mode), profiles:member_id(full_name, member_number, member_code)"
+    )
     .eq("id", resolvedClaimId)
     .single();
+
+  const { adjustGiftItemRedeemCounters, notifyGiftRedeemed } = await import(
+    "@/lib/gifts/notifications"
+  );
+  await adjustGiftItemRedeemCounters(admin, {
+    giftItemId: claim?.gift_item_id,
+    quantity: claim?.quantity ?? 1,
+    mode: "redeem",
+    hadReservation:
+      (claim?.gift_campaigns as { inventory_reservation_mode?: string } | null)
+        ?.inventory_reservation_mode === "reserve_on_claim",
+  });
+
+  if (claim?.member_id) {
+    await notifyGiftRedeemed(admin, {
+      memberId: claim.member_id,
+      claimId: claim.id,
+      giftName:
+        (claim.gift_campaigns as { gift_name?: string } | null)?.gift_name ?? "會員禮",
+      storeName: claim.redeemed_store_name_snapshot ?? store?.name,
+    });
+  }
 
   await logAudit(
     auth!.profile.id,

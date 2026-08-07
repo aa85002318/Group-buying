@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { GiftMemberUiStatus } from "@/lib/gifts/types";
@@ -20,6 +21,17 @@ export type GiftCampaignCardData = {
   claim_end_at?: string | null;
   redeem_end_at?: string | null;
   minimum_spend?: number | null;
+  require_store_selection?: boolean;
+  item_selection_mode?: "single" | "member_pick" | "random" | "staff_pick";
+  claim_button_label?: string | null;
+  sold_out_label?: string | null;
+  gift_items?: Array<{
+    id: string;
+    gift_name: string;
+    gift_image_url?: string | null;
+    description?: string | null;
+    quantity_per_redeem?: number;
+  }>;
   redemption_stores?: Array<{ id: string; name: string }>;
   member_status: GiftMemberUiStatus;
   member_status_label: string;
@@ -59,14 +71,43 @@ export function GiftCampaignCard({
   compact,
 }: {
   item: GiftCampaignCardData;
-  onClaim?: (campaignId: string) => void;
+  onClaim?: (campaignId: string, opts?: { store_id?: string; gift_item_id?: string }) => void;
   claiming?: boolean;
   compact?: boolean;
 }) {
+  const [picking, setPicking] = useState(false);
+  const [storeId, setStoreId] = useState("");
+  const [itemId, setItemId] = useState("");
+
   const exhausted =
     item.member_status === "exhausted" || item.member_status === "sold_out";
-  const storeLabel =
-    item.redemption_stores?.map((s) => s.name).join("、") || "指定門市";
+  const stores = item.redemption_stores ?? [];
+  const giftItems = item.gift_items ?? [];
+  const storeLabel = stores.map((s) => s.name).join("、") || "指定門市";
+  const needsStore = Boolean(item.require_store_selection);
+  const needsItem = item.item_selection_mode === "member_pick" && giftItems.length > 0;
+
+  const startClaim = () => {
+    if (!onClaim) return;
+    if (needsStore || needsItem) {
+      setStoreId(stores[0]?.id ?? "");
+      setItemId(giftItems[0]?.id ?? "");
+      setPicking(true);
+      return;
+    }
+    onClaim(item.id);
+  };
+
+  const confirmClaim = () => {
+    if (!onClaim) return;
+    if (needsStore && !storeId) return;
+    if (needsItem && !itemId) return;
+    onClaim(item.id, {
+      ...(needsStore ? { store_id: storeId } : {}),
+      ...(needsItem ? { gift_item_id: itemId } : {}),
+    });
+    setPicking(false);
+  };
 
   let action: React.ReactNode = null;
   if (item.member_status === "claimable" && onClaim) {
@@ -74,10 +115,14 @@ export function GiftCampaignCard({
       <button
         type="button"
         disabled={claiming}
-        onClick={() => onClaim(item.id)}
+        onClick={startClaim}
         className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[#FEE169] text-sm font-bold text-[#153E73] disabled:opacity-50"
       >
-        {claiming ? "領取中…" : "立即領取"}
+        {claiming
+          ? "領取中…"
+          : needsStore || needsItem
+            ? "選擇並領取"
+            : item.claim_button_label || "立即領取"}
       </button>
     );
   } else if (
@@ -129,7 +174,7 @@ export function GiftCampaignCard({
         {exhausted ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/35">
             <span className="rounded-full bg-white/95 px-3 py-1 text-sm font-bold text-[#153E73]">
-              兌換完畢
+              {item.sold_out_label || "兌換完畢"}
             </span>
           </div>
         ) : null}
@@ -168,6 +213,12 @@ export function GiftCampaignCard({
             <dt className="shrink-0 font-semibold text-[#153E73]">兌換數量</dt>
             <dd>每位會員限兌換 {item.per_member_limit} 份</dd>
           </div>
+          {giftItems.length > 1 ? (
+            <div className="flex gap-2">
+              <dt className="shrink-0 font-semibold text-[#153E73]">可選贈品</dt>
+              <dd>{giftItems.map((g) => g.gift_name).join("、")}</dd>
+            </div>
+          ) : null}
           <div className="flex gap-2">
             <dt className="shrink-0 font-semibold text-[#153E73]">指定門市</dt>
             <dd>{storeLabel}</dd>
@@ -188,12 +239,81 @@ export function GiftCampaignCard({
 
         {exhausted ? (
           <div className="rounded-xl bg-[#FFFEFA] px-3 py-2 text-xs text-[#687386]">
-            <p className="font-bold text-[#153E73]">本月會員禮已兌換完畢</p>
+            <p className="font-bold text-[#153E73]">
+              {item.sold_out_label || "本月會員禮已兌換完畢"}
+            </p>
             <p>本月限量會員禮已全數兌換，敬請期待下個月的新禮物！</p>
           </div>
         ) : null}
 
         {action}
+
+        {picking ? (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+            <div className="w-full max-w-md space-y-3 rounded-2xl bg-white p-4 shadow-xl">
+              <h4 className="text-base font-bold text-[#153E73]">確認領取</h4>
+              {needsItem ? (
+                <label className="block text-xs font-semibold text-[#153E73]">
+                  選擇贈品
+                  <select
+                    className="input-field mt-1 w-full"
+                    value={itemId}
+                    onChange={(e) => setItemId(e.target.value)}
+                  >
+                    {giftItems.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.gift_name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              {needsStore ? (
+                <label className="block text-xs font-semibold text-[#153E73]">
+                  選擇兌換門市
+                  {stores.length === 0 ? (
+                    <p className="mt-1 rounded-xl bg-[#FDE8E6] px-3 py-2 text-sm font-normal text-[#B42318]">
+                      目前沒有可選門市，請稍後再試或聯繫客服。
+                    </p>
+                  ) : (
+                    <select
+                      className="input-field mt-1 w-full"
+                      value={storeId}
+                      onChange={(e) => setStoreId(e.target.value)}
+                    >
+                      {stores.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </label>
+              ) : null}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="h-11 flex-1 rounded-xl border border-[#E8E1D7] text-sm font-bold text-[#153E73]"
+                  onClick={() => setPicking(false)}
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  disabled={
+                    claiming ||
+                    (needsStore && (!storeId || stores.length === 0)) ||
+                    (needsItem && !itemId)
+                  }
+                  className="h-11 flex-1 rounded-xl bg-[#FEE169] text-sm font-bold text-[#153E73] disabled:opacity-50"
+                  onClick={confirmClaim}
+                >
+                  {claiming ? "領取中…" : "確認領取"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     </article>
   );

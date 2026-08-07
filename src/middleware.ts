@@ -96,7 +96,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    if (role === "store_staff") {
+    if (role === "store_staff" || role === "store_manager") {
       if (path === "/admin" || path === "/admin/") {
         return NextResponse.redirect(new URL("/admin/store", request.url));
       }

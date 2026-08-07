@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { isMemberEligibleForCampaign } from "@/lib/gifts/eligibility";
-import { loadStoreNameMap, listMemberClaims, listPublishedCampaigns } from "@/lib/gifts/service";
+import { loadStoreNameMap, listActiveStores, listMemberClaims, listPublishedCampaigns } from "@/lib/gifts/service";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { serializeCampaignPublic } from "@/lib/gifts/serialize";
 import { resolveMemberGiftStatus } from "@/lib/gifts/status";
 import type { GiftCampaign, MemberGiftClaim } from "@/lib/gifts/types";
@@ -92,6 +93,36 @@ export async function GET(request: Request) {
 
     const storeIds = campaigns.flatMap((c) => c.applicable_redemption_store_ids ?? []);
     const storeNames = await loadStoreNameMap(storeIds);
+    const needsFallbackStores = campaigns.some(
+      (c) =>
+        Boolean(c.require_store_selection) &&
+        !(c.applicable_redemption_store_ids && c.applicable_redemption_store_ids.length)
+    );
+    let fallbackStores: Array<{ id: string; name: string }> = [];
+    if (needsFallbackStores) {
+      fallbackStores = await listActiveStores();
+    }
+
+    const campaignIds = campaigns.map((c) => c.id);
+    const admin = createAdminClient();
+    const { data: itemRows } = campaignIds.length
+      ? await admin
+          .from("gift_campaign_items")
+          .select(
+            "id, campaign_id, gift_name, gift_image_url, description, quantity_per_redeem, sort_order, total_quantity, reserved_quantity, redeemed_quantity, allow_substitute_when_oos, substitute_item_id, is_active"
+          )
+          .in("campaign_id", campaignIds)
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+      : { data: [] as Array<Record<string, unknown>> };
+    const itemsByCampaign = new Map<string, Array<Record<string, unknown>>>();
+    for (const row of itemRows ?? []) {
+      const cid = String(row.campaign_id);
+      const arr = itemsByCampaign.get(cid) ?? [];
+      arr.push(row);
+      itemsByCampaign.set(cid, arr);
+    }
+
     const claimsByCampaign = new Map<string, MemberGiftClaim>();
     for (const claim of claims) {
       if (!claimsByCampaign.has(claim.campaign_id)) {
@@ -104,14 +135,46 @@ export async function GET(request: Request) {
       created_at: (auth!.profile as { created_at?: string }).created_at ?? null,
       birthday: (auth!.profile as { birthday?: string }).birthday ?? null,
       member_level: (auth!.profile as { member_level?: string }).member_level ?? null,
+      member_tags: (auth!.profile as { member_tags?: string[] }).member_tags ?? null,
+      phone: (auth!.profile as { phone?: string }).phone ?? null,
+      email: (auth!.profile as { email?: string }).email ?? null,
+      member_points: Number((auth!.profile as { member_points?: number }).member_points ?? 0),
     };
 
     const rows = campaigns.map((campaign) => {
       const claim = claimsByCampaign.get(campaign.id) ?? null;
       const eligible = isMemberEligibleForCampaign(campaign, profile);
       const member_status = resolveMemberGiftStatus({ campaign, claim, eligible });
+      const gift_items = (itemsByCampaign.get(campaign.id) ?? [])
+        .map((i) => ({
+          id: String(i.id),
+          gift_name: String(i.gift_name),
+          gift_image_url: (i.gift_image_url as string | null) ?? null,
+          description: (i.description as string | null) ?? null,
+          quantity_per_redeem: Number(i.quantity_per_redeem ?? 1),
+          total_quantity: i.total_quantity as number | null | undefined,
+          reserved_quantity: Number(i.reserved_quantity ?? 0),
+          redeemed_quantity: Number(i.redeemed_quantity ?? 0),
+          allow_substitute_when_oos: Boolean(i.allow_substitute_when_oos),
+          substitute_item_id: (i.substitute_item_id as string | null) ?? null,
+          is_active: i.is_active !== false,
+        }))
+        .filter((i) => {
+          if (i.total_quantity == null) return true;
+          const rem =
+            Number(i.total_quantity) - i.reserved_quantity - i.redeemed_quantity;
+          return rem > 0 || i.allow_substitute_when_oos;
+        });
       return {
-        ...serializeCampaignPublic(campaign, storeNames),
+        ...serializeCampaignPublic(campaign, storeNames, { fallbackStores }),
+        auto_hide_when_sold_out: campaign.auto_hide_when_sold_out !== false,
+        gift_items: gift_items.map(({ id, gift_name, gift_image_url, description, quantity_per_redeem }) => ({
+          id,
+          gift_name,
+          gift_image_url,
+          description,
+          quantity_per_redeem,
+        })),
         member_status,
         member_status_label: GIFT_UI_STATUS_LABEL[member_status],
         claim: claim
@@ -123,9 +186,19 @@ export async function GET(request: Request) {
               redeemed_at: claim.redeemed_at,
               redemption_number: claim.redemption_number,
               redeemed_store_name_snapshot: claim.redeemed_store_name_snapshot,
+              gift_item_id: claim.gift_item_id ?? null,
             }
           : null,
       };
+    }).filter((row) => {
+      if (row.claim) return true;
+      if (
+        row.auto_hide_when_sold_out &&
+        (row.member_status === "sold_out" || row.member_status === "exhausted")
+      ) {
+        return false;
+      }
+      return true;
     });
 
     const usable_claim_count = claims.filter((c) => c.status === "available").length;

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireGiftMarketing } from "@/lib/gifts/permissions";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -15,7 +15,7 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { error } = await requireAdmin();
+  const { error } = await requireGiftMarketing();
   if (error) return error;
 
   const { id } = await context.params;

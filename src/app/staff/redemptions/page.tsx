@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QrScanner } from "@/components/staff/QrScanner";
 import { APP_ROUTES } from "@/lib/site-links";
+import { cn } from "@/lib/utils";
 
 type LookupResult = {
   can_redeem: boolean;
@@ -23,6 +24,7 @@ type LookupResult = {
     redeemed_store_name_snapshot?: string | null;
     redeemed_staff_code_snapshot?: string | null;
   };
+  gift_items?: Array<{ id: string; gift_name: string }>;
   member: { name_masked: string; member_tail: string };
   store: { id?: string | null; name: string; allowed: boolean };
 };
@@ -37,20 +39,45 @@ type SuccessResult = {
   member?: { name_masked: string; member_tail: string };
 };
 
+type MemberClaimRow = {
+  id: string;
+  gift_name: string;
+  campaign_name?: string;
+  redemption_code: string;
+};
+
 export default function StaffRedemptionsPage() {
+  const [mode, setMode] = useState<"scan" | "member">("scan");
   const [code, setCode] = useState("");
+  const [memberQ, setMemberQ] = useState("");
   const [lookup, setLookup] = useState<LookupResult | null>(null);
-  const [token, setToken] = useState<string>("");
+  const [memberClaims, setMemberClaims] = useState<MemberClaimRow[]>([]);
+  const [memberInfo, setMemberInfo] = useState<{
+    name_masked: string;
+    member_tail: string;
+  } | null>(null);
+  const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [success, setSuccess] = useState<SuccessResult | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [staffItemId, setStaffItemId] = useState("");
+  const [staffItems, setStaffItems] = useState<Array<{ id: string; gift_name: string }>>([]);
+
+  const applyLookup = (d: LookupResult, raw: string) => {
+    setLookup(d);
+    setToken(raw);
+    const items = d.gift_items ?? [];
+    setStaffItems(items);
+    setStaffItemId(items[0]?.id ?? "");
+  };
 
   const doLookup = useCallback(async (raw: string) => {
     setLoading(true);
     setMessage(null);
     setSuccess(null);
     setConfirmOpen(false);
+    setMemberClaims([]);
     try {
       const res = await fetch("/api/staff/redemptions/lookup", {
         method: "POST",
@@ -59,8 +86,7 @@ export default function StaffRedemptionsPage() {
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error ?? "查詢失敗");
-      setLookup(d);
-      setToken(raw);
+      applyLookup(d, raw);
     } catch (e) {
       setLookup(null);
       setMessage(e instanceof Error ? e.message : "查詢失敗");
@@ -69,8 +95,58 @@ export default function StaffRedemptionsPage() {
     }
   }, []);
 
+  const searchMember = async () => {
+    setLoading(true);
+    setMessage(null);
+    setSuccess(null);
+    setLookup(null);
+    setMemberClaims([]);
+    setMemberInfo(null);
+    try {
+      const res = await fetch("/api/staff/redemptions/member-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ q: memberQ.trim() }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "查詢失敗");
+      setMemberInfo(d.member);
+      setMemberClaims(d.claims ?? []);
+      if (!(d.claims ?? []).length) {
+        setMessage("此會員目前沒有可核銷的兌換券");
+      }
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "查詢失敗");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pickMemberClaim = async (row: MemberClaimRow) => {
+    setLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/staff/redemptions/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: row.redemption_code }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "查詢失敗");
+      applyLookup(d, row.redemption_code);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "查詢失敗");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const confirmRedeem = async () => {
     if (!lookup?.claim?.id) return;
+    if (staffItems.length > 0 && !staffItemId) {
+      setMessage("請先選擇贈品");
+      return;
+    }
     setLoading(true);
     setMessage(null);
     try {
@@ -82,6 +158,7 @@ export default function StaffRedemptionsPage() {
           token,
           confirmed: true,
           idempotency_key: `${lookup.claim.id}:${Date.now()}`,
+          ...(staffItemId ? { gift_item_id: staffItemId } : {}),
         }),
       });
       const d = await res.json();
@@ -98,7 +175,10 @@ export default function StaffRedemptionsPage() {
       }
       setSuccess(d.result);
       setLookup(null);
+      setMemberClaims([]);
       setConfirmOpen(false);
+      setStaffItemId("");
+      setStaffItems([]);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "核銷失敗");
     } finally {
@@ -117,9 +197,37 @@ export default function StaffRedemptionsPage() {
         </p>
         <h1 className="mt-1 text-xl font-bold text-[#153E73]">會員禮核銷</h1>
         <p className="text-sm text-[#687386]">
-          掃描會員兌換 QR，或輸入備用兌換碼。確認禮品備妥後再核銷。
+          掃描 QR、輸入備用碼，或以電話／會員編號查詢。
         </p>
       </div>
+
+      {!success ? (
+        <div className="flex gap-1 rounded-2xl border border-[#E8E1D7] bg-white p-1">
+          {(
+            [
+              ["scan", "掃碼／兌換碼"],
+              ["member", "電話／會員編號"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => {
+                setMode(id);
+                setMessage(null);
+                setLookup(null);
+                setMemberClaims([]);
+              }}
+              className={cn(
+                "flex-1 rounded-xl px-2 py-2 text-xs font-bold",
+                mode === id ? "bg-[#FEE169] text-[#153E73]" : "text-[#687386]"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {success ? (
         <div className="space-y-3 rounded-2xl border border-[#E8E1D7] bg-white p-4">
@@ -138,6 +246,7 @@ export default function StaffRedemptionsPage() {
             onClick={() => {
               setSuccess(null);
               setCode("");
+              setMemberQ("");
             }}
           >
             完成並掃描下一張
@@ -146,7 +255,7 @@ export default function StaffRedemptionsPage() {
             返回門市首頁
           </Link>
         </div>
-      ) : (
+      ) : mode === "scan" ? (
         <>
           <QrScanner onScan={(v) => void doLookup(v)} disabled={loading} />
           <div className="flex gap-2">
@@ -160,6 +269,42 @@ export default function StaffRedemptionsPage() {
             </Button>
           </div>
         </>
+      ) : (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Input
+              value={memberQ}
+              onChange={(e) => setMemberQ(e.target.value)}
+              placeholder="手機號碼或會員編號"
+            />
+            <Button disabled={loading || !memberQ.trim()} onClick={() => void searchMember()}>
+              查詢
+            </Button>
+          </div>
+          {memberInfo ? (
+            <p className="text-xs text-[#687386]">
+              會員 {memberInfo.name_masked}（尾碼 {memberInfo.member_tail}）
+            </p>
+          ) : null}
+          {memberClaims.length > 0 ? (
+            <ul className="space-y-2">
+              {memberClaims.map((row) => (
+                <li key={row.id}>
+                  <button
+                    type="button"
+                    className="w-full rounded-2xl border border-[#E8E1D7] bg-white px-4 py-3 text-left"
+                    onClick={() => void pickMemberClaim(row)}
+                  >
+                    <p className="font-semibold text-[#153E73]">{row.gift_name}</p>
+                    <p className="text-xs text-[#8A94A6]">
+                      {row.campaign_name ?? "活動"} · 碼 {row.redemption_code}
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       )}
 
       {message ? (
@@ -186,13 +331,29 @@ export default function StaffRedemptionsPage() {
             <div className="flex justify-between"><dt>目前門市</dt><dd>{lookup.store.name}</dd></div>
             <div className="flex justify-between"><dt>狀態</dt><dd>{lookup.claim.status}</dd></div>
           </dl>
+          {staffItems.length > 0 ? (
+            <label className="block text-xs font-semibold text-[#153E73]">
+              選擇贈品（門市選定）
+              <select
+                className="input-field mt-1 w-full"
+                value={staffItemId}
+                onChange={(e) => setStaffItemId(e.target.value)}
+              >
+                {staffItems.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.gift_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           {lookup.reason ? (
             <p className="rounded-xl bg-[#FFF5CC] px-3 py-2 text-sm text-[#153E73]">{lookup.reason}</p>
           ) : null}
           {lookup.can_redeem ? (
             <Button
               className="h-12 w-full bg-[#153E73] font-bold text-white"
-              disabled={loading}
+              disabled={loading || (staffItems.length > 0 && !staffItemId)}
               onClick={() => setConfirmOpen(true)}
             >
               確認兌換

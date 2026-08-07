@@ -58,13 +58,20 @@ export function MemberGiftsHubClient({ initialTab = "monthly" as Tab }: { initia
     [campaigns]
   );
 
-  const onClaim = async (campaignId: string) => {
+  const onClaim = async (
+    campaignId: string,
+    opts?: { store_id?: string; gift_item_id?: string }
+  ) => {
     setClaimingId(campaignId);
     try {
       const res = await fetch("/api/member/gifts/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ campaign_id: campaignId }),
+        body: JSON.stringify({
+          campaign_id: campaignId,
+          ...(opts?.store_id ? { store_id: opts.store_id } : {}),
+          ...(opts?.gift_item_id ? { gift_item_id: opts.gift_item_id } : {}),
+        }),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error ?? "領取失敗");

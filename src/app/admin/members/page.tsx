@@ -24,7 +24,17 @@ type Member = Profile & {
   last_sign_in_at?: string | null;
 };
 
-const ROLES: UserRole[] = ["member", "admin", "store_staff", "group_leader", "promoter", "livestream_host"];
+const ROLES: UserRole[] = [
+  "member",
+  "admin",
+  "store_staff",
+  "store_manager",
+  "content_editor",
+  "customer_service",
+  "group_leader",
+  "promoter",
+  "livestream_host",
+];
 
 const GENDER_LABELS: Record<string, string> = { male: "男性", female: "女性", unknown: "未知" };
 

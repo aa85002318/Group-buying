@@ -2,6 +2,7 @@ export type UserRole =
   | "member"
   | "admin"
   | "store_staff"
+  | "store_manager"
   | "content_editor"
   | "customer_service"
   | "group_leader"

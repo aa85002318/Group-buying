@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireStaffOrAdmin } from "@/lib/auth";
+import { requireGiftRedeem } from "@/lib/gifts/permissions";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStaffStoreId } from "@/lib/services/pickupService";
@@ -35,7 +35,7 @@ async function findClaimByTokenOrCode(raw: string) {
 }
 
 export async function POST(request: Request) {
-  const { error, auth } = await requireStaffOrAdmin();
+  const { error, auth } = await requireGiftRedeem();
   if (error) return error;
 
   if (auth!.profile.role === "customer_service") {
@@ -99,9 +99,34 @@ export async function POST(request: Request) {
     gift_image_url?: string | null;
     campaign_type?: string;
     name?: string;
+    item_selection_mode?: string;
+    id?: string;
   } | null;
 
   const canRedeem = claim.status === "available" && allowed;
+
+  let gift_items: Array<{ id: string; gift_name: string }> = [];
+  const needsStaffPick =
+    campaign?.item_selection_mode === "staff_pick" && !claim.gift_item_id;
+  if (needsStaffPick) {
+    const { data: items } = await admin
+      .from("gift_campaign_items")
+      .select("id, gift_name")
+      .eq("campaign_id", claim.campaign_id)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    gift_items = (items ?? []).map((i) => ({ id: i.id, gift_name: i.gift_name }));
+  }
+
+  const itemName = claim.gift_item_id
+    ? (
+        await admin
+          .from("gift_campaign_items")
+          .select("gift_name")
+          .eq("id", claim.gift_item_id)
+          .maybeSingle()
+      ).data?.gift_name
+    : null;
 
   return NextResponse.json({
     valid: true,
@@ -112,14 +137,19 @@ export async function POST(request: Request) {
         ? "此會員禮已兌換"
         : claim.status !== "available"
           ? `目前狀態：${claim.status}`
-          : null,
+          : needsStaffPick
+            ? "請先選擇贈品後再核銷"
+            : null,
     claim: {
       id: claim.id,
       status: claim.status,
-      gift_name: campaign?.gift_name,
+      gift_name: itemName || campaign?.gift_name,
       gift_image_url: campaign?.gift_image_url,
       campaign_name: campaign?.name,
       campaign_type: campaign?.campaign_type,
+      campaign_id: claim.campaign_id,
+      gift_item_id: claim.gift_item_id,
+      item_selection_mode: campaign?.item_selection_mode ?? "single",
       quantity: claim.quantity,
       expires_at: claim.expires_at,
       redeemed_at: claim.redeemed_at,
@@ -127,6 +157,7 @@ export async function POST(request: Request) {
       redeemed_store_name_snapshot: claim.redeemed_store_name_snapshot,
       redeemed_staff_code_snapshot: claim.redeemed_staff_code_snapshot,
     },
+    gift_items,
     member: {
       name_masked: maskMemberName(profile?.full_name),
       member_tail: memberNumberTail(profile?.member_number ?? profile?.member_code),

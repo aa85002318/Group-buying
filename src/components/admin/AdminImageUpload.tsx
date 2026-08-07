@@ -17,6 +17,8 @@ interface AdminImageUploadProps {
   hint?: string;
   uploadFolder?: string;
   bucket?: string;
+  /** Client-side size limit in bytes (default: no client limit; server still enforces 5MB) */
+  maxFileBytes?: number;
 }
 
 export function AdminImageUpload({
@@ -29,6 +31,7 @@ export function AdminImageUpload({
   hint,
   uploadFolder = "products",
   bucket = "product-images",
+  maxFileBytes,
 }: AdminImageUploadProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [urlInput, setUrlInput] = useState("");
@@ -41,6 +44,10 @@ export function AdminImageUpload({
     setUploading(true);
     setError(null);
     try {
+      if (maxFileBytes && file.size > maxFileBytes) {
+        setError(`單張上限 ${Math.round(maxFileBytes / (1024 * 1024))}MB`);
+        return;
+      }
       const formData = new FormData();
       formData.append("file", file);
       formData.append("bucket", bucket);
