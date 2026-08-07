@@ -13,6 +13,7 @@ export const APP_ROUTES = {
   memberCarrier: "/member/carrier",
   memberOrders: "/member/orders",
   memberBenefits: "/member/benefits",
+  memberGiftVouchers: "/member/benefits/vouchers",
   memberFavorites: "/member/favorites",
   memberAddresses: "/member/addresses",
   memberNotifications: "/member/notifications",
@@ -51,6 +52,7 @@ export const APP_ROUTES = {
   staffLogin: "/staff/login",
   staffHome: "/staff",
   staffPickupScan: "/staff/pickup-scan",
+  staffRedemptions: "/staff/redemptions",
 } as const;
 
 export type AppRouteKey = keyof typeof APP_ROUTES;
@@ -74,7 +76,8 @@ const LINK_META: Record<AppRouteKey, { label: string; description?: string }> = 
   memberBarcode: { label: "會員條碼", description: "門市識別 App 會員身分" },
   memberCarrier: { label: "發票載具", description: "儲存及出示手機條碼" },
   memberOrders: { label: "我的 App 訂單", description: "僅 App 商城與團購訂單" },
-  memberBenefits: { label: "會員福利", description: "App 活動發放的福利" },
+  memberBenefits: { label: "門市會員禮", description: "會員禮、滿額贈與兌換紀錄" },
+  memberGiftVouchers: { label: "我的兌換券", description: "可兌換與已兌換票券" },
   memberFavorites: { label: "我的收藏", description: "收藏的商品" },
   memberAddresses: { label: "收件地址", description: "宅配與聯絡地址" },
   memberNotifications: { label: "通知中心", description: "訂單與活動通知" },
@@ -112,6 +115,7 @@ const LINK_META: Record<AppRouteKey, { label: string; description?: string }> = 
   staffLogin: { label: "門市登入", description: "門市人員專用登入" },
   staffHome: { label: "門市作業首頁", description: "取貨掃碼與協作入口" },
   staffPickupScan: { label: "門市掃碼", description: "取貨掃碼與確認" },
+  staffRedemptions: { label: "門市核銷", description: "會員禮／滿額贈核銷" },
 };
 
 /** Primary shortcuts shown in dev panel (matches common test URLs). */

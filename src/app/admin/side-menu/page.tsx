@@ -32,6 +32,7 @@ const ICON_OPTIONS: Array<{ value: SideMenuIconKey; label: string }> = [
   { value: "video", label: "影音" },
   { value: "article", label: "文章" },
   { value: "sparkles", label: "精選" },
+  { value: "gift", label: "禮物" },
 ];
 
 const COLOR_OPTIONS: Array<{ value: SideMenuColorKey; label: string }> = [

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { QrCode, Store, PackageCheck, AlertTriangle } from "lucide-react";
+import { Gift, QrCode, Store, PackageCheck, AlertTriangle } from "lucide-react";
 import { APP_ROUTES } from "@/lib/site-links";
 import { formatCurrency, ORDER_PICKUP_STATUS_LABELS, ORDER_STATUS_LABELS } from "@/lib/utils";
 
@@ -98,6 +98,13 @@ export default function StaffHomeClient() {
         >
           <Store className="h-6 w-6" aria-hidden />
           <span className="text-sm font-bold">門市協作中心</span>
+        </Link>
+        <Link
+          href={APP_ROUTES.staffRedemptions}
+          className="flex min-h-[96px] flex-col justify-between rounded-[20px] bg-white p-4 text-[#153E73] shadow-[0_8px_24px_rgba(21,62,115,.06)] ring-1 ring-[#E6E9EF]"
+        >
+          <Gift className="h-5 w-5" aria-hidden />
+          <span className="text-sm font-bold">會員禮核銷</span>
         </Link>
         <Link
           href="/admin/pickup"

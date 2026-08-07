@@ -15,6 +15,7 @@ import {
   CupSoda,
   FileText,
   Flame,
+  Gift,
   Leaf,
   Menu,
   Package,
@@ -98,6 +99,7 @@ const SIDE_MENU_ICONS: Record<SideMenuIconKey, LucideIcon> = {
   video: Video,
   article: FileText,
   sparkles: Sparkles,
+  gift: Gift,
 };
 
 const SIDE_MENU_COLORS: Record<

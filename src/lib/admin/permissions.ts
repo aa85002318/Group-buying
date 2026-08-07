@@ -311,6 +311,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin", "customer_service"],
     items: [
       { href: "/admin/members", label: "會員列表", roles: ["admin", "customer_service"] },
+      { href: "/admin/member-gifts", label: "會員禮管理", roles: ["admin"] },
       { href: "/admin/benefits", label: "會員等級／福利", roles: ["admin"] },
       { href: "/admin/rewards", label: "點數紀錄", roles: ["admin"] },
       { href: "/admin/support", label: "客服", roles: ["admin", "customer_service"] },

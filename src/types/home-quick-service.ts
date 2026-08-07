@@ -85,6 +85,16 @@ export const DEFAULT_QUICK_SERVICE_ITEMS: QuickServiceItem[] = [
     sortOrder: 40,
   },
   {
+    id: "member-gifts",
+    title: "會員禮",
+    imageUrl: `${ICON}/promotion.svg`,
+    href: APP_ROUTES.memberBenefits,
+    backgroundColor: "#FFF5CC",
+    badge: null,
+    enabled: true,
+    sortOrder: 45,
+  },
+  {
     id: "promo",
     title: "優惠活動",
     imageUrl: `${ICON}/promotion.svg`,

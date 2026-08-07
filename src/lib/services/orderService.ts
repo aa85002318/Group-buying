@@ -18,6 +18,10 @@ import { createPickupCodeForOrder, generatePickupToken } from "@/lib/services/pi
 import { shippingFeeForMethod } from "@/lib/checkout/options";
 import { recordInitialPayment } from "@/lib/services/paymentService";
 import { sendOrderLineNotification } from "@/lib/line/notifications";
+import {
+  cancelSpendGiftsForOrder,
+  qualifySpendGiftsForOrder,
+} from "@/lib/gifts/spend-qualify";
 
 export interface CreateOrderItemInput {
   productId: string;
@@ -562,6 +566,12 @@ export async function updateOrderStatus(orderId: string, status: string) {
       await notifyReadyForPickup(admin, userId, orderId, orderNo).catch(() => {});
     } else if (status === "completed") {
       await notifyOrderCompleted(admin, userId, orderId, orderNo).catch(() => {});
+      await qualifySpendGiftsForOrder(orderId).catch(() => {});
+    } else if (status === "cancelled" || status === "refunded") {
+      await cancelSpendGiftsForOrder(
+        orderId,
+        status === "refunded" ? "訂單退款" : "訂單取消"
+      ).catch(() => {});
     } else if (status !== "cancelled") {
       const label = ORDER_STATUS_LABELS[status] ?? status;
       await notifyOrderStatusChange(admin, userId, orderId, orderNo, label).catch(() => {});

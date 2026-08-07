@@ -66,6 +66,7 @@ function iconForItem(item: { id: string; label: string; icon?: string }): Lucide
   if (/材料|baking|shop/.test(item.label)) return Wheat;
   if (/課程|course/.test(item.label)) return ChefHat;
   if (/團購|group/.test(item.label)) return Gift;
+  if (/會員禮|福利|gift|benefit/.test(item.label)) return Gift;
   if (/門市|store|map/.test(item.label)) return MapPin;
   if (/客服|faq|support/.test(item.label)) return Headphones;
   if (/會員|member|profile/.test(item.label)) return UserRound;

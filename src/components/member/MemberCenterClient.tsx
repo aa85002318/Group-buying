@@ -18,12 +18,14 @@ import {
   Settings,
   Shield,
   Store,
+  Ticket,
   User,
   Video,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmailVerificationNotice } from "@/components/auth/EmailVerificationNotice";
+import { GiftCampaignCard, type GiftCampaignCardData } from "@/components/member/gifts/GiftCampaignCard";
 import { isSupabaseConfigured } from "@/lib/config";
 import { getAuthErrorMessage } from "@/lib/auth/error-messages";
 import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
@@ -76,7 +78,7 @@ function MenuLink({
         <span className="flex items-center gap-2">
           <span className="font-medium text-foreground">{label}</span>
           {badge != null && badge > 0 && (
-            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">{badge}</span>
+            <span className="rounded-full bg-[#F16458] px-2 py-0.5 text-[10px] font-bold text-white">{badge}</span>
           )}
         </span>
         {subtitle && <span className="block text-xs text-foreground-secondary">{subtitle}</span>}
@@ -94,6 +96,20 @@ export function MemberCenterClient() {
   const [resending, setResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaignCardData[]>([]);
+  const [usableGifts, setUsableGifts] = useState(0);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+
+  const loadGifts = () => {
+    fetch("/api/member/gifts")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        setGiftCampaigns(d.campaigns ?? []);
+        setUsableGifts(d.usable_claim_count ?? 0);
+      })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -105,6 +121,7 @@ export function MemberCenterClient() {
       });
       setSummary({ awaitingPayment: 0, readyForPickup: 0, completed: 0, total: 0, unreadNotifications: 0, hasCarrier: false });
       setLoading(false);
+      loadGifts();
       return;
     }
 
@@ -122,9 +139,28 @@ export function MemberCenterClient() {
         }
         setEmailVerified(Boolean(authData.email_verified));
         if (summaryData?.summary) setSummary(summaryData.summary);
+        loadGifts();
       })
       .finally(() => setLoading(false));
   }, []);
+
+  const claimGift = async (campaignId: string) => {
+    setClaimingId(campaignId);
+    try {
+      const res = await fetch("/api/member/gifts/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaign_id: campaignId }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "領取失敗");
+      loadGifts();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "領取失敗");
+    } finally {
+      setClaimingId(null);
+    }
+  };
 
   const handleLogout = async () => {
     if (isSupabaseConfigured()) await fetch("/api/auth/logout", { method: "POST" });
@@ -205,6 +241,58 @@ export function MemberCenterClient() {
         </Link>
       </section>
 
+      {/* 本月會員禮 */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-medium text-foreground-secondary">本月會員禮</h2>
+          <Link href={APP_ROUTES.memberBenefits} className="text-xs font-semibold text-[#153E73]">
+            查看全部
+          </Link>
+        </div>
+        {giftCampaigns.filter((c) => c.campaign_type === "monthly_member_gift").length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-[#E8E1D7] bg-white px-4 py-6 text-center text-sm text-[#687386]">
+            目前沒有進行中的會員禮
+          </p>
+        ) : (
+          giftCampaigns
+            .filter((c) => c.campaign_type === "monthly_member_gift")
+            .slice(0, 2)
+            .map((item) => (
+              <GiftCampaignCard
+                key={item.id}
+                item={item}
+                compact
+                onClaim={claimGift}
+                claiming={claimingId === item.id}
+              />
+            ))
+        )}
+      </section>
+
+      {/* 我的兌換券快捷 */}
+      <Link
+        href={APP_ROUTES.memberGiftVouchers}
+        className="flex min-h-[72px] items-center gap-3 rounded-[16px] border border-[#E8E1D7] bg-white px-4 py-3 shadow-card"
+      >
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FFF5CC] text-[#153E73]">
+          <Ticket className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium text-foreground">我的兌換券</span>
+          <span className="block text-xs text-foreground-secondary">
+            查看可兌換、已兌換及已過期的會員禮
+          </span>
+        </span>
+        {usableGifts > 0 ? (
+          <span className="rounded-full bg-[#F16458] px-2.5 py-1 text-[11px] font-bold text-white">
+            {usableGifts} 張可使用
+          </span>
+        ) : (
+          <span className="text-[11px] text-[#687386]">目前沒有待兌換票券</span>
+        )}
+        <ChevronRight className="h-5 w-5 shrink-0 text-foreground-secondary" />
+      </Link>
+
       {/* B. 我的 App 訂單 */}
       <section>
         <h2 className="mb-1 px-1 text-sm font-medium text-foreground-secondary">我的 App 訂單</h2>
@@ -235,7 +323,13 @@ export function MemberCenterClient() {
         <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">常用功能</h2>
         <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-card">
           <MenuLink href={APP_ROUTES.memberOrders} icon={Receipt} label="我的 App 訂單" subtitle="商城訂單（不含門市現場消費）" featured />
-          <MenuLink href={APP_ROUTES.memberBenefits} icon={Gift} label="會員福利" subtitle="App 活動發放的福利（無點數／等級）" />
+          <MenuLink
+            href={APP_ROUTES.memberBenefits}
+            icon={Gift}
+            label="門市會員禮"
+            subtitle="查看會員禮、滿額贈與兌換紀錄"
+            badge={usableGifts}
+          />
           <MenuLink href={APP_ROUTES.memberFavorites} icon={Heart} label="我的收藏" subtitle="商品、食譜與影音收藏" />
           <MenuLink href={APP_ROUTES.memberAddresses} icon={MapPin} label="地址管理" subtitle="管理宅配與聯絡地址" />
           <MenuLink href={APP_ROUTES.memberNotifications} icon={Bell} label="通知中心" subtitle="訂單與活動通知" badge={summary?.unreadNotifications} />

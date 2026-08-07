@@ -30,7 +30,8 @@ export type SideMenuIconKey =
   | "play"
   | "video"
   | "article"
-  | "sparkles";
+  | "sparkles"
+  | "gift";
 
 export type SideMenuColorKey =
   | "berry"
@@ -297,6 +298,14 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         color: "coral",
       },
       {
+        id: "member-gifts",
+        label: "門市會員禮",
+        description: "會員禮、滿額贈與兌換券",
+        href: "/member/benefits",
+        icon: "gift",
+        color: "yellow",
+      },
+      {
         id: "carrier",
         label: "發票載具",
         description: "手機條碼載具",
@@ -449,6 +458,7 @@ const SIDE_MENU_ICONS = new Set<SideMenuIconKey>([
   "video",
   "article",
   "sparkles",
+  "gift",
 ]);
 
 const SIDE_MENU_COLORS = new Set<SideMenuColorKey>([
