@@ -11,6 +11,7 @@ import {
 import { QuickServicesHeader } from "@/components/home/QuickServicesHeader";
 import { QuickServicesCarousel } from "@/components/home/QuickServicesCarousel";
 import { MemberCenterCard } from "@/components/home/MemberCenterCard";
+import { HomeMemberPromoBanner } from "@/components/home/HomeMemberPromoBanner";
 
 /** Homepage common services — circular icons carousel + member center. */
 export function HomeQuickServicesSection() {
@@ -53,6 +54,12 @@ export function HomeQuickServicesSection() {
         <div className="mt-4 md:mt-5">
           <MemberCenterCard settings={settings} />
         </div>
+        <HomeMemberPromoBanner
+          enabled={settings.promoBannerEnabled}
+          imageUrl={settings.promoBannerImageUrl}
+          href={settings.promoBannerHref}
+          alt={settings.promoBannerAlt}
+        />
       </div>
     </section>
   );

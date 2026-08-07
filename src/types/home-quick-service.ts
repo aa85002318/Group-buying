@@ -38,6 +38,11 @@ export type HomeQuickServicesSettings = {
   memberCenterHref: string;
   memberCenterImageUrl: string;
   memberShortcuts: MemberShortcutItem[];
+  /** 5:2 banner under member center */
+  promoBannerEnabled: boolean;
+  promoBannerImageUrl: string;
+  promoBannerHref: string;
+  promoBannerAlt: string;
 };
 
 const ICON = "/images/home/quick-services";
@@ -149,6 +154,10 @@ export const DEFAULT_QUICK_SERVICES_SETTINGS: HomeQuickServicesSettings = {
   memberCenterHref: APP_ROUTES.member,
   memberCenterImageUrl: `${ICON}/member-avatar.svg`,
   memberShortcuts: DEFAULT_MEMBER_SHORTCUT_ITEMS,
+  promoBannerEnabled: true,
+  promoBannerImageUrl: "",
+  promoBannerHref: APP_ROUTES.shop,
+  promoBannerAlt: "精選活動",
 };
 
 function asString(value: unknown, fallback = ""): string {
@@ -302,6 +311,22 @@ export function parseQuickServicesSettings(
       DEFAULT_QUICK_SERVICES_SETTINGS.memberCenterImageUrl
     ),
     memberShortcuts,
+    promoBannerEnabled: asBool(
+      raw.promoBannerEnabled ?? raw.promo_banner_enabled,
+      DEFAULT_QUICK_SERVICES_SETTINGS.promoBannerEnabled
+    ),
+    promoBannerImageUrl: asString(
+      raw.promoBannerImageUrl ?? raw.promo_banner_image_url,
+      DEFAULT_QUICK_SERVICES_SETTINGS.promoBannerImageUrl
+    ),
+    promoBannerHref: asString(
+      raw.promoBannerHref ?? raw.promo_banner_href,
+      DEFAULT_QUICK_SERVICES_SETTINGS.promoBannerHref
+    ),
+    promoBannerAlt: asString(
+      raw.promoBannerAlt ?? raw.promo_banner_alt,
+      DEFAULT_QUICK_SERVICES_SETTINGS.promoBannerAlt
+    ),
   };
 }
 

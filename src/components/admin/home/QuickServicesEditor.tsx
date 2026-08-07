@@ -266,6 +266,49 @@ export function QuickServicesEditor({
         </Button>
       </div>
 
+      <div className="space-y-3 border-t border-border pt-3">
+        <p className="text-xs font-semibold text-coffee">會員中心下方 Banner（5:2）</p>
+        <p className="text-[11px] text-muted-foreground">
+          建議上傳 1500×600（5:2）。未上傳圖片時前台會顯示預設佔位。
+        </p>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.promoBannerEnabled !== false}
+            onChange={(e) =>
+              onChange({ ...settings, promoBannerEnabled: e.target.checked })
+            }
+          />
+          顯示 Banner
+        </label>
+        <Input
+          value={settings.promoBannerAlt}
+          onChange={(e) =>
+            onChange({ ...settings, promoBannerAlt: e.target.value })
+          }
+          placeholder="Banner 說明文字"
+        />
+        <Input
+          value={settings.promoBannerHref}
+          onChange={(e) =>
+            onChange({ ...settings, promoBannerHref: e.target.value })
+          }
+          placeholder="點擊連結（例如 /shop 或 /recipes）"
+        />
+        <AdminImageUpload
+          label="Banner 圖（1500×600／5:2）"
+          images={
+            settings.promoBannerImageUrl ? [settings.promoBannerImageUrl] : []
+          }
+          onChange={(imgs) =>
+            onChange({ ...settings, promoBannerImageUrl: imgs[0] ?? "" })
+          }
+          uploadFolder="home/member-promo-banner"
+          maxImages={1}
+          multiple={false}
+        />
+      </div>
+
       <Button type="button" size="sm" disabled={saving} onClick={onSave}>
         儲存常用服務／會員中心
       </Button>

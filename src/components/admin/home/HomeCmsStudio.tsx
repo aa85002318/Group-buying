@@ -304,11 +304,14 @@ export function HomeCmsStudio() {
 
   const catalogItems = HOME_ADMIN_SECTIONS.filter((s) => {
     if (s.catalog === false) return false;
+    // Singletons already in draft cannot be added again
     if (isSingletonHomeSection(s.id) && blocks.some((b) => b.block_key === s.id)) {
       return false;
     }
     return true;
   });
+
+  const catalogEmpty = catalogItems.length === 0;
 
   const previewSrc = `/admin/home/preview?embed=1&v=${previewKey}&device=${previewDevice === "desktop" ? "desktop" : "mobile"}`;
 
@@ -461,19 +464,26 @@ export function HomeCmsStudio() {
           footer={
             <>
               {showCatalog ? (
-                <div className="mb-2 max-h-36 space-y-1 overflow-y-auto rounded-lg bg-[#F7F8FA] p-2">
-                  {catalogItems.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      disabled={catalogBusy}
-                      className="flex w-full flex-col rounded-lg px-2 py-1.5 text-left hover:bg-white"
-                      onClick={() => void addBlock(s.id)}
-                    >
-                      <span className="text-sm font-medium text-[#153E73]">{s.label}</span>
-                      <span className="text-[11px] text-muted-foreground">{s.description}</span>
-                    </button>
-                  ))}
+                <div className="mb-2 max-h-64 space-y-1 overflow-y-auto rounded-lg bg-[#F7F8FA] p-2">
+                  {catalogEmpty ? (
+                    <p className="px-2 py-3 text-center text-[11px] leading-relaxed text-muted-foreground">
+                      目前可新增的區塊類型已用完。可重複加入「自訂 Banner 帶」等非單一例區塊；
+                      若要補回主堆疊缺漏，請點左側標示「草稿尚未加入」的項目。
+                    </p>
+                  ) : (
+                    catalogItems.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        disabled={catalogBusy}
+                        className="flex w-full flex-col rounded-lg px-2 py-1.5 text-left hover:bg-white disabled:opacity-50"
+                        onClick={() => void addBlock(s.id)}
+                      >
+                        <span className="text-sm font-medium text-[#153E73]">{s.label}</span>
+                        <span className="text-[11px] text-muted-foreground">{s.description}</span>
+                      </button>
+                    ))
+                  )}
                 </div>
               ) : null}
               {legacyBlocks.length ? (
