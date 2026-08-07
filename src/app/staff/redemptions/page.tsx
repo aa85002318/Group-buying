@@ -156,6 +156,7 @@ export default function StaffRedemptionsPage() {
         body: JSON.stringify({
           claim_id: lookup.claim.id,
           token,
+          code: token,
           confirmed: true,
           idempotency_key: `${lookup.claim.id}:${Date.now()}`,
           ...(staffItemId ? { gift_item_id: staffItemId } : {}),

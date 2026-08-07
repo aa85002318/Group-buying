@@ -33,6 +33,8 @@ export async function GET(request: Request) {
       reports: [],
       daily_trend: [],
       by_store: [],
+      failure_reasons: [],
+      duplicate_scans: 0,
       stores: [],
     });
   }
@@ -306,10 +308,52 @@ export async function GET(request: Request) {
   if (to) pq = pq.lte("claimed_at", to);
   const { data: participants } = await pq;
 
+  let failQ = admin
+    .from("gift_redemption_logs")
+    .select("id, action, result, failure_reason, created_at, campaign_id")
+    .in("result", ["failure", "error", "anomaly"])
+    .gte("created_at", rangeStart.toISOString())
+    .order("created_at", { ascending: false })
+    .limit(2000);
+  if (campaignId) failQ = failQ.eq("campaign_id", campaignId);
+  if (rangeEnd) failQ = failQ.lte("created_at", rangeEnd.toISOString());
+  const { data: failRows } = await failQ;
+
+  const reasonMap = new Map<string, number>();
+  let duplicate_scans = 0;
+  for (const row of failRows ?? []) {
+    const reason =
+      String(row.failure_reason ?? "").trim() ||
+      `${row.action ?? "unknown"}/${row.result ?? "failure"}`;
+    reasonMap.set(reason, (reasonMap.get(reason) ?? 0) + 1);
+    if (
+      /already_redeemed|已兌換|已使用|duplicate/i.test(reason) ||
+      String(row.action) === "redeem_duplicate"
+    ) {
+      duplicate_scans += 1;
+    }
+  }
+  const failure_reasons = Array.from(reasonMap.entries())
+    .map(([label, value]) => ({ label, value, color: "#B42318" }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 12);
+
+  let dupQ = admin
+    .from("gift_redemption_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("action", "redeem_duplicate")
+    .gte("created_at", rangeStart.toISOString());
+  if (campaignId) dupQ = dupQ.eq("campaign_id", campaignId);
+  if (rangeEnd) dupQ = dupQ.lte("created_at", rangeEnd.toISOString());
+  const { count: dupCount } = await dupQ;
+  if ((dupCount ?? 0) > duplicate_scans) duplicate_scans = dupCount ?? 0;
+
   return NextResponse.json({
     reports,
     daily_trend,
     by_store,
+    failure_reasons,
+    duplicate_scans,
     days: trendDays,
     stores: storeRows ?? [],
     participants: (participants ?? []).map((p) => ({

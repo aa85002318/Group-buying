@@ -22,7 +22,7 @@ export async function GET(
   const { data: member, error: memberError } = await admin
     .from("profiles")
     .select(
-      "id, email, phone, full_name, birthday, member_code, member_number, role, avatar_url, city, district, created_at, updated_at, store_credit_balance, is_active, admin_notes"
+      "id, email, phone, full_name, birthday, member_code, member_number, role, avatar_url, city, district, created_at, updated_at, store_credit_balance, is_active, admin_notes, member_points"
     )
     .eq("id", id)
     .single();
@@ -133,6 +133,7 @@ export async function PATCH(
   let body: {
     role?: string;
     store_credit_balance?: number;
+    member_points?: number;
     full_name?: string;
     phone?: string;
     birthday?: string;
@@ -168,6 +169,13 @@ export async function PATCH(
 
   if (body.role !== undefined) updates.role = body.role;
   if (body.store_credit_balance !== undefined) updates.store_credit_balance = body.store_credit_balance;
+  if (body.member_points !== undefined) {
+    const pts = Number(body.member_points);
+    if (!Number.isFinite(pts) || pts < 0) {
+      return NextResponse.json({ error: "會員點數必須為非負整數" }, { status: 400 });
+    }
+    updates.member_points = Math.floor(pts);
+  }
   if (body.is_active !== undefined) updates.is_active = body.is_active;
   if (body.admin_notes !== undefined) updates.admin_notes = body.admin_notes;
 

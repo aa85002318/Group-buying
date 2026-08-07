@@ -11,6 +11,7 @@ const TABS: Array<{ href: string; label: string; exact?: boolean }> = [
   { href: "/admin/member-gifts/redeem", label: "門市核銷" },
   { href: "/admin/member-gifts/logs", label: "核銷紀錄" },
   { href: "/admin/member-gifts/reports", label: "報表統計" },
+  { href: "/admin/member-gifts/qa", label: "驗收清單" },
 ];
 
 export function MemberGiftsAdminNav() {

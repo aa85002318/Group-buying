@@ -45,7 +45,7 @@ export async function GET(request: Request) {
   let query = admin
     .from("profiles")
     .select(
-      "id, email, phone, full_name, birthday, member_code, member_number, role, store_id, created_at, updated_at, store_credit_balance, is_active, admin_notes"
+      "id, email, phone, full_name, birthday, member_code, member_number, role, store_id, created_at, updated_at, store_credit_balance, member_points, is_active, admin_notes"
     )
     .order("created_at", { ascending: false });
 

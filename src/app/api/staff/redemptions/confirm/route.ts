@@ -70,6 +70,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "缺少兌換券資訊" }, { status: 400 });
   }
 
+  const { data: claimForRules } = await admin
+    .from("member_gift_claims")
+    .select("id, member_id, redemption_code, gift_campaigns(require_self_redeem)")
+    .eq("id", resolvedClaimId)
+    .maybeSingle();
+  const requireSelf =
+    (claimForRules?.gift_campaigns as { require_self_redeem?: boolean } | null)
+      ?.require_self_redeem !== false;
+  if (requireSelf) {
+    const verified = token ? verifyGiftQrToken(token) : { ok: false as const };
+    const qrOk =
+      verified.ok &&
+      verified.payload &&
+      verified.payload.claim_id === resolvedClaimId &&
+      (!claimForRules?.member_id || verified.payload.member_id === claimForRules.member_id);
+    const codeCandidate = (code || token).trim().toUpperCase();
+    const codeOk =
+      Boolean(codeCandidate) &&
+      Boolean(claimForRules?.redemption_code) &&
+      codeCandidate === String(claimForRules?.redemption_code).toUpperCase();
+    if (!qrOk && !codeOk) {
+      return NextResponse.json(
+        {
+          error: "此活動限本人兌換，請掃描有效 QR 或輸入備用兌換碼",
+          code: "self_redeem_required",
+        },
+        { status: 400 }
+      );
+    }
+  }
+
   const storeId =
     (await getStaffStoreId(auth!.profile.id)) ||
     (auth!.profile.role === "admin" ? String(body?.store_id ?? "") : "");
@@ -149,6 +180,18 @@ export async function POST(request: Request) {
       campaign_inactive: "活動未開放或已暫停",
       not_started: "兌換尚未開始",
     };
+
+    await admin.from("gift_redemption_logs").insert({
+      claim_id: resolvedClaimId,
+      campaign_id: claim?.campaign_id ?? null,
+      member_id: claim?.member_id ?? null,
+      store_id: storeId,
+      staff_id: auth!.profile.id,
+      action: codeFail === "already_redeemed" ? "redeem_duplicate" : "redeem",
+      result: "failure",
+      failure_reason: messages[codeFail ?? ""] ?? codeFail ?? "核銷失敗",
+      meta: { failure_code: codeFail },
+    });
 
     return NextResponse.json(
       {

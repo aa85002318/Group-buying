@@ -38,6 +38,13 @@ export default function MemberGiftVouchersPage() {
   const [restoreInventory, setRestoreInventory] = useState(true);
   const [reactivate, setReactivate] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [showReissue, setShowReissue] = useState(false);
+  const [reissueCampaignId, setReissueCampaignId] = useState("");
+  const [reissueMemberId, setReissueMemberId] = useState("");
+  const [reissueReason, setReissueReason] = useState("");
+  const [campaignOptions, setCampaignOptions] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
 
   const load = () => {
     setLoading(true);
@@ -52,6 +59,47 @@ export default function MemberGiftVouchersPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetch("/api/admin/member-gifts")
+      .then((r) => r.json())
+      .then((d) =>
+        setCampaignOptions(
+          (d.campaigns ?? []).map((c: { id: string; name: string }) => ({
+            id: c.id,
+            name: c.name,
+          }))
+        )
+      )
+      .catch(() => {});
+  }, [isAdmin]);
+
+  const submitReissue = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/admin/member-gifts/claims/reissue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaign_id: reissueCampaignId,
+          member_id: reissueMemberId.trim(),
+          reason: reissueReason.trim(),
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "補發失敗");
+      alert(d.message ?? "已補發");
+      setShowReissue(false);
+      setReissueReason("");
+      setReissueMemberId("");
+      load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "補發失敗");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const submit = async () => {
     if (!modalId) return;
@@ -102,11 +150,18 @@ export default function MemberGiftVouchersPage() {
         title="兌換券管理"
         description="可作廢未兌換券；已核銷由門市主管申請沖銷或總管直接沖銷。"
         actions={
-          canReverse ? (
-            <Link href="/admin/member-gifts/reversals" className="text-sm font-semibold text-[#153E73] underline">
-              沖銷申請
-            </Link>
-          ) : undefined
+          <div className="flex flex-wrap gap-3">
+            {isAdmin ? (
+              <Button variant="outline" onClick={() => setShowReissue(true)}>
+                補發兌換券
+              </Button>
+            ) : null}
+            {canReverse ? (
+              <Link href="/admin/member-gifts/reversals" className="text-sm font-semibold text-[#153E73] underline">
+                沖銷申請
+              </Link>
+            ) : null}
+          </div>
         }
       />
 
@@ -229,6 +284,66 @@ export default function MemberGiftVouchersPage() {
           </tbody>
         </table>
       </div>
+
+      {showReissue && isAdmin ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md space-y-3 rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-base font-bold text-[#153E73]">補發兌換券</h3>
+            <p className="text-xs text-[#687386]">
+              可略過資格與個人上限，仍會保留庫存並寫入稽核。請填寫原因。
+            </p>
+            <label className="block text-xs">
+              活動
+              <select
+                className="input-field mt-1"
+                value={reissueCampaignId}
+                onChange={(e) => setReissueCampaignId(e.target.value)}
+              >
+                <option value="">請選擇</option>
+                {campaignOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs">
+              會員 UUID
+              <Input
+                className="mt-1 font-mono text-[11px]"
+                value={reissueMemberId}
+                onChange={(e) => setReissueMemberId(e.target.value)}
+                placeholder="profiles.id"
+              />
+            </label>
+            <label className="block text-xs">
+              補發原因（必填）
+              <Input
+                className="mt-1"
+                value={reissueReason}
+                onChange={(e) => setReissueReason(e.target.value)}
+                placeholder="例如：客服補償／系統漏發"
+              />
+            </label>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" disabled={busy} onClick={() => setShowReissue(false)}>
+                取消
+              </Button>
+              <Button
+                disabled={
+                  busy ||
+                  !reissueCampaignId ||
+                  reissueMemberId.trim().length < 8 ||
+                  reissueReason.trim().length < 2
+                }
+                onClick={() => void submitReissue()}
+              >
+                {busy ? "處理中…" : "確認補發"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {modalId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

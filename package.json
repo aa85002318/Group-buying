@@ -16,6 +16,8 @@
     "seed:demo-recipe:remove": "tsx scripts/remove-demo-smart-recipe.ts",
     "seed:flipbook-recipes": "tsx scripts/seed-flipbook-recipes.ts",
     "typecheck": "tsc --noEmit",
+    "check:member-gifts": "tsx scripts/check-member-gifts.ts",
+    "seed:member-gifts-demo": "tsx scripts/seed-member-gifts-demo.ts",
     "set-admin": "tsx scripts/set-admin.ts",
     "confirm-email": "tsx scripts/confirm-user-email.ts",
     "update-category-icons": "tsx scripts/update-category-icons.ts",

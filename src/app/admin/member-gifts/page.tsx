@@ -133,6 +133,12 @@ export default function MemberGiftsDashboardPage() {
                 >
                   健全檢查
                 </Link>
+                <Link
+                  href="/admin/member-gifts/qa"
+                  className={cn(buttonVariants({ variant: "outline" }))}
+                >
+                  驗收清單
+                </Link>
               </>
             ) : null}
             {canEdit ? (

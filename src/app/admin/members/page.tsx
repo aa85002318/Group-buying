@@ -71,6 +71,7 @@ export default function AdminMembersPage() {
     email: "",
     role: "member" as UserRole,
     credit: "0",
+    points: "0",
   });
 
   useEffect(() => {
@@ -106,6 +107,7 @@ export default function AdminMembersPage() {
       email: m.email ?? "",
       role: m.role,
       credit: String(m.store_credit_balance ?? 0),
+      points: String(m.member_points ?? 0),
     });
   };
 
@@ -123,6 +125,7 @@ export default function AdminMembersPage() {
           email: form.email,
           role: form.role,
           store_credit_balance: Number(form.credit),
+          member_points: Number(form.points),
         }),
       });
       const data = await res.json();
@@ -310,6 +313,13 @@ export default function AdminMembersPage() {
               placeholder="購物金餘額"
               value={form.credit}
               onChange={(e) => setForm({ ...form, credit: e.target.value })}
+            />
+            <Input
+              type="number"
+              min={0}
+              placeholder="會員點數（會員禮門檻）"
+              value={form.points}
+              onChange={(e) => setForm({ ...form, points: e.target.value })}
             />
           </div>
           {form.phone ? (

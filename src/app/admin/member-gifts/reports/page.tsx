@@ -42,6 +42,8 @@ export default function MemberGiftReportsPage() {
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [dailyTrend, setDailyTrend] = useState<ChartPoint[]>([]);
   const [byStore, setByStore] = useState<ChartPoint[]>([]);
+  const [failureReasons, setFailureReasons] = useState<ChartPoint[]>([]);
+  const [duplicateScans, setDuplicateScans] = useState(0);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [stores, setStores] = useState<Array<{ id: string; name: string }>>([]);
   const [campaignId, setCampaignId] = useState("");
@@ -64,6 +66,8 @@ export default function MemberGiftReportsPage() {
         setReports(d.reports ?? []);
         setDailyTrend(d.daily_trend ?? []);
         setByStore(d.by_store ?? []);
+        setFailureReasons(d.failure_reasons ?? []);
+        setDuplicateScans(Number(d.duplicate_scans ?? 0));
         setParticipants(d.participants ?? []);
         setStores(d.stores ?? []);
       });
@@ -197,6 +201,22 @@ export default function MemberGiftReportsPage() {
           ) : (
             <AdminBarChart data={byStore} height={160} />
           )}
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-[1fr_220px]">
+        <div className="rounded-2xl border border-[#E7EAF0] bg-white p-4">
+          <h3 className="mb-3 text-sm font-bold text-[#153E73]">核銷失敗原因</h3>
+          {failureReasons.length === 0 ? (
+            <p className="py-10 text-center text-sm text-[#8A94A6]">期間內無失敗紀錄</p>
+          ) : (
+            <AdminBarChart data={failureReasons} height={160} />
+          )}
+        </div>
+        <div className="rounded-2xl border border-[#E7EAF0] bg-white p-4">
+          <h3 className="text-sm font-bold text-[#153E73]">重複掃描</h3>
+          <p className="mt-6 text-3xl font-black text-[#B42318]">{duplicateScans}</p>
+          <p className="mt-2 text-xs text-[#8A94A6]">已兌換券再次掃描／核銷次數</p>
         </div>
       </div>
 

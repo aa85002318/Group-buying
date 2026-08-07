@@ -107,6 +107,7 @@ export interface Profile {
   referrer_user_id: string | null;
   store_id: string | null;
   store_credit_balance?: number;
+  member_points?: number;
   is_active?: boolean;
   admin_notes?: string | null;
   created_at: string;

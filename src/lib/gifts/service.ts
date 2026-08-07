@@ -157,8 +157,15 @@ export async function claimMonthlyGift(opts: {
   };
   designatedStoreId?: string | null;
   giftItemId?: string | null;
+  /** 後台補發：可略過資格／個人上限（仍檢查庫存與活動狀態） */
+  adminOverride?: {
+    reason: string;
+    bypassEligibility?: boolean;
+    bypassMemberLimit?: boolean;
+  };
 }): Promise<{ claim: MemberGiftClaim } | { error: string; code: string }> {
   const admin = createAdminClient();
+  const override = opts.adminOverride;
   const { data: campaign, error: cErr } = await admin
     .from("gift_campaigns")
     .select("*")
@@ -173,22 +180,26 @@ export async function claimMonthlyGift(opts: {
     c.campaign_type !== "birthday_gift" &&
     c.campaign_type !== "new_member_gift" &&
     c.campaign_type !== "event_limited_gift" &&
-    c.campaign_type !== "targeted_member_gift"
+    c.campaign_type !== "targeted_member_gift" &&
+    !(override && c.campaign_type === "store_spend_gift")
   ) {
     return { error: "此活動不可自行領取", code: "wrong_type" };
   }
-  if (c.status !== "published") {
+  if (c.status !== "published" && !override) {
     return { error: "活動未開放", code: "disabled" };
   }
-  if (!isMemberEligibleForCampaign(c, opts.profile)) {
+  if (c.status === "ended" || c.status === "draft") {
+    return { error: "活動狀態不可發券", code: "disabled" };
+  }
+  if (!override?.bypassEligibility && !isMemberEligibleForCampaign(c, opts.profile)) {
     return { error: "不符合兌換資格", code: "ineligible" };
   }
 
   const now = new Date();
-  if (c.claim_start_at && now < new Date(c.claim_start_at)) {
+  if (!override && c.claim_start_at && now < new Date(c.claim_start_at)) {
     return { error: "領取尚未開始", code: "not_started" };
   }
-  if (c.claim_end_at && now > new Date(c.claim_end_at)) {
+  if (!override && c.claim_end_at && now > new Date(c.claim_end_at)) {
     return { error: "領取已結束", code: "expired" };
   }
   if (availableQuantity(c) <= 0 && c.inventory_scope !== "per_store") {
@@ -218,11 +229,23 @@ export async function claimMonthlyGift(opts: {
     .eq("member_id", opts.memberId)
     .neq("status", "cancelled");
 
-  if ((count ?? 0) >= c.per_member_limit) {
+  // 允許重複參加：僅計算「尚可兌換」張數；否則計算所有未作廢領取
+  let limitCount = count ?? 0;
+  if (c.allow_repeat_participation && !override?.bypassMemberLimit) {
+    const { count: availableCount } = await admin
+      .from("member_gift_claims")
+      .select("id", { count: "exact", head: true })
+      .eq("campaign_id", c.id)
+      .eq("member_id", opts.memberId)
+      .eq("status", "available");
+    limitCount = availableCount ?? 0;
+  }
+
+  if (!override?.bypassMemberLimit && limitCount >= c.per_member_limit) {
     return { error: "已達個人領取上限", code: "limit_reached" };
   }
 
-  if (c.per_member_daily_limit) {
+  if (c.per_member_daily_limit && !override?.bypassMemberLimit) {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     const { count: dayCount } = await admin
@@ -392,9 +415,12 @@ export async function claimMonthlyGift(opts: {
     campaign_id: c.id,
     member_id: opts.memberId,
     store_id: designatedStoreId,
-    action: "claim",
+    action: override ? "admin_reissue" : "claim",
     result: "success",
-    meta: itemResult.substituted ? { substituted: true, gift_item_id: giftItemId } : {},
+    meta: {
+      ...(itemResult.substituted ? { substituted: true, gift_item_id: giftItemId } : {}),
+      ...(override ? { reason: override.reason, admin_override: true } : {}),
+    },
   });
 
   try {
