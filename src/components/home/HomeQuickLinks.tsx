@@ -3,7 +3,7 @@ import { BrandIcon, type BrandIconName } from "@/components/brand/BrandIcon";
 
 const LINKS: Array<{ href: string; label: string; icon: BrandIconName }> = [
   { href: "/ai", label: "AI助手", icon: "articles" },
-  { href: "/group-buy", label: "團購", icon: "groupBuy" },
+  { href: "/recipes", label: "食譜", icon: "articles" },
   { href: "/live", label: "直播", icon: "live" },
   { href: "/courses", label: "課程", icon: "courses" },
   { href: "/corporate", label: "企業", icon: "member" },

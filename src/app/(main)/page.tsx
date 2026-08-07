@@ -47,6 +47,10 @@ import {
 } from "@/lib/home/blocks";
 import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
 import { CREAM_ZONE_KEYS, type HomeSectionKey } from "@/lib/home/section-keys";
+import {
+  GROUP_BUY_CONSUMER_VISIBLE,
+  HIDDEN_HOME_GROUP_BUY_KEYS,
+} from "@/lib/features/group-buy-visibility";
 import { mockProducts } from "@/lib/mock-data";
 import type { RecipeSummary } from "@/lib/consumer-hub";
 import type { Article, HomepageBlock, Product, Video } from "@/lib/types/database";
@@ -148,6 +152,9 @@ type HomeDataCtx = {
 function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNode {
   const { key } = block;
   const reactKey = block.id;
+  if (!GROUP_BUY_CONSUMER_VISIBLE && HIDDEN_HOME_GROUP_BUY_KEYS.has(key)) {
+    return null;
+  }
   switch (key) {
     case "hot_searches":
       // Replaced by Quick Entry — never render 熱門搜尋 on homepage
@@ -556,12 +563,16 @@ export default function HomePage() {
     return d.products?.length ? d.products : mockProducts;
   });
 
-  const eventsLoad = useIndependentLoad<GbEvent[]>([], async () => {
-    const r = await fetch("/api/group-buy-events");
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error ?? "團購載入失敗");
-    return d.events ?? [];
-  });
+  const eventsLoad = useIndependentLoad<GbEvent[]>(
+    [],
+    async () => {
+      const r = await fetch("/api/group-buy-events");
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? "團購載入失敗");
+      return d.events ?? [];
+    },
+    GROUP_BUY_CONSUMER_VISIBLE
+  );
 
   const recipesLoad = useIndependentLoad<RecipeSummary[]>([], async () => {
     const r = await fetch("/api/recipes");

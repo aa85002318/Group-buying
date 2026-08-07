@@ -17,18 +17,10 @@ const DEFAULT_SLIDES: HeroSlide[] = [
   {
     id: "shop",
     title: "用心烘焙・幸福分享",
-    subtitle: "嚴選食材 × 團購優惠 × 烘焙知識",
+    subtitle: "嚴選食材 × 商城好物 × 烘焙知識",
     cta: "立即探索",
     href: "/shop",
     tone: "cream",
-  },
-  {
-    id: "group-buy",
-    title: "限時團購開跑",
-    subtitle: "優質原料・人氣好物・即將收單",
-    cta: "看團購",
-    href: "/group-buy",
-    tone: "groupBuy",
   },
   {
     id: "recipes",

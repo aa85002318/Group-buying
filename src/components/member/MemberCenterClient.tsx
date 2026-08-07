@@ -13,8 +13,8 @@ import {
   HelpCircle,
   LogOut,
   MapPin,
-  QrCode,
   Radio,
+  Receipt,
   Settings,
   Shield,
   Store,
@@ -193,14 +193,14 @@ export function MemberCenterClient() {
           href={APP_ROUTES.memberBarcode}
           className="flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-[16px] bg-surface p-3 text-center shadow-card"
         >
-          <QrCode className="h-6 w-6 text-caramel" />
+          <Barcode className="h-6 w-6 text-caramel" />
           <span className="text-sm font-medium text-foreground">會員條碼</span>
         </Link>
         <Link
           href={APP_ROUTES.memberCarrier}
           className="flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-[16px] bg-surface p-3 text-center shadow-card"
         >
-          <Barcode className="h-6 w-6 text-caramel" />
+          <Receipt className="h-6 w-6 text-caramel" />
           <span className="text-sm font-medium text-foreground">發票載具</span>
         </Link>
       </section>
@@ -209,7 +209,7 @@ export function MemberCenterClient() {
       <section>
         <h2 className="mb-1 px-1 text-sm font-medium text-foreground-secondary">我的 App 訂單</h2>
         <p className="mb-2 px-1 text-xs text-foreground-secondary">
-          僅顯示透過 CHIMEIDIY App 建立的商城與團購訂單，不包含門市現場消費紀錄。
+          僅顯示透過 CHIMEIDIY App 建立的商城訂單，不包含門市現場消費紀錄。
         </p>
         <div className="grid grid-cols-4 gap-2">
           {[
@@ -234,7 +234,7 @@ export function MemberCenterClient() {
       <section>
         <h2 className="mb-2 px-1 text-sm font-medium text-foreground-secondary">常用功能</h2>
         <div className="divide-y overflow-hidden rounded-[20px] bg-surface shadow-card">
-          <MenuLink href={APP_ROUTES.memberOrders} icon={QrCode} label="我的 App 訂單" subtitle="商城與團購訂單（不含門市現場消費）" featured />
+          <MenuLink href={APP_ROUTES.memberOrders} icon={Receipt} label="我的 App 訂單" subtitle="商城訂單（不含門市現場消費）" featured />
           <MenuLink href={APP_ROUTES.memberBenefits} icon={Gift} label="會員福利" subtitle="App 活動發放的福利（無點數／等級）" />
           <MenuLink href={APP_ROUTES.memberFavorites} icon={Heart} label="我的收藏" subtitle="商品、食譜與影音收藏" />
           <MenuLink href={APP_ROUTES.memberAddresses} icon={MapPin} label="地址管理" subtitle="管理宅配與聯絡地址" />

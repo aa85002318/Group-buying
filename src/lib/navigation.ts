@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  BookOpen,
   CookingPot,
   Droplets,
   Flame,
@@ -57,11 +58,11 @@ export const HEADER_CATEGORY_LINKS: HeaderCategoryLink[] = [
     },
   },
   {
-    label: "熱門團購",
-    href: "/group-buy",
-    icon: Flame,
+    label: "食譜",
+    href: "/recipes",
+    icon: BookOpen,
     badge: "hot",
-    match: (pathname) => pathname === "/group-buy" || pathname.startsWith("/group-buy/"),
+    match: (pathname) => pathname === "/recipes" || pathname.startsWith("/recipes/"),
   },
   {
     label: "食品",
@@ -124,8 +125,8 @@ export const BOTTOM_NAV_ITEMS: BottomNavItem[] = [
 /** Homepage quick entry cards */
 export const HOME_QUICK_ENTRIES = [
   { href: APP_ROUTES.products, label: "全部商品", description: "瀏覽與搜尋商品", emoji: "🛍️" },
-  { href: "/group-buy", label: "熱門團購", description: "限時團購與預購", emoji: "🔥" },
-  { href: APP_ROUTES.orders, label: "我的團購", description: "查詢訂單與取貨碼", emoji: "📦" },
+  { href: "/recipes", label: "食譜", description: "烘焙食譜與靈感", emoji: "📖" },
+  { href: APP_ROUTES.orders, label: "我的訂單", description: "查詢訂單與取貨碼", emoji: "📦" },
   { href: APP_ROUTES.profile, label: "會員中心", description: "帳號與個人服務", emoji: "👤" },
 ] as const;
 
@@ -180,7 +181,8 @@ export const FOOTER_SECTIONS: { title: string; links: NavLink[] }[] = [
     title: "購物",
     links: [
       { href: APP_ROUTES.products, label: "全部商品" },
-      { href: "/group-buy", label: "熱門團購" },
+      { href: "/shop", label: "商城" },
+      { href: "/recipes", label: "食譜" },
       { href: "/live", label: "直播專區" },
       { href: "/videos", label: "影音專區" },
       { href: "/articles", label: "文章專區" },

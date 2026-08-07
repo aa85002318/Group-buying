@@ -209,7 +209,6 @@ export const SERVICE_HUB_ITEMS: ServiceHubItem[] = [
 export const CONSUMER_SECONDARY_NAV = [
   { href: "/shop", label: "商城" },
   { href: "/recipes", label: "食譜影音" },
-  { href: "/group-buy", label: "團購專區", accent: "groupBuy" as const },
   {
     href: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
     label: "最新消息",
@@ -221,7 +220,7 @@ export const CONSUMER_SECONDARY_NAV = [
   { href: "/ai-tools", label: "AI 助手" },
 ] as const;
 
-/** Mobile bottom nav — 首頁／商城／團購／AI／我的 */
+/** Mobile bottom nav — 首頁／商城／食譜／AI／我的 */
 export const CONSUMER_BOTTOM_NAV = [
   { href: "/", label: "首頁", match: (p: string) => p === "/", accent: "primary" as const },
   {
@@ -234,10 +233,11 @@ export const CONSUMER_BOTTOM_NAV = [
     accent: "primary" as const,
   },
   {
-    href: "/group-buy",
-    label: "團購",
-    match: (p: string) => p.startsWith("/group-buy"),
+    href: "/recipes",
+    label: "食譜",
+    match: (p: string) => p.startsWith("/recipes"),
     accent: "primary" as const,
+    featured: true as const,
   },
   {
     href: "/ai",

@@ -51,7 +51,7 @@ export function SiteFooter() {
             </span>
           </Link>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            精選團購好物，門市取貨方便安心。
+            精選烘焙材料與食譜靈感，門市取貨方便安心。
           </p>
         </div>
 

@@ -27,6 +27,7 @@ import {
   DEFAULT_SIDE_MENU_SECTIONS,
   type SideMenuSection,
 } from "@/lib/site-header";
+import { filterSideMenuSectionsForGroupBuyVisibility } from "@/lib/features/group-buy-visibility";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/config";
 import { OPEN_SIDE_MENU_EVENT } from "@/lib/side-menu-events";
@@ -96,8 +97,10 @@ export function AppHamburgerMenu({ className }: { className?: string }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [sections, setSections] = useState<SideMenuSection[]>(() =>
-    DEFAULT_SIDE_MENU_SECTIONS.filter(
-      (s) => s.id === "services" || s.id === "support" || s.id === "member"
+    filterSideMenuSectionsForGroupBuyVisibility(
+      DEFAULT_SIDE_MENU_SECTIONS.filter(
+        (s) => s.id === "services" || s.id === "support" || s.id === "member"
+      )
     )
   );
 
@@ -120,15 +123,17 @@ export function AppHamburgerMenu({ className }: { className?: string }) {
           | undefined;
         if (Array.isArray(cms) && cms.length > 0) {
           setSections(
-            cms
-              .map((section) => ({
-                ...section,
-                items: (section.items ?? []).filter(
-                  (item) =>
-                    !/store-map|門市地圖/i.test(`${item.href} ${item.label}`)
-                ),
-              }))
-              .filter((section) => (section.items?.length ?? 0) > 0)
+            filterSideMenuSectionsForGroupBuyVisibility(
+              cms
+                .map((section) => ({
+                  ...section,
+                  items: (section.items ?? []).filter(
+                    (item) =>
+                      !/store-map|門市地圖/i.test(`${item.href} ${item.label}`)
+                  ),
+                }))
+                .filter((section) => (section.items?.length ?? 0) > 0)
+            )
           );
         }
       })

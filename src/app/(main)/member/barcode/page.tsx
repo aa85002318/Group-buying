@@ -8,13 +8,21 @@ import { MemberBarcode } from "@/components/profile/MemberBarcode";
 import { Button } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/config";
 import { APP_ROUTES } from "@/lib/site-links";
+import { maskPhone } from "@/lib/services/profileService";
 
 type ProfilePayload = {
   full_name?: string | null;
+  phone?: string | null;
   member_number?: string | null;
   member_code?: string | null;
   updated_at?: string | null;
 };
+
+function normalizeBarcodePhone(phone: string | null | undefined): string {
+  if (!phone) return "";
+  // Keep digits only for CODE128 scanning stability
+  return phone.replace(/\D/g, "");
+}
 
 function MemberBarcodePageInner() {
   const [profile, setProfile] = useState<ProfilePayload | null>(null);
@@ -27,6 +35,7 @@ function MemberBarcodePageInner() {
     if (!isSupabaseConfigured()) {
       setProfile({
         full_name: "示範會員",
+        phone: "0912345678",
         member_number: "CM000001",
         member_code: "CM000001",
         updated_at: new Date().toISOString(),
@@ -64,14 +73,14 @@ function MemberBarcodePageInner() {
     };
   }, []);
 
-  const barcodeValue =
-    profile?.member_number?.trim() || profile?.member_code?.trim() || "";
+  const barcodeValue = normalizeBarcodePhone(profile?.phone);
+  const displayPhone = profile?.phone?.trim() || "";
 
   if (loading) {
     return (
       <div className="space-y-4">
         <div className="h-8 w-40 animate-pulse rounded-lg bg-muted" />
-        <div className="mx-auto h-[280px] w-[260px] animate-pulse rounded-xl bg-muted" />
+        <div className="mx-auto h-[200px] w-full max-w-sm animate-pulse rounded-xl bg-muted" />
       </div>
     );
   }
@@ -90,13 +99,18 @@ function MemberBarcodePageInner() {
   if (!barcodeValue) {
     return (
       <div className="space-y-4 py-8 text-center">
-        <p className="font-medium text-foreground">尚無可用的會員編號</p>
+        <p className="font-medium text-foreground">尚無可用的手機號碼</p>
         <p className="text-sm text-foreground-secondary">
-          無法產生會員條碼。請確認帳號已完成註冊，或聯絡客服協助。
+          無法產生會員條碼。請先於個人資料補齊手機號碼，或聯絡客服協助。
         </p>
-        <Link href={APP_ROUTES.support} className="text-sm text-primary hover:underline">
-          前往客服中心
-        </Link>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link href={APP_ROUTES.memberProfile}>
+            <Button variant="outline">前往個人資料</Button>
+          </Link>
+          <Link href={APP_ROUTES.support} className="text-sm text-primary hover:underline">
+            前往客服中心
+          </Link>
+        </div>
       </div>
     );
   }
@@ -113,14 +127,16 @@ function MemberBarcodePageInner() {
         </Link>
         <div>
           <h1 className="text-xl font-bold text-caramel">會員條碼</h1>
-          <p className="text-sm text-foreground-secondary">門市識別會員身分用</p>
+          <p className="text-sm text-foreground-secondary">門市以手機號碼辨識會員身分</p>
         </div>
       </div>
 
       <div className="rounded-[20px] bg-surface p-5 text-center shadow-card">
         <p className="font-medium text-foreground">{profile?.full_name || "會員"}</p>
-        <p className="mt-1 font-mono text-sm tracking-wide text-caramel">{barcodeValue}</p>
-        <p className="mt-1 text-xs text-foreground-secondary">App 會員編號</p>
+        <p className="mt-1 font-mono text-sm tracking-wide text-caramel">
+          {maskPhone(displayPhone) || displayPhone}
+        </p>
+        <p className="mt-1 text-xs text-foreground-secondary">條碼內容：手機號碼</p>
       </div>
 
       <MemberBarcode value={barcodeValue} title="請出示此條碼" />
@@ -148,9 +164,9 @@ function MemberBarcodePageInner() {
       <section className="rounded-[20px] border border-border bg-peach-soft/40 p-4 text-sm text-foreground-secondary">
         <p className="font-medium text-caramel">使用說明</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>此條碼僅供門市人員辨識 App 會員身分。</li>
+          <li>此為傳統線條條碼（CODE128），內容為您的手機號碼。</li>
+          <li>僅供門市人員掃描辨識 App 會員身分。</li>
           <li>不代表 POS 消費同步、點數累積或會員等級。</li>
-          <li>不包含門市現場消費紀錄或發票交易同步。</li>
           <li>請勿將條碼截圖公開分享。</li>
         </ul>
       </section>
@@ -172,7 +188,7 @@ function MemberBarcodePageInner() {
             </Button>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center px-6 pb-8">
-            <MemberBarcode value={barcodeValue} title="" className="scale-110" />
+            <MemberBarcode value={barcodeValue} title="" height={140} className="w-full max-w-md" />
             <p className="mt-6 text-center text-sm text-foreground-secondary">
               請將螢幕亮度調高後出示給門市人員
             </p>

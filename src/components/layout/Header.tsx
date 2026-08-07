@@ -48,6 +48,11 @@ import {
   type SideMenuIconKey,
   type SideMenuSection,
 } from "@/lib/site-header";
+import {
+  filterConsumerGroupBuyLinks,
+  filterSideMenuSectionsForGroupBuyVisibility,
+  GROUP_BUY_CONSUMER_VISIBLE,
+} from "@/lib/features/group-buy-visibility";
 import type { ProductCategory } from "@/lib/types/database";
 
 function BrandLockup({ className }: { className?: string }) {
@@ -456,7 +461,7 @@ function SearchBar({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         autoFocus={autoFocus}
-        placeholder="搜尋商品、品牌或團購活動"
+        placeholder="搜尋商品、食譜或品牌"
         className="h-10 w-full rounded-full border-[1.5px] border-border bg-background pl-10 pr-10 text-sm text-foreground outline-none transition placeholder:text-foreground-secondary focus:border-primary focus:shadow-brand-ring focus-visible:border-primary focus-visible:shadow-brand-ring"
       />
       <button
@@ -637,7 +642,7 @@ function AuthActions({
         <>
           <IconAction
             href={APP_ROUTES.orders}
-            label="我的團購"
+            label="我的訂單"
             icon={Package}
             className="hidden md:inline-flex"
           />
@@ -647,7 +652,7 @@ function AuthActions({
         <>
           <IconAction
             href={APP_ROUTES.login}
-            label="我的團購"
+            label="我的訂單"
             icon={Package}
             className="hidden md:inline-flex"
           />
@@ -790,12 +795,16 @@ export function Header() {
       .catch(() => {});
   }, []);
 
-  const promoItems = Array.isArray(siteHeaderConfig?.promoItems)
-    ? siteHeaderConfig.promoItems
-    : DEFAULT_HEADER_PROMO_ITEMS;
-  const sideMenuSections = Array.isArray(siteHeaderConfig?.sideMenuSections)
-    ? siteHeaderConfig.sideMenuSections
-    : DEFAULT_SIDE_MENU_SECTIONS;
+  const promoItems = filterConsumerGroupBuyLinks(
+    Array.isArray(siteHeaderConfig?.promoItems)
+      ? siteHeaderConfig.promoItems
+      : DEFAULT_HEADER_PROMO_ITEMS
+  );
+  const sideMenuSections = filterSideMenuSectionsForGroupBuyVisibility(
+    Array.isArray(siteHeaderConfig?.sideMenuSections)
+      ? siteHeaderConfig.sideMenuSections
+      : DEFAULT_SIDE_MENU_SECTIONS
+  );
 
   useEffect(() => {
     const header = headerRef.current;
@@ -856,8 +865,10 @@ export function Header() {
             </div>
           </div>
 
-          {/* Promo strip */}
-          {!isAuthPage && <QuickPromoStrip items={promoItems} />}
+          {/* Promo strip — hidden while group-buy consumer surfaces are off */}
+          {!isAuthPage && GROUP_BUY_CONSUMER_VISIBLE && promoItems.length > 0 ? (
+            <QuickPromoStrip items={promoItems} />
+          ) : null}
         </div>
       </div>
     </header>

@@ -14,7 +14,7 @@ export function BrandHeading({ logoSize = "auth", priority }: BrandHeadingProps)
       textLayout="below"
       align="center"
       priority={priority}
-      title="CHIMEIDIY 團購"
+      title="CHIMEIDIY"
       subtitle="棋美點心屋"
     />
   );
