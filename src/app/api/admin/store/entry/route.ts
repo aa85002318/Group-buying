@@ -125,7 +125,7 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
-  let storeId =
+  const storeId =
     (await resolveOpsStoreId(auth!, (body.store_id as string | undefined) || null)) || null;
   if (!storeId) {
     return NextResponse.json(

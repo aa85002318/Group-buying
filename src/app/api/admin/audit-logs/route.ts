@@ -45,34 +45,40 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient();
 
-  const applyFilters = <T extends { eq: Function; or: Function; gte: Function; lte: Function; in: Function }>(
-    query: T
-  ): T => {
-    let qy = query;
+  type FilterableQuery = {
+    eq: (column: string, value: unknown) => FilterableQuery;
+    or: (filters: string) => FilterableQuery;
+    gte: (column: string, value: string) => FilterableQuery;
+    lte: (column: string, value: string) => FilterableQuery;
+    in: (column: string, values: readonly string[]) => FilterableQuery;
+  };
+
+  const applyFilters = <T extends FilterableQuery>(query: T): T => {
+    let qy: FilterableQuery = query;
     if (entityType) {
-      qy = qy.eq("entity_type", entityType) as T;
+      qy = qy.eq("entity_type", entityType);
     } else if (moduleId && moduleId !== "other") {
       const types = entityTypesForModule(moduleId);
-      if (types?.length) qy = qy.in("entity_type", types) as T;
+      if (types?.length) qy = qy.in("entity_type", types);
     }
-    if (action) qy = qy.eq("action", action) as T;
-    if (from) qy = qy.gte("created_at", `${from}T00:00:00.000Z`) as T;
-    if (to) qy = qy.lte("created_at", `${to}T23:59:59.999Z`) as T;
+    if (action) qy = qy.eq("action", action);
+    if (from) qy = qy.gte("created_at", `${from}T00:00:00.000Z`);
+    if (to) qy = qy.lte("created_at", `${to}T23:59:59.999Z`);
     if (q) {
       const safe = q.replace(/[%_,.()]/g, " ").trim();
       if (safe) {
         qy = qy.or(
           `entity_id.ilike.%${safe}%,action.ilike.%${safe}%,entity_type.ilike.%${safe}%`
-        ) as T;
+        );
       }
     }
-    return qy;
+    return qy as T;
   };
 
   let data: Array<Record<string, unknown>> | null = null;
   let count: number | null = null;
 
-  let query = applyFilters(
+  const query = applyFilters(
     admin
       .from("audit_logs")
       .select(SELECT_WITH_PROFILE, { count: "exact" })

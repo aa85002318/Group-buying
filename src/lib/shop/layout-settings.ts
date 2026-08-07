@@ -80,7 +80,7 @@ export function mergeShopLayoutSettings(input: unknown): ShopLayoutSettings {
     }
   }
 
-  let order: ShopLayoutSectionId[] = [];
+  const order: ShopLayoutSectionId[] = [];
   if (Array.isArray(raw.sectionOrder)) {
     for (const id of raw.sectionOrder) {
       if (isSectionId(id) && id !== "hero" && !order.includes(id)) order.push(id);
