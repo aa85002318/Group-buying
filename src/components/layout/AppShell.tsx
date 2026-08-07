@@ -28,31 +28,39 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
     pathname === "/recipes" || pathname === "/recipes/" || pathname.startsWith("/recipes?");
   const isAiHub =
     pathname === "/ai" || pathname === "/ai/" || pathname.startsWith("/ai?");
+  const isMemberHub = pathname === "/member" || pathname === "/member/";
   const yellowPlane = isHome || isShopHub || isGroupBuyHub || isAiHub;
-  const fullBleedPage = yellowPlane || isRecipesHub;
+  const fullBleedPage = yellowPlane || isRecipesHub || isMemberHub;
   const showChrome = !isMinimalChromePath(pathname);
-  const showSiteFooter = showChrome && !isGroupBuyHub && !isRecipesHub;
+  const showSiteFooter =
+    showChrome && !isGroupBuyHub && !isRecipesHub && !isMemberHub;
 
   return (
     <div
       className={cn(
         "min-h-dvh w-full overflow-x-clip",
-        yellowPlane ? "bg-[#FDE045]" : "bg-background"
+        yellowPlane ? "bg-[#FDE045]" : isMemberHub ? "bg-[#FFFEFA]" : "bg-background"
       )}
     >
       <div
         className={cn(
           "relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip",
-          yellowPlane ? "max-w-none bg-[#FDE045]" : "app-shell bg-background md:shadow-lift"
+          yellowPlane
+            ? "max-w-none bg-[#FDE045]"
+            : isMemberHub
+              ? "max-w-none bg-[#FFFEFA]"
+              : "app-shell bg-background md:shadow-lift"
         )}
       >
-        {/* Homepage / shop / group-buy / AI render their own yellow-plane headers. */}
-        {!yellowPlane && !isRecipesHub ? <AppHeader /> : null}
+        {/* Homepage / shop / group-buy / AI / member hub render their own headers. */}
+        {!yellowPlane && !isRecipesHub && !isMemberHub ? <AppHeader /> : null}
         <main
           className={cn(
             "page-enter min-w-0 flex-1 overflow-x-clip",
             showChrome && !fullBleedPage && "site-main",
-            "pb-[calc(112px+env(safe-area-inset-bottom,0px))] md:pb-0"
+            isMemberHub
+              ? "pb-0 md:pb-0"
+              : "pb-[calc(112px+env(safe-area-inset-bottom,0px))] md:pb-0"
           )}
         >
           {showChrome && !fullBleedPage ? (

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "CHIMEIDIY 門市會員中心",
-  description: "會員條碼、發票載具、訂單與收藏。線上與門市會員資料不自動合併。",
+  title: "CHIMEIDIY 我的",
+  description: "數位會員卡、訂單、會員禮與會員日常服務",
 };
 
 export default function MemberLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <div className="bg-[#FFFEFA]">{children}</div>;
 }

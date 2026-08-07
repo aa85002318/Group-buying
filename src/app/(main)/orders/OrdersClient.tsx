@@ -17,12 +17,15 @@ import type { Order, OrderPayment, OrderStatus, Shipment } from "@/lib/types/dat
 
 const FILTER_MAP: Record<string, OrderStatus[] | null> = {
   awaiting: ["awaiting_payment", "payment_reported"],
-  pickup: ["payment_confirmed", "preparing", "ready_for_pickup"],
+  shipping: ["payment_confirmed", "preparing"],
+  /** Legacy: includes shipping + pickup; prefer shipping / pickup separately */
+  pickup: ["ready_for_pickup"],
   completed: ["completed"],
 };
 
 const FILTER_LABELS: Record<string, string> = {
   awaiting: "待付款",
+  shipping: "待出貨",
   pickup: "待取貨",
   completed: "已完成",
 };
