@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   if (error) return error;
 
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ items: [], todayCount: 0 });
+    return NextResponse.json({ items: [], todayCount: 0, stores: [] });
   }
 
   const { searchParams } = new URL(request.url);
@@ -30,12 +30,20 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient();
   const storeId = await resolveStoreId(admin, storeIdParam);
-  if (!storeId) return NextResponse.json({ items: [], todayCount: 0 });
+  if (!storeId) return NextResponse.json({ items: [], todayCount: 0, stores: [] });
+
+  const storesRes = await admin
+    .from("stores")
+    .select("id, name, is_active, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name");
+  const stores = (storesRes.data ?? []).map((s) => ({ id: s.id as string, name: s.name as string }));
 
   let query = admin
     .from("store_customer_requests")
     .select(
-      "*, products(id, name, sku, barcode, supplier_name, price, unit, brands(name)), suppliers(id, name)"
+      "*, products(id, name, sku, barcode, supplier_name, price, unit, brands(name)), suppliers(id, name), pickup_store:pickup_store_id(id, name)"
     )
     .eq("store_id", storeId)
     .gte("created_at", `${day}T00:00:00`)
@@ -46,7 +54,21 @@ export async function GET(request: Request) {
   if (type === "order" || type === "price_inquiry") query = query.eq("request_type", type);
   if (status) query = query.eq("status", status);
 
-  const { data, error: fetchError } = await query;
+  let { data, error: fetchError } = await query;
+  if (fetchError && /pickup_store/i.test(fetchError.message)) {
+    const fallback = await admin
+      .from("store_customer_requests")
+      .select(
+        "*, products(id, name, sku, barcode, supplier_name, price, unit, brands(name)), suppliers(id, name)"
+      )
+      .eq("store_id", storeId)
+      .gte("created_at", `${day}T00:00:00`)
+      .lte("created_at", `${day}T23:59:59.999`)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    data = fallback.data;
+    fetchError = fallback.error;
+  }
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
 
   return NextResponse.json({
@@ -54,6 +76,7 @@ export async function GET(request: Request) {
     todayCount: (data ?? []).length,
     store_id: storeId,
     date: day,
+    stores,
   });
 }
 
@@ -137,7 +160,7 @@ export async function POST(request: Request) {
         ? stockSnapshot > 0
         : null;
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     store_id: storeId,
     request_type: requestType,
     customer_name: customerName,
@@ -153,6 +176,10 @@ export async function POST(request: Request) {
     expected_arrival_date:
       typeof body.expected_arrival_date === "string" && body.expected_arrival_date
         ? body.expected_arrival_date
+        : null,
+    pickup_store_id:
+      typeof body.pickup_store_id === "string" && body.pickup_store_id
+        ? body.pickup_store_id
         : null,
     inquiry_body:
       typeof body.inquiry_body === "string" ? body.inquiry_body.trim() || null : null,
@@ -172,14 +199,26 @@ export async function POST(request: Request) {
       null,
   };
 
-  const { data, error: insertError } = await admin
+  let insertResult = await admin
     .from("store_customer_requests")
     .insert(payload)
     .select(
-      "*, products(id, name, sku, barcode, supplier_name, price, unit, brands(name)), suppliers(id, name)"
+      "*, products(id, name, sku, barcode, supplier_name, price, unit, brands(name)), suppliers(id, name), pickup_store:pickup_store_id(id, name)"
     )
     .single();
 
+  if (insertResult.error && /pickup_store/i.test(insertResult.error.message)) {
+    delete payload.pickup_store_id;
+    insertResult = await admin
+      .from("store_customer_requests")
+      .insert(payload)
+      .select(
+        "*, products(id, name, sku, barcode, supplier_name, price, unit, brands(name)), suppliers(id, name)"
+      )
+      .single();
+  }
+
+  const { data, error: insertError } = insertResult;
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
   await logAudit(
     auth!.profile.id,
@@ -229,36 +268,50 @@ export async function PATCH(request: Request) {
     "inquiry_body",
     "quantity",
     "expected_arrival_date",
+    "pickup_store_id",
   ]) {
     if (body[key] !== undefined) updates[key] = body[key];
   }
 
+  // Keep track flags in sync when advancing pipeline statuses
+  if (updates.status === "notified") updates.track_notified = true;
+  if (updates.status === "done") {
+    updates.track_done = true;
+    updates.track_notified = true;
+  }
   if (updates.track_done === true && updates.status === undefined) {
     updates.status = "done";
   }
-  if (updates.track_paid === true && updates.status === undefined) {
-    updates.status = "paid";
-  }
   if (updates.track_notified === true && updates.status === undefined) {
     updates.status = "notified";
-  }
-  if (updates.track_picked_up === true && updates.status === undefined) {
-    updates.status = "picked_up";
   }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "沒有可更新的欄位" }, { status: 400 });
   }
 
-  const { data, error: updateError } = await admin
+  let updateResult = await admin
     .from("store_customer_requests")
     .update(updates)
     .eq("id", id)
     .select(
-      "*, products(id, name, sku, barcode, supplier_name, price, unit, brands(name)), suppliers(id, name)"
+      "*, products(id, name, sku, barcode, supplier_name, price, unit, brands(name)), suppliers(id, name), pickup_store:pickup_store_id(id, name)"
     )
     .single();
 
+  if (updateResult.error && /pickup_store/i.test(updateResult.error.message)) {
+    delete updates.pickup_store_id;
+    updateResult = await admin
+      .from("store_customer_requests")
+      .update(updates)
+      .eq("id", id)
+      .select(
+        "*, products(id, name, sku, barcode, supplier_name, price, unit, brands(name)), suppliers(id, name)"
+      )
+      .single();
+  }
+
+  const { data, error: updateError } = updateResult;
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
   await logAudit(
     auth!.profile.id,

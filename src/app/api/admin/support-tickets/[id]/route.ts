@@ -5,7 +5,7 @@ import { mockStore } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error, auth } = await requireRole(["admin", "store_staff"]);
+  const { error, auth } = await requireRole(["admin", "customer_service"]);
   if (error) return error;
   const { id } = await params;
   const body = await request.json();

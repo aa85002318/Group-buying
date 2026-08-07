@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
@@ -18,6 +18,12 @@ import {
   SHOP_BRAND_YELLOW,
   type ShopPageSettings,
 } from "@/lib/shop/page-settings";
+import {
+  DEFAULT_SHOP_LAYOUT,
+  mergeShopLayoutSettings,
+  type ShopLayoutSectionId,
+  type ShopLayoutSettings,
+} from "@/lib/shop/layout-settings";
 
 /** Older CMS yellows → unify to homepage hero yellow (#FDE045). */
 const LEGACY_SHOP_YELLOWS = new Set([
@@ -36,21 +42,59 @@ function resolvePlaneYellow(settings: ShopPageSettings) {
   return header;
 }
 
+function renderSection(id: ShopLayoutSectionId) {
+  switch (id) {
+    case "categories":
+      return <ShopMainCategoryMenu key={id} />;
+    case "features":
+      return <ShopFeatureBlocks key={id} />;
+    case "promo":
+      return <ShopPromoCarousel key={id} />;
+    case "popular":
+      return <PopularProducts key={id} />;
+    case "new":
+      return <ShopNewProducts key={id} />;
+    case "inspiration":
+      return (
+        <Suspense key={id} fallback={null}>
+          <ShopInspirationWall />
+        </Suspense>
+      );
+    case "ai-assistant":
+      return <ShopAiRecipeAssistant key={id} />;
+    case "info-banners":
+      return (
+        <div key={id} className="contents">
+          <ShopOrderingInfo />
+          <ShopCorporateInquiry />
+        </div>
+      );
+    default:
+      return null;
+  }
+}
+
 /**
  * Shop hub layout — from search bar to footer, every major block is 20px apart.
+ * Section order / visibility come from CMS layout (draft preview via ?preview=draft).
  */
 export function ShopHubClient() {
-  const [pageSettings, setPageSettings] = useState<ShopPageSettings>(
-    DEFAULT_SHOP_PAGE_SETTINGS
-  );
+  const [layout, setLayout] = useState<ShopLayoutSettings>(DEFAULT_SHOP_LAYOUT);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/shop/page-settings", { cache: "no-store" })
+    const previewDraft =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("preview") === "draft";
+    const url = previewDraft
+      ? "/api/shop/layout?preview=draft"
+      : "/api/shop/layout";
+
+    fetch(url, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         if (cancelled || !d.settings) return;
-        setPageSettings(d.settings as ShopPageSettings);
+        setLayout(mergeShopLayoutSettings(d.settings));
       })
       .catch(() => {});
     return () => {
@@ -58,6 +102,7 @@ export function ShopHubClient() {
     };
   }, []);
 
+  const pageSettings = layout.appearance ?? DEFAULT_SHOP_PAGE_SETTINGS;
   const planeYellow = resolvePlaneYellow(pageSettings);
   const unifiedSettings: ShopPageSettings = {
     ...pageSettings,
@@ -66,6 +111,14 @@ export function ShopHubClient() {
     header_border_color: null,
   };
 
+  const mainSections = useMemo(() => {
+    return layout.sectionOrder.filter(
+      (id) => id !== "hero" && layout.sections[id] !== false
+    );
+  }, [layout]);
+
+  const showHero = layout.sections.hero !== false;
+
   return (
     <div className="shop-hub space-y-0 bg-white">
       <div
@@ -73,22 +126,11 @@ export function ShopHubClient() {
         style={{ backgroundColor: planeYellow }}
       >
         <ShopHeader settings={unifiedSettings} title="商城" />
-        <ShopHeroBanner backgroundColor={planeYellow} />
+        {showHero ? <ShopHeroBanner backgroundColor={planeYellow} /> : null}
       </div>
 
-      {/* Search → footer: every major block spaced 20px apart */}
       <main className="shop-hub-main flex flex-col gap-[20px] pb-[20px]">
-        <ShopMainCategoryMenu />
-        <ShopFeatureBlocks />
-        <ShopPromoCarousel />
-        <PopularProducts />
-        <ShopNewProducts />
-        <Suspense fallback={null}>
-          <ShopInspirationWall />
-        </Suspense>
-        <ShopAiRecipeAssistant />
-        <ShopOrderingInfo />
-        <ShopCorporateInquiry />
+        {mainSections.map((id) => renderSection(id))}
 
         <div className="shop-hub-body mx-auto w-full max-w-7xl px-4 md:px-6">
           <Link

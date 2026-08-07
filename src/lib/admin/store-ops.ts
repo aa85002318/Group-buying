@@ -20,19 +20,21 @@ export const STORE_RESOURCE_TABLE: Record<StoreResource, string> = {
 };
 
 export const STORE_QUICK_ACTIONS = [
-  { href: "/admin/store/pos", label: "現場客戶服務", icon: "pos" },
-  { href: "/admin/orders", label: "App 訂單", icon: "orders" },
-  { href: "/admin/pickup", label: "取貨", icon: "pickup" },
-  { href: "/admin/store/entry?type=issue_return", label: "異常／退貨", icon: "issue" },
+  { href: "/admin/store/pos?type=order", label: "商品訂購", icon: "pos" },
+  { href: "/admin/store/pos?type=price_inquiry", label: "價格詢問", icon: "orders" },
+  { href: "/admin/store/demand?type=restock", label: "分店需求", icon: "stock" },
+  { href: "/admin/store/entry?type=issue", label: "商品異常", icon: "issue" },
   { href: "/admin/store/entry?type=disposal", label: "商品報廢", icon: "disposal" },
+  { href: "/admin/store/entry?type=return", label: "商品退貨", icon: "issue" },
   { href: "/admin/store/entry?type=repair", label: "商品報修", icon: "repair" },
-  { href: "/admin/store/demand", label: "缺貨／叫貨", icon: "stock" },
+  { href: "/admin/store#messages", label: "工作留言", icon: "pickup" },
 ] as const;
 
 /** Phase B: field entry types — shared form at /admin/store/entry */
 export const STORE_QUICK_ENTRY_TYPES = [
-  { id: "issue_return", label: "異常／退貨", href: "/admin/store/entry?type=issue_return" },
+  { id: "issue", label: "商品異常", href: "/admin/store/entry?type=issue" },
   { id: "disposal", label: "商品報廢", href: "/admin/store/entry?type=disposal" },
+  { id: "return", label: "商品退貨", href: "/admin/store/entry?type=return" },
   { id: "repair", label: "商品報修", href: "/admin/store/entry?type=repair" },
   { id: "special", label: "客人特殊需求", href: "/admin/store/entry?type=special" },
   { id: "message", label: "留言", href: "/admin/store/entry?type=message" },

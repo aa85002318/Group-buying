@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Bell,
   ChevronRight,
   LogOut,
   Search,
@@ -14,6 +13,7 @@ import { ROLE_LABELS } from "@/lib/utils";
 import { APP_ROUTES } from "@/lib/site-links";
 import { useAdminShell } from "@/components/admin/AdminShell";
 import { AdminMobileMenuButton } from "@/components/layout/AdminSidebar";
+import { StoreUnreadBell } from "@/components/admin/StoreUnreadBell";
 import {
   ADMIN_NAV_GROUPS,
   isAdminNavLinkItem,
@@ -104,14 +104,7 @@ export function AdminTopBar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
-          <Link
-            href="/admin/notifications"
-            className="admin-icon-btn"
-            aria-label="通知"
-            title="通知管理"
-          >
-            <Bell className="h-4 w-4" aria-hidden />
-          </Link>
+          <StoreUnreadBell />
           <Link
             href="/admin/products"
             className="admin-icon-btn"

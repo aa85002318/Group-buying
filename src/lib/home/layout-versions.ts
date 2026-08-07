@@ -291,17 +291,32 @@ export async function restoreVersion(
   return restored;
 }
 
-/** Auto-publish due scheduled layouts (call from public CMS GET). */
+/** Auto-publish due scheduled layouts without wiping the working draft. */
 export async function publishDueScheduled(): Promise<boolean> {
   const scheduled = await getScheduled();
   if (!scheduled?.scheduled_at) return false;
   if (new Date(scheduled.scheduled_at) > new Date()) return false;
 
-  await writeSetting(DRAFT_KEY, { ...scheduled, status: "draft" }, scheduled.updated_by);
-  await publishDraft({
-    label: scheduled.label || undefined,
+  await applyBlocksToLive(scheduled.blocks_snapshot);
+
+  const published: LayoutVersionMeta = {
+    ...scheduled,
+    id: makeId(),
+    status: "published",
+    label: scheduled.label || `排程發布 v${scheduled.version_number}`,
     note: scheduled.note || "排程自動發布",
-    publishedBy: scheduled.updated_by,
-  });
+    published_at: nowIso(),
+    published_by: scheduled.updated_by,
+    updated_at: nowIso(),
+    scheduled_at: null,
+  };
+
+  const history = (await readSetting<LayoutVersionMeta[]>(HISTORY_KEY)) ?? [];
+  const archivedHistory = history.map((h) =>
+    h.status === "published" ? { ...h, status: "archived" as const } : h
+  );
+  const nextHistory = [published, ...archivedHistory].slice(0, MAX_HISTORY);
+  await writeSetting(HISTORY_KEY, nextHistory, scheduled.updated_by);
+  await writeSetting(SCHEDULED_KEY, null, scheduled.updated_by);
   return true;
 }

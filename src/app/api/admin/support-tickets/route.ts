@@ -5,7 +5,7 @@ import { mockStore } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
-  const { error } = await requireRole(["admin", "store_staff"]);
+  const { error } = await requireRole(["admin", "customer_service"]);
   if (error) return error;
 
   const { searchParams } = new URL(request.url);

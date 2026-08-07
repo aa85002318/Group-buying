@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ImagePlus, Trash2, Upload } from "lucide-react";
+import { FolderOpen, ImagePlus, Trash2, Upload } from "lucide-react";
+import { MediaLibraryPicker } from "@/components/admin/media/MediaLibraryPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,8 @@ type Props = {
   className?: string;
   deviceLabel?: "桌面版" | "手機版" | string;
   enforceMaxKb?: boolean;
+  /** Show “從素材庫選擇” (default true) */
+  allowLibrary?: boolean;
 };
 
 /**
@@ -42,11 +45,13 @@ export function CmsImageField({
   className,
   deviceLabel,
   enforceMaxKb = false,
+  allowLibrary = true,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warn, setWarn] = useState<string | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const maxKb = spec.maxKb ?? 500;
   const formats = spec.formats ?? "JPG、PNG、WebP";
@@ -67,6 +72,8 @@ export function CmsImageField({
       formData.append("file", file);
       formData.append("bucket", bucket);
       formData.append("folder", uploadFolder);
+      formData.append("register_library", "1");
+      if (alt) formData.append("alt_text", alt);
       const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) {
@@ -74,7 +81,6 @@ export function CmsImageField({
         return;
       }
       onChange(data.url ?? null);
-      // soft dimension check via Image
       const img = new window.Image();
       img.onload = () => {
         if (img.naturalWidth < spec.width * 0.7 || img.naturalHeight < spec.height * 0.7) {
@@ -103,7 +109,19 @@ export function CmsImageField({
             建議尺寸 {spec.width}×{spec.height} px（{spec.ratioLabel}）· {formats} · {maxKb}KB 以下
           </p>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
+          {allowLibrary ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={uploading}
+              onClick={() => setLibraryOpen(true)}
+            >
+              <FolderOpen className="mr-1 h-3.5 w-3.5" />
+              素材庫
+            </Button>
+          ) : null}
           <Button
             type="button"
             size="sm"
@@ -171,6 +189,20 @@ export function CmsImageField({
       {warn ? <p className="text-[11px] text-amber-700">{warn}</p> : null}
       {error ? <p className="text-[11px] text-danger">{error}</p> : null}
       {uploading ? <p className="text-[11px] text-muted-foreground">上傳中…</p> : null}
+
+      {allowLibrary ? (
+        <MediaLibraryPicker
+          open={libraryOpen}
+          onClose={() => setLibraryOpen(false)}
+          folder={uploadFolder}
+          onSelect={(asset) => {
+            onChange(asset.file_url);
+            if (onAltChange && asset.alt_text) onAltChange(asset.alt_text);
+            setWarn(null);
+            setError(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -9,6 +9,8 @@ import {
   CmsSettingsPanel,
   CmsStudioHeader,
   CmsStudioShell,
+  CmsVersionPublishBar,
+  CmsWorkflowSteps,
   type CmsDevice,
   type CmsSaveStatus,
 } from "@/components/admin/cms-studio";
@@ -66,9 +68,11 @@ export function GroupBuyCmsStudio() {
       ? "error"
       : dirty
         ? "dirty"
-        : message
+        : message?.includes("上線")
           ? "published"
-          : "idle";
+          : message
+            ? "saved"
+            : "idle";
 
   const load = useCallback(() => {
     setLoading(true);
@@ -120,7 +124,7 @@ export function GroupBuyCmsStudio() {
       const next = mergeGroupBuyPageSettings(data.settings);
       setSettings(next);
       setSavedSnapshot(next);
-      setMessage(data.message ?? "團購頁面設定已更新");
+      setMessage(data.message ?? "草稿已儲存（尚未上線）");
       setPreviewKey((k) => k + 1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "儲存失敗");
@@ -147,56 +151,81 @@ export function GroupBuyCmsStudio() {
       mobileTab={mobileTab}
       onMobileTabChange={setMobileTab}
       header={
-        <CmsStudioHeader
-          title="團購頁 CMS"
-          description="控制前台 /group-buy 區塊與顯示。活動、商品、訂單、分潤仍在「團購管理」。"
-          status={saveStatus}
-          actions={
-            <>
-              <Link
-                href="/admin/group-buy"
-                className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-              >
-                <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-                團購活動
-              </Link>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setSettings(savedSnapshot);
-                  setError(null);
-                  setMessage(null);
-                }}
-              >
-                還原
-              </Button>
-              <Button
-                size="sm"
-                className="border-[#FFE149] bg-[#FFE149] font-bold text-[#153E73] hover:bg-[#FFE149]/90"
-                disabled={saving}
-                onClick={() => void save()}
-              >
-                <Save className="mr-1 h-3.5 w-3.5" />
-                發布
-              </Button>
-            </>
-          }
-          notice={
-            <>
-              {message ? (
-                <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                  {message}
-                </p>
-              ) : null}
-              {error ? (
-                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {error}
-                </p>
-              ) : null}
-            </>
-          }
-        />
+        <div className="space-y-3">
+          <CmsStudioHeader
+            title="團購頁 CMS"
+            description="變更先存草稿，確認預覽後再發布上線。活動／訂單／分潤仍在「團購管理」。"
+            status={saveStatus}
+            actions={
+              <>
+                <Link
+                  href="/admin/group-buy"
+                  className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+                >
+                  <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+                  團購活動
+                </Link>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSettings(savedSnapshot);
+                    setError(null);
+                    setMessage(null);
+                  }}
+                >
+                  捨棄變更
+                </Button>
+                <Button
+                  size="sm"
+                  className="border-[#FFE149] bg-[#FFE149] font-bold text-[#153E73] hover:bg-[#FFE149]/90"
+                  disabled={saving || !dirty}
+                  onClick={() => void save()}
+                >
+                  <Save className="mr-1 h-3.5 w-3.5" />
+                  儲存草稿
+                </Button>
+              </>
+            }
+            notice={
+              <>
+                <CmsWorkflowSteps
+                  active={
+                    mobileTab === "preview"
+                      ? "preview"
+                      : mobileTab === "edit"
+                        ? "edit"
+                        : "list"
+                  }
+                />
+                {message ? (
+                  <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                    {message}
+                  </p>
+                ) : null}
+                {error ? (
+                  <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {error}
+                  </p>
+                ) : null}
+              </>
+            }
+          />
+          <CmsVersionPublishBar
+            apiPath="/api/admin/group-buy/page-settings"
+            title="團購頁草稿與發布"
+            description="儲存草稿不會改前台；按「發布上線」後訪客才會看到新設定。"
+            previewHref={`/group-buy?preview=draft&v=${previewKey}`}
+            publishConfirm="確定將團購頁草稿發布到線上？"
+            publishDisabled={dirty}
+            publishDisabledHint="尚有未儲存變更，請先按「儲存草稿」再發布。"
+            onChanged={() => {
+              load();
+              setPreviewKey((k) => k + 1);
+              setMessage("已發布到線上");
+            }}
+          />
+        </div>
       }
       sectionList={
         <CmsSectionList
@@ -496,12 +525,12 @@ export function GroupBuyCmsStudio() {
       }
       preview={
         <CmsLivePreview
-          title="團購頁預覽"
-          src={`/group-buy?v=${previewKey}`}
+          title="團購頁草稿預覽"
+          src={`/group-buy?preview=draft&v=${previewKey}`}
           reloadKey={previewKey}
           device={previewDevice}
           onDeviceChange={setPreviewDevice}
-          fullPreviewHref="/group-buy"
+          fullPreviewHref={`/group-buy?preview=draft&v=${previewKey}`}
           highlightLabel={
             selectedId === GLOBAL_ID
               ? "全域設定"
@@ -513,18 +542,18 @@ export function GroupBuyCmsStudio() {
         <div className="flex flex-wrap gap-2">
           <Button
             className="flex-1 border-[#FFE149] bg-[#FFE149] font-bold text-[#153E73] hover:bg-[#FFE149]/90 lg:flex-none"
-            disabled={saving}
+            disabled={saving || !dirty}
             onClick={() => void save()}
           >
             <Save className="mr-1 h-3.5 w-3.5" />
-            發布
+            儲存草稿
           </Button>
           <Button
             variant="outline"
             className="flex-1 lg:flex-none"
             onClick={() => setMobileTab("preview")}
           >
-            預覽
+            預覽草稿
           </Button>
         </div>
       }

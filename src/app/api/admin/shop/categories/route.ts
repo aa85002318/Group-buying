@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
 import {
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 /** GET /api/admin/shop/categories — shop main categories for CMS */
 export async function GET() {
-  const { error: authError } = await requireAdmin();
+  const { error: authError } = await requireContentAdmin();
   if (authError) return authError;
 
   if (!isSupabaseConfigured()) {
@@ -33,7 +33,7 @@ export async function GET() {
 
 /** POST /api/admin/shop/categories */
 export async function POST(request: Request) {
-  const { error: authError, auth } = await requireAdmin();
+  const { error: authError, auth } = await requireContentAdmin();
   if (authError) return authError;
 
   const body = await request.json();

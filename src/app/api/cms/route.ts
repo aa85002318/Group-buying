@@ -3,7 +3,7 @@ import { isSupabaseConfigured } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { CmsBanner } from "@/lib/types/database";
-import { publishDueScheduled } from "@/lib/home/layout-versions";
+import { publishAllDueCmsSchedules } from "@/lib/cms/publish-due";
 
 function isBannerLive(b: CmsBanner, now: Date): boolean {
   if (!b.is_active) return false;
@@ -33,10 +33,10 @@ export async function GET(request: Request) {
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  // Auto-apply due scheduled layouts before serving live blocks
+  // Auto-apply due scheduled CMS (home + group-buy) before serving live
   if (preview !== "draft") {
     try {
-      await publishDueScheduled();
+      await publishAllDueCmsSchedules();
     } catch {
       // non-fatal
     }

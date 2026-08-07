@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -278,7 +279,7 @@ export default function AdminShopCategoriesPage() {
         description="控制 /shop 搜尋欄下方圓形主分類（最多 8 個＋系統「全部分類」）。可更換文字與 logo 圖；素材建議透明 PNG／WebP 256×256。"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Link href="/admin/shop?section=categories" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               返回商城 CMS
             </Link>
             <Link
@@ -293,6 +294,8 @@ export default function AdminShopCategoriesPage() {
           </div>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="categories" />
 
       <label className="inline-flex items-center gap-2 text-sm text-coffee">
         <input

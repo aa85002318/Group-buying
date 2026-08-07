@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -227,7 +228,7 @@ export default function AdminShopHeroBannersPage() {
         description="比照首頁：滿寬、高度隨圖片比例、兩側不裁切。Header 與 Hero 分開，不疊圖。"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Link href="/admin/shop?section=hero" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               返回商城 CMS
             </Link>
             <Button size="sm" onClick={openCreate}>
@@ -236,6 +237,8 @@ export default function AdminShopHeroBannersPage() {
           </div>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="hero" />
 
       {showForm ? (
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">

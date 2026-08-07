@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Minus, Plus, Search } from "lucide-react";
+import { ArrowRight, CheckCircle2, Minus, Plus, Search } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   AdminBarcodeInput,
@@ -11,11 +11,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  nextStatusInPipeline,
   requestStatusLabel,
   requestTypeLabel,
+  statusPipelineForType,
+  STORE_ASSIGNEE_OPTIONS,
   STORE_CUSTOMER_SOURCES,
-  STORE_CUSTOMER_STATUSES,
   type StoreCustomerRequest,
+  type StoreCustomerRequestStatus,
   type StoreCustomerRequestType,
   type StoreCustomerSource,
 } from "@/lib/admin/store-pos-lite";
@@ -26,12 +29,16 @@ type ProductHit = BarcodeProduct & {
   price?: number | null;
 };
 
+type StoreOption = { id: string; name: string };
 type Mode = "home" | "form";
+type ListFilter = "all" | StoreCustomerRequestType;
 
-export default function StorePosLitePage() {
+export default function StoreCustomerServicePage() {
   const [mode, setMode] = useState<Mode>("home");
   const [tab, setTab] = useState<StoreCustomerRequestType>("order");
+  const [listFilter, setListFilter] = useState<ListFilter>("all");
   const [items, setItems] = useState<StoreCustomerRequest[]>([]);
+  const [stores, setStores] = useState<StoreOption[]>([]);
   const [todayCount, setTodayCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -47,8 +54,10 @@ export default function StorePosLitePage() {
   const [note, setNote] = useState("");
   const [inquiryBody, setInquiryBody] = useState("");
   const [needsReply, setNeedsReply] = useState(true);
-  const [assignedToName, setAssignedToName] = useState("業務");
+  const [assignedToName, setAssignedToName] = useState("店長");
   const [expectedArrival, setExpectedArrival] = useState("");
+  const [followUpAt, setFollowUpAt] = useState("");
+  const [pickupStoreId, setPickupStoreId] = useState("");
   const [internalNote, setInternalNote] = useState("");
 
   const load = useCallback(async () => {
@@ -59,9 +68,11 @@ export default function StorePosLitePage() {
       if (!res.ok) throw new Error(data.error ?? "載入失敗");
       setItems(data.items ?? []);
       setTodayCount(data.todayCount ?? (data.items ?? []).length);
+      setStores((data.stores ?? []) as StoreOption[]);
     } catch {
       setItems([]);
       setTodayCount(0);
+      setStores([]);
     } finally {
       setLoading(false);
     }
@@ -76,6 +87,7 @@ export default function StorePosLitePage() {
     const t = params.get("type");
     if (t === "order" || t === "price_inquiry") {
       setTab(t);
+      setListFilter(t);
       setMode("form");
     }
     if (params.get("new") === "1") setMode("form");
@@ -86,7 +98,7 @@ export default function StorePosLitePage() {
       setProductHits([]);
       return;
     }
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       void (async () => {
         const res = await fetch(
           `/api/admin/store/products?q=${encodeURIComponent(productQ.trim())}&limit=12`
@@ -95,7 +107,7 @@ export default function StorePosLitePage() {
         setProductHits((data.products ?? []) as ProductHit[]);
       })();
     }, 250);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [productQ]);
 
   const stockQty = useMemo(() => {
@@ -106,6 +118,16 @@ export default function StorePosLitePage() {
   }, [product]);
 
   const inStock = stockQty != null ? stockQty > 0 : null;
+
+  const filteredItems = useMemo(() => {
+    if (listFilter === "all") return items;
+    return items.filter((item) => item.request_type === listFilter);
+  }, [items, listFilter]);
+
+  const pendingCount = useMemo(
+    () => items.filter((item) => item.status === "pending").length,
+    [items]
+  );
 
   const resetForm = () => {
     setCustomerName("");
@@ -118,8 +140,10 @@ export default function StorePosLitePage() {
     setNote("");
     setInquiryBody("");
     setNeedsReply(true);
-    setAssignedToName("業務");
+    setAssignedToName("店長");
     setExpectedArrival("");
+    setFollowUpAt("");
+    setPickupStoreId("");
     setInternalNote("");
     setDoneMsg(null);
   };
@@ -136,7 +160,11 @@ export default function StorePosLitePage() {
       return;
     }
     if (tab === "order" && !product) {
-      alert("請選擇商品（可掃條碼或搜尋）");
+      alert("請選擇訂購商品（可掃條碼或搜尋）");
+      return;
+    }
+    if (tab === "price_inquiry" && !inquiryBody.trim() && !product) {
+      alert("請填寫詢問內容，或選擇要詢價的商品");
       return;
     }
     setSaving(true);
@@ -153,26 +181,28 @@ export default function StorePosLitePage() {
           product_id: product?.id ?? null,
           barcode: product?.barcode ?? null,
           vendor_id: product?.supplier_id ?? null,
-          quantity: tab === "order" ? qty : null,
+          quantity: qty,
           unit_price: product?.price ?? null,
           stock_snapshot: stockQty,
           in_stock: inStock,
-          expected_arrival_date: expectedArrival || null,
+          expected_arrival_date: tab === "order" ? expectedArrival || null : null,
+          pickup_store_id: tab === "order" ? pickupStoreId || null : null,
           inquiry_body: tab === "price_inquiry" ? inquiryBody : null,
           needs_reply: tab === "price_inquiry" ? needsReply : false,
           note,
           internal_note: internalNote || null,
-          assigned_to_name: tab === "price_inquiry" ? assignedToName : null,
+          assigned_to_name: assignedToName === "未指定" ? null : assignedToName,
+          follow_up_at: tab === "price_inquiry" ? followUpAt || null : null,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "建立失敗");
-      setDoneMsg(data.message ?? "已建立");
+      setDoneMsg(data.message ?? "已建立，狀態：待確認");
       await load();
       setTimeout(() => {
         resetForm();
         setMode("home");
-      }, 800);
+      }, 700);
     } catch (e) {
       alert(e instanceof Error ? e.message : "建立失敗");
     } finally {
@@ -180,19 +210,11 @@ export default function StorePosLitePage() {
     }
   };
 
-  const patchTrack = async (
-    id: string,
-    patch: Partial<
-      Pick<
-        StoreCustomerRequest,
-        "track_notified" | "track_paid" | "track_picked_up" | "track_done" | "status"
-      >
-    >
-  ) => {
+  const patchStatus = async (id: string, status: StoreCustomerRequestStatus) => {
     const res = await fetch("/api/admin/store/customer-requests", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...patch }),
+      body: JSON.stringify({ id, status }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -203,133 +225,194 @@ export default function StorePosLitePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-5">
       <AdminPageHeader
-        title="現場客戶服務"
-        description="POS Lite：快速記錄門市客戶訂購與價格詢問。商品來自共用 products，不建立完整電商訂單。"
+        title="客戶服務"
+        description="商品訂購與價格詢問。商品／廠商／規格自動帶入共用商品主檔，不建立電商訂單、不串接收銀。"
         actions={
-          <Button type="button" onClick={() => openForm(tab)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            新增服務紀錄
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={() => openForm("price_inquiry")}>
+              ＋ 價格詢問
+            </Button>
+            <Button type="button" onClick={() => openForm("order")}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              商品訂購
+            </Button>
+          </div>
         }
       />
 
       {mode === "home" ? (
         <>
-          <section className="rounded-[20px] border border-[#E9DED4] bg-gradient-to-br from-[#FFF8F5] to-white p-5">
-            <p className="text-sm text-[#756B64]">👋 現場客戶服務</p>
-            <p className="mt-2 text-3xl font-black text-[#2F2925]">
-              今天已接待{" "}
-              <span className="text-[#C45C26]">{loading ? "…" : todayCount}</span> 位
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button type="button" onClick={() => openForm("order")}>
-                ＋ 商品訂購
-              </Button>
-              <Button type="button" variant="outline" onClick={() => openForm("price_inquiry")}>
-                ＋ 價格詢問
-              </Button>
+          <section className="rounded-2xl border border-[#FFE149]/60 bg-[#FFFBEA] p-5">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-[#687386]">今日服務總覽</p>
+                <p className="mt-1 text-3xl font-bold text-[#153E73]">
+                  {loading ? "…" : todayCount}
+                  <span className="ml-2 text-base font-semibold text-[#687386]">筆紀錄</span>
+                </p>
+                <p className="mt-1 text-sm text-[#687386]">
+                  待確認 {pendingCount} 筆 · 狀態依流程推進，不扣庫存
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" onClick={() => openForm("order")}>
+                  ＋ 商品訂購
+                </Button>
+                <Button type="button" variant="outline" onClick={() => openForm("price_inquiry")}>
+                  ＋ 價格詢問
+                </Button>
+              </div>
             </div>
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold text-[#2F2925]">今日服務</h2>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-bold text-[#153E73]">今日服務</h2>
+              <div className="flex gap-1 rounded-full bg-[#F7F8FA] p-1">
+                {(
+                  [
+                    ["all", "全部"],
+                    ["order", "商品訂購"],
+                    ["price_inquiry", "價格詢問"],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setListFilter(id)}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-sm",
+                      listFilter === id
+                        ? "bg-[#FFE149] font-semibold text-[#153E73]"
+                        : "text-[#687386]"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {loading ? (
-              <p className="text-sm text-[#756B64]">載入中…</p>
-            ) : items.length === 0 ? (
-              <p className="rounded-[16px] border border-dashed border-[#E9DED4] bg-white p-8 text-center text-sm text-[#756B64]">
+              <p className="text-sm text-[#687386]">載入中…</p>
+            ) : filteredItems.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-[#E6E9EF] bg-white p-8 text-center text-sm text-[#687386]">
                 今天尚無服務紀錄
               </p>
             ) : (
-              <div className="overflow-x-auto rounded-[16px] border border-[#E9DED4] bg-white">
-                <table className="w-full min-w-[640px] text-left text-sm">
-                  <thead className="bg-[#FAF6F1] text-[#756B64]">
-                    <tr>
-                      <th className="px-3 py-2 font-medium">類型</th>
-                      <th className="px-3 py-2 font-medium">客戶</th>
-                      <th className="px-3 py-2 font-medium">商品</th>
-                      <th className="px-3 py-2 font-medium">狀態</th>
-                      <th className="px-3 py-2 font-medium">追蹤</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((row) => (
-                      <tr key={row.id} className="border-t border-[#E9DED4]">
-                        <td className="px-3 py-2">{requestTypeLabel(row.request_type)}</td>
-                        <td className="px-3 py-2">
-                          <p className="font-medium text-[#2F2925]">{row.customer_name}</p>
-                          <p className="text-xs text-[#756B64]">{row.customer_phone}</p>
-                        </td>
-                        <td className="px-3 py-2">
-                          {row.products?.name ?? "—"}
-                          {(() => {
-                            const b = row.products?.brands;
-                            const brand = Array.isArray(b) ? b[0]?.name : b?.name;
-                            return brand ? (
-                              <span className="ml-1 text-xs text-[#756B64]">{brand}</span>
-                            ) : null;
-                          })()}
-                          {row.quantity != null ? (
-                            <span className="ml-1 text-xs text-[#756B64]">×{row.quantity}</span>
-                          ) : null}
-                        </td>
-                        <td className="px-3 py-2">
-                          <select
-                            className="rounded-lg border border-[#E9DED4] bg-white px-2 py-1 text-xs"
-                            value={row.status}
-                            onChange={(e) =>
-                              void patchTrack(row.id, {
-                                status: e.target.value as StoreCustomerRequest["status"],
-                              })
-                            }
-                          >
-                            {STORE_CUSTOMER_STATUSES.map((s) => (
-                              <option key={s.id} value={s.id}>
-                                {s.label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="flex flex-wrap gap-2 text-[11px]">
-                            {(
-                              [
-                                ["track_notified", "已通知"],
-                                ["track_paid", "已付款"],
-                                ["track_picked_up", "已取貨"],
-                                ["track_done", "已完成"],
-                              ] as const
-                            ).map(([key, label]) => (
-                              <label key={key} className="inline-flex items-center gap-1">
-                                <input
-                                  type="checkbox"
-                                  checked={Boolean(row[key])}
-                                  onChange={(e) =>
-                                    void patchTrack(row.id, { [key]: e.target.checked })
-                                  }
-                                />
-                                {label}
-                              </label>
-                            ))}
+              <ul className="space-y-3">
+                {filteredItems.map((row) => {
+                  const pipeline = statusPipelineForType(row.request_type);
+                  const next = nextStatusInPipeline(row.request_type, row.status);
+                  const brand = (() => {
+                    const b = row.products?.brands;
+                    return Array.isArray(b) ? b[0]?.name : b?.name;
+                  })();
+                  return (
+                    <li
+                      key={row.id}
+                      className="rounded-2xl border border-[#E6E9EF] bg-white p-4 shadow-[0_4px_14px_rgba(21,62,115,0.04)]"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-[#FFF5CC] px-2.5 py-0.5 text-xs font-bold text-[#153E73]">
+                              {requestTypeLabel(row.request_type)}
+                            </span>
+                            <span className="rounded-full border border-[#E6E9EF] px-2.5 py-0.5 text-xs font-semibold text-[#153E73]">
+                              {requestStatusLabel(row.status, row.request_type)}
+                            </span>
                           </div>
-                          <p className="mt-1 text-[11px] text-[#756B64]">
-                            {requestStatusLabel(row.status)}
-                            {row.assigned_to_name ? ` · ${row.assigned_to_name}` : ""}
+                          <p className="mt-2 text-base font-bold text-[#153E73]">
+                            {row.customer_name}
+                            <span className="ml-2 text-sm font-medium text-[#687386]">
+                              {row.customer_phone}
+                            </span>
                           </p>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          <p className="mt-1 text-sm text-[#153E73]/85">
+                            {row.products?.name ||
+                              row.inquiry_body ||
+                              row.note ||
+                              "未指定商品"}
+                            {brand ? ` · ${brand}` : ""}
+                            {row.quantity != null ? ` · 數量 ${row.quantity}` : ""}
+                          </p>
+                          <p className="mt-1 text-[12px] text-[#8A94A6]">
+                            {[
+                              row.assigned_to_name ? `負責人 ${row.assigned_to_name}` : null,
+                              row.pickup_store?.name
+                                ? `取貨 ${row.pickup_store.name}`
+                                : null,
+                              row.expected_arrival_date
+                                ? `希望到貨 ${row.expected_arrival_date}`
+                                : null,
+                              row.follow_up_at ? `預計回覆 ${row.follow_up_at}` : null,
+                              row.needs_reply ? "需正式報價／回覆" : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ") || "尚未指派"}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {next ? (
+                            <button
+                              type="button"
+                              onClick={() => void patchStatus(row.id, next)}
+                              className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[#FFE149] bg-[#FFE149] px-3 text-xs font-bold text-[#153E73]"
+                            >
+                              推進至 {requestStatusLabel(next, row.request_type)}
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </button>
+                          ) : null}
+                          {row.status !== "cancelled" && row.status !== "done" ? (
+                            <button
+                              type="button"
+                              onClick={() => void patchStatus(row.id, "cancelled")}
+                              className="inline-flex min-h-9 items-center rounded-full border border-[#E6E9EF] px-3 text-xs font-semibold text-[#687386]"
+                            >
+                              取消
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {pipeline
+                          .filter((s) => s.id !== "cancelled")
+                          .map((step) => {
+                            const activeIdx = pipeline.findIndex((s) => s.id === row.status);
+                            const stepIdx = pipeline.findIndex((s) => s.id === step.id);
+                            const reached = activeIdx >= stepIdx && row.status !== "cancelled";
+                            return (
+                              <button
+                                key={step.id}
+                                type="button"
+                                onClick={() => void patchStatus(row.id, step.id)}
+                                className={cn(
+                                  "rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
+                                  reached
+                                    ? "bg-[#153E73] text-white"
+                                    : "bg-[#F3F5F8] text-[#687386] hover:bg-[#FFF5CC]"
+                                )}
+                              >
+                                {step.label}
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </section>
         </>
       ) : (
-        <section className="space-y-4 rounded-[20px] border border-[#E9DED4] bg-white p-4 md:p-5">
+        <section className="space-y-4 rounded-2xl border border-[#E6E9EF] bg-white p-4 md:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex gap-1 rounded-full bg-[#FAF6F1] p-1">
+            <div className="flex gap-1 rounded-full bg-[#F7F8FA] p-1">
               {(
                 [
                   ["order", "商品訂購"],
@@ -343,8 +426,8 @@ export default function StorePosLitePage() {
                   className={cn(
                     "rounded-full px-4 py-1.5 text-sm",
                     tab === id
-                      ? "bg-[#FFF5C7] font-semibold text-[#153E73]"
-                      : "text-[#756B64]"
+                      ? "bg-[#FFE149] font-semibold text-[#153E73]"
+                      : "text-[#687386]"
                   )}
                 >
                   {label}
@@ -356,8 +439,14 @@ export default function StorePosLitePage() {
             </Button>
           </div>
 
+          <p className="text-sm text-[#687386]">
+            {tab === "order"
+              ? "流程：待確認 → 查詢中／待到貨 → 已通知 → 已完成"
+              : "流程：待查價 → 已報價 → 已回覆 → 已完成"}
+          </p>
+
           {doneMsg ? (
-            <div className="flex items-center gap-2 rounded-[12px] bg-[#E8F5EE] px-3 py-2 text-sm text-[#2E7D5B]">
+            <div className="flex items-center gap-2 rounded-xl bg-[#E8F5EE] px-3 py-2 text-sm text-[#2E7D5B]">
               <CheckCircle2 className="h-4 w-4" />
               {doneMsg}
             </div>
@@ -365,17 +454,17 @@ export default function StorePosLitePage() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1 text-sm">
-              <span className="text-[#756B64]">客戶姓名 *</span>
+              <span className="font-medium text-[#153E73]">姓名 *</span>
               <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
             </label>
             <label className="space-y-1 text-sm">
-              <span className="text-[#756B64]">聯絡電話 *</span>
+              <span className="font-medium text-[#153E73]">電話 *</span>
               <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
             </label>
           </div>
 
           <div>
-            <p className="mb-2 text-sm text-[#756B64]">客戶來源</p>
+            <p className="mb-2 text-sm font-medium text-[#153E73]">客戶來源</p>
             <div className="flex flex-wrap gap-2">
               {STORE_CUSTOMER_SOURCES.map((s) => (
                 <label
@@ -383,8 +472,8 @@ export default function StorePosLitePage() {
                   className={cn(
                     "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm",
                     source === s.id
-                      ? "border-[#FFE149] bg-[#FFF5C7]"
-                      : "border-[#E9DED4] bg-white"
+                      ? "border-[#FFE149] bg-[#FFF5CC] font-semibold text-[#153E73]"
+                      : "border-[#E6E9EF] bg-white text-[#687386]"
                   )}
                 >
                   <input
@@ -401,7 +490,7 @@ export default function StorePosLitePage() {
 
           <AdminBarcodeInput
             autoFocus
-            placeholder="📷 掃描或輸入條碼"
+            placeholder="掃描或輸入商品條碼"
             onSelect={(p) => {
               setProduct(p as ProductHit);
               setProductQ(p.name);
@@ -410,24 +499,26 @@ export default function StorePosLitePage() {
 
           <div className="space-y-2">
             <label className="block space-y-1 text-sm">
-              <span className="text-[#756B64]">搜尋商品（共用 products）</span>
+              <span className="font-medium text-[#153E73]">
+                {tab === "order" ? "訂購商品 *" : "詢價商品（選填）"}
+              </span>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#756B64]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#687386]" />
                 <Input
                   className="pl-9"
                   value={productQ}
                   onChange={(e) => setProductQ(e.target.value)}
-                  placeholder="例：高筋麵粉"
+                  placeholder="搜尋品名／SKU／條碼"
                 />
               </div>
             </label>
             {productHits.length > 0 ? (
-              <ul className="max-h-48 overflow-auto rounded-[12px] border border-[#E9DED4]">
+              <ul className="max-h-48 overflow-auto rounded-xl border border-[#E6E9EF]">
                 {productHits.map((p) => (
                   <li key={p.id}>
                     <button
                       type="button"
-                      className="flex w-full items-center justify-between gap-2 border-b border-[#E9DED4] px-3 py-2 text-left text-sm hover:bg-[#FFFBEA]"
+                      className="flex w-full items-center justify-between gap-2 border-b border-[#E6E9EF] px-3 py-2 text-left text-sm hover:bg-[#FFFBEA]"
                       onClick={() => {
                         setProduct(p);
                         setProductQ(p.name);
@@ -435,12 +526,12 @@ export default function StorePosLitePage() {
                       }}
                     >
                       <span>
-                        <span className="font-medium text-[#2F2925]">{p.name}</span>
-                        <span className="ml-2 text-xs text-[#756B64]">
+                        <span className="font-medium text-[#153E73]">{p.name}</span>
+                        <span className="ml-2 text-xs text-[#687386]">
                           {p.brand || p.supplier_name || p.sku}
                         </span>
                       </span>
-                      <span className="text-xs text-[#756B64]">
+                      <span className="text-xs text-[#687386]">
                         {p.price != null ? `$${p.price}` : ""} · 庫存 {p.stock ?? "—"}
                       </span>
                     </button>
@@ -451,29 +542,27 @@ export default function StorePosLitePage() {
           </div>
 
           {product ? (
-            <div className="rounded-[14px] border border-[#E9DED4] bg-[#FAF6F1] p-4 text-sm">
-              <p className="text-base font-semibold text-[#2F2925]">{product.name}</p>
+            <div className="rounded-2xl border border-[#E6E9EF] bg-[#F7F8FA] p-4 text-sm">
+              <p className="text-base font-bold text-[#153E73]">{product.name}</p>
               <div className="mt-2 grid gap-1 sm:grid-cols-2">
-                <p>品牌：{product.brand || "—"}</p>
                 <p>廠商：{product.supplier_name || "—"}</p>
+                <p>品牌：{product.brand || "—"}</p>
                 <p>規格：{product.specifications || product.package_spec || product.unit || "—"}</p>
-                <p>售價：{product.price != null ? `$${product.price}` : "—"}</p>
-                <p className="flex items-center gap-2">
-                  目前庫存：{stockQty ?? "—"}
+                <p>售價：{product.price != null ? `NT$ ${product.price}` : "—"}</p>
+                <p>
+                  目前庫存：{stockQty ?? "—"}{" "}
                   {inStock === true ? (
-                    <span className="text-[#2E7D5B]">🟢 有庫存</span>
+                    <span className="text-emerald-700">有庫存</span>
                   ) : inStock === false ? (
-                    <span className="text-[#C94C4C]">🔴 缺貨</span>
+                    <span className="text-red-600">缺貨</span>
                   ) : null}
                 </p>
-                <p className="font-mono text-xs text-[#756B64]">
-                  條碼 {product.barcode || "—"}
-                </p>
+                <p className="font-mono text-xs text-[#687386]">條碼 {product.barcode || "—"}</p>
               </div>
               <p className="mt-2">
                 <Link
                   href={`/admin/products/${product.id}/edit`}
-                  className="text-xs text-primary underline"
+                  className="text-xs font-semibold text-[#153E73] underline"
                 >
                   開啟商品主檔
                 </Link>
@@ -481,10 +570,12 @@ export default function StorePosLitePage() {
             </div>
           ) : null}
 
-          {tab === "order" ? (
-            <>
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-[#756B64]">數量</span>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-[#153E73]">
+                {tab === "order" ? "數量 *" : "預估訂購量"}
+              </span>
+              <div className="flex items-center gap-2">
                 <Button
                   type="button"
                   size="sm"
@@ -495,7 +586,7 @@ export default function StorePosLitePage() {
                 </Button>
                 <Input
                   type="number"
-                  className="w-20 text-center"
+                  className="w-24 text-center"
                   value={qty}
                   min={1}
                   onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
@@ -504,68 +595,95 @@ export default function StorePosLitePage() {
                   <Plus className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <label className="block space-y-1 text-sm">
-                <span className="text-[#756B64]">預計到貨日（選填）</span>
+            </div>
+
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">
+                {tab === "order" ? "負責人" : "指定回覆人員"}
+              </span>
+              <select
+                className="w-full rounded-[10px] border border-[#E6E9EF] bg-white px-3 py-2"
+                value={assignedToName}
+                onChange={(e) => setAssignedToName(e.target.value)}
+              >
+                {STORE_ASSIGNEE_OPTIONS.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {tab === "order" ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1 text-sm">
+                <span className="font-medium text-[#153E73]">希望到貨日期</span>
                 <Input
                   type="date"
                   value={expectedArrival}
                   onChange={(e) => setExpectedArrival(e.target.value)}
                 />
               </label>
-              <label className="block space-y-1 text-sm">
-                <span className="text-[#756B64]">備註</span>
-                <textarea
-                  className="input-field min-h-[88px] w-full rounded-[10px] border border-[#E9DED4] px-3 py-2 text-sm"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                />
+              <label className="space-y-1 text-sm">
+                <span className="font-medium text-[#153E73]">指定取貨分店</span>
+                <select
+                  className="w-full rounded-[10px] border border-[#E6E9EF] bg-white px-3 py-2"
+                  value={pickupStoreId}
+                  onChange={(e) => setPickupStoreId(e.target.value)}
+                >
+                  <option value="">— 不指定 —</option>
+                  {stores.map((store) => (
+                    <option key={store.id} value={store.id}>
+                      {store.name}
+                    </option>
+                  ))}
+                </select>
               </label>
-            </>
+            </div>
           ) : (
             <>
               <label className="block space-y-1 text-sm">
-                <span className="text-[#756B64]">詢問內容</span>
+                <span className="font-medium text-[#153E73]">詢問內容 *</span>
                 <textarea
-                  className="input-field min-h-[100px] w-full rounded-[10px] border border-[#E9DED4] px-3 py-2 text-sm"
-                  placeholder={"例：是否有大量價格？\n希望 100 包"}
+                  className="min-h-[100px] w-full rounded-[10px] border border-[#E6E9EF] px-3 py-2 text-sm"
+                  placeholder={"例：是否有大量價格？\n預估需求約 100 包"}
                   value={inquiryBody}
                   onChange={(e) => setInquiryBody(e.target.value)}
                 />
               </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={needsReply}
-                  onChange={(e) => setNeedsReply(e.target.checked)}
-                />
-                是否需要回覆
-              </label>
-              <label className="block space-y-1 text-sm">
-                <span className="text-[#756B64]">指派</span>
-                <select
-                  className="w-full rounded-[10px] border border-[#E9DED4] bg-white px-3 py-2"
-                  value={assignedToName}
-                  onChange={(e) => setAssignedToName(e.target.value)}
-                >
-                  <option value="業務">業務</option>
-                  <option value="店長">店長</option>
-                  <option value="客服">客服</option>
-                  <option value="倉儲">倉儲</option>
-                </select>
-              </label>
-              <label className="block space-y-1 text-sm">
-                <span className="text-[#756B64]">備註</span>
-                <textarea
-                  className="input-field min-h-[72px] w-full rounded-[10px] border border-[#E9DED4] px-3 py-2 text-sm"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                />
-              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex items-center gap-2 rounded-xl border border-[#E6E9EF] px-3 py-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={needsReply}
+                    onChange={(e) => setNeedsReply(e.target.checked)}
+                  />
+                  <span className="font-medium text-[#153E73]">是否需要正式報價</span>
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-medium text-[#153E73]">預計回覆日期</span>
+                  <Input
+                    type="date"
+                    value={followUpAt}
+                    onChange={(e) => setFollowUpAt(e.target.value)}
+                  />
+                </label>
+              </div>
             </>
           )}
 
           <label className="block space-y-1 text-sm">
-            <span className="text-[#756B64]">內部備註（客戶不可見）</span>
+            <span className="font-medium text-[#153E73]">備註</span>
+            <textarea
+              className="min-h-[72px] w-full rounded-[10px] border border-[#E6E9EF] px-3 py-2 text-sm"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </label>
+
+          <label className="block space-y-1 text-sm">
+            <span className="font-medium text-[#153E73]">內部備註（客戶不可見）</span>
             <Input value={internalNote} onChange={(e) => setInternalNote(e.target.value)} />
           </label>
 
@@ -574,7 +692,7 @@ export default function StorePosLitePage() {
               取消
             </Button>
             <Button type="button" disabled={saving} onClick={() => void submit()}>
-              {saving ? "建立中…" : "確認建立"}
+              {saving ? "送出中…" : "送出（狀態：待確認）"}
             </Button>
           </div>
         </section>

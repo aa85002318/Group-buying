@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireContentAdmin, logAudit } from "@/lib/auth";
+import { requireFaqAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
-  const { error } = await requireContentAdmin();
+  const { error } = await requireFaqAdmin();
   if (error) return error;
 
   if (!isSupabaseConfigured()) {
@@ -23,7 +23,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error, auth } = await requireContentAdmin();
+  const { error, auth } = await requireFaqAdmin();
   if (error) return error;
 
   const body = await request.json();

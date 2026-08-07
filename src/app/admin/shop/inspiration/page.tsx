@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -98,7 +99,7 @@ export default function AdminShopInspirationPage() {
         description="管理牆上食譜露出、精選與滿版 banner。新增食譜請至食譜主檔；此處調整牆面欄位。"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Link href="/admin/shop?section=inspiration" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               返回商城 CMS
             </Link>
             <Link
@@ -113,6 +114,8 @@ export default function AdminShopInspirationPage() {
           </div>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="inspiration" />
 
       {editing ? (
         <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">

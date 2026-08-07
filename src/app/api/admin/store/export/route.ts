@@ -108,24 +108,83 @@ export async function GET(request: Request) {
     let q = admin
       .from("store_anomalies")
       .select(
-        "anomaly_type, description, quantity, status, reported_at, batch_id, products(name, sku, barcode)"
+        "anomaly_type, description, quantity, status, reported_at, batch_id, assignee_name, products(name, sku, barcode)"
       )
+      .neq("anomaly_type", "repair")
       .order("reported_at", { ascending: false })
       .limit(1000);
     if (storeId) q = q.eq("store_id", storeId);
-    const { data } = await q;
-    rows = (data ?? []).map((r) => {
+    const { data, error: qErr } = await q;
+    // Soft-fail if assignee_name column missing
+    let rowsRaw: Array<Record<string, unknown>> = (data as Array<Record<string, unknown>> | null) ?? [];
+    if (qErr && /assignee_name/i.test(qErr.message)) {
+      let q2 = admin
+        .from("store_anomalies")
+        .select(
+          "anomaly_type, description, quantity, status, reported_at, batch_id, products(name, sku, barcode)"
+        )
+        .neq("anomaly_type", "repair")
+        .order("reported_at", { ascending: false })
+        .limit(1000);
+      if (storeId) q2 = q2.eq("store_id", storeId);
+      const retry = await q2;
+      rowsRaw = (retry.data as Array<Record<string, unknown>> | null) ?? [];
+    }
+    rows = rowsRaw.map((r) => {
       const p = r.products as { name?: string; sku?: string; barcode?: string } | null;
       return {
         商品名稱: p?.name ?? "",
         SKU: p?.sku ?? "",
         條碼: p?.barcode ?? "",
-        批次ID: r.batch_id ?? "",
-        異常類型: r.anomaly_type ?? "",
+        批次ID: (r.batch_id as string | null) ?? "",
+        異常類型: (r.anomaly_type as string | null) ?? "",
         數量: r.quantity ?? "",
-        原因: r.description ?? "",
-        狀態: r.status ?? "",
-        回報時間: r.reported_at ?? "",
+        原因: (r.description as string | null) ?? "",
+        負責人: (r.assignee_name as string | null) ?? "",
+        狀態: (r.status as string | null) ?? "",
+        回報時間: (r.reported_at as string | null) ?? "",
+      };
+    });
+  } else if (type === "repair") {
+    let q = admin
+      .from("store_anomalies")
+      .select(
+        "anomaly_type, description, quantity, status, reported_at, urgency, assignee_name, customer_name, customer_phone, vendor_name, products(name, sku, barcode)"
+      )
+      .eq("anomaly_type", "repair")
+      .order("reported_at", { ascending: false })
+      .limit(1000);
+    if (storeId) q = q.eq("store_id", storeId);
+    const { data, error: qErr } = await q;
+    let rowsRaw: Array<Record<string, unknown>> = (data as Array<Record<string, unknown>> | null) ?? [];
+    if (qErr && /urgency|assignee_name|customer_name|vendor_name/i.test(qErr.message)) {
+      let q2 = admin
+        .from("store_anomalies")
+        .select(
+          "anomaly_type, description, quantity, status, reported_at, products(name, sku, barcode)"
+        )
+        .eq("anomaly_type", "repair")
+        .order("reported_at", { ascending: false })
+        .limit(1000);
+      if (storeId) q2 = q2.eq("store_id", storeId);
+      const retry = await q2;
+      rowsRaw = (retry.data as Array<Record<string, unknown>> | null) ?? [];
+    }
+    rows = rowsRaw.map((r) => {
+      const p = r.products as { name?: string; sku?: string; barcode?: string } | null;
+      return {
+        商品名稱: p?.name ?? "",
+        SKU: p?.sku ?? "",
+        條碼: p?.barcode ?? "",
+        數量: r.quantity ?? "",
+        故障說明: (r.description as string | null) ?? "",
+        緊急程度: (r.urgency as string | null) ?? "",
+        客戶姓名: (r.customer_name as string | null) ?? "",
+        電話: (r.customer_phone as string | null) ?? "",
+        廠商: (r.vendor_name as string | null) ?? "",
+        負責人: (r.assignee_name as string | null) ?? "",
+        狀態: (r.status as string | null) ?? "",
+        回報時間: (r.reported_at as string | null) ?? "",
       };
     });
   } else if (type === "disposal") {
@@ -199,6 +258,79 @@ export async function GET(request: Request) {
         審核時間: r.reviewed_at ?? "",
       };
     });
+  } else if (type === "customer_orders" || type === "price_inquiries") {
+    const requestType = type === "customer_orders" ? "order" : "price_inquiry";
+    let q = admin
+      .from("store_customer_requests")
+      .select(
+        "customer_name, customer_phone, customer_source, barcode, quantity, expected_arrival_date, inquiry_body, needs_reply, note, assigned_to_name, status, created_at, follow_up_at, products(name, sku, barcode)"
+      )
+      .eq("request_type", requestType)
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    if (storeId) q = q.eq("store_id", storeId);
+    const { data } = await q;
+    rows = (data ?? []).map((r) => {
+      const p = r.products as { name?: string; sku?: string; barcode?: string } | null;
+      if (requestType === "order") {
+        return {
+          姓名: r.customer_name ?? "",
+          電話: r.customer_phone ?? "",
+          客戶來源: r.customer_source ?? "",
+          條碼: r.barcode ?? p?.barcode ?? "",
+          商品名稱: p?.name ?? "",
+          數量: r.quantity ?? "",
+          希望到貨日: r.expected_arrival_date ?? "",
+          負責人: r.assigned_to_name ?? "",
+          備註: r.note ?? "",
+          狀態: r.status ?? "",
+          建立時間: r.created_at ?? "",
+        };
+      }
+      return {
+        姓名: r.customer_name ?? "",
+        電話: r.customer_phone ?? "",
+        條碼: r.barcode ?? p?.barcode ?? "",
+        商品名稱: p?.name ?? "",
+        預估訂購量: r.quantity ?? "",
+        詢問內容: r.inquiry_body ?? "",
+        需正式報價: r.needs_reply ? "是" : "否",
+        預計回覆日: r.follow_up_at ?? "",
+        負責人: r.assigned_to_name ?? "",
+        備註: r.note ?? "",
+        狀態: r.status ?? "",
+        建立時間: r.created_at ?? "",
+      };
+    });
+  } else if (type === "worklogs") {
+    let q = admin
+      .from("store_work_logs")
+      .select("log_date, body, author_name, created_at")
+      .order("log_date", { ascending: false })
+      .limit(500);
+    if (storeId) q = q.eq("store_id", storeId);
+    const { data } = await q;
+    rows = (data ?? []).map((r) => ({
+      日期: r.log_date ?? "",
+      內容: r.body ?? "",
+      填寫人: r.author_name ?? "",
+      建立時間: r.created_at ?? "",
+    }));
+  } else if (type === "todos") {
+    let q = admin
+      .from("store_todos")
+      .select("todo_date, label, is_done, done_at, created_at")
+      .order("todo_date", { ascending: false })
+      .limit(500);
+    if (storeId) q = q.eq("store_id", storeId);
+    const { data } = await q;
+    rows = (data ?? []).map((r) => ({
+      日期: r.todo_date ?? "",
+      待辦內容: r.label ?? "",
+      是否完成: r.is_done ? "是" : "否",
+      完成時間: r.done_at ?? "",
+      建立時間: r.created_at ?? "",
+    }));
   }
 
   const out = sheetFromRows(rows, "匯出");

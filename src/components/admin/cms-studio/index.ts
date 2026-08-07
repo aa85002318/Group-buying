@@ -4,6 +4,8 @@ export { CmsSettingsPanel, CmsSettingsTabs } from "./CmsSettingsPanel";
 export { CmsLivePreview, CmsPreviewRenderer } from "./CmsLivePreview";
 export { CmsDeviceSwitcher } from "./CmsDeviceSwitcher";
 export { CmsSaveStatusBadge } from "./CmsSaveStatusBadge";
+export { CmsWorkflowSteps, type CmsWorkflowStep } from "./CmsWorkflowSteps";
+export { CmsVersionPublishBar } from "./CmsVersionPublishBar";
 export {
   CMS_DEVICE_SIZE,
   CMS_SAVE_STATUS_LABEL,

@@ -236,7 +236,7 @@ export function AdminProductForm({
 
         <Section title="取貨門市">
           {stores.length === 0 ? (
-            <p className="text-sm text-muted-foreground">尚無可用門市，請至門市管理新增。</p>
+            <p className="text-sm text-muted-foreground">尚無可用門市，請至門市協作中心／分店列表新增。</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {stores.map((store) => {

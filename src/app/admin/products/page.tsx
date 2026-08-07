@@ -7,12 +7,15 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { useAdminShell } from "@/components/admin/AdminShell";
 import { useAdminList } from "@/hooks/useAdminList";
 import { calcGrossMarginAmount } from "@/lib/admin/product-form-v2";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types/database";
 
 export default function AdminProductsPage() {
+  const { profile } = useAdminShell();
+  const isAdmin = profile?.role === "admin";
   const { paginated, search, setSearch, page, setPage, totalPages, loading } = useAdminList<Product>(
     "/api/admin/products",
     "products",
@@ -21,53 +24,70 @@ export default function AdminProductsPage() {
   const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0 });
 
   useEffect(() => {
+    if (!isAdmin) return;
     fetch("/api/admin/inventory?summary=true")
       .then((r) => r.json())
       .then((d) => setStats(d.summary ?? { total: 0, active: 0, lowStock: 0 }))
       .catch(() => {});
-  }, []);
+  }, [isAdmin]);
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="商品管理"
-        description="Product Master：商品只建立一次，透過渠道上架官網／團購／門市"
+        title="商品主檔"
+        description={
+          isAdmin
+            ? "Product Master：商品只建立一次，透過渠道上架官網／團購／門市"
+            : "瀏覽商品主檔與列印價格牌。新增／編輯請由總部管理員操作。"
+        }
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/products/analysis">
-              <Button variant="secondary">
-                <BarChart3 className="mr-1.5 h-4 w-4" />
-                分析總覽
-              </Button>
-            </Link>
-            <Link href="/admin/products/labels">
-              <Button variant="secondary">
-                <Printer className="mr-1.5 h-4 w-4" />
-                價格牌列印
-              </Button>
-            </Link>
-            <Link href="/admin/products/import">
-              <Button variant="secondary">
-                <Upload className="mr-1.5 h-4 w-4" />
-                批次匯入
-              </Button>
-            </Link>
-            <Link href="/admin/products/new">
-              <Button variant="secondary">
-                <PackagePlus className="mr-1.5 h-4 w-4" />
-                商品新增
-              </Button>
-            </Link>
-            <Link href="/admin/products/new?mode=group-buy">
-              <Button className="bg-primary hover:bg-[#E63D6A]">
-                <PackagePlus className="mr-1.5 h-4 w-4" />
-                團購新增
-              </Button>
-            </Link>
+            {isAdmin ? (
+              <>
+                <Link href="/admin/products/analysis">
+                  <Button variant="secondary">
+                    <BarChart3 className="mr-1.5 h-4 w-4" />
+                    分析總覽
+                  </Button>
+                </Link>
+                <Link href="/admin/products/labels">
+                  <Button variant="secondary">
+                    <Printer className="mr-1.5 h-4 w-4" />
+                    價格牌列印
+                  </Button>
+                </Link>
+                <Link href="/admin/products/import">
+                  <Button variant="secondary">
+                    <Upload className="mr-1.5 h-4 w-4" />
+                    批次匯入
+                  </Button>
+                </Link>
+                <Link href="/admin/products/new">
+                  <Button variant="secondary">
+                    <PackagePlus className="mr-1.5 h-4 w-4" />
+                    商品新增
+                  </Button>
+                </Link>
+                <Link href="/admin/products/new?mode=group-buy">
+                  <Button className="bg-primary hover:bg-[#E63D6A]">
+                    <PackagePlus className="mr-1.5 h-4 w-4" />
+                    團購新增
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Link href="/admin/products/labels">
+                <Button variant="secondary">
+                  <Printer className="mr-1.5 h-4 w-4" />
+                  價格牌列印
+                </Button>
+              </Link>
+            )}
           </div>
         }
       />
 
+      {isAdmin ? (
       <div className="grid gap-4 sm:grid-cols-3">
         {[
           { label: "商品總數", value: stats.total },
@@ -83,19 +103,27 @@ export default function AdminProductsPage() {
           </div>
         ))}
       </div>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
-        <Link href="/admin/products/categories">
-          <Button variant="outline" size="sm">分類管理</Button>
-        </Link>
+        {isAdmin ? (
+          <>
+            <Link href="/admin/products/categories">
+              <Button variant="outline" size="sm">分類管理</Button>
+            </Link>
+            <Link href="/admin/inventory">
+              <Button variant="outline" size="sm">庫存報表</Button>
+            </Link>
+            <Link href="/admin/reports">
+              <Button variant="outline" size="sm">銷售報表</Button>
+            </Link>
+          </>
+        ) : null}
         <Link href="/admin/store">
-          <Button variant="outline" size="sm">門市管理</Button>
+          <Button variant="outline" size="sm">門市協作中心</Button>
         </Link>
-        <Link href="/admin/inventory">
-          <Button variant="outline" size="sm">庫存報表</Button>
-        </Link>
-        <Link href="/admin/reports">
-          <Button variant="outline" size="sm">銷售報表</Button>
+        <Link href="/admin/store/inventory">
+          <Button variant="outline" size="sm">分店庫存查詢</Button>
         </Link>
       </div>
 
@@ -162,12 +190,19 @@ export default function AdminProductsPage() {
             header: "操作",
             render: (p) => (
               <div className="flex flex-wrap justify-end gap-1">
-                <Link href={`/admin/products/${p.id}/analysis`}>
-                  <Button size="sm" variant="outline">分析</Button>
+                <Link href={`/admin/products/labels?productId=${p.id}`}>
+                  <Button size="sm" variant="outline">價格牌</Button>
                 </Link>
-                <Link href={`/admin/products/${p.id}/edit`}>
-                  <Button size="sm" variant="secondary">編輯</Button>
-                </Link>
+                {isAdmin ? (
+                  <>
+                    <Link href={`/admin/products/${p.id}/analysis`}>
+                      <Button size="sm" variant="outline">分析</Button>
+                    </Link>
+                    <Link href={`/admin/products/${p.id}/edit`}>
+                      <Button size="sm" variant="secondary">編輯</Button>
+                    </Link>
+                  </>
+                ) : null}
               </div>
             ),
           },
@@ -182,6 +217,7 @@ export default function AdminProductsPage() {
         onPageChange={setPage}
       />
 
+      {isAdmin ? (
       <div className="rounded-[20px] border border-dashed border-border bg-background p-6 text-center">
         <Download className="mx-auto h-8 w-8 text-primary" />
         <p className="mt-2 font-semibold text-[#334155]">需要批次新增商品？</p>
@@ -190,6 +226,7 @@ export default function AdminProductsPage() {
           <Button variant="secondary">前往批次匯入</Button>
         </Link>
       </div>
+      ) : null}
     </div>
   );
 }

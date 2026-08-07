@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -208,7 +209,7 @@ export default function AdminShopPromoBannersPage() {
         description="可新增多張、刪除或停用。顯示於商品分類下方，建議桌面 1500×600、手機 1080×432（皆 5:2）。"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Link href="/admin/shop?section=promo" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               返回商城 CMS
             </Link>
             <Button size="sm" onClick={openCreate}>
@@ -217,6 +218,8 @@ export default function AdminShopPromoBannersPage() {
           </div>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="promo" />
 
       {showForm ? (
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
 import {
@@ -13,7 +13,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 /** PATCH /api/admin/shop/categories/[id] */
 export async function PATCH(request: Request, context: Ctx) {
-  const { error: authError, auth } = await requireAdmin();
+  const { error: authError, auth } = await requireContentAdmin();
   if (authError) return authError;
 
   const { id } = await context.params;
@@ -105,7 +105,7 @@ export async function PATCH(request: Request, context: Ctx) {
  * Blocks hard delete when products or child categories exist.
  */
 export async function DELETE(request: Request, context: Ctx) {
-  const { error: authError, auth } = await requireAdmin();
+  const { error: authError, auth } = await requireContentAdmin();
   if (authError) return authError;
 
   const { id } = await context.params;

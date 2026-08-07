@@ -182,6 +182,63 @@ export async function POST(request: Request) {
   }
 
   const { data: urlData } = admin.storage.from(bucket).getPublicUrl(path);
+  const publicUrl = urlData.publicUrl;
 
-  return NextResponse.json({ url: urlData.publicUrl, path });
+  // Register in media library when requested (default on for CMS uploads)
+  const registerFlag = String(formData.get("register_library") ?? "1");
+  const shouldRegister = registerFlag !== "0" && registerFlag !== "false";
+  let mediaId: string | null = null;
+
+  if (shouldRegister) {
+    try {
+      const { logAudit } = await import("@/lib/auth");
+      const altText = (formData.get("alt_text") as string) || null;
+      const folderNorm = folder.replace(/^\/+|\/+$/g, "") || "cms/general";
+
+      let uploadedBy: string | null = null;
+      try {
+        const { createClient } = await import("@/lib/supabase/server");
+        const supabase = await createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        uploadedBy = user?.id ?? null;
+      } catch {
+        uploadedBy = null;
+      }
+
+      const { data: mediaRow, error: mediaErr } = await admin
+        .from("media_assets")
+        .insert({
+          uploaded_by: uploadedBy,
+          file_name: file.name.slice(0, 200),
+          file_url: publicUrl,
+          mime_type: file.type,
+          file_size: file.size,
+          folder: folderNorm,
+          alt_text: altText,
+        })
+        .select("id")
+        .maybeSingle();
+
+      if (!mediaErr && mediaRow?.id) {
+        mediaId = mediaRow.id as string;
+        if (uploadedBy) {
+          await logAudit(
+            uploadedBy,
+            "create",
+            "media_assets",
+            mediaId,
+            null,
+            { folder: folderNorm, file_name: file.name },
+            request as never
+          );
+        }
+      }
+    } catch {
+      // Soft-fail: upload still succeeds if media_assets missing
+    }
+  }
+
+  return NextResponse.json({ url: publicUrl, path, media_id: mediaId });
 }

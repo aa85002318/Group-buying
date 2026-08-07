@@ -86,7 +86,7 @@ export function CmsStudioShell({
         ))}
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[280px_minmax(420px,1fr)_minmax(320px,420px)]">
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(280px,300px)_minmax(0,1fr)_minmax(390px,430px)]">
         <div
           className={cn(
             "min-h-0 overflow-hidden rounded-[24px] border border-[var(--admin-border,#ECECEC)] bg-white shadow-[0_10px_35px_rgba(0,0,0,.05)]",

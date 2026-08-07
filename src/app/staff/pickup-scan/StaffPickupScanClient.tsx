@@ -1,13 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PickupOrderPanel } from "@/components/staff/PickupOrderPanel";
 import { QrScanner } from "@/components/staff/QrScanner";
 import { parsePickupToken } from "@/lib/staff/pickup-token";
 import type { PickupLookupResult } from "@/lib/types/database";
+import { APP_ROUTES } from "@/lib/site-links";
+import { cn } from "@/lib/utils";
 
 export default function StaffPickupScanClient() {
   const router = useRouter();
@@ -72,11 +75,25 @@ export default function StaffPickupScanClient() {
   };
 
   return (
-    <div className="mx-auto max-w-lg space-y-4 p-4 pb-8">
+    <div className="mx-auto max-w-lg space-y-4 p-4 pb-10">
       <div>
-        <h1 className="text-xl font-bold text-coffee">門市取貨掃碼</h1>
-        <p className="text-sm text-muted-foreground">掃描客戶 QR Code 或手動輸入取貨碼</p>
+        <p className="text-xs font-semibold text-[#687386]">
+          <Link href={APP_ROUTES.staffHome} className="underline">
+            今日作業
+          </Link>{" "}
+          / 掃碼取貨
+        </p>
+        <h1 className="mt-1 text-xl font-bold text-[#153E73]">App 訂單取貨</h1>
+        <p className="text-sm text-[#687386]">
+          掃描客戶取貨 QR，或手動輸入取貨碼。僅處理 App 訂單，不含門市 POS。
+        </p>
       </div>
+
+      <ol className="grid grid-cols-3 gap-2 text-center text-[11px] font-semibold text-[#153E73]">
+        <li className="rounded-xl bg-[#FFFBEA] px-2 py-2 ring-1 ring-[#FFE149]/70">1. 掃碼／輸入</li>
+        <li className="rounded-xl bg-white px-2 py-2 ring-1 ring-[#E6E9EF]">2. 確認收款</li>
+        <li className="rounded-xl bg-white px-2 py-2 ring-1 ring-[#E6E9EF]">3. 確認取貨</li>
+      </ol>
 
       <QrScanner onScan={handleScan} disabled={loading} />
 
@@ -87,7 +104,11 @@ export default function StaffPickupScanClient() {
           placeholder="輸入取貨碼"
           className="font-mono text-sm"
         />
-        <Button onClick={() => lookup(token)} disabled={loading}>
+        <Button
+          className="border-[#FFE149] bg-[#FFE149] font-bold text-[#153E73] hover:bg-[#FFE149]/90"
+          onClick={() => lookup(token)}
+          disabled={loading}
+        >
           查詢
         </Button>
       </div>
@@ -99,10 +120,17 @@ export default function StaffPickupScanClient() {
           message={message}
           issueNotes={issueNotes}
           onIssueNotesChange={setIssueNotes}
-          onConfirmPayment={() => act("/api/staff/pickup/confirm-payment", { order_id: order.order_id })}
-          onConfirmPickup={() => act("/api/staff/pickup/confirm-pickup", { order_id: order.order_id })}
+          onConfirmPayment={() =>
+            act("/api/staff/pickup/confirm-payment", { order_id: order.order_id })
+          }
+          onConfirmPickup={() =>
+            act("/api/staff/pickup/confirm-pickup", { order_id: order.order_id })
+          }
           onReportIssue={() =>
-            act("/api/staff/pickup/report-issue", { order_id: order.order_id, notes: issueNotes })
+            act("/api/staff/pickup/report-issue", {
+              order_id: order.order_id,
+              notes: issueNotes,
+            })
           }
         />
       )}
@@ -110,6 +138,21 @@ export default function StaffPickupScanClient() {
       {!order && message && !loading && (
         <p className="text-sm text-destructive">{message}</p>
       )}
+
+      <div className="flex flex-wrap gap-2">
+        <Link
+          href={APP_ROUTES.staffHome}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          回今日作業
+        </Link>
+        <Link
+          href="/admin/store"
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+        >
+          門市協作中心
+        </Link>
+      </div>
     </div>
   );
 }

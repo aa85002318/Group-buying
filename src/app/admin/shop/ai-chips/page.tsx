@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -115,7 +116,7 @@ export default function AdminShopAiChipsPage() {
         description="管理商城 AI 烘焙助手快速推薦標籤：新增、排序、上下架。"
         actions={
           <div className="flex gap-2">
-            <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Link href="/admin/shop?section=ai-chips" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               返回商城 CMS
             </Link>
             <Button size="sm" onClick={openCreate}>
@@ -124,6 +125,8 @@ export default function AdminShopAiChipsPage() {
           </div>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="ai-chips" />
 
       {showForm ? (
         <div className="space-y-3 rounded-xl border border-border bg-white p-4">

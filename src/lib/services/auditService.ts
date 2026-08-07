@@ -8,12 +8,18 @@ export function sanitizeAuditPayload(data: unknown): unknown {
 
   const blocked = new Set([
     "password",
+    "password_hash",
     "carrier_code",
     "carrier_number",
     "token",
     "access_token",
     "refresh_token",
     "pickup_token",
+    "api_key",
+    "secret",
+    "authorization",
+    "credit_card",
+    "card_number",
   ]);
 
   const out: Record<string, unknown> = {};

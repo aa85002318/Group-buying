@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { StoreRecordsClient } from "@/components/admin/store/StoreRecordsClient";
 import {
-  ISSUE_RETURN_CASE_OPTIONS,
-  ISSUE_RETURN_STATUS_OPTIONS,
+  ISSUE_ANOMALY_OPTIONS,
+  ISSUE_STATUS_OPTIONS,
 } from "@/lib/admin/store-entry";
 
 export default function StoreIssuesPage() {
@@ -11,18 +11,26 @@ export default function StoreIssuesPage() {
     <Suspense fallback={<p className="text-sm text-[#756B64]">載入中…</p>}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
-          異常與退貨已整合為同一表單；此處為列表檢視。
+          商品異常與報修紀錄列表。新增請走共用處理表單。
         </p>
-        <Link
-          href="/admin/store/entry?type=issue_return"
-          className="rounded-xl border border-[#FFE149] bg-[#FFE149] px-3 py-2 text-sm font-bold text-[#153E73]"
-        >
-          ＋異常／退貨登記
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/store/entry?type=issue"
+            className="rounded-xl border border-[#FFE149] bg-[#FFE149] px-3 py-2 text-sm font-bold text-[#153E73]"
+          >
+            ＋商品異常
+          </Link>
+          <Link
+            href="/admin/store/entry?type=repair"
+            className="rounded-xl border border-[#E7EAF0] bg-white px-3 py-2 text-sm font-semibold text-[#153E73]"
+          >
+            ＋商品報修
+          </Link>
+        </div>
       </div>
       <StoreRecordsClient
-        title="異常／退貨紀錄"
-        description="客戶退貨、到貨異常等。批次選填；含狀態與照片。"
+        title="異常／報修紀錄"
+        description="包裝破損、短缺、效期異常與報修追蹤。批次選填。"
         resource="anomalies"
         createLabel="＋新增"
         requireBatch={false}
@@ -32,10 +40,11 @@ export default function StoreIssuesPage() {
             label: "類型",
             type: "select",
             required: true,
-            options: ISSUE_RETURN_CASE_OPTIONS.map((o) => ({
-              value: o.value,
-              label: o.label,
-            })),
+            options: [
+              ...ISSUE_ANOMALY_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+              { value: "repair", label: "報修" },
+              { value: "special", label: "特殊需求" },
+            ],
           },
           { key: "description", label: "原因", type: "text", required: true },
           { key: "quantity", label: "數量", type: "number" },
@@ -46,7 +55,7 @@ export default function StoreIssuesPage() {
             key: "status",
             label: "狀態",
             type: "select",
-            options: ISSUE_RETURN_STATUS_OPTIONS.map((o) => ({
+            options: ISSUE_STATUS_OPTIONS.map((o) => ({
               value: o.value,
               label: o.label,
             })),

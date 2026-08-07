@@ -10,10 +10,17 @@ import { StoreManualProductAdd } from "@/components/admin/store/StoreManualProdu
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  DISPOSAL_REASON_OPTIONS,
   DISPOSAL_STATUS_OPTIONS,
-  ISSUE_RETURN_CASE_OPTIONS,
-  ISSUE_RETURN_STATUS_OPTIONS,
+  ISSUE_ANOMALY_OPTIONS,
+  ISSUE_STATUS_OPTIONS,
+  PRODUCT_HANDLING_FLOW_STEPS,
+  PRODUCT_HANDLING_TYPES,
   REPAIR_STATUS_OPTIONS,
+  REPAIR_URGENCY_OPTIONS,
+  RETURN_STATUS_OPTIONS,
+  RETURN_TARGET_OPTIONS,
+  STORE_ENTRY_OTHER_TYPES,
   STORE_ENTRY_TYPES,
   getStoreEntryDef,
   type StoreEntryType,
@@ -46,12 +53,22 @@ export function StoreQuickEntryForm({
   const [batches, setBatches] = useState<BatchOption[]>([]);
   const [quantity, setQuantity] = useState("");
   const [reason, setReason] = useState("");
-  const [caseKind, setCaseKind] = useState("customer_return");
+  const [note, setNote] = useState("");
+  const [caseKind, setCaseKind] = useState("damage");
   const [status, setStatus] = useState("pending");
   const [invoiceNo, setInvoiceNo] = useState("");
   const [location, setLocation] = useState("");
   const [productExpiry, setProductExpiry] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
+  const [assigneeName, setAssigneeName] = useState("");
+  const [pauseSales, setPauseSales] = useState(false);
+  const [managerConfirmed, setManagerConfirmed] = useState(false);
+  const [disposalReasonCode, setDisposalReasonCode] = useState("expired");
+  const [returnTarget, setReturnTarget] = useState("supplier");
+  const [expectedReturnDate, setExpectedReturnDate] = useState("");
+  const [urgency, setUrgency] = useState("normal");
+  const [affectsOperations, setAffectsOperations] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   // repair
   const [receivedAt, setReceivedAt] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -65,8 +82,9 @@ export function StoreQuickEntryForm({
   const showOptionalBatch =
     Boolean(productId) &&
     Boolean(def) &&
-    (def!.id === "issue_return" ||
+    (def!.id === "issue" ||
       def!.id === "disposal" ||
+      def!.id === "return" ||
       def!.id === "repair" ||
       def!.id === "special");
 
@@ -87,12 +105,22 @@ export function StoreQuickEntryForm({
     setBatchId(null);
     setQuantity("");
     setReason("");
+    setNote("");
     setPhotos([]);
-    setCaseKind("customer_return");
+    setCaseKind("damage");
     setStatus("pending");
     setInvoiceNo("");
     setLocation("");
     setProductExpiry("");
+    setAssigneeName("");
+    setPauseSales(false);
+    setManagerConfirmed(false);
+    setDisposalReasonCode("expired");
+    setReturnTarget("supplier");
+    setExpectedReturnDate("");
+    setUrgency("normal");
+    setAffectsOperations(false);
+    setConfirmed(false);
     setReceivedAt("");
     setCustomerName("");
     setCustomerPhone("");
@@ -108,6 +136,7 @@ export function StoreQuickEntryForm({
     resetFields();
     if (id === "repair") setStatus("notified_vendor");
     else if (id === "disposal") setStatus("pending");
+    else if (id === "return") setStatus("pending");
     else setStatus("pending");
   };
 
@@ -119,9 +148,18 @@ export function StoreQuickEntryForm({
 
   const submit = async () => {
     if (!type || !def) return;
+    if (!confirmed && def.group === "product") {
+      setError("請勾選「確認處理」後再送出");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
+      const description =
+        def.id === "repair"
+          ? reason
+          : [reason, note.trim() ? `備註：${note.trim()}` : ""].filter(Boolean).join("\n");
+
       const res = await fetch("/api/admin/store/entry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -132,10 +170,10 @@ export function StoreQuickEntryForm({
           product_label: productName,
           batch_id: batchId,
           quantity: quantity ? Number(quantity) : null,
-          reason,
-          description: reason,
-          anomaly_type: type === "issue_return" ? caseKind : def.anomalyType,
-          case_kind: type === "issue_return" ? caseKind : null,
+          reason: description || reason,
+          description: description || reason,
+          anomaly_type: type === "issue" ? caseKind : def.anomalyType,
+          case_kind: type === "issue" ? caseKind : type === "return" ? "customer_return" : null,
           status,
           invoice_no: invoiceNo || null,
           location: location || null,
@@ -147,6 +185,14 @@ export function StoreQuickEntryForm({
           customer_phone: customerPhone || null,
           pieces_count: piecesCount ? Number(piecesCount) : null,
           vendor_name: vendorName || null,
+          assignee_name: assigneeName || null,
+          pause_sales: pauseSales,
+          manager_confirmed: managerConfirmed,
+          disposal_reason_code: disposalReasonCode || null,
+          return_target: returnTarget || null,
+          expected_return_date: expectedReturnDate || null,
+          urgency: urgency || null,
+          affects_operations: affectsOperations,
         }),
       });
       const data = await res.json();
@@ -155,16 +201,19 @@ export function StoreQuickEntryForm({
       const href =
         data.resource === "disposals"
           ? "/admin/store/disposals"
-          : data.resource === "returns" || data.resource === "anomalies" || data.resource === "issue_return"
-            ? "/admin/store/issues"
-          : data.resource === "store_messages"
+          : data.resource === "returns"
+            ? "/admin/store/returns"
+            : data.resource === "anomalies" || data.resource === "issue_return"
+              ? type === "repair"
+                ? "/admin/store/issues?filter=repair"
+                : "/admin/store/issues"
+              : data.resource === "store_messages"
                 ? "/admin/store#messages"
                 : "/admin/store";
 
       setDone({ message: data.message ?? "已送出", href });
       resetFields();
       if (type === "repair") setStatus("notified_vendor");
-      else if (type === "disposal") setStatus("pending");
       else setStatus("pending");
     } catch (e) {
       setError(e instanceof Error ? e.message : "送出失敗");
@@ -207,10 +256,16 @@ export function StoreQuickEntryForm({
 
   if (step === "pick" || !def) {
     return (
-      <div className="mx-auto max-w-lg space-y-3">
-        <p className="text-sm text-muted-foreground">選擇要登記的類型</p>
+      <div className="mx-auto max-w-lg space-y-4">
+        <div className="rounded-[14px] border border-[#FFE149]/60 bg-[#FFFBEA] px-4 py-3">
+          <p className="text-sm font-bold text-[#153E73]">商品處理流程</p>
+          <p className="mt-1 text-[12px] text-[#153E73]/70">
+            {PRODUCT_HANDLING_FLOW_STEPS.join(" → ")}
+          </p>
+        </div>
+        <p className="text-sm font-semibold text-[#153E73]">1. 選擇處理類型</p>
         <div className="grid gap-2">
-          {STORE_ENTRY_TYPES.map((t) => (
+          {PRODUCT_HANDLING_TYPES.map((t) => (
             <button
               key={t.id}
               type="button"
@@ -224,15 +279,34 @@ export function StoreQuickEntryForm({
             </button>
           ))}
         </div>
+        <p className="pt-2 text-xs font-semibold uppercase tracking-wide text-[#153E73]/45">
+          其他
+        </p>
+        <div className="grid gap-2">
+          {STORE_ENTRY_OTHER_TYPES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => pickType(t.id)}
+              className="rounded-[14px] border border-dashed border-[#E7EAF0] bg-white px-4 py-3 text-left transition hover:border-[#FFE149] hover:bg-[#FFFBEA]"
+            >
+              <span className="block text-[14px] font-semibold text-[#153E73]">{t.label}</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                {t.description}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
 
   const showProduct = def.requiresProduct || Boolean(def.optionalProduct);
-  const isIssueReturn = def.id === "issue_return";
+  const isIssue = def.id === "issue";
   const isRepair = def.id === "repair";
   const isDisposal = def.id === "disposal";
-  const showServiceFields = isIssueReturn || isDisposal || isRepair;
+  const isReturn = def.id === "return";
+  const isProductHandling = def.group === "product";
   const showPhotos = def.resource !== "store_messages";
 
   return (
@@ -257,7 +331,7 @@ export function StoreQuickEntryForm({
       <div className="space-y-4 rounded-[14px] border border-[#E7EAF0] bg-white p-4 shadow-sm">
         {showProduct ? (
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-[#153E73]">商品</p>
+            <p className="text-sm font-semibold text-[#153E73]">2. 掃描／選擇商品</p>
             <AdminBarcodeInput onSelect={onBarcode} autoFocus />
             {productName ? (
               <p className="text-sm text-[#153E73]">
@@ -298,28 +372,9 @@ export function StoreQuickEntryForm({
           </label>
         ) : null}
 
-        {isIssueReturn ? (
+        {(isIssue || isReturn || isDisposal || def.requiresQuantity) && !isRepair ? (
           <label className="block space-y-1.5 text-sm">
-            <span className="font-semibold text-[#153E73]">類型</span>
-            <select
-              className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
-              value={caseKind}
-              onChange={(e) => setCaseKind(e.target.value)}
-            >
-              {ISSUE_RETURN_CASE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-
-        {(isIssueReturn || def.requiresQuantity || def.requiresProduct) && !isRepair ? (
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-semibold text-[#153E73]">
-              數量{def.requiresQuantity || isIssueReturn ? "（必填）" : "（選填）"}
-            </span>
+            <span className="font-semibold text-[#153E73]">3. 數量（必填）</span>
             <Input
               type="number"
               inputMode="decimal"
@@ -333,9 +388,176 @@ export function StoreQuickEntryForm({
           </label>
         ) : null}
 
+        {/* —— Type-specific —— */}
+        {isIssue ? (
+          <div className="space-y-3 rounded-xl border border-[#E7EAF0] bg-[#F7F8FA] p-3">
+            <p className="text-sm font-bold text-[#153E73]">4. 異常細節</p>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">異常類型</span>
+              <select
+                className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
+                value={caseKind}
+                onChange={(e) => setCaseKind(e.target.value)}
+              >
+                {ISSUE_ANOMALY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium text-[#153E73]">
+              <input
+                type="checkbox"
+                checked={pauseSales}
+                onChange={(e) => setPauseSales(e.target.checked)}
+                className="h-4 w-4 rounded border-[#E7EAF0]"
+              />
+              暫停銷售此商品（僅紀錄，不改商品主檔上架）
+            </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">狀態</span>
+              <select
+                className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {ISSUE_STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : null}
+
+        {isDisposal ? (
+          <div className="space-y-3 rounded-xl border border-[#E7EAF0] bg-[#F7F8FA] p-3">
+            <p className="text-sm font-bold text-[#153E73]">4. 報廢細節</p>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">報廢原因</span>
+              <select
+                className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
+                value={disposalReasonCode}
+                onChange={(e) => {
+                  setDisposalReasonCode(e.target.value);
+                  const label =
+                    DISPOSAL_REASON_OPTIONS.find((o) => o.value === e.target.value)?.label ?? "";
+                  if (!reason.trim()) setReason(label);
+                }}
+              >
+                {DISPOSAL_REASON_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">效期</span>
+              <Input
+                type="date"
+                className="h-11 rounded-xl"
+                value={productExpiry}
+                onChange={(e) => setProductExpiry(e.target.value)}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium text-[#153E73]">
+              <input
+                type="checkbox"
+                checked={managerConfirmed}
+                onChange={(e) => setManagerConfirmed(e.target.checked)}
+                className="h-4 w-4 rounded border-[#E7EAF0]"
+              />
+              主管已確認報廢
+            </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">狀態</span>
+              <select
+                className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {DISPOSAL_STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : null}
+
+        {isReturn ? (
+          <div className="space-y-3 rounded-xl border border-[#E7EAF0] bg-[#F7F8FA] p-3">
+            <p className="text-sm font-bold text-[#153E73]">4. 退貨細節</p>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">退貨對象</span>
+              <select
+                className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
+                value={returnTarget}
+                onChange={(e) => setReturnTarget(e.target.value)}
+              >
+                {RETURN_TARGET_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">預計退貨日</span>
+              <Input
+                type="date"
+                className="h-11 rounded-xl"
+                value={expectedReturnDate}
+                onChange={(e) => setExpectedReturnDate(e.target.value)}
+              />
+            </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">狀態</span>
+              <select
+                className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {RETURN_STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ) : null}
+
         {isRepair ? (
           <div className="space-y-3 rounded-xl border border-[#E9DED4] bg-[#FFFCF7] p-3">
-            <p className="text-sm font-bold text-[#153E73]">客戶資料</p>
+            <p className="text-sm font-bold text-[#153E73]">4. 報修細節</p>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">緊急程度</span>
+              <select
+                className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
+                value={urgency}
+                onChange={(e) => setUrgency(e.target.value)}
+              >
+                {REPAIR_URGENCY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium text-[#153E73]">
+              <input
+                type="checkbox"
+                checked={affectsOperations}
+                onChange={(e) => setAffectsOperations(e.target.checked)}
+                className="h-4 w-4 rounded border-[#E7EAF0]"
+              />
+              是否影響營運
+            </label>
             <label className="block space-y-1 text-sm">
               <span className="font-medium text-[#153E73]">收件時間</span>
               <Input
@@ -346,7 +568,7 @@ export function StoreQuickEntryForm({
               />
             </label>
             <label className="block space-y-1 text-sm">
-              <span className="font-medium text-[#153E73]">姓名</span>
+              <span className="font-medium text-[#153E73]">客戶姓名</span>
               <Input
                 className="h-11 rounded-xl"
                 value={customerName}
@@ -370,7 +592,7 @@ export function StoreQuickEntryForm({
               />
             </label>
             <label className="block space-y-1 text-sm">
-              <span className="font-medium text-[#153E73]">帶回件數登記</span>
+              <span className="font-medium text-[#153E73]">帶回件數</span>
               <Input
                 type="number"
                 min={0}
@@ -387,21 +609,33 @@ export function StoreQuickEntryForm({
                 onChange={(e) => setVendorName(e.target.value)}
               />
             </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">狀態</span>
+              <select
+                className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                {REPAIR_STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         ) : null}
 
-        {showServiceFields && !isRepair ? (
-          <>
-            {!isDisposal ? (
-              <label className="block space-y-1.5 text-sm">
-                <span className="font-semibold text-[#153E73]">發票號碼（選填）</span>
-                <Input
-                  className="h-11 rounded-xl"
-                  value={invoiceNo}
-                  onChange={(e) => setInvoiceNo(e.target.value)}
-                />
-              </label>
-            ) : null}
+        {(isIssue || isReturn) && !isDisposal ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block space-y-1.5 text-sm">
+              <span className="font-semibold text-[#153E73]">發票號碼（選填）</span>
+              <Input
+                className="h-11 rounded-xl"
+                value={invoiceNo}
+                onChange={(e) => setInvoiceNo(e.target.value)}
+              />
+            </label>
             <label className="block space-y-1.5 text-sm">
               <span className="font-semibold text-[#153E73]">擺放位置（選填）</span>
               <Input
@@ -411,99 +645,87 @@ export function StoreQuickEntryForm({
                 placeholder="例如 冷藏 A3"
               />
             </label>
-            <label className="block space-y-1.5 text-sm">
-              <span className="font-semibold text-[#153E73]">產品效期（選填）</span>
-              <Input
-                type="date"
-                className="h-11 rounded-xl"
-                value={productExpiry}
-                onChange={(e) => setProductExpiry(e.target.value)}
-              />
-            </label>
-          </>
-        ) : null}
-
-        {isIssueReturn ? (
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-semibold text-[#153E73]">狀態</span>
-            <select
-              className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              {ISSUE_RETURN_STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-
-        {isRepair ? (
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-semibold text-[#153E73]">狀態</span>
-            <select
-              className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              {REPAIR_STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-            <span className="text-[11px] text-muted-foreground">
-              送出後會記錄變更時間並保留軌跡
-            </span>
-          </label>
-        ) : null}
-
-        {isDisposal ? (
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-semibold text-[#153E73]">狀態</span>
-            <select
-              className="h-11 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              {DISPOSAL_STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
+            {isIssue ? (
+              <label className="block space-y-1.5 text-sm sm:col-span-2">
+                <span className="font-semibold text-[#153E73]">產品效期（選填）</span>
+                <Input
+                  type="date"
+                  className="h-11 rounded-xl"
+                  value={productExpiry}
+                  onChange={(e) => setProductExpiry(e.target.value)}
+                />
+              </label>
+            ) : null}
+          </div>
         ) : null}
 
         <label className="block space-y-1.5 text-sm">
           <span className="font-semibold text-[#153E73]">
-            {isRepair ? "說明欄位（必填）" : "原因／說明（必填）"}
+            {isRepair ? "故障說明（必填）" : "原因／說明（必填）"}
           </span>
           <textarea
-            className="min-h-[100px] w-full rounded-xl border border-[#E7EAF0] px-3 py-2 text-sm"
+            className="min-h-[88px] w-full rounded-xl border border-[#E7EAF0] px-3 py-2 text-sm"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder={
               def.id === "message"
                 ? "寫下要告訴同事的話"
-                : "簡短說明即可"
+                : isRepair
+                  ? "簡述故障現象"
+                  : "簡短說明即可"
             }
           />
         </label>
 
         {showPhotos ? (
-          <AdminImageUpload
-            images={photos}
-            onChange={setPhotos}
-            multiple
-            maxImages={8}
-            label="照片（可多張）"
-            hint="可拍現場／商品照片"
-            uploadFolder="store-ops"
-            bucket="product-images"
-          />
+          <div className="space-y-1.5">
+            <p className="text-sm font-semibold text-[#153E73]">5. 拍照上傳</p>
+            <AdminImageUpload
+              images={photos}
+              onChange={setPhotos}
+              multiple
+              maxImages={8}
+              label="照片（可多張）"
+              hint="可拍現場／商品照片"
+              uploadFolder="store-ops"
+              bucket="product-images"
+            />
+          </div>
+        ) : null}
+
+        {isProductHandling ? (
+          <div className="space-y-3 rounded-xl border border-[#E7EAF0] bg-[#F7F8FA] p-3">
+            <p className="text-sm font-bold text-[#153E73]">6. 備註與負責人</p>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">負責人</span>
+              <Input
+                className="h-11 rounded-xl"
+                value={assigneeName}
+                onChange={(e) => setAssigneeName(e.target.value)}
+                placeholder="誰負責跟進"
+              />
+            </label>
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-[#153E73]">備註（選填）</span>
+              <textarea
+                className="min-h-[64px] w-full rounded-xl border border-[#E7EAF0] bg-white px-3 py-2 text-sm"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
+            </label>
+          </div>
+        ) : null}
+
+        {isProductHandling ? (
+          <label className="flex items-start gap-2 rounded-xl border border-[#FFE149]/70 bg-[#FFFBEA] px-3 py-3 text-sm font-semibold text-[#153E73]">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-[#E7EAF0]"
+            />
+            <span>7. 確認處理 — 資料正確，送出登記（不建立第二份商品主檔）</span>
+          </label>
         ) : null}
 
         {error ? (
@@ -523,6 +745,10 @@ export function StoreQuickEntryForm({
         >
           {saving ? "送出中…" : "送出"}
         </Button>
+
+        <p className="text-center text-[11px] text-muted-foreground">
+          類型代碼：{def.id} · 共 {STORE_ENTRY_TYPES.length} 種表單入口
+        </p>
       </div>
     </div>
   );

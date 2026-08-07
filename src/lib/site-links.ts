@@ -49,6 +49,7 @@ export const APP_ROUTES = {
   corporate: "/corporate",
   admin: "/admin",
   staffLogin: "/staff/login",
+  staffHome: "/staff",
   staffPickupScan: "/staff/pickup-scan",
 } as const;
 
@@ -109,6 +110,7 @@ const LINK_META: Record<AppRouteKey, { label: string; description?: string }> = 
   corporate: { label: "企業福委", description: "企業詢價與合作" },
   admin: { label: "管理後台", description: "admin / store_staff" },
   staffLogin: { label: "門市登入", description: "門市人員專用登入" },
+  staffHome: { label: "門市作業首頁", description: "取貨掃碼與協作入口" },
   staffPickupScan: { label: "門市掃碼", description: "取貨掃碼與確認" },
 };
 

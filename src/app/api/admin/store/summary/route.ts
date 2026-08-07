@@ -21,6 +21,11 @@ const EMPTY = {
     pendingRestock: 0,
     todayReceive: 0,
     lastBackupAt: null as string | null,
+    pendingRequests: 0,
+    pendingCustomerOrders: 0,
+    pendingPriceInquiries: 0,
+    unreadMessages: 0,
+    unreadNotifications: 0,
   },
   ordersToday: {
     new: 0,
@@ -37,9 +42,23 @@ const EMPTY = {
     href?: string | null;
     is_done?: boolean;
   }>,
+  tomorrowChecklist: [] as Array<{
+    id: string;
+    label: string;
+    href?: string | null;
+    is_done?: boolean;
+  }>,
   requests: [] as Array<Record<string, unknown>>,
+  customerRequests: [] as Array<Record<string, unknown>>,
   messages: [] as Array<Record<string, unknown>>,
   workLogs: [] as Array<Record<string, unknown>>,
+  notifications: [] as Array<Record<string, unknown>>,
+  activity: [] as Array<{
+    id: string;
+    at: string;
+    label: string;
+    href?: string;
+  }>,
 };
 
 export async function GET() {
@@ -111,11 +130,11 @@ export async function GET() {
     admin
       .from("store_anomalies")
       .select("id", { count: "exact", head: true })
-      .in("status", ["open", "processing"]),
+      .in("status", ["open", "processing", "pending", "notified_vendor", "vendor_collected"]),
     admin
       .from("store_returns")
       .select("id", { count: "exact", head: true })
-      .in("status", ["open", "approved"]),
+      .in("status", ["open", "approved", "pending", "awaiting_vendor"]),
     admin.from("products").select("id, stock, safety_stock").eq("is_active", true).limit(800),
     admin
       .from("store_backup_logs")
@@ -259,20 +278,55 @@ export async function GET() {
     href?: string | null;
     is_done?: boolean;
   }> = [];
+  let tomorrowChecklist: Array<{
+    id: string;
+    label: string;
+    href?: string | null;
+    is_done?: boolean;
+  }> = [];
   let requests: Array<Record<string, unknown>> = [];
+  let customerRequests: Array<Record<string, unknown>> = [];
   let messages: Array<Record<string, unknown>> = [];
   let workLogs: Array<Record<string, unknown>> = [];
   let pendingRequests = 0;
+  let pendingCustomerOrders = 0;
+  let pendingPriceInquiries = 0;
+  let unreadMessages = 0;
+  let unreadNotifications = 0;
+  let notifications: Array<Record<string, unknown>> = [];
+  const activity: Array<{ id: string; at: string; label: string; href?: string }> = [];
 
   if (storeId) {
     await admin.rpc("ensure_store_daily_todos", { p_store_id: storeId, p_date: today });
+    const tomorrow = daysFromNow(1);
+    await admin.rpc("ensure_store_daily_todos", { p_store_id: storeId, p_date: tomorrow });
 
-    const [todoRows, reqRows, msgRows, logRows, pendingCount] = await Promise.all([
+    const userId = auth!.profile.id;
+    const {
+      getMessageUnreadCount,
+      getNotificationUnreadCount,
+    } = await import("@/lib/admin/store-notifications");
+
+    const [
+      todoRows,
+      tomorrowRows,
+      reqRows,
+      msgRows,
+      logRows,
+      pendingCount,
+      notifRows,
+    ] = await Promise.all([
       admin
         .from("store_todos")
         .select("id, label, href, is_done, sort_order")
         .eq("store_id", storeId)
         .eq("todo_date", today)
+        .order("sort_order", { ascending: true }),
+      admin
+        .from("store_todos")
+        .select("id, label, href, is_done, sort_order")
+        .eq("store_id", storeId)
+        .eq("todo_date", tomorrow)
         .order("sort_order", { ascending: true }),
       admin
         .from("store_requests")
@@ -301,7 +355,50 @@ export async function GET() {
         .select("id", { count: "exact", head: true })
         .eq("store_id", storeId)
         .eq("status", "pending"),
+      admin
+        .from("store_notifications")
+        .select("*")
+        .eq("store_id", storeId)
+        .order("created_at", { ascending: false })
+        .limit(12),
     ]);
+
+    void notifRows.error;
+    notifications = notifRows.error
+      ? []
+      : ((notifRows.data ?? []) as Array<Record<string, unknown>>);
+
+    unreadMessages = await getMessageUnreadCount(admin, { storeId, userId });
+    unreadNotifications = await getNotificationUnreadCount(admin, storeId);
+
+    // Soft-fail if customer-request tables are not yet available in an environment
+    const [openCustomerRows, orderPending, inquiryPending] = await Promise.all([
+      admin
+        .from("store_customer_requests")
+        .select(
+          "id, request_type, customer_name, customer_phone, quantity, status, note, inquiry_body, created_at, products(name)"
+        )
+        .eq("store_id", storeId)
+        .in("status", ["pending", "quoted", "notified"])
+        .order("created_at", { ascending: false })
+        .limit(12),
+      admin
+        .from("store_customer_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", storeId)
+        .eq("request_type", "order")
+        .in("status", ["pending", "quoted", "notified"]),
+      admin
+        .from("store_customer_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", storeId)
+        .eq("request_type", "price_inquiry")
+        .in("status", ["pending", "quoted", "notified"]),
+    ]);
+
+    void openCustomerRows.error;
+    void orderPending.error;
+    void inquiryPending.error;
 
     checklist = (todoRows.data ?? []).map((t) => ({
       id: t.id,
@@ -309,17 +406,84 @@ export async function GET() {
       href: t.href,
       is_done: Boolean(t.is_done),
     }));
+    tomorrowChecklist = (tomorrowRows.data ?? []).map((t) => ({
+      id: t.id,
+      label: t.label,
+      href: t.href,
+      is_done: Boolean(t.is_done),
+    }));
     requests = (reqRows.data ?? []) as Array<Record<string, unknown>>;
+    customerRequests = openCustomerRows.error
+      ? []
+      : ((openCustomerRows.data ?? []) as Array<Record<string, unknown>>);
     messages = (msgRows.data ?? []) as Array<Record<string, unknown>>;
     workLogs = (logRows.data ?? []) as Array<Record<string, unknown>>;
     pendingRequests = pendingCount.count ?? 0;
+    pendingCustomerOrders = orderPending.error ? 0 : (orderPending.count ?? 0);
+    pendingPriceInquiries = inquiryPending.error ? 0 : (inquiryPending.count ?? 0);
 
+    for (const row of requests.slice(0, 5)) {
+      const productName =
+        (row.products as { name?: string } | null)?.name ||
+        String(row.product_label ?? "未指定商品");
+      activity.push({
+        id: `req-${String(row.id)}`,
+        at: String(row.created_at ?? ""),
+        label: `${String(row.requested_by_name ?? "分店")}提出需求：${productName}`,
+        href: "/admin/store/demand",
+      });
+    }
+    for (const row of customerRequests.slice(0, 5)) {
+      const typeLabel = row.request_type === "price_inquiry" ? "價格詢問" : "商品訂購";
+      activity.push({
+        id: `csr-${String(row.id)}`,
+        at: String(row.created_at ?? ""),
+        label: `${typeLabel}：${String(row.customer_name ?? "客戶")}`,
+        href: "/admin/store/pos",
+      });
+    }
+    for (const row of messages.slice(-5)) {
+      activity.push({
+        id: `msg-${String(row.id)}`,
+        at: String(row.created_at ?? ""),
+        label: `${String(row.author_name ?? "門市")}留言`,
+        href: "/admin/store#messages",
+      });
+    }
+    for (const row of notifications.filter((n) => !n.is_read).slice(0, 5)) {
+      activity.push({
+        id: `ntf-${String(row.id)}`,
+        at: String(row.created_at ?? ""),
+        label: String(row.title ?? "跨店通知"),
+        href: String(row.href ?? "/admin/store#notifications"),
+      });
+    }
+    activity.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+
+    if (unreadNotifications > 0) {
+      todos.unshift({
+        priority: 0,
+        label: "跨店未讀通知",
+        href: "/admin/store#notifications",
+        count: unreadNotifications,
+      });
+      todos.sort((a, b) => a.priority - b.priority);
+    }
     if (pendingRequests > 0) {
       todos.unshift({
         priority: 0,
         label: "待審核叫貨需求",
         href: "/admin/store#requests",
         count: pendingRequests,
+      });
+      todos.sort((a, b) => a.priority - b.priority);
+    }
+    if (pendingCustomerOrders + pendingPriceInquiries > 0) {
+      todos.unshift({
+        priority: 0,
+        label: "待處理客戶服務",
+        href: "/admin/store/pos",
+        count: pendingCustomerOrders + pendingPriceInquiries,
       });
       todos.sort((a, b) => a.priority - b.priority);
     }
@@ -343,12 +507,20 @@ export async function GET() {
       todayReceive: todayReceive.count ?? 0,
       lastBackupAt: backup.data?.finished_at ?? backup.data?.created_at ?? null,
       pendingRequests,
+      pendingCustomerOrders,
+      pendingPriceInquiries,
+      unreadMessages,
+      unreadNotifications,
     },
     ordersToday,
     todos,
     checklist,
+    tomorrowChecklist,
     requests,
+    customerRequests,
     messages,
     workLogs,
+    notifications,
+    activity: activity.slice(0, 12),
   });
 }

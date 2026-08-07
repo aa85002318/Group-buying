@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireOpsAdmin, logAudit } from "@/lib/auth";
+import { requireRole, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSafeLinkUrl } from "@/lib/cms/safeHtml";
 
 export async function GET() {
-  const { error } = await requireOpsAdmin();
+  const { error } = await requireRole(["admin", "customer_service"]);
   if (error) return error;
 
   if (!isSupabaseConfigured()) {
@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const { error, auth } = await requireOpsAdmin();
+  const { error, auth } = await requireRole(["admin", "customer_service"]);
   if (error) return error;
 
   const body = await request.json();

@@ -26,6 +26,8 @@ import {
   AdminLineChart,
 } from "@/components/admin/v2/AdminCharts";
 import { useAdminShell } from "@/components/admin/AdminShell";
+import { CustomerServiceHome } from "@/components/admin/CustomerServiceHome";
+import { ContentEditorHome } from "@/components/admin/ContentEditorHome";
 import { formatCurrency } from "@/lib/utils";
 
 type Period = "today" | "yesterday" | "week" | "month" | "all";
@@ -84,14 +86,15 @@ const WORKSPACE: Array<{
   Icon: LucideIcon;
   tone: string;
 }> = [
-  { title: "APP 版型", href: "/admin/home", Icon: LayoutTemplate, tone: "#FFF5CC" },
-  { title: "文章管理", href: "/admin/articles", Icon: FileText, tone: "#EEF8FC" },
-  { title: "團購管理", href: "/admin/group-buy/products", Icon: ShoppingBag, tone: "#FFF0EE" },
-  { title: "商品管理", href: "/admin/products", Icon: PackagePlus, tone: "#EFF9EE" },
-  { title: "門市工具", href: "/admin/store", Icon: Store, tone: "#FFF7CC" },
-  { title: "食譜管理", href: "/admin/recipes", Icon: BookOpen, tone: "#F3EEFF" },
-  { title: "公司資訊", href: "/admin/stores", Icon: Megaphone, tone: "#EEF8FC" },
-  { title: "物流金流", href: "/admin/payments", Icon: Truck, tone: "#FFF0EE" },
+  { title: "APP 版型設定", href: "/admin/home", Icon: LayoutTemplate, tone: "#FFF5CC" },
+  { title: "文章新增", href: "/admin/articles/new", Icon: FileText, tone: "#EEF8FC" },
+  { title: "門市協作中心", href: "/admin/store", Icon: Store, tone: "#FFF7CC" },
+  { title: "團購新增", href: "/admin/products/new?mode=group-buy", Icon: ShoppingBag, tone: "#FFF0EE" },
+  { title: "烘焙商品", href: "/admin/products", Icon: PackagePlus, tone: "#EFF9EE" },
+  { title: "物流金流設定", href: "/admin/payments", Icon: Truck, tone: "#FFF0EE" },
+  { title: "公司相關資訊", href: "/admin/stores?tab=company", Icon: Megaphone, tone: "#EEF8FC" },
+  { title: "客服", href: "/admin/support", Icon: MessageSquare, tone: "#F3EEFF" },
+  { title: "食譜新增", href: "/admin/recipes/new", Icon: BookOpen, tone: "#EEF8FC" },
 ];
 
 const QUICK_CREATE: Array<{
@@ -155,6 +158,28 @@ function StatCard({
 
 export default function AdminDashboardPage() {
   const { profile } = useAdminShell();
+  const role = profile?.role;
+
+  if (!role) {
+    return (
+      <div className="space-y-4">
+        <div className="admin-skeleton h-10 w-48" />
+        <div className="admin-skeleton h-40 w-full" />
+      </div>
+    );
+  }
+
+  if (role === "customer_service") {
+    return <CustomerServiceHome fullName={profile?.full_name} />;
+  }
+  if (role === "content_editor") {
+    return <ContentEditorHome fullName={profile?.full_name} />;
+  }
+
+  return <AdminOpsDashboard fullName={profile?.full_name} />;
+}
+
+function AdminOpsDashboard({ fullName }: { fullName?: string | null }) {
   const [period, setPeriod] = useState<Period>("today");
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -230,7 +255,7 @@ export default function AdminDashboardPage() {
         <div>
           <p className="text-sm font-semibold text-[var(--admin-muted)]">今日營運</p>
           <h1 className="mt-1 text-2xl font-bold text-[var(--admin-title)] md:text-[30px]">
-            {greetingLabel(profile?.full_name)}
+            {greetingLabel(fullName)}
           </h1>
           <p className="mt-1 text-sm text-[var(--admin-muted)]">
             一眼掌握今天要處理的事，常用功能都在首頁。
@@ -318,7 +343,7 @@ export default function AdminDashboardPage() {
 
           <section>
             <h2 className="mb-4 text-lg font-bold text-[var(--admin-title)]">工作區</h2>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
               {WORKSPACE.map((item, i) => (
                 <motion.div
                   key={item.href}

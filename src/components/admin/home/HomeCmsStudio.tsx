@@ -8,7 +8,6 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { HomeLayoutPublishBar } from "@/components/admin/HomeLayoutPublishBar";
 import { HomeHeroEditor } from "@/components/admin/home/HomeHeroEditor";
 import { LatestCampaignEditor } from "@/components/admin/home/LatestCampaignEditor";
 import { QuickServicesEditor } from "@/components/admin/home/QuickServicesEditor";
@@ -24,6 +23,8 @@ import {
   CmsSettingsPanel,
   CmsStudioHeader,
   CmsStudioShell,
+  CmsVersionPublishBar,
+  CmsWorkflowSteps,
   type CmsDevice,
   type CmsSaveStatus,
 } from "@/components/admin/cms-studio";
@@ -370,12 +371,28 @@ export function HomeCmsStudio() {
             description="拖拉排序核心區塊，右側預覽草稿。AI 頁（/ai）Hero 為靜態素材，搜尋與頁首部分沿用首頁 Hero 設定。"
             status={dirtyHint ? (saveStatus === "saving" ? "saving" : "dirty") : saveStatus}
             notice={
-              <p className="rounded-lg border border-[#FFE149]/60 bg-[#FFFBEA] px-3 py-2 text-xs text-[#153E73]">
-                提示：商城 AI 卡（/admin/shop/ai-assistant）僅管理商城內卡片，不是 /ai 頁 CMS。
-              </p>
+              <div className="space-y-2">
+                <CmsWorkflowSteps
+                  active={
+                    mobileTab === "preview"
+                      ? "preview"
+                      : mobileTab === "edit"
+                        ? "edit"
+                        : "list"
+                  }
+                />
+                <p className="rounded-lg border border-[#FFE149]/60 bg-[#FFFBEA] px-3 py-2 text-xs text-[#153E73]">
+                  提示：商城 AI 卡（/admin/shop/ai-assistant）僅管理商城內卡片，不是 /ai 頁 CMS。
+                </p>
+              </div>
             }
           />
-          <HomeLayoutPublishBar
+          <CmsVersionPublishBar
+            apiPath="/api/admin/home/layout"
+            title="首頁草稿與發布"
+            description="區塊變更先寫入草稿，發布或排程後才會影響前台。"
+            previewHref="/?preview=draft"
+            publishConfirm="確定發布草稿到線上首頁？"
             onChanged={() => {
               load();
               setPreviewKey((k) => k + 1);

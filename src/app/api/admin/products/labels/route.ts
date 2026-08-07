@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireStoreOps, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BUILTIN_TEMPLATES, type LabelProduct } from "@/lib/admin/product-labels";
@@ -52,7 +52,7 @@ function isMissingColumnError(message: string): boolean {
 }
 
 export async function GET(request: Request) {
-  const { error } = await requireAdmin();
+  const { error } = await requireStoreOps();
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
@@ -144,7 +144,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { error: authError, auth } = await requireAdmin();
+  const { error: authError, auth } = await requireStoreOps();
   if (authError) return authError;
 
   const body = await request.json();

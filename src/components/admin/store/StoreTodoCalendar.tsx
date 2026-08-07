@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 import { todayISO } from "@/lib/admin/store-ops";
 import { cn } from "@/lib/utils";
 
-type TabId = "todos" | "worklogs" | "voids";
+export type WorkTabId = "todos" | "worklogs" | "messages";
 
 type ChecklistItem = {
   id: string;
   label: string;
   href?: string | null;
   is_done?: boolean;
+  source?: string | null;
 };
 
 type WorkLog = {
@@ -24,13 +25,10 @@ type WorkLog = {
   created_at?: string;
 };
 
-type VoidInvoice = {
+type StoreMessage = {
   id: string;
-  invoice_no: string;
-  reason: string;
-  invoice_medium: "carrier" | "paper";
-  carrier_code?: string | null;
-  created_by_name?: string | null;
+  body: string;
+  author_name?: string | null;
   created_at?: string;
 };
 
@@ -50,55 +48,70 @@ function formatDayLabel(iso: string): string {
   });
 }
 
-const TABS: Array<{ id: TabId; label: string }> = [
+const TABS: Array<{ id: WorkTabId; label: string }> = [
   { id: "todos", label: "待辦事項" },
   { id: "worklogs", label: "每日工作紀錄" },
-  { id: "voids", label: "作廢發票" },
+  { id: "messages", label: "交班留言" },
 ];
 
-/** 門市行事曆：待辦／工作紀錄／作廢發票 */
-export function StoreTodoCalendar({ initialTab = "todos" }: { initialTab?: TabId }) {
-  const [day, setDay] = useState(todayISO());
-  const [tab, setTab] = useState<TabId>(initialTab);
+function formatTime(value?: string | null) {
+  if (!value) return "";
+  return new Date(value).toLocaleTimeString("zh-TW", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** 門市工作管理：待辦／工作紀錄／交班留言（不含發票／POS） */
+export function StoreTodoCalendar({
+  initialTab = "todos",
+  initialDate,
+}: {
+  initialTab?: WorkTabId;
+  initialDate?: string;
+}) {
+  const [day, setDay] = useState(initialDate || todayISO());
+  const [tab, setTab] = useState<WorkTabId>(initialTab);
   const [todos, setTodos] = useState<ChecklistItem[]>([]);
   const [workLogs, setWorkLogs] = useState<WorkLog[]>([]);
-  const [voids, setVoids] = useState<VoidInvoice[]>([]);
+  const [messages, setMessages] = useState<StoreMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [todoDraft, setTodoDraft] = useState("");
   const [workDraft, setWorkDraft] = useState("");
-  const [voidForm, setVoidForm] = useState({
-    invoice_no: "",
-    reason: "",
-    invoice_medium: "paper" as "carrier" | "paper",
-    carrier_code: "",
-  });
+  const [messageDraft, setMessageDraft] = useState("");
 
   const isToday = day === todayISO();
+  const tomorrow = shiftDate(todayISO(), 1);
+  const isTomorrow = day === tomorrow;
 
   const load = useCallback(async (date: string) => {
     setLoading(true);
     setError(null);
     try {
-      const [tRes, wRes, vRes] = await Promise.all([
+      const [tRes, wRes, mRes] = await Promise.all([
         fetch(`/api/admin/store/todos?date=${encodeURIComponent(date)}`),
         fetch(`/api/admin/store/work-logs?date=${encodeURIComponent(date)}`),
-        fetch(`/api/admin/store/void-invoices?date=${encodeURIComponent(date)}`),
+        fetch(`/api/admin/store/messages?date=${encodeURIComponent(date)}`),
       ]);
-      const [tData, wData, vData] = await Promise.all([tRes.json(), wRes.json(), vRes.json()]);
+      const [tData, wData, mData] = await Promise.all([
+        tRes.json(),
+        wRes.json(),
+        mRes.json(),
+      ]);
       if (!tRes.ok) throw new Error(tData.error ?? "待辦載入失敗");
       if (!wRes.ok) throw new Error(wData.error ?? "工作紀錄載入失敗");
-      if (!vRes.ok) throw new Error(vData.error ?? "作廢發票載入失敗");
+      if (!mRes.ok) throw new Error(mData.error ?? "留言載入失敗");
       setTodos(tData.todos ?? []);
       setWorkLogs(wData.logs ?? []);
-      setVoids(vData.invoices ?? []);
+      setMessages(mData.messages ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "載入失敗");
       setTodos([]);
       setWorkLogs([]);
-      setVoids([]);
+      setMessages([]);
     } finally {
       setLoading(false);
     }
@@ -108,10 +121,20 @@ export function StoreTodoCalendar({ initialTab = "todos" }: { initialTab?: TabId
     void load(day);
   }, [day, load]);
 
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (initialDate) setDay(initialDate);
+  }, [initialDate]);
+
   const weekDays = useMemo(() => {
     const start = shiftDate(day, -3);
     return Array.from({ length: 7 }, (_, i) => shiftDate(start, i));
   }, [day]);
+
+  const doneCount = todos.filter((t) => t.is_done).length;
 
   const toggleTodo = async (item: ChecklistItem) => {
     const nextDone = !item.is_done;
@@ -206,90 +229,96 @@ export function StoreTodoCalendar({ initialTab = "todos" }: { initialTab?: TabId
     }
   };
 
-  const addVoid = async () => {
+  const addMessage = async () => {
+    const text = messageDraft.trim();
+    if (!text) return;
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/store/void-invoices", {
+      const res = await fetch("/api/admin/store/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...voidForm,
-          void_date: day,
-          carrier_code:
-            voidForm.invoice_medium === "carrier" ? voidForm.carrier_code : null,
-        }),
+        body: JSON.stringify({ body: text }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "新增失敗");
-      setVoidForm({
-        invoice_no: "",
-        reason: "",
-        invoice_medium: "paper",
-        carrier_code: "",
-      });
-      setVoids((prev) => [data.item, ...prev]);
+      if (!res.ok) throw new Error(data.error ?? "送出失敗");
+      setMessageDraft("");
+      // Only show if message falls on selected day (usually today)
+      if (isToday || day === todayISO()) {
+        setMessages((prev) => [...prev, data.item]);
+      } else {
+        setError("交班留言已送出（歸於今天）。切換到今天可查看。");
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "新增失敗");
+      setError(e instanceof Error ? e.message : "送出失敗");
     } finally {
       setBusy(false);
     }
   };
 
-  const removeVoid = async (item: VoidInvoice) => {
-    if (!window.confirm(`刪除作廢發票「${item.invoice_no}」？`)) return;
-    setVoids((prev) => prev.filter((t) => t.id !== item.id));
-    try {
-      const res = await fetch("/api/admin/store/void-invoices", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: item.id }),
-      });
-      if (!res.ok) throw new Error("刪除失敗");
-    } catch {
-      void load(day);
-    }
-  };
-
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <button
-          type="button"
-          className="rounded-lg border border-[#E7EAF0] p-1.5 hover:bg-[#FFFBEA]"
-          onClick={() => setDay((d) => shiftDate(d, -1))}
-          aria-label="前一天"
-        >
-          <ChevronLeft className="h-4 w-4 text-[#153E73]" />
-        </button>
-        <div className="min-w-0 text-center">
-          <p className="text-sm font-bold text-[#153E73]">{formatDayLabel(day)}</p>
-          {!isToday ? (
-            <button
-              type="button"
-              className="text-[11px] font-semibold text-[#153E73] underline"
-              onClick={() => setDay(todayISO())}
-            >
-              回到今天
-            </button>
-          ) : (
-            <p className="text-[11px] text-muted-foreground">今天</p>
-          )}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="rounded-lg border border-[#E7EAF0] p-1.5 hover:bg-[#FFFBEA]"
+            onClick={() => setDay((d) => shiftDate(d, -1))}
+            aria-label="前一天"
+          >
+            <ChevronLeft className="h-4 w-4 text-[#153E73]" />
+          </button>
+          <div className="min-w-0 text-center">
+            <p className="text-sm font-bold text-[#153E73]">{formatDayLabel(day)}</p>
+            <div className="flex flex-wrap justify-center gap-2 text-[11px]">
+              {!isToday ? (
+                <button
+                  type="button"
+                  className="font-semibold text-[#153E73] underline"
+                  onClick={() => setDay(todayISO())}
+                >
+                  今天
+                </button>
+              ) : (
+                <span className="text-muted-foreground">今天</span>
+              )}
+              {!isTomorrow ? (
+                <button
+                  type="button"
+                  className="font-semibold text-[#153E73] underline"
+                  onClick={() => {
+                    setDay(tomorrow);
+                    setTab("todos");
+                  }}
+                >
+                  明日待辦
+                </button>
+              ) : (
+                <span className="font-semibold text-[#153E73]">明日待辦</span>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="rounded-lg border border-[#E7EAF0] p-1.5 hover:bg-[#FFFBEA]"
+            onClick={() => setDay((d) => shiftDate(d, 1))}
+            aria-label="後一天"
+          >
+            <ChevronRight className="h-4 w-4 text-[#153E73]" />
+          </button>
         </div>
-        <button
-          type="button"
-          className="rounded-lg border border-[#E7EAF0] p-1.5 hover:bg-[#FFFBEA]"
-          onClick={() => setDay((d) => shiftDate(d, 1))}
-          aria-label="後一天"
-        >
-          <ChevronRight className="h-4 w-4 text-[#153E73]" />
-        </button>
+        {tab === "todos" && todos.length > 0 ? (
+          <p className="text-xs font-semibold text-[#153E73]/70">
+            完成 {doneCount}/{todos.length}
+          </p>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-7 gap-1">
         {weekDays.map((d) => {
           const dateObj = new Date(d + "T12:00:00");
           const selected = d === day;
+          const isTmr = d === tomorrow;
           return (
             <button
               key={d}
@@ -299,7 +328,9 @@ export function StoreTodoCalendar({ initialTab = "todos" }: { initialTab?: TabId
                 "rounded-lg px-1 py-2 text-center text-[11px] transition",
                 selected
                   ? "bg-[#FFE149] font-bold text-[#153E73]"
-                  : "bg-[#F7F8FA] text-[#153E73]/80 hover:bg-[#FFFBEA]"
+                  : isTmr
+                    ? "bg-[#FFFBEA] font-semibold text-[#153E73] ring-1 ring-[#FFE149]/50"
+                    : "bg-[#F7F8FA] text-[#153E73]/80 hover:bg-[#FFFBEA]"
               )}
             >
               <span className="block text-[10px] opacity-70">
@@ -346,6 +377,11 @@ export function StoreTodoCalendar({ initialTab = "todos" }: { initialTab?: TabId
         <p className="text-sm text-muted-foreground">載入中…</p>
       ) : tab === "todos" ? (
         <div className="space-y-3">
+          {isTomorrow ? (
+            <p className="rounded-lg border border-[#FFE149]/50 bg-[#FFFBEA] px-3 py-2 text-xs text-[#153E73]">
+              正在編輯明日待辦。交班前可先排好明天要處理的事。
+            </p>
+          ) : null}
           {todos.length === 0 ? (
             <p className="rounded-[12px] border border-dashed border-[#E8EBF0] bg-[#F7F8FA] px-3 py-4 text-sm text-muted-foreground">
               這天尚無待辦，可在下方新增。
@@ -397,7 +433,7 @@ export function StoreTodoCalendar({ initialTab = "todos" }: { initialTab?: TabId
           <div className="flex gap-2">
             <Input
               className="h-10 rounded-xl"
-              placeholder="新增待辦事項…"
+              placeholder={isTomorrow ? "新增明日待辦…" : "新增待辦事項…"}
               value={todoDraft}
               onChange={(e) => setTodoDraft(e.target.value)}
               onKeyDown={(e) => {
@@ -420,6 +456,9 @@ export function StoreTodoCalendar({ initialTab = "todos" }: { initialTab?: TabId
         </div>
       ) : tab === "worklogs" ? (
         <div className="space-y-3">
+          <p className="text-[11px] text-muted-foreground">
+            記錄當日實際完成的工作內容，方便交班對照。
+          </p>
           {workLogs.length === 0 ? (
             <p className="rounded-[12px] border border-dashed border-[#E8EBF0] bg-[#F7F8FA] px-3 py-4 text-sm text-muted-foreground">
               這天尚無工作紀錄。
@@ -436,12 +475,7 @@ export function StoreTodoCalendar({ initialTab = "todos" }: { initialTab?: TabId
                       <p className="whitespace-pre-wrap text-sm text-[#153E73]">{item.body}</p>
                       <p className="mt-1 text-[11px] text-muted-foreground">
                         {item.author_name || "門市"}
-                        {item.created_at
-                          ? ` · ${new Date(item.created_at).toLocaleTimeString("zh-TW", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}`
-                          : ""}
+                        {item.created_at ? ` · ${formatTime(item.created_at)}` : ""}
                       </p>
                     </div>
                     <button
@@ -474,87 +508,55 @@ export function StoreTodoCalendar({ initialTab = "todos" }: { initialTab?: TabId
         </div>
       ) : (
         <div className="space-y-3">
-          {voids.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground">
+            給下一班同事的訊息。留言一律記在送出當下（今天），與待辦／工作紀錄分開。
+          </p>
+          {messages.length === 0 ? (
             <p className="rounded-[12px] border border-dashed border-[#E8EBF0] bg-[#F7F8FA] px-3 py-4 text-sm text-muted-foreground">
-              這天尚無作廢發票。
+              {isToday ? "今天還沒有交班留言。" : "這天沒有交班留言紀錄。"}
             </p>
           ) : (
-            <ul className="space-y-2">
-              {voids.map((item) => (
+            <ul className="max-h-72 space-y-2 overflow-y-auto">
+              {messages.map((item) => (
                 <li
                   key={item.id}
-                  className="rounded-[12px] border border-[#E8EBF0] px-3 py-2.5"
+                  className="rounded-[12px] border border-[#E8EBF0] bg-white px-3 py-2.5"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-[#153E73]">
-                        {item.invoice_no}
-                        <span className="ml-2 text-xs font-medium text-[#153E73]/70">
-                          {item.invoice_medium === "carrier" ? "載具" : "實體發票"}
-                          {item.carrier_code ? ` · ${item.carrier_code}` : ""}
-                        </span>
-                      </p>
-                      <p className="mt-1 text-sm text-[#153E73]/90">{item.reason}</p>
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        {item.created_by_name || "門市"}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      className="rounded-md p-1 text-red-500 hover:bg-red-50"
-                      onClick={() => void removeVoid(item)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-sm font-bold text-[#153E73]">
+                      {item.author_name || "門市"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatTime(item.created_at)}
+                    </p>
                   </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-[#153E73]/90">
+                    {item.body}
+                  </p>
                 </li>
               ))}
             </ul>
           )}
-          <div className="space-y-2 rounded-xl border border-[#E9DED4] bg-[#FFFCF7] p-3">
+          <div className="flex gap-2">
             <Input
               className="h-10 rounded-xl"
-              placeholder="發票號碼"
-              value={voidForm.invoice_no}
-              onChange={(e) => setVoidForm((f) => ({ ...f, invoice_no: e.target.value }))}
+              placeholder="快速交班留言…"
+              value={messageDraft}
+              onChange={(e) => setMessageDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void addMessage();
+                }
+              }}
             />
-            <Input
-              className="h-10 rounded-xl"
-              placeholder="原因"
-              value={voidForm.reason}
-              onChange={(e) => setVoidForm((f) => ({ ...f, reason: e.target.value }))}
-            />
-            <select
-              className="h-10 w-full rounded-xl border border-[#E7EAF0] bg-white px-3 text-sm"
-              value={voidForm.invoice_medium}
-              onChange={(e) =>
-                setVoidForm((f) => ({
-                  ...f,
-                  invoice_medium: e.target.value as "carrier" | "paper",
-                }))
-              }
-            >
-              <option value="paper">實體發票</option>
-              <option value="carrier">載具</option>
-            </select>
-            {voidForm.invoice_medium === "carrier" ? (
-              <Input
-                className="h-10 rounded-xl"
-                placeholder="載具號碼"
-                value={voidForm.carrier_code}
-                onChange={(e) => setVoidForm((f) => ({ ...f, carrier_code: e.target.value }))}
-              />
-            ) : null}
             <Button
               type="button"
-              disabled={
-                busy || !voidForm.invoice_no.trim() || !voidForm.reason.trim()
-              }
-              className="w-full border-[#FFE149] bg-[#FFE149] text-[#153E73]"
-              onClick={() => void addVoid()}
+              disabled={busy || !messageDraft.trim()}
+              className="shrink-0 border-[#FFE149] bg-[#FFE149] text-[#153E73]"
+              onClick={() => void addMessage()}
             >
-              <Plus className="mr-1 h-4 w-4" />
-              新增作廢發票
+              送出
             </Button>
           </div>
         </div>

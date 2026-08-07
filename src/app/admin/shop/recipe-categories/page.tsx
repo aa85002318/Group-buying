@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -140,7 +141,7 @@ export default function AdminShopRecipeCategoriesPage() {
         description="靈感牆分類選單：可新增／刪除，並更換上方圓形圖案。系統固定保留「熱門推薦／全部」。"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Link href="/admin/shop?section=recipe-categories" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               返回商城 CMS
             </Link>
             <Button size="sm" onClick={openCreate}>
@@ -149,6 +150,8 @@ export default function AdminShopRecipeCategoriesPage() {
           </div>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="recipe-categories" />
 
       {showForm ? (
         <div className="space-y-3 rounded-xl bg-white p-4 shadow-card">

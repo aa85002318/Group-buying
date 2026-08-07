@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
-import { APP_ROUTES } from "@/lib/site-links";
+import StaffHomeClient from "./StaffHomeClient";
 
+/** Staff hub — App pickup ops + links into store collaboration (not POS). */
 export default function StaffHomePage() {
-  redirect(APP_ROUTES.staffPickupScan);
+  return <StaffHomeClient />;
 }

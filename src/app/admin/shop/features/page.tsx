@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -132,7 +133,7 @@ export default function AdminShopFeaturesPage() {
         description="固定最多 3 格 banner 圖（前台無區塊標題）。上傳圖片並設定連結即可。"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Link href="/admin/shop?section=features" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               返回商城 CMS
             </Link>
             <Button size="sm" onClick={openCreate} disabled={features.length >= 3}>
@@ -141,6 +142,8 @@ export default function AdminShopFeaturesPage() {
           </div>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="features" />
 
       {showForm ? (
         <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">

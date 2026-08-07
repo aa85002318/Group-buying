@@ -4,6 +4,20 @@ import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { todayISO } from "@/lib/admin/store-ops";
 
+async function resolveStoreId(
+  admin: ReturnType<typeof createAdminClient>,
+  storeId?: string | null
+) {
+  if (storeId) return storeId;
+  const { data } = await admin
+    .from("stores")
+    .select("id")
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
 export async function GET(request: Request) {
   const { error } = await requireStoreOps();
   if (error) return error;
@@ -15,10 +29,13 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const day = url.searchParams.get("date") || todayISO();
   const admin = createAdminClient();
-  const dayStart = `${day}T00:00:00.000Z`;
-  const dayEnd = `${day}T23:59:59.999Z`;
+  const storeId = await resolveStoreId(admin, url.searchParams.get("store_id"));
 
-  const { data, error: qError } = await admin
+  // Use Taiwan calendar day bounds in UTC+8
+  const dayStart = `${day}T00:00:00+08:00`;
+  const dayEnd = `${day}T23:59:59.999+08:00`;
+
+  let query = admin
     .from("store_messages")
     .select("*")
     .gte("created_at", dayStart)
@@ -26,8 +43,15 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: true })
     .limit(100);
 
+  if (storeId) query = query.eq("store_id", storeId);
+
+  const { data, error: qError } = await query;
   if (qError) return NextResponse.json({ error: qError.message }, { status: 500 });
-  return NextResponse.json({ messages: data ?? [] });
+  return NextResponse.json({
+    messages: data ?? [],
+    store_id: storeId,
+    date: day,
+  });
 }
 
 export async function POST(request: Request) {
@@ -50,16 +74,7 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
-  let storeId = (body.store_id as string | undefined) || null;
-  if (!storeId) {
-    const { data: store } = await admin
-      .from("stores")
-      .select("id")
-      .eq("is_active", true)
-      .limit(1)
-      .maybeSingle();
-    storeId = store?.id ?? null;
-  }
+  const storeId = await resolveStoreId(admin, body.store_id);
   if (!storeId) return NextResponse.json({ error: "找不到可用門市" }, { status: 400 });
 
   const staffName =

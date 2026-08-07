@@ -43,33 +43,63 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
   };
 
   if (isLoginPage) {
-    return <div className="min-h-screen bg-background">{children}</div>;
+    return <div className="min-h-screen bg-[#F7F8FA]">{children}</div>;
   }
 
+  const nav = [
+    { href: APP_ROUTES.staffHome, label: "今日作業", match: (p: string) => p === "/staff" || p === "/staff/" },
+    {
+      href: APP_ROUTES.staffPickupScan,
+      label: "掃碼取貨",
+      match: (p: string) => p.startsWith("/staff/pickup"),
+    },
+    { href: "/admin/store", label: "協作中心", match: () => false },
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card px-4 py-3">
+    <div className="min-h-screen bg-[#F7F8FA]">
+      <header className="border-b border-[#E6E9EF] bg-white px-4 py-3">
         <div className="mx-auto flex max-w-lg items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-coffee">門市取貨系統</p>
+            <p className="text-sm font-bold text-[#153E73]">門市取貨作業</p>
             {staff ? (
-              <p className="text-xs text-muted-foreground">
-                {staff.full_name ?? staff.email} · {ROLE_LABELS[staff.role as keyof typeof ROLE_LABELS] ?? staff.role}
+              <p className="text-xs text-[#687386]">
+                {staff.full_name ?? staff.email} ·{" "}
+                {ROLE_LABELS[staff.role as keyof typeof ROLE_LABELS] ?? staff.role}
                 {staff.store?.name ? ` · ${staff.store.name}` : ""}
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground">載入中…</p>
+              <p className="text-xs text-[#687386]">載入中…</p>
             )}
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1 text-xs">
-            <Link href={APP_ROUTES.staffPickupScan} className="text-primary hover:underline">
-              掃碼取貨
-            </Link>
-            <Button type="button" variant="ghost" size="sm" className="h-auto px-0 py-0 text-muted-foreground" onClick={logout}>
-              登出
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-auto px-0 py-0 text-[#687386]"
+            onClick={logout}
+          >
+            登出
+          </Button>
         </div>
+        <nav className="mx-auto mt-3 flex max-w-lg gap-1">
+          {nav.map((item) => {
+            const active = item.match(pathname);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex-1 rounded-full px-3 py-2 text-center text-xs font-semibold transition ${
+                  active
+                    ? "bg-[#FFE149] text-[#153E73]"
+                    : "bg-[#F7F8FA] text-[#153E73]/80 hover:bg-[#FFFBEA]"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
       </header>
       {children}
     </div>

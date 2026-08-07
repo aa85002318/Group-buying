@@ -94,12 +94,20 @@ export async function requireAdmin() {
   return result;
 }
 
-/** Admin or content editor — recipes / news / banners / FAQ / home CMS */
+/** Admin or content editor — recipes / news / banners / home CMS */
 export async function requireContentAdmin() {
   if (!isSupabaseConfigured()) {
     return { error: null, auth: getMockAdminAuth() };
   }
   return requireRole(["admin", "content_editor"]);
+}
+
+/** FAQ — shared by content editors and customer service */
+export async function requireFaqAdmin() {
+  if (!isSupabaseConfigured()) {
+    return { error: null, auth: getMockAdminAuth() };
+  }
+  return requireRole(["admin", "content_editor", "customer_service"]);
 }
 
 /** Admin, customer service, or store staff — App orders / members view */
@@ -146,16 +154,19 @@ export async function logAudit(
 ) {
   try {
     const { createAdminClient } = await import("@/lib/supabase/admin");
+    const { sanitizeAuditPayload } = await import("@/lib/services/auditService");
     const admin = createAdminClient();
+    const forwarded = request?.headers.get("x-forwarded-for");
+    const ip = forwarded?.split(",")[0]?.trim() || request?.headers.get("x-real-ip") || null;
     await admin.from("audit_logs").insert({
       user_id: userId,
       action,
       entity_type: entityType,
       entity_id: entityId,
-      old_data: oldData ?? null,
-      new_data: newData ?? null,
-      ip_address: request?.headers.get("x-forwarded-for") ?? null,
-      user_agent: request?.headers.get("user-agent") ?? null,
+      old_data: sanitizeAuditPayload(oldData ?? null),
+      new_data: sanitizeAuditPayload(newData ?? null),
+      ip_address: ip,
+      user_agent: request?.headers.get("user-agent")?.slice(0, 500) ?? null,
     });
   } catch (e) {
     console.error("Audit log failed:", e);

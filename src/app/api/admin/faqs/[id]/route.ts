@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { requireContentAdmin, logAudit } from "@/lib/auth";
+import { requireFaqAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const { error, auth } = await requireContentAdmin();
+  const { error, auth } = await requireFaqAdmin();
   if (error) return error;
 
   const { id } = await context.params;
@@ -33,7 +33,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const { error, auth } = await requireContentAdmin();
+  const { error, auth } = await requireFaqAdmin();
   if (error) return error;
 
   const { id } = await context.params;

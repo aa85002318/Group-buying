@@ -20,7 +20,7 @@
   --admin-radius-btn: 18px;
   --admin-radius-input: 16px;
   --admin-header-h: 72px;
-  --admin-sidebar-width: 260px;
+  --admin-sidebar-width: 240px;
 
   /* Soft remap so existing primary utilities lean brand-yellow in admin */
   --primary: #ffe149;

@@ -15,7 +15,7 @@ const STAFF_ROLES = new Set(["admin", "store_staff"]);
 export default function StaffLoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? APP_ROUTES.staffPickupScan;
+  const next = searchParams.get("next") ?? APP_ROUTES.staffHome;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,7 +53,7 @@ export default function StaffLoginClient() {
       return;
     }
 
-    router.push(next.startsWith("/") ? next : APP_ROUTES.staffPickupScan);
+    router.push(next.startsWith("/") ? next : APP_ROUTES.staffHome);
     router.refresh();
   };
 
@@ -61,8 +61,10 @@ export default function StaffLoginClient() {
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <Logo size="header" withText markOnly textLayout="below" align="center" title="CHIMEIDIY 團購" subtitle="棋美點心屋" />
-        <h1 className="text-xl font-bold text-coffee">門市人員登入</h1>
-        <p className="text-sm text-muted-foreground">登入後可掃碼查單、確認收款與取貨</p>
+        <h1 className="text-xl font-bold text-[#153E73]">門市人員登入</h1>
+        <p className="text-sm text-[#687386]">
+          登入後進入今日作業：App 取貨掃碼，並可連到門市協作中心（不含 POS／收銀）
+        </p>
       </div>
 
       <form onSubmit={handleLogin} className="space-y-4 rounded-xl bg-card p-6 shadow-card">

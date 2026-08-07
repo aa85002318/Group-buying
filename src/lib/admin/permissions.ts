@@ -1,15 +1,17 @@
 export type AdminRole = "admin" | "store_staff" | "content_editor" | "customer_service";
 
+/**
+ * Paths store_staff may open (prefix match via isPathAllowed).
+ * Product master: list + labels only — see isStoreStaffAllowedPath.
+ * No CMS, no payment-records, no company-wide system pages.
+ */
 export const STORE_STAFF_ADMIN_PATHS = [
-  "/admin",
+  "/admin/store",
+  "/admin/stores",
   "/admin/orders",
   "/admin/payments",
   "/admin/pickup",
-  "/admin/store",
-  "/admin/payment-records",
-  "/admin/suppliers",
-  "/admin/categories",
-  "/admin/products",
+  "/admin/products/labels",
 ] as const;
 
 export const CONTENT_EDITOR_ADMIN_PATHS = [
@@ -42,6 +44,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/themes",
   "/admin/side-menu",
   "/admin/navigation",
+  "/admin/media",
   "/admin/settings",
   "/admin/brand-system",
   "/admin/group-buy",
@@ -62,7 +65,14 @@ export function isPathAllowed(path: string, allowed: readonly string[]): boolean
 }
 
 export function isStoreStaffAllowedPath(path: string): boolean {
-  return isPathAllowed(path, STORE_STAFF_ADMIN_PATHS);
+  const base = path.split("?")[0] ?? path;
+  // Dashboard redirects in middleware; allow so matcher doesn't loop oddly.
+  if (base === "/admin" || base === "/admin/") return true;
+  // Product master: browse list + price labels only (no new/edit/import/analysis).
+  if (base === "/admin/products") return true;
+  if (base.startsWith("/admin/products/labels")) return true;
+  if (base.startsWith("/admin/products")) return false;
+  return isPathAllowed(base, STORE_STAFF_ADMIN_PATHS);
 }
 
 export function isContentEditorAllowedPath(path: string): boolean {
@@ -101,7 +111,7 @@ export type AdminNavGroup = {
 
 /**
  * Grouped admin navigation — CHIMEIDIY 管理中心
- * Store ops live under /admin/store/* (no iframe / no second admin).
+ * Store collaboration lives under /admin/store/* (no POS / no second admin).
  */
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
@@ -112,60 +122,143 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     id: "store",
-    label: "門市管理",
+    label: "門市協作中心",
     icon: "Store",
     roles: ["admin", "store_staff"],
     items: [
-      { type: "heading", label: "門市總覽", roles: ["admin", "store_staff"] },
-      { href: "/admin/store", label: "今日工作台", roles: ["admin", "store_staff"] },
-      { href: "/admin/orders", label: "App 訂單", roles: ["admin", "store_staff"] },
-      { href: "/admin/pickup", label: "取貨核銷", roles: ["admin", "store_staff"] },
+      { type: "heading", label: "今日總覽", roles: ["admin", "store_staff"] },
+      { href: "/admin/store", label: "今日總覽", roles: ["admin", "store_staff"] },
 
+      { type: "heading", label: "客戶服務", roles: ["admin", "store_staff"] },
       {
         href: "/admin/store/pos",
-        label: "現場客戶服務",
+        label: "客戶服務",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/pos?type=order",
+        label: "商品訂購",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/pos?type=price_inquiry",
+        label: "價格詢問",
+        roles: ["admin", "store_staff"],
+      },
+
+      { type: "heading", label: "分店協作", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/store/demand?type=restock",
+        label: "分店貨品需求",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/demand?type=out_of_stock",
+        label: "缺貨通知",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/inventory",
+        label: "分店庫存查詢",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store#messages",
+        label: "分店留言",
         roles: ["admin", "store_staff"],
       },
 
       { type: "heading", label: "商品處理", roles: ["admin", "store_staff"] },
       {
-        href: "/admin/store/entry?type=issue_return",
-        label: "異常／退貨",
+        href: "/admin/store/entry?type=issue",
+        label: "商品異常",
         roles: ["admin", "store_staff"],
       },
-      { href: "/admin/store/disposals", label: "商品報廢", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/store/entry?type=disposal",
+        label: "商品報廢",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/store/entry?type=return",
+        label: "商品退貨",
+        roles: ["admin", "store_staff"],
+      },
       {
         href: "/admin/store/entry?type=repair",
         label: "商品報修",
         roles: ["admin", "store_staff"],
       },
       { href: "/admin/store/expiry", label: "效期管理", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/store/entry",
+        label: "共用處理表單",
+        roles: ["admin", "store_staff"],
+      },
+      /* List views — reachable from form success / hub, keep access */
+      {
+        href: "/admin/store/issues",
+        label: "異常紀錄",
+        roles: ["admin", "store_staff"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/store/disposals",
+        label: "報廢紀錄",
+        roles: ["admin", "store_staff"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/store/returns",
+        label: "退貨紀錄",
+        roles: ["admin", "store_staff"],
+        hiddenFromSidebar: true,
+      },
 
-      { type: "heading", label: "分店商品需求／缺貨通知", roles: ["admin", "store_staff"] },
+      { type: "heading", label: "工作管理", roles: ["admin", "store_staff"] },
       {
-        href: "/admin/store/demand?type=out_of_stock",
-        label: "商品缺貨",
+        href: "/admin/store?tab=worklogs#calendar",
+        label: "每日工作紀錄",
         roles: ["admin", "store_staff"],
       },
       {
-        href: "/admin/store/demand?type=restock",
-        label: "門市商品叫貨需求",
-        roles: ["admin", "store_staff"],
-      },
-
-      { type: "heading", label: "門市行事曆", roles: ["admin", "store_staff"] },
-      {
-        href: "/admin/store#calendar",
-        label: "待辦／工作紀錄／作廢發票",
+        href: "/admin/store?tab=todos&date=tomorrow#calendar",
+        label: "明日待辦",
         roles: ["admin", "store_staff"],
       },
       {
-        href: "/admin/store#messages",
-        label: "留言板",
+        href: "/admin/store?tab=messages#messages",
+        label: "交班留言",
         roles: ["admin", "store_staff"],
       },
 
-      { type: "heading", label: "Excel 批次", roles: ["admin", "store_staff"] },
+      { type: "heading", label: "分店資訊", roles: ["admin", "store_staff"] },
+      { href: "/admin/stores", label: "分店列表", roles: ["admin", "store_staff"] },
+      {
+        href: "/admin/stores?tab=map",
+        label: "Google Maps",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/stores?tab=company",
+        label: "公司揭露資訊",
+        roles: ["admin"],
+      },
+      {
+        href: "/admin/stores?tab=social",
+        label: "社群連結",
+        roles: ["admin", "store_staff"],
+      },
+      {
+        href: "/admin/stores?tab=hours",
+        label: "營業資訊",
+        roles: ["admin", "store_staff"],
+      },
+      { href: "/admin/products", label: "商品主檔", roles: ["admin", "store_staff"] },
+      { href: "/admin/store/suppliers", label: "廠商管理", roles: ["admin", "store_staff"] },
+      { href: "/admin/products/labels", label: "價格牌列印", roles: ["admin", "store_staff"] },
+
+      { type: "heading", label: "批次工具", roles: ["admin", "store_staff"] },
       {
         href: "/admin/store/excel",
         label: "中文範本／匯入",
@@ -173,17 +266,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       },
       {
         href: "/admin/store/excel#export",
-        label: "匯出",
-        roles: ["admin", "store_staff"],
-      },
-
-      { type: "heading", label: "設定", roles: ["admin", "store_staff"] },
-      { href: "/admin/products", label: "商品主檔", roles: ["admin", "store_staff"] },
-      { href: "/admin/store/suppliers", label: "廠商管理", roles: ["admin", "store_staff"] },
-      { href: "/admin/products/labels", label: "價格牌列印", roles: ["admin", "store_staff"] },
-      {
-        href: "/admin/store/entry",
-        label: "現場輸入（異常／報廢等）",
+        label: "Excel 匯出",
         roles: ["admin", "store_staff"],
       },
       { href: "/admin/store/backups", label: "備份管理", roles: ["admin", "store_staff"] },
@@ -265,10 +348,17 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/home", label: "首頁 CMS", roles: ["admin", "content_editor"] },
       { href: "/admin/shop", label: "商城 CMS", roles: ["admin", "content_editor"] },
       { href: "/admin/group-buy/settings", label: "團購頁 CMS", roles: ["admin"] },
+      { href: "/admin/media", label: "素材庫", roles: ["admin", "content_editor"] },
       { href: "/admin/side-menu", label: "全站側選單", roles: ["admin", "content_editor"] },
       { href: "/admin/banners", label: "共用 Banner", roles: ["admin", "content_editor"] },
-      { href: "/admin/home/preview", label: "首頁預覽", roles: ["admin", "content_editor"] },
       { href: "/admin/content/popups", label: "彈跳公告", roles: ["admin", "content_editor"] },
+      /* Preview is inside Home CMS studio — keep route, hide from sidebar */
+      {
+        href: "/admin/home/preview",
+        label: "首頁預覽",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
 
       /* Shop detail routes — reachable from /admin/shop hub, not primary sidebar */
       {

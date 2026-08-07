@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,25 +12,31 @@ import {
   normalizeShopHex,
   type ShopPageSettings,
 } from "@/lib/shop/page-settings";
+import {
+  DEFAULT_SHOP_LAYOUT,
+  mergeShopLayoutSettings,
+  type ShopLayoutSettings,
+} from "@/lib/shop/layout-settings";
 import { cn } from "@/lib/utils";
 
 export default function AdminShopAppearancePage() {
+  const [layout, setLayout] = useState<ShopLayoutSettings>(DEFAULT_SHOP_LAYOUT);
   const [settings, setSettings] = useState<ShopPageSettings>(DEFAULT_SHOP_PAGE_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [matchHero, setMatchHero] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/shop/page-settings")
+    fetch("/api/admin/shop/layout")
       .then((r) => r.json())
       .then((d) => {
-        if (d.settings) {
-          setSettings(d.settings);
-          setMatchHero(
-            String(d.settings.header_bg_color).toUpperCase() ===
-              String(d.settings.hero_bg_color).toUpperCase()
-          );
-        }
+        const next = mergeShopLayoutSettings(d.settings ?? DEFAULT_SHOP_LAYOUT);
+        setLayout(next);
+        setSettings(next.appearance);
+        setMatchHero(
+          String(next.appearance.header_bg_color).toUpperCase() ===
+            String(next.appearance.hero_bg_color).toUpperCase()
+        );
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -56,19 +63,25 @@ export default function AdminShopAppearancePage() {
     }
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/shop/page-settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const nextLayout = mergeShopLayoutSettings({
+        ...layout,
+        appearance: {
           header_bg_color: header,
           hero_bg_color: hero,
           header_border_color: settings.header_border_color,
-        }),
+        },
+      });
+      const res = await fetch("/api/admin/shop/layout", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: nextLayout }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "儲存失敗");
-      setSettings(data.settings);
-      alert("已儲存頁首／Hero 底色");
+      const saved = mergeShopLayoutSettings(data.settings ?? nextLayout);
+      setLayout(saved);
+      setSettings(saved.appearance);
+      alert("已寫入版面草稿（尚未上線）。請回商城 CMS 發布。");
     } catch (e) {
       alert(e instanceof Error ? e.message : "儲存失敗");
     } finally {
@@ -80,13 +93,18 @@ export default function AdminShopAppearancePage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="商城頁首／Hero 外觀"
-        description="設定商城 Header 底色（建議與 Hero 同色銜接）。Logo 使用透明底素材，Hero 無圓角、無白邊。"
+        description="設定商城 Header 底色（建議與 Hero 同色銜接）。寫入版面草稿，發布後才上線。"
         actions={
-          <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+          <Link
+            href="/admin/shop?section=appearance"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
             返回商城 CMS
           </Link>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="appearance" draftMode />
 
       {loading ? (
         <p className="text-sm text-muted-foreground">載入中…</p>
@@ -204,14 +222,22 @@ export default function AdminShopAppearancePage() {
               </div>
             </div>
 
-            <Button onClick={() => void save()} disabled={saving}>
-              {saving ? "儲存中…" : "儲存"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => void save()} disabled={saving}>
+                {saving ? "儲存中…" : "儲存至版面草稿"}
+              </Button>
+              <Link
+                href="/admin/shop?section=appearance"
+                className={cn(buttonVariants({ variant: "outline" }))}
+              >
+                回 Hub 發布
+              </Link>
+            </div>
           </div>
 
           <div className="overflow-hidden rounded-xl bg-white shadow-card">
             <p className="border-b border-border px-4 py-2 text-sm font-medium text-coffee">
-              即時預覽
+              草稿預覽色塊
             </p>
             <div
               className="px-4 py-3"

@@ -84,7 +84,10 @@ export function GroupBuyPageClient() {
   }, [settings.pageSizeDesktop, settings.pageSizeMobile]);
 
   useEffect(() => {
-    fetch("/api/group-buy/page-settings")
+    const previewDraft =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("preview") === "draft";
+    fetch(previewDraft ? "/api/group-buy/page-settings?preview=draft" : "/api/group-buy/page-settings")
       .then((r) => r.json())
       .then((d) => {
         if (d.settings) {

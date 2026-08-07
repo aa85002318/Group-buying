@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireAdmin, requireStoreOps, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockProducts } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -123,7 +123,8 @@ async function maybeSyncChannels(productId: string, body: Record<string, unknown
 }
 
 export async function GET(request: Request) {
-  const { error } = await requireAdmin();
+  // store_staff: read-only product master browse; writes stay admin-only below
+  const { error } = await requireStoreOps();
   if (error) return error;
 
   const { searchParams } = new URL(request.url);

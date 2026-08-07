@@ -5,6 +5,8 @@ import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  buildGoogleMapsEmbedUrl,
+  buildGoogleMapsNavUrl,
   newId,
   parseLatLngFromGoogleMapsUrl,
   STORE_GALLERY_CATEGORIES,
@@ -12,6 +14,7 @@ import {
   STORE_WEEKDAY_KEYS,
   STORE_WEEKDAY_LABELS,
   type StoreAnnouncement,
+  type StoreDisclosure,
   type StoreGalleryCategory,
   type StoreGalleryItem,
   type StoreHoliday,
@@ -24,12 +27,14 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { id: "basic", label: "基本資料" },
-  { id: "social", label: "社群資訊" },
+  { id: "company", label: "公司揭露" },
+  { id: "social", label: "社群連結" },
   { id: "hours", label: "營業資訊" },
-  { id: "map", label: "Google Map" },
+  { id: "map", label: "Google Maps" },
+  { id: "services", label: "門市服務" },
   { id: "images", label: "圖片" },
   { id: "announce", label: "公告" },
-  { id: "seo", label: "SEO" },
+  { id: "system", label: "系統設定" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -37,10 +42,18 @@ type TabId = (typeof TABS)[number]["id"];
 type Props = {
   store: StoreProfile;
   onUpdated: (store: StoreProfile) => void;
+  /** Admin can edit company disclosure / system enable flags */
+  canEditAdminFields?: boolean;
+  initialTab?: TabId;
 };
 
-export function StoreProfileEditor({ store, onUpdated }: Props) {
-  const [tab, setTab] = useState<TabId>("basic");
+export function StoreProfileEditor({
+  store,
+  onUpdated,
+  canEditAdminFields = false,
+  initialTab = "basic",
+}: Props) {
+  const [tab, setTab] = useState<TabId>(initialTab);
   const [draft, setDraft] = useState<StoreProfile>(store);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +65,8 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
     skipFirst.current = true;
     setSaveState("idle");
     setError(null);
+    // Reset draft when switching stores; ignore subsequent prop churn from autosave echo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.id]);
 
   useEffect(() => {
@@ -100,6 +115,7 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
           gallery: next.gallery,
           announcements: next.announcements,
           seo: next.seo,
+          disclosure: next.disclosure,
           service_flags: next.service_flags,
           visibility: next.visibility,
           pickup_available: next.service_flags.pickup !== false,
@@ -138,47 +154,73 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
     patch({ weekly_hours: next });
   };
 
+  const patchDisclosure = (partial: Partial<StoreDisclosure>) => {
+    patch({ disclosure: { ...(draft.disclosure ?? {}), ...partial } });
+  };
+
+  const navUrl = buildGoogleMapsNavUrl({
+    map_url: draft.map_url,
+    latitude: draft.latitude,
+    longitude: draft.longitude,
+    address: draft.address,
+  });
+  const embedUrl = buildGoogleMapsEmbedUrl({
+    map_url: draft.map_url,
+    latitude: draft.latitude,
+    longitude: draft.longitude,
+    address: draft.address,
+  });
+
   return (
-    <div className="flex min-h-[520px] flex-col rounded-[16px] border border-[#E9DED4] bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E9DED4] px-4 py-3">
+    <div className="flex min-h-[520px] flex-col rounded-2xl border border-[#E7EAF0] bg-white shadow-[0_4px_14px_rgba(21,62,115,0.05)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E7EAF0] px-4 py-3">
         <div>
-          <h2 className="font-semibold text-[#2F2925]">{draft.name || "未命名分店"}</h2>
-          <p className="text-xs text-[#756B64]">
+          <h2 className="font-semibold text-[#153E73]">{draft.name || "未命名分店"}</h2>
+          <p className="text-xs text-[#8A94A6]">
             {saveState === "saving" && "儲存中…"}
             {saveState === "saved" && "已自動儲存"}
             {saveState === "error" && (error ?? "儲存失敗")}
             {saveState === "idle" && "編輯後自動儲存"}
           </p>
         </div>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <label className="flex items-center gap-1.5">
-            <input
-              type="checkbox"
-              checked={draft.is_active}
-              onChange={(e) => patch({ is_active: e.target.checked })}
-            />
-            啟用
-          </label>
-          <label className="flex items-center gap-1.5">
-            <input
-              type="checkbox"
-              checked={draft.is_default}
-              onChange={(e) => patch({ is_default: e.target.checked })}
-            />
-            預設門市
-          </label>
-        </div>
+        {canEditAdminFields ? (
+          <div className="flex flex-wrap gap-3 text-sm text-[#153E73]">
+            <label className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={draft.is_active}
+                onChange={(e) => patch({ is_active: e.target.checked })}
+              />
+              啟用
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={draft.is_default}
+                onChange={(e) => patch({ is_default: e.target.checked })}
+              />
+              預設門市
+            </label>
+          </div>
+        ) : (
+          <p className="text-xs text-[#8A94A6]">
+            {draft.is_active ? "已啟用" : "已停用"}
+            {draft.is_default ? " · 預設門市" : ""}
+          </p>
+        )}
       </div>
 
-      <div className="flex gap-1 overflow-x-auto border-b border-[#E9DED4] px-2 py-2">
+      <div className="flex gap-1 overflow-x-auto border-b border-[#E7EAF0] px-2 py-2">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
             className={cn(
-              "shrink-0 rounded-full px-3 py-1.5 text-sm",
-              tab === t.id ? "bg-[#FFF5C7] font-medium text-[#153E73]" : "text-[#756B64] hover:bg-[#FFFBEA]"
+              "shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold",
+              tab === t.id
+                ? "bg-[#FFE149] text-[#153E73]"
+                : "text-[#687386] hover:bg-[#FFFBEA]"
             )}
           >
             {t.label}
@@ -213,14 +255,14 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
               onToggleHide={(v) => patchVisibility("show_description", !v)}
             >
               <textarea
-                className="input-field min-h-[120px] w-full rounded-[10px] border border-[#E9DED4] px-3 py-2 text-sm"
+                className="input-field min-h-[120px] w-full rounded-xl border border-[#E7EAF0] px-3 py-2 text-sm"
                 value={draft.description ?? ""}
                 onChange={(e) => patch({ description: e.target.value || null })}
               />
             </Field>
             <Field label="注意事項（取貨／結帳顯示）">
               <textarea
-                className="input-field min-h-[80px] w-full rounded-[10px] border border-[#E9DED4] px-3 py-2 text-sm"
+                className="input-field min-h-[80px] w-full rounded-xl border border-[#E7EAF0] px-3 py-2 text-sm"
                 value={draft.notes ?? ""}
                 onChange={(e) => patch({ notes: e.target.value || null })}
               />
@@ -228,65 +270,55 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
             <Field label="Logo 網址">
               <Input value={draft.logo_url ?? ""} onChange={(e) => patch({ logo_url: e.target.value || null })} />
             </Field>
-            <div className="rounded-[12px] border border-[#E9DED4] bg-[#FAF6F1] p-3">
-              <p className="mb-2 text-sm font-medium text-[#2F2925]">門市服務</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {(
-                  [
-                    ["pickup", "自取／取貨"],
-                    ["frozen", "冷凍"],
-                    ["chilled", "冷藏"],
-                    ["parking", "停車"],
-                    ["accessible", "無障礙"],
-                    ["corporate", "企業取貨"],
-                    ["classroom", "課程教室"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(draft.service_flags[key])}
-                      onChange={(e) =>
-                        patch({
-                          service_flags: { ...draft.service_flags, [key]: e.target.checked },
-                        })
-                      }
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-[12px] border border-[#E9DED4] bg-[#FAF6F1] p-3">
-              <p className="mb-2 text-sm font-medium text-[#2F2925]">顯示於</p>
-              <div className="flex flex-wrap gap-3 text-sm">
-                {(
-                  [
-                    ["website", "官網"],
-                    ["app", "APP"],
-                    ["pwa", "PWA"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-1.5">
-                    <input
-                      type="checkbox"
-                      checked={draft.visibility[key] !== false}
-                      onChange={(e) => patchVisibility(key, e.target.checked)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-              <label className="mt-3 block space-y-1 text-sm">
-                <span className="text-[#756B64]">排序（數字越小越前）</span>
-                <Input
-                  type="number"
-                  value={draft.sort_order}
-                  onChange={(e) => patch({ sort_order: Number(e.target.value) || 0 })}
-                />
-              </label>
-            </div>
           </>
+        )}
+
+        {tab === "company" && (
+          <div className="space-y-3">
+            {!canEditAdminFields ? (
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                公司揭露資訊僅管理員可修改。以下為唯讀。
+              </p>
+            ) : null}
+            <Field label="公司名稱">
+              <Input
+                value={draft.disclosure?.company_name ?? ""}
+                disabled={!canEditAdminFields}
+                onChange={(e) => patchDisclosure({ company_name: e.target.value || undefined })}
+              />
+            </Field>
+            <Field label="統一編號">
+              <Input
+                value={draft.disclosure?.tax_id ?? ""}
+                disabled={!canEditAdminFields}
+                onChange={(e) => patchDisclosure({ tax_id: e.target.value || undefined })}
+              />
+            </Field>
+            <Field label="負責人">
+              <Input
+                value={draft.disclosure?.representative ?? ""}
+                disabled={!canEditAdminFields}
+                onChange={(e) => patchDisclosure({ representative: e.target.value || undefined })}
+              />
+            </Field>
+            <Field label="登記地址">
+              <Input
+                value={draft.disclosure?.registered_address ?? ""}
+                disabled={!canEditAdminFields}
+                onChange={(e) =>
+                  patchDisclosure({ registered_address: e.target.value || undefined })
+                }
+              />
+            </Field>
+            <Field label="補充說明">
+              <textarea
+                className="input-field min-h-[80px] w-full rounded-xl border border-[#E7EAF0] px-3 py-2 text-sm disabled:bg-[#F7F8FA]"
+                value={draft.disclosure?.note ?? ""}
+                disabled={!canEditAdminFields}
+                onChange={(e) => patchDisclosure({ note: e.target.value || undefined })}
+              />
+            </Field>
+          </div>
         )}
 
         {tab === "social" && (
@@ -461,7 +493,10 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
 
         {tab === "map" && (
           <div className="space-y-3">
-            <label className="flex items-center gap-1.5 text-sm">
+            <p className="text-xs text-[#687386]">
+              前台直接開啟 Google Maps，不自行建立導航。請填連結或經緯度。
+            </p>
+            <label className="flex items-center gap-1.5 text-sm font-medium text-[#153E73]">
               <input
                 type="checkbox"
                 checked={draft.visibility.show_map !== false}
@@ -469,44 +504,114 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
               />
               前台顯示地圖／導航
             </label>
-            <Field label="Google Map URL（APP 點擊導航）">
+            <Field label="Google Maps 連結">
               <Input
                 value={draft.map_url ?? ""}
                 onChange={(e) => patch({ map_url: e.target.value || null })}
                 placeholder="https://maps.google.com/..."
               />
             </Field>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                const { latitude, longitude } = parseLatLngFromGoogleMapsUrl(draft.map_url ?? "");
-                if (latitude == null && longitude == null) {
-                  alert("無法解析經緯度，請確認連結含 @lat,lng");
-                  return;
-                }
-                patch({ latitude, longitude });
-              }}
-            >
-              📍 自動取得經緯度
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const { latitude, longitude } = parseLatLngFromGoogleMapsUrl(
+                    draft.map_url ?? ""
+                  );
+                  if (latitude == null && longitude == null) {
+                    alert("無法解析經緯度，請確認連結含 @lat,lng 或手動輸入");
+                    return;
+                  }
+                  patch({ latitude, longitude });
+                }}
+              >
+                從連結解析經緯度
+              </Button>
+              {navUrl ? (
+                <a
+                  href={navUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-10 items-center rounded-md border border-[#FFE149] bg-[#FFE149] px-4 text-sm font-bold text-[#153E73]"
+                >
+                  一鍵導航測試
+                </a>
+              ) : (
+                <Button type="button" variant="outline" disabled>
+                  一鍵導航測試
+                </Button>
+              )}
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Latitude">
+              <Field label="緯度">
                 <Input
                   value={draft.latitude ?? ""}
                   onChange={(e) =>
                     patch({ latitude: e.target.value ? Number(e.target.value) : null })
                   }
+                  placeholder="25.0330"
                 />
               </Field>
-              <Field label="Longitude">
+              <Field label="經度">
                 <Input
                   value={draft.longitude ?? ""}
                   onChange={(e) =>
                     patch({ longitude: e.target.value ? Number(e.target.value) : null })
                   }
+                  placeholder="121.5654"
                 />
               </Field>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-[#E7EAF0] bg-[#F7F8FA]">
+              <p className="border-b border-[#E7EAF0] px-3 py-2 text-xs font-semibold text-[#153E73]">
+                地圖預覽
+              </p>
+              {embedUrl ? (
+                <iframe
+                  title="Google Maps 預覽"
+                  src={embedUrl}
+                  className="h-56 w-full border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              ) : (
+                <p className="px-3 py-10 text-center text-sm text-[#687386]">
+                  填寫連結、經緯度或地址後顯示預覽
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {tab === "services" && (
+          <div className="rounded-xl border border-[#E7EAF0] bg-[#F7F8FA] p-3">
+            <p className="mb-2 text-sm font-medium text-[#153E73]">門市服務</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(
+                [
+                  ["pickup", "自取／取貨"],
+                  ["frozen", "冷凍"],
+                  ["chilled", "冷藏"],
+                  ["parking", "停車"],
+                  ["accessible", "無障礙"],
+                  ["corporate", "企業取貨"],
+                  ["classroom", "課程教室"],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key} className="flex items-center gap-2 text-sm text-[#153E73]">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(draft.service_flags[key])}
+                    onChange={(e) =>
+                      patch({
+                        service_flags: { ...draft.service_flags, [key]: e.target.checked },
+                      })
+                    }
+                  />
+                  {label}
+                </label>
+              ))}
             </div>
           </div>
         )}
@@ -531,11 +636,41 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
           />
         )}
 
-        {tab === "seo" && (
+        {tab === "system" && (
           <div className="space-y-3">
+            <div className="rounded-xl border border-[#E7EAF0] bg-[#F7F8FA] p-3">
+              <p className="mb-2 text-sm font-medium text-[#153E73]">顯示於</p>
+              <div className="flex flex-wrap gap-3 text-sm text-[#153E73]">
+                {(
+                  [
+                    ["website", "官網"],
+                    ["app", "APP"],
+                    ["pwa", "PWA"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={draft.visibility[key] !== false}
+                      onChange={(e) => patchVisibility(key, e.target.checked)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+              <label className="mt-3 block space-y-1 text-sm">
+                <span className="text-[#8A94A6]">排序（數字越小越前）</span>
+                <Input
+                  type="number"
+                  value={draft.sort_order}
+                  onChange={(e) => patch({ sort_order: Number(e.target.value) || 0 })}
+                />
+              </label>
+            </div>
             <Field label="Slug（之後可用 /stores/你的slug）">
               <Input
                 value={draft.seo.slug ?? ""}
+                disabled={!canEditAdminFields}
                 onChange={(e) =>
                   patch({ seo: { ...draft.seo, slug: e.target.value || undefined } })
                 }
@@ -545,6 +680,7 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
             <Field label="Meta Title">
               <Input
                 value={draft.seo.title ?? ""}
+                disabled={!canEditAdminFields}
                 onChange={(e) =>
                   patch({ seo: { ...draft.seo, title: e.target.value || undefined } })
                 }
@@ -552,8 +688,9 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
             </Field>
             <Field label="Meta Description">
               <textarea
-                className="input-field min-h-[80px] w-full rounded-[10px] border border-[#E9DED4] px-3 py-2 text-sm"
+                className="input-field min-h-[80px] w-full rounded-xl border border-[#E7EAF0] px-3 py-2 text-sm disabled:bg-[#F7F8FA]"
                 value={draft.seo.description ?? ""}
+                disabled={!canEditAdminFields}
                 onChange={(e) =>
                   patch({ seo: { ...draft.seo, description: e.target.value || undefined } })
                 }
@@ -562,11 +699,15 @@ export function StoreProfileEditor({ store, onUpdated }: Props) {
             <Field label="OG 圖片網址">
               <Input
                 value={draft.seo.og_image ?? ""}
+                disabled={!canEditAdminFields}
                 onChange={(e) =>
                   patch({ seo: { ...draft.seo, og_image: e.target.value || undefined } })
                 }
               />
             </Field>
+            {!canEditAdminFields ? (
+              <p className="text-xs text-[#8A94A6]">SEO 與啟用狀態僅管理員可修改。</p>
+            ) : null}
           </div>
         )}
       </div>

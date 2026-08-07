@@ -44,8 +44,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Settings,
 };
 
-const EXPANDED_STORAGE_KEY = "chimeidiy-admin-nav-expanded-v2";
+const EXPANDED_STORAGE_KEY = "chimeidiy-admin-nav-expanded-v3";
 const COLLAPSED_STORAGE_KEY = "chimeidiy-admin-sidebar-collapsed";
+const SIDEBAR_EXPANDED_WIDTH = "240px";
+const SIDEBAR_COLLAPSED_WIDTH = "72px";
 
 function pathnameMatchesHref(pathname: string, href: string): boolean {
   const pathOnly = (href.split("?")[0] || href).split("#")[0] || href;
@@ -214,7 +216,7 @@ function AdminNavGroupSection({
               return (
                 <p
                   key={`heading-${group.id}-${item.label}-${idx}`}
-                  className="px-3 pb-0.5 pt-2 text-[11px] font-bold uppercase tracking-wide text-[#153E73]/45"
+                  className="px-3 pb-0.5 pt-2.5 text-[11px] font-bold tracking-wide text-[#153E73]/45"
                 >
                   {item.label}
                 </p>
@@ -236,70 +238,64 @@ function AdminNavGroupSection({
   );
 }
 
-function readStoredExpanded(): Set<string> {
-  if (typeof window === "undefined") return new Set();
+function readStoredExpandedId(): string | null {
+  if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(EXPANDED_STORAGE_KEY);
-    if (!raw) return new Set();
-    const parsed = JSON.parse(raw) as string[];
-    return new Set(Array.isArray(parsed) ? parsed : []);
+    if (!raw) return null;
+    // v3 stores a single group id; tolerate legacy JSON array
+    if (raw.startsWith("[")) {
+      const parsed = JSON.parse(raw) as string[];
+      return Array.isArray(parsed) && parsed[0] ? parsed[0] : null;
+    }
+    return raw || null;
   } catch {
-    return new Set();
+    return null;
   }
 }
 
+/** Accordion: only one primary group open at a time (active route always preferred). */
 function useExpandedGroups(navGroups: AdminNavGroup[], pathname: string) {
-  const activeGroupIds = useMemo(
-    () => navGroups.filter((g) => groupContainsActivePath(g, pathname)).map((g) => g.id),
-    [navGroups, pathname]
-  );
+  const activeGroupId = useMemo(() => {
+    const active = navGroups.find((g) => groupContainsActivePath(g, pathname));
+    return active?.id ?? navGroups[0]?.id ?? null;
+  }, [navGroups, pathname]);
 
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(activeGroupIds));
+  const [expandedId, setExpandedId] = useState<string | null>(activeGroupId);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const stored = readStoredExpanded();
-    // Default: only active groups (+ any previously stored that user opened)
-    setExpanded((prev) => {
-      const next = new Set<string>();
-      for (const id of activeGroupIds) next.add(id);
-      Array.from(stored).forEach((id) => {
-        if (navGroups.some((g) => g.id === id)) next.add(id);
-      });
-      Array.from(prev).forEach((id) => {
-        if (activeGroupIds.includes(id)) next.add(id);
-      });
-      return next;
-    });
+    const stored = readStoredExpandedId();
+    if (activeGroupId) {
+      setExpandedId(activeGroupId);
+    } else if (stored && navGroups.some((g) => g.id === stored)) {
+      setExpandedId(stored);
+    }
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      for (const id of activeGroupIds) next.add(id);
-      return next;
-    });
-  }, [activeGroupIds]);
+    if (activeGroupId) setExpandedId(activeGroupId);
+  }, [activeGroupId]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !expandedId) return;
     try {
-      window.localStorage.setItem(EXPANDED_STORAGE_KEY, JSON.stringify(Array.from(expanded)));
+      window.localStorage.setItem(EXPANDED_STORAGE_KEY, expandedId);
     } catch {
       /* ignore */
     }
-  }, [expanded, hydrated]);
+  }, [expandedId, hydrated]);
 
   const toggle = (id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setExpandedId((prev) => (prev === id ? null : id));
   };
+
+  const expanded = useMemo(
+    () => new Set(expandedId ? [expandedId] : []),
+    [expandedId]
+  );
 
   return { expanded, toggle };
 }
@@ -430,14 +426,14 @@ export function AdminDesktopSidebar() {
     }
     document.documentElement.style.setProperty(
       "--admin-sidebar-width",
-      collapsed ? "72px" : "260px"
+      collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH
     );
   }, [collapsed, hydrated]);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--admin-sidebar-width",
-      collapsed ? "72px" : "260px"
+      collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH
     );
   }, [collapsed]);
 
@@ -445,7 +441,7 @@ export function AdminDesktopSidebar() {
     <aside
       className={cn(
         "sticky top-0 z-30 hidden h-[100dvh] shrink-0 flex-col border-r border-[var(--admin-border,#ECECEC)] bg-white lg:flex",
-        collapsed ? "w-[72px]" : "w-[260px]"
+        collapsed ? "w-[72px]" : "w-[240px]"
       )}
     >
       <SidebarBrand
@@ -477,23 +473,33 @@ export function AdminMobileDrawer() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMobileNavOpen(false);
     };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [mobileNavOpen, setMobileNavOpen]);
+
+  // Close drawer when route changes (e.g. browser back)
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname, setMobileNavOpen]);
 
   if (!mobileNavOpen) return null;
 
   const close = () => setMobileNavOpen(false);
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
+    <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="管理選單">
       <button
         type="button"
         aria-label="關閉選單"
         className="absolute inset-0 bg-[rgba(15,23,42,0.38)]"
         onClick={close}
       />
-      <aside className="absolute left-0 top-0 flex h-[100dvh] w-[min(88vw,330px)] max-w-full flex-col overflow-hidden bg-white shadow-xl">
+      <aside className="absolute left-0 top-0 flex h-[100dvh] w-[min(88vw,300px)] max-w-full flex-col overflow-hidden bg-white shadow-xl">
         <SidebarBrand
           extra={
             <button

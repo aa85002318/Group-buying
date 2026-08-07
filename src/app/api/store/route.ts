@@ -3,6 +3,7 @@ import { requireStoreOps, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { daysFromNow, todayISO } from "@/lib/admin/store-ops";
+import { assertCanWriteStore, resolveOpsStoreId } from "@/lib/admin/store-access";
 
 type Resource =
   | "inventory"
@@ -164,19 +165,17 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
-  const table = TABLE[resource];
   const payload = { ...body };
   delete payload.resource;
 
   if (!payload.store_id) {
-    const { data: store } = await admin
-      .from("stores")
-      .select("id")
-      .eq("is_active", true)
-      .limit(1)
-      .maybeSingle();
-    if (store?.id) payload.store_id = store.id;
+    payload.store_id = await resolveOpsStoreId(auth!, null);
   }
+
+  const writeGate = await assertCanWriteStore(auth!, payload.store_id as string | null);
+  if (!writeGate.ok) return writeGate.response;
+
+  const table = TABLE[resource];
 
   if (resource === "anomalies") {
     payload.reported_by = auth!.profile.id;
@@ -294,6 +293,14 @@ export async function PATCH(request: Request) {
   const admin = createAdminClient();
   const table = TABLE[resource];
   const { data: old } = await admin.from(table).select("*").eq("id", id).single();
+
+  const targetStoreId =
+    (rest.store_id as string | undefined) ||
+    (old as { store_id?: string } | null)?.store_id ||
+    null;
+  const writeGate = await assertCanWriteStore(auth!, targetStoreId);
+  if (!writeGate.ok) return writeGate.response;
+
   const { data, error } = await admin.from(table).update(rest).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

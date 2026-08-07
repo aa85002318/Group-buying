@@ -107,6 +107,17 @@ export type StoreSeo = {
   slug?: string;
 };
 
+/** 公司揭露資訊（全公司／分店對外揭露；僅 admin 可改） */
+export type StoreDisclosure = {
+  company_name?: string;
+  tax_id?: string;
+  representative?: string;
+  registered_address?: string;
+  note?: string;
+};
+
+export const EMPTY_STORE_DISCLOSURE: StoreDisclosure = {};
+
 export type StoreServiceFlags = {
   pickup?: boolean;
   frozen?: boolean;
@@ -157,6 +168,7 @@ export type StoreProfile = {
   gallery: StoreGalleryImage[];
   announcements: StoreAnnouncement[];
   seo: StoreSeo;
+  disclosure: StoreDisclosure;
   service_flags: StoreServiceFlags;
   visibility: StoreVisibility;
   services: unknown;
@@ -288,6 +300,80 @@ export function parseLatLngFromGoogleMapsUrl(url: string): {
   return { latitude: null, longitude: null };
 }
 
+/** Open in Google Maps app / browser (do not build custom navigation). */
+export function buildGoogleMapsNavUrl(input: {
+  map_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string | null;
+}): string | null {
+  const link = input.map_url?.trim();
+  if (link) return link;
+  if (
+    input.latitude != null &&
+    input.longitude != null &&
+    !Number.isNaN(input.latitude) &&
+    !Number.isNaN(input.longitude)
+  ) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${input.latitude},${input.longitude}`;
+  }
+  const address = input.address?.trim();
+  if (address) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  }
+  return null;
+}
+
+/** Embeddable preview URL for admin iframe (Google Maps). */
+export function buildGoogleMapsEmbedUrl(input: {
+  map_url?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string | null;
+}): string | null {
+  if (
+    input.latitude != null &&
+    input.longitude != null &&
+    !Number.isNaN(input.latitude) &&
+    !Number.isNaN(input.longitude)
+  ) {
+    return `https://maps.google.com/maps?q=${input.latitude},${input.longitude}&z=16&output=embed`;
+  }
+  const address = input.address?.trim();
+  if (address) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(address)}&z=15&output=embed`;
+  }
+  const link = input.map_url?.trim();
+  if (!link) return null;
+  const parsed = parseLatLngFromGoogleMapsUrl(link);
+  if (parsed.latitude != null && parsed.longitude != null) {
+    return `https://maps.google.com/maps?q=${parsed.latitude},${parsed.longitude}&z=16&output=embed`;
+  }
+  try {
+    const u = new URL(link);
+    if (u.hostname.includes("google.") && !u.searchParams.has("output")) {
+      u.searchParams.set("output", "embed");
+      return u.toString();
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+export function normalizeDisclosure(raw: unknown): StoreDisclosure {
+  if (!raw || typeof raw !== "object") return { ...EMPTY_STORE_DISCLOSURE };
+  const o = raw as Record<string, unknown>;
+  return {
+    company_name: typeof o.company_name === "string" ? o.company_name : undefined,
+    tax_id: typeof o.tax_id === "string" ? o.tax_id : undefined,
+    representative: typeof o.representative === "string" ? o.representative : undefined,
+    registered_address:
+      typeof o.registered_address === "string" ? o.registered_address : undefined,
+    note: typeof o.note === "string" ? o.note : undefined,
+  };
+}
+
 export function normalizeSocialLinks(raw: unknown): StoreSocialLink[] {
   const byPlatform = new Map<StoreSocialPlatform, StoreSocialLink>();
   for (const d of DEFAULT_SOCIAL_LINKS) byPlatform.set(d.platform, { ...d });
@@ -360,6 +446,7 @@ export function normalizeStoreRow(row: Record<string, unknown>): StoreProfile {
       typeof row.seo === "object" && row.seo
         ? (row.seo as StoreSeo)
         : {},
+    disclosure: normalizeDisclosure(row.disclosure),
     service_flags,
     visibility,
     services: row.services ?? [],
@@ -410,6 +497,7 @@ export const STORE_PROFILE_SELECT = [
   "gallery",
   "announcements",
   "seo",
+  "disclosure",
   "service_flags",
   "visibility",
   "services",

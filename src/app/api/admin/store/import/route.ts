@@ -6,12 +6,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   encodeContentDisposition,
   getStoreExcelTemplate,
+  isStoreExcelImportType,
   type StoreExcelImportType,
 } from "@/lib/admin/store-excel";
 import {
   recordInventoryMovement,
   syncInventoryFromBatches,
 } from "@/lib/admin/inventory-movements";
+import { assertCanWriteStore, resolveOpsStoreId } from "@/lib/admin/store-access";
+
+type AdminClient = ReturnType<typeof createAdminClient>;
 
 type PreviewRow = {
   row: number;
@@ -32,6 +36,13 @@ type PreviewRow = {
   cost_price?: number;
   safety_stock?: number;
   notes?: string;
+  assignee_name?: string;
+  urgency?: string;
+  return_target?: string;
+  expected_return_date?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  vendor_name?: string;
   errors: string[];
   will_create_supplier?: boolean;
   will_create_category?: boolean;
@@ -48,24 +59,42 @@ const JOB_TYPES = new Set([
   "price",
 ]);
 
+const NEW_FIELD_RE =
+  /pause_sales|assignee_name|urgency|affects_operations|manager_confirmed|disposal_reason|return_target|expected_return/i;
+
+async function insertWithSoftFallback(
+  admin: AdminClient,
+  table: "store_anomalies" | "store_returns" | "store_disposals",
+  payload: Record<string, unknown>,
+  extraKeys: string[]
+) {
+  let result = await admin.from(table).insert(payload).select("id").single();
+  if (result.error && NEW_FIELD_RE.test(result.error.message)) {
+    const legacy = { ...payload };
+    for (const key of extraKeys) delete legacy[key];
+    result = await admin.from(table).insert(legacy).select("id").single();
+  }
+  return result;
+}
+
 function normalizeImportType(raw: string): StoreExcelImportType {
   if (raw === "batches") return "expiry";
-  if (
-    raw === "expiry" ||
-    raw === "disposal" ||
-    raw === "return" ||
-    raw === "anomaly" ||
-    raw === "inventory" ||
-    raw === "price" ||
-    raw === "products"
-  ) {
-    return raw;
-  }
+  if (isStoreExcelImportType(raw)) return raw;
   return "expiry";
 }
 
 function jobImportType(t: StoreExcelImportType): string {
+  if (t === "repair") return "anomaly";
   return JOB_TYPES.has(t) ? t : "expiry";
+}
+
+function mapUrgency(raw: string): string {
+  const t = raw.trim().toLowerCase();
+  if (!t) return "normal";
+  if (t.includes("緊") || t === "urgent") return "urgent";
+  if (t.includes("高") || t === "high") return "high";
+  if (t.includes("低") || t === "low") return "low";
+  return "normal";
 }
 
 function cell(row: Record<string, unknown>, ...keys: string[]): string {
@@ -110,6 +139,15 @@ function mapAnomalyType(raw: string): string {
   return raw.trim() || "damaged";
 }
 
+const PRODUCT_OPS = new Set<StoreExcelImportType>([
+  "expiry",
+  "disposal",
+  "return",
+  "inventory",
+  "anomaly",
+  "repair",
+]);
+
 export async function GET(request: Request) {
   const { error } = await requireStoreOps();
   if (error) return error;
@@ -142,10 +180,16 @@ export async function POST(request: Request) {
   const importType = normalizeImportType(String(form.get("import_type") ?? "expiry"));
   const confirm = String(form.get("confirm") ?? "") === "1";
   const jobId = form.get("job_id") ? String(form.get("job_id")) : null;
+  const tpl = getStoreExcelTemplate(importType);
 
-  if (importType === "products") {
+  if (!tpl?.supportsStoreImport) {
     return NextResponse.json(
-      { error: "商品主檔匯入請使用商品匯入頁" },
+      {
+        error:
+          importType === "products"
+            ? "商品主檔匯入請使用商品匯入頁"
+            : "此類型僅提供範本下載，請至對應頁面建立紀錄",
+      },
       { status: 400 }
     );
   }
@@ -189,8 +233,16 @@ export async function POST(request: Request) {
     (categories ?? []).map((c) => [c.name.trim().toLowerCase(), c])
   );
 
-  const { data: store } = await admin.from("stores").select("id").eq("is_active", true).limit(1).maybeSingle();
-  const storeId = store?.id ?? null;
+  const preferredStore = form.get("store_id") ? String(form.get("store_id")) : null;
+  const storeId = await resolveOpsStoreId(auth!, preferredStore);
+  if (!storeId) {
+    return NextResponse.json(
+      { error: "找不到可用門市，或無權限匯入其他分店" },
+      { status: 403 }
+    );
+  }
+  const writeGate = await assertCanWriteStore(auth!, storeId);
+  if (!writeGate.ok) return writeGate.response;
 
   const { data: batches } = storeId
     ? await admin
@@ -251,6 +303,14 @@ export async function POST(request: Request) {
     const cost_price = num(r, "cost_price", "成本");
     const safety_stock = num(r, "safety_stock", "安全庫存");
     const notes = cell(r, "notes", "備註");
+    const assignee_name = cell(r, "assignee_name", "負責人");
+    const urgencyRaw = cell(r, "urgency", "緊急程度");
+    const return_target = cell(r, "return_target", "退貨對象");
+    const expected_return_date = dateCell(r, "expected_return_date", "預計退貨日");
+    const customer_name = cell(r, "customer_name", "客戶姓名");
+    const customer_phone = cell(r, "customer_phone", "電話");
+    const vendor_name = cell(r, "vendor_name", "廠商");
+    const fault = cell(r, "fault", "故障說明");
 
     const errors: string[] = [];
     let product =
@@ -260,21 +320,11 @@ export async function POST(request: Request) {
       product = productList.find((p) => p.name === productName) ?? null;
     }
 
-    if (importType !== "price" && !product) {
-      errors.push("找不到商品（請確認條碼／SKU）");
-    }
-    if (importType === "price" && !product) {
+    if (!product) {
       errors.push("找不到商品（請確認條碼／SKU）");
     }
 
-    if (
-      (importType === "expiry" ||
-        importType === "disposal" ||
-        importType === "return" ||
-        importType === "inventory" ||
-        importType === "anomaly") &&
-      (quantity == null || quantity <= 0)
-    ) {
+    if (PRODUCT_OPS.has(importType) && (quantity == null || quantity <= 0)) {
       errors.push("數量無效");
     }
     if (importType === "expiry" && !expiry_date) errors.push("缺少效期");
@@ -283,6 +333,9 @@ export async function POST(request: Request) {
     }
     if (importType === "price" && price == null && cost_price == null && safety_stock == null) {
       errors.push("請至少填售價、成本或安全庫存其中一項");
+    }
+    if (importType === "repair" && !(fault || reason || notes)) {
+      errors.push("缺少故障說明");
     }
 
     const batch =
@@ -293,7 +346,12 @@ export async function POST(request: Request) {
     if ((importType === "return" || importType === "inventory") && product && !batch) {
       errors.push("找不到對應批次");
     }
-    if (importType === "anomaly" && batch_no && product && !batch) {
+    if (
+      (importType === "anomaly" || importType === "repair") &&
+      batch_no &&
+      product &&
+      !batch
+    ) {
       errors.push("找不到對應批次");
     }
 
@@ -304,6 +362,11 @@ export async function POST(request: Request) {
       categoryName && !categoryByName.has(categoryName.toLowerCase())
     );
 
+    const resolvedReason =
+      importType === "repair"
+        ? fault || reason || notes || undefined
+        : reason || notes || undefined;
+
     return {
       row: i + 2,
       barcode: barcode || undefined,
@@ -312,17 +375,29 @@ export async function POST(request: Request) {
       product_id: product?.id ?? null,
       batch_id: batch?.id ?? null,
       batch_no: batch_no || undefined,
-      supplier_name: supplierName || undefined,
+      supplier_name: supplierName || vendor_name || undefined,
       category_name: categoryName || undefined,
       quantity,
       expiry_date: expiry_date || undefined,
-      reason: reason || notes || undefined,
+      reason: resolvedReason,
       unit_cost,
-      anomaly_type: anomalyRaw ? mapAnomalyType(anomalyRaw) : undefined,
+      anomaly_type:
+        importType === "repair"
+          ? "repair"
+          : anomalyRaw
+            ? mapAnomalyType(anomalyRaw)
+            : undefined,
       price,
       cost_price,
       safety_stock,
       notes: notes || undefined,
+      assignee_name: assignee_name || undefined,
+      urgency: urgencyRaw ? mapUrgency(urgencyRaw) : undefined,
+      return_target: return_target || undefined,
+      expected_return_date: expected_return_date || undefined,
+      customer_name: customer_name || undefined,
+      customer_phone: customer_phone || undefined,
+      vendor_name: vendor_name || undefined,
       errors,
       will_create_supplier,
       will_create_category,
@@ -470,25 +545,28 @@ export async function POST(request: Request) {
           const hit = findBatch(row.product_id, row.batch_no, row.barcode ?? "");
           batchId = hit?.id ?? null;
         }
-        const { data, error: insertError } = await admin
-          .from("store_disposals")
-          .insert({
-            store_id: storeId,
-            product_id: row.product_id,
-            batch_id: batchId,
-            quantity: row.quantity,
-            reason: row.reason ?? null,
-            unit_cost: row.unit_cost ?? null,
-            total_loss:
-              row.unit_cost != null && row.quantity != null
-                ? row.unit_cost * row.quantity
-                : null,
-            status: "open",
-            created_by: auth!.profile.id,
-            disposed_at: new Date().toISOString(),
-          })
-          .select("id")
-          .single();
+        const payload: Record<string, unknown> = {
+          store_id: storeId,
+          product_id: row.product_id,
+          batch_id: batchId,
+          quantity: row.quantity,
+          reason: row.reason ?? null,
+          unit_cost: row.unit_cost ?? null,
+          total_loss:
+            row.unit_cost != null && row.quantity != null
+              ? row.unit_cost * row.quantity
+              : null,
+          status: "open",
+          created_by: auth!.profile.id,
+          disposed_at: new Date().toISOString(),
+          assignee_name: row.assignee_name ?? null,
+        };
+        const { data, error: insertError } = await insertWithSoftFallback(
+          admin,
+          "store_disposals",
+          payload,
+          ["assignee_name"]
+        );
         if (insertError) throw new Error(insertError.message);
 
         if (batchId && row.quantity) {
@@ -522,20 +600,25 @@ export async function POST(request: Request) {
 
       if (importType === "return") {
         if (!row.batch_id || row.quantity == null) throw new Error("缺少批次或數量");
-        const { data, error: insertError } = await admin
-          .from("store_returns")
-          .insert({
-            store_id: storeId,
-            product_id: row.product_id,
-            batch_id: row.batch_id,
-            quantity: row.quantity,
-            reason: row.reason ?? null,
-            status: "open",
-            created_by: auth!.profile.id,
-            returned_at: new Date().toISOString(),
-          })
-          .select("id")
-          .single();
+        const payload: Record<string, unknown> = {
+          store_id: storeId,
+          product_id: row.product_id,
+          batch_id: row.batch_id,
+          quantity: row.quantity,
+          reason: row.reason ?? null,
+          status: "open",
+          created_by: auth!.profile.id,
+          returned_at: new Date().toISOString(),
+          return_target: row.return_target ?? null,
+          expected_return_date: row.expected_return_date ?? null,
+          assignee_name: row.assignee_name ?? null,
+        };
+        const { data, error: insertError } = await insertWithSoftFallback(
+          admin,
+          "store_returns",
+          payload,
+          ["return_target", "expected_return_date", "assignee_name"]
+        );
         if (insertError) throw new Error(insertError.message);
 
         const before = batchList.find((b) => b.id === row.batch_id);
@@ -564,22 +647,31 @@ export async function POST(request: Request) {
         continue;
       }
 
-      if (importType === "anomaly") {
-        const { data, error: insertError } = await admin
-          .from("store_anomalies")
-          .insert({
-            store_id: storeId,
-            product_id: row.product_id,
-            batch_id: row.batch_id,
-            anomaly_type: row.anomaly_type ?? "damaged",
-            description: row.reason ?? null,
-            quantity: row.quantity ?? null,
-            status: "open",
-            reported_by: auth!.profile.id,
-            reported_at: new Date().toISOString(),
-          })
-          .select("id")
-          .single();
+      if (importType === "anomaly" || importType === "repair") {
+        const isRepair = importType === "repair" || row.anomaly_type === "repair";
+        const payload: Record<string, unknown> = {
+          store_id: storeId,
+          product_id: row.product_id,
+          batch_id: row.batch_id,
+          anomaly_type: isRepair ? "repair" : row.anomaly_type ?? "damaged",
+          description: row.reason ?? null,
+          quantity: row.quantity ?? null,
+          status: isRepair ? "notified_vendor" : "open",
+          reported_by: auth!.profile.id,
+          reported_at: new Date().toISOString(),
+          assignee_name: row.assignee_name ?? null,
+          urgency: isRepair ? row.urgency ?? "normal" : null,
+          affects_operations: false,
+          customer_name: row.customer_name ?? null,
+          customer_phone: row.customer_phone ?? null,
+          vendor_name: row.vendor_name ?? row.supplier_name ?? null,
+        };
+        const { data, error: insertError } = await insertWithSoftFallback(
+          admin,
+          "store_anomalies",
+          payload,
+          ["assignee_name", "urgency", "affects_operations", "customer_name", "customer_phone", "vendor_name"]
+        );
         if (insertError) throw new Error(insertError.message);
         successCount += 1;
         await logAudit(auth!.profile.id, "import", "store_anomalies", data.id, null, row, request as never);

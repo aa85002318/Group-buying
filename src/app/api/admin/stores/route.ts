@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdmin, logAudit } from "@/lib/auth";
+import { requireAdmin, requireStoreOps, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mockStores } from "@/lib/mock-data";
@@ -103,7 +103,7 @@ function buildCreatePayload(body: Record<string, unknown>) {
 }
 
 export async function GET() {
-  const { error } = await requireAdmin();
+  const { error } = await requireStoreOps();
   if (error) return error;
 
   if (!isSupabaseConfigured()) {
@@ -113,11 +113,22 @@ export async function GET() {
   }
 
   const admin = createAdminClient();
-  const { data, error: fetchError } = await admin
+  let { data, error: fetchError } = await admin
     .from("stores")
     .select(STORE_PROFILE_SELECT)
     .order("sort_order", { ascending: true })
     .order("name");
+
+  if (fetchError && /disclosure/i.test(fetchError.message)) {
+    const legacySelect = STORE_PROFILE_SELECT.replace(",disclosure,", ",");
+    const fallback = await admin
+      .from("stores")
+      .select(legacySelect)
+      .order("sort_order", { ascending: true })
+      .order("name");
+    data = fallback.data;
+    fetchError = fallback.error;
+  }
 
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
 
@@ -125,23 +136,10 @@ export async function GET() {
     normalizeStoreRow(row as unknown as Record<string, unknown>)
   );
 
-  // Lightweight card metrics (best-effort)
+  // Lightweight inventory totals only (no order/revenue metrics)
   try {
-    const today = new Date().toISOString().slice(0, 10);
     const storeIds = stores.map((s) => s.id);
     if (storeIds.length) {
-      const { data: orders } = await admin
-        .from("orders")
-        .select("store_id, pickup_store_id, created_at")
-        .gte("created_at", `${today}T00:00:00`)
-        .limit(2000);
-      const orderCounts = new Map<string, number>();
-      for (const o of orders ?? []) {
-        const sid = (o.pickup_store_id || o.store_id) as string | null;
-        if (!sid) continue;
-        orderCounts.set(sid, (orderCounts.get(sid) ?? 0) + 1);
-      }
-
       const { data: inv } = await admin
         .from("store_inventory")
         .select("store_id, quantity")
@@ -152,9 +150,7 @@ export async function GET() {
         const sid = row.store_id as string;
         invCounts.set(sid, (invCounts.get(sid) ?? 0) + Number(row.quantity ?? 0));
       }
-
       for (const s of stores) {
-        s.today_orders = orderCounts.get(s.id) ?? 0;
         s.inventory_qty = invCounts.get(s.id) ?? 0;
       }
     }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { CmsLinkPicker, type CmsLinkValue } from "@/components/admin/home/CmsLinkPicker";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -131,11 +132,13 @@ export default function AdminShopInfoBannersPage() {
         title="訂購須知／企業詢問 Banner"
         description="兩張 5:2 banner：可更換圖片，並設定連結至文章、選單頁或站內路徑。"
         actions={
-          <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+          <Link href="/admin/shop?section=info-banners" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
             返回商城 CMS
           </Link>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="info-banners" />
       {loading ? (
         <p className="text-sm text-muted-foreground">載入中…</p>
       ) : (

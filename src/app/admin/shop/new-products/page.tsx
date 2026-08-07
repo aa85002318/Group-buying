@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ export default function AdminShopNewProductsPage() {
         description="依商城主分類排序自動撈取；優先 is_new 商品，不足時以各分類近期上架補足。請至商品主檔標記新品，並於「商品分類」調整主分類順序。"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Link href="/admin/shop" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Link href="/admin/shop?section=new" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               返回商城 CMS
             </Link>
             <Link
@@ -56,6 +57,8 @@ export default function AdminShopNewProductsPage() {
           </div>
         }
       />
+
+      <ShopCmsLiveSaveNotice section="new" />
 
       <div className="rounded-xl border border-border bg-white p-4 text-sm text-muted-foreground shadow-card">
         <p>

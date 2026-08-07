@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ShopCmsLiveSaveNotice } from "@/components/admin/shop/ShopCmsLiveSaveNotice";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -109,19 +110,25 @@ export default function AdminShopAiAssistantPage() {
       <AdminPageHeader
         title="AI 食譜助手（Version A）"
         description="商城首頁暖黃功能卡：標題、搜尋、智慧 Prompt 標籤與 IP 圖。非聊天介面。"
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/shop?section=ai-assistant" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+              返回商城 CMS
+            </Link>
+            <Link href="/shop" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+              前台預覽 /shop
+            </Link>
+            <Link
+              href="/admin/shop/ai-chips"
+              className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+            >
+              舊版 AI Chip
+            </Link>
+          </div>
+        }
       />
 
-      <div className="flex flex-wrap gap-2">
-        <Link href="/shop" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
-          前台預覽 /shop
-        </Link>
-        <Link
-          href="/admin/shop/ai-chips"
-          className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-        >
-          舊版 AI Chip
-        </Link>
-      </div>
+      <ShopCmsLiveSaveNotice section="ai-assistant" />
 
       <section className="space-y-3 rounded-xl border border-border bg-white p-4 shadow-card">
         <label className="flex items-center gap-2 text-sm font-medium">
