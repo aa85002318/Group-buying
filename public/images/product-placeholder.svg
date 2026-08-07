@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" fill="none">
+  <rect width="600" height="600" fill="#F7F1E7"/>
+  <rect x="180" y="180" width="240" height="240" rx="24" stroke="#E8E1D7" stroke-width="4" fill="#FFFEFA"/>
+  <circle cx="260" cy="260" r="28" fill="#E8E1D7"/>
+  <path d="M200 380 L280 300 L340 350 L400 280 L420 380 Z" fill="#E8E1D7"/>
+  <text x="300" y="460" text-anchor="middle" fill="#8A94A6" font-family="system-ui,sans-serif" font-size="28">FÁG</text>
+</svg>

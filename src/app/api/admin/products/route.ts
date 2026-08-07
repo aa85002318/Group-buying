@@ -16,6 +16,55 @@ import {
   type ProductChannel,
 } from "@/lib/services/productChannelService";
 import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
+import { syncProductImagesTable } from "@/lib/products/sync-product-images";
+import type { ProductImageItem } from "@/lib/products/product-images";
+import { revalidatePath } from "next/cache";
+
+async function softPatchExtendedProductFields(
+  admin: ReturnType<typeof createAdminClient>,
+  productId: string,
+  body: Record<string, unknown>
+) {
+  const patch: Record<string, unknown> = {};
+  if (Array.isArray(body.content_images)) patch.content_images = body.content_images;
+  if (Array.isArray(body.related_recipe_ids)) {
+    patch.related_recipe_ids = (body.related_recipe_ids as string[]).filter(Boolean);
+  }
+  if (Array.isArray(body.related_product_ids)) {
+    patch.related_product_ids = (body.related_product_ids as string[]).filter(Boolean);
+  }
+  if (Object.keys(patch).length === 0) return;
+  const { error } = await admin.from("products").update(patch).eq("id", productId);
+  if (error && !/column|does not exist/i.test(error.message)) {
+    console.warn("[products] extended fields", error.message);
+  }
+}
+
+async function syncImagesAndRevalidate(
+  admin: ReturnType<typeof createAdminClient>,
+  productId: string,
+  body: Record<string, unknown>,
+  images: string[] | undefined,
+  image_url: string | null | undefined
+) {
+  const gallery = (images ?? []).slice(1);
+  const mainUrl = image_url ?? images?.[0] ?? null;
+  const content = Array.isArray(body.content_images)
+    ? (body.content_images as ProductImageItem[])
+    : [];
+  await syncProductImagesTable(admin, productId, {
+    mainUrl,
+    galleryUrls: gallery,
+    content,
+  });
+  try {
+    revalidatePath(`/products/${productId}`);
+    revalidatePath("/products");
+    revalidatePath("/shop");
+  } catch {
+    /* ignore outside request scope */
+  }
+}
 
 function normalizeImages(body: Record<string, unknown>) {
   const images = Array.isArray(body.images)
@@ -201,9 +250,12 @@ export async function POST(request: Request) {
     await syncProductPickupStores(admin, data.id, pickup_store_ids);
     await syncAllProductRelations(admin, data.id, body);
     await maybeSyncChannels(data.id, body);
+    const { images, image_url } = normalizeImages(body);
+    await softPatchExtendedProductFields(admin, data.id, body);
+    await syncImagesAndRevalidate(admin, data.id, body, images, image_url ?? null);
   } catch (e) {
     const message = e instanceof Error ? e.message : "關聯資料儲存失敗";
-    if (!message.includes("does not exist") && !message.includes("relation")) {
+    if (!message.includes("does not exist") && !message.includes("relation") && !message.includes("column")) {
       return NextResponse.json({ error: message }, { status: 500 });
     }
   }
@@ -242,9 +294,12 @@ export async function PUT(request: Request) {
     }
     await syncAllProductRelations(admin, id, body);
     await maybeSyncChannels(id, body);
+    const { images, image_url } = normalizeImages(body);
+    await softPatchExtendedProductFields(admin, id, body);
+    await syncImagesAndRevalidate(admin, id, body, images, image_url ?? null);
   } catch (e) {
     const message = e instanceof Error ? e.message : "關聯資料儲存失敗";
-    if (!message.includes("does not exist") && !message.includes("relation")) {
+    if (!message.includes("does not exist") && !message.includes("relation") && !message.includes("column")) {
       return NextResponse.json({ error: message }, { status: 500 });
     }
   }

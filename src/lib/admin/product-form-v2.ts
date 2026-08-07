@@ -1,5 +1,11 @@
 import type { Product, ProductScope, ProductStatus } from "@/lib/types/database";
 import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
+import {
+  type ProductImageItem,
+  resolveContentImages,
+  splitLegacyImages,
+  mergeMainGalleryToImages,
+} from "@/lib/products/product-images";
 
 export type InventoryMode = "stock" | "preorder" | "both";
 
@@ -48,7 +54,13 @@ export type AdminProductFormV2 = {
   new_sort_order: string;
   is_weekly_pick: boolean;
   is_closing_soon: boolean;
+  /** Legacy flat list: [main, ...gallery] — kept for API payload */
   images: string[];
+  mainImage: ProductImageItem | null;
+  galleryImages: ProductImageItem[];
+  contentImages: ProductImageItem[];
+  related_recipe_ids: string[];
+  related_product_ids: string[];
   videos: ProductVideo[];
   inventory_mode: InventoryMode;
   stock: string;
@@ -117,6 +129,11 @@ export const emptyProductFormV2 = (): AdminProductFormV2 => ({
   is_weekly_pick: false,
   is_closing_soon: false,
   images: [],
+  mainImage: null,
+  galleryImages: [],
+  contentImages: [],
+  related_recipe_ids: [],
+  related_product_ids: [],
   videos: [],
   inventory_mode: "stock",
   stock: "100",
@@ -213,11 +230,20 @@ type ExtendedProduct = Product & {
   videos?: ProductVideo[];
   variants?: ProductVariant[];
   batches?: ProductBatch[];
+  content_images?: unknown;
+  related_recipe_ids?: string[] | null;
+  related_product_ids?: string[] | null;
 };
 
 export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
   const images =
-    p.images && p.images.length > 0 ? p.images : p.image_url ? [p.image_url] : [];
+    p.images && p.images.length > 0
+      ? (p.images as string[]).filter((u) => typeof u === "string")
+      : p.image_url
+        ? [p.image_url]
+        : [];
+  const { main, gallery } = splitLegacyImages(images);
+  const contentImages = resolveContentImages({ content_images: p.content_images });
 
   return {
     name: p.name,
@@ -241,6 +267,15 @@ export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
     is_weekly_pick: p.is_weekly_pick ?? false,
     is_closing_soon: p.is_closing_soon ?? false,
     images,
+    mainImage: main,
+    galleryImages: gallery,
+    contentImages,
+    related_recipe_ids: Array.isArray(p.related_recipe_ids)
+      ? p.related_recipe_ids.map(String)
+      : [],
+    related_product_ids: Array.isArray(p.related_product_ids)
+      ? p.related_product_ids.map(String)
+      : [],
     videos: p.videos ?? [],
     inventory_mode: p.inventory_mode ?? "stock",
     stock: String(p.stock),
@@ -294,6 +329,7 @@ export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
 export function formV2ToPayload(form: AdminProductFormV2) {
   const margin = calcGrossMarginAmount(form.price, form.cost_price);
   const isActive = form.status === "active";
+  const images = mergeMainGalleryToImages(form.mainImage, form.galleryImages);
 
   return {
     name: form.name.trim(),
@@ -313,8 +349,17 @@ export function formV2ToPayload(form: AdminProductFormV2) {
     new_sort_order: Number(form.new_sort_order) || 100,
     is_weekly_pick: form.is_weekly_pick,
     is_closing_soon: form.is_closing_soon,
-    images: form.images,
-    image_url: form.images[0] ?? null,
+    images,
+    image_url: images[0] ?? null,
+    content_images: form.contentImages.map((c, i) => ({
+      url: c.url,
+      alt_text: c.alt_text,
+      caption: c.caption ?? "",
+      width_mode: c.width_mode ?? "full",
+      sort_order: c.sort_order ?? i,
+    })),
+    related_recipe_ids: form.related_recipe_ids,
+    related_product_ids: form.related_product_ids,
     videos: form.videos,
     inventory_mode: form.inventory_mode,
     stock: Number(form.stock) || 0,
@@ -376,8 +421,14 @@ export function formV2ToPayload(form: AdminProductFormV2) {
 export function validateProductFormV2(form: AdminProductFormV2): string | null {
   if (!form.name.trim()) return "請填寫商品名稱";
   if (form.category_ids.length === 0) return "請至少選擇一個商品分類";
-  if (!form.price || Number(form.price) <= 0) return "請填寫有效的售價";
+  if (!form.sku.trim()) return "請填寫 SKU";
+  if (!form.price || Number(form.price) < 0) return "請填寫有效的售價";
   if (form.stock === "" || Number(form.stock) < 0) return "請填寫現貨庫存";
+  const hasMain =
+    Boolean(form.mainImage?.url) ||
+    Boolean(form.images[0]) ||
+    mergeMainGalleryToImages(form.mainImage, form.galleryImages).length > 0;
+  if (!hasMain) return "請上傳商品主圖";
   if (form.is_group_buy) {
     if (!form.group_buy_start_at || !form.group_buy_end_at) {
       return "團購商品請填寫團購區間（開始與結束）";

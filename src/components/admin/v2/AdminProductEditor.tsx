@@ -1,13 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 import {
   BarChart3,
   Boxes,
   DollarSign,
   FileText,
-  GripVertical,
   ImageIcon,
   Package,
   Plus,
@@ -37,6 +35,8 @@ import {
   createEmptyVideo,
   type AdminProductFormV2,
 } from "@/lib/admin/product-form-v2";
+import { ProductImageManager } from "@/components/admin/v2/ProductImageManager";
+import { mergeMainGalleryToImages } from "@/lib/products/product-images";
 import { formatCurrency } from "@/lib/utils";
 import type { GroupBuyCategory, ProductCategory, ProductScope, ProductStatus, Store } from "@/lib/types/database";
 
@@ -105,106 +105,6 @@ function TagInput({
           新增
         </Button>
       </div>
-    </div>
-  );
-}
-
-function MediaGallery({
-  images,
-  onChange,
-}: {
-  images: string[];
-  onChange: (images: string[]) => void;
-}) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const dragIndex = useRef<number | null>(null);
-
-  const uploadFile = async (file: File) => {
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("bucket", "product-images");
-      formData.append("folder", "products");
-      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (res.ok && data.url) onChange([...images, data.url]);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDrop = (targetIndex: number) => {
-    const from = dragIndex.current;
-    if (from === null || from === targetIndex) return;
-    const next = [...images];
-    const [moved] = next.splice(from, 1);
-    next.splice(targetIndex, 0, moved);
-    onChange(next);
-    dragIndex.current = null;
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-        {images.map((url, index) => (
-          <div
-            key={`${url}-${index}`}
-            draggable
-            onDragStart={() => { dragIndex.current = index; }}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => handleDrop(index)}
-            className="group relative overflow-hidden rounded-2xl border border-border bg-background"
-          >
-            <div className="relative aspect-square">
-              <Image src={url} alt="" fill className="object-cover" unoptimized />
-              {index === 0 && (
-                <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">
-                  主圖
-                </span>
-              )}
-              <span className="absolute left-2 bottom-2 rounded bg-black/50 p-1 text-white opacity-0 transition group-hover:opacity-100">
-                <GripVertical className="h-4 w-4" />
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => onChange(images.filter((_, i) => i !== index))}
-              className="absolute right-2 top-2 rounded-full bg-white/90 p-1 text-red-500 shadow"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
-        {images.length < 20 && (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary-soft text-sm font-semibold text-primary transition hover:border-primary hover:bg-primary-soft"
-          >
-            <ImageIcon className="h-6 w-6" />
-            {uploading ? "上傳中…" : "新增圖片"}
-          </button>
-        )}
-      </div>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        multiple
-        className="hidden"
-        onChange={(e) => {
-          const files = e.target.files;
-          if (!files) return;
-          Array.from(files)
-            .slice(0, 20 - images.length)
-            .forEach((f) => uploadFile(f));
-          e.target.value = "";
-        }}
-      />
-      <p className="text-xs text-foreground-muted">最多 20 張，支援 JPG / PNG / WebP。拖曳可排序，第一張為主圖。</p>
     </div>
   );
 }
@@ -394,8 +294,26 @@ export function AdminProductEditor({
         </div>
       </AdminCard>
 
-      <AdminCard title="商品媒體" description="圖片與影片，支援拖曳排序" icon={<ImageIcon className="h-5 w-5" />}>
-        <MediaGallery images={form.images} onChange={(images) => patch({ images })} />
+      <AdminCard title="商品圖片" description="主圖、附圖與商品介紹內容圖" icon={<ImageIcon className="h-5 w-5" />}>
+        <ProductImageManager
+          productId={productId}
+          main={form.mainImage}
+          gallery={form.galleryImages}
+          content={form.contentImages}
+          onMainChange={(mainImage) =>
+            patch({
+              mainImage,
+              images: mergeMainGalleryToImages(mainImage, form.galleryImages),
+            })
+          }
+          onGalleryChange={(galleryImages) =>
+            patch({
+              galleryImages,
+              images: mergeMainGalleryToImages(form.mainImage, galleryImages),
+            })
+          }
+          onContentChange={(contentImages) => patch({ contentImages })}
+        />
         <div className="mt-6 space-y-3 border-t border-divider pt-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-bold text-[#334155]">商品影片</p>
