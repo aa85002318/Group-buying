@@ -44,6 +44,14 @@ export type SideMenuColorKey =
   | "teal"
   | "pink";
 
+export type SideMenuNavSection =
+  | "home"
+  | "materials"
+  | "group_buy"
+  | "recipes"
+  | "member"
+  | "search";
+
 export type SideMenuItem = {
   id: string;
   label: string;
@@ -51,6 +59,12 @@ export type SideMenuItem = {
   href: string;
   icon: SideMenuIconKey;
   color: SideMenuColorKey;
+  /** C6 primary section mapping */
+  section?: SideMenuNavSection;
+  requiresAuth?: boolean;
+  comingSoon?: boolean;
+  enabled?: boolean;
+  order?: number;
 };
 
 export type SideMenuSection = {
@@ -124,6 +138,9 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         href: "/shop",
         icon: "package",
         color: "berry",
+        section: "materials",
+        enabled: true,
+        order: 20,
       },
       {
         id: "recipes",
@@ -132,6 +149,9 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         href: "/recipes",
         icon: "article",
         color: "yellow",
+        section: "recipes",
+        enabled: true,
+        order: 40,
       },
       {
         id: "member",
@@ -140,6 +160,10 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         href: "/member",
         icon: "star",
         color: "green",
+        section: "member",
+        requiresAuth: true,
+        enabled: true,
+        order: 50,
       },
       {
         id: "group_buy",
@@ -148,6 +172,10 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         href: "/group-buy",
         icon: "flame",
         color: "orange",
+        section: "group_buy",
+        comingSoon: true,
+        enabled: true,
+        order: 30,
       },
       {
         id: "news",
@@ -491,6 +519,17 @@ export function normalizeSideMenuSections(raw: unknown): SideMenuSection[] {
       const href = typeof item.href === "string" ? item.href.trim() : "";
       if (!label || !isValidHeaderHref(href)) continue;
 
+      const sectionRaw =
+        typeof item.section === "string" ? item.section.trim() : "";
+      const sectionOk = [
+        "home",
+        "materials",
+        "group_buy",
+        "recipes",
+        "member",
+        "search",
+      ].includes(sectionRaw);
+
       items.push({
         id:
           typeof item.id === "string" && item.id.trim()
@@ -508,6 +547,14 @@ export function normalizeSideMenuSections(raw: unknown): SideMenuSection[] {
         color: SIDE_MENU_COLORS.has(item.color as SideMenuColorKey)
           ? (item.color as SideMenuColorKey)
           : "berry",
+        section: sectionOk ? (sectionRaw as SideMenuNavSection) : undefined,
+        requiresAuth: item.requiresAuth === true || item.requires_auth === true,
+        comingSoon: item.comingSoon === true || item.coming_soon === true,
+        enabled: item.enabled === false ? false : true,
+        order:
+          typeof item.order === "number" && Number.isFinite(item.order)
+            ? item.order
+            : items.length + 1,
       });
     }
 

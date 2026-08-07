@@ -392,6 +392,55 @@ export default function AdminSideMenuPage() {
                           {COLOR_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                         </select>
                       </label>
+                      <label className="space-y-2">
+                        <span className="text-xs font-medium text-muted-foreground">C6 分層入口</span>
+                        <select
+                          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                          value={item.section ?? ""}
+                          onChange={(event) =>
+                            updateItem(section.id, item.id, {
+                              section: (event.target.value || undefined) as SideMenuItem["section"],
+                            })
+                          }
+                        >
+                          <option value="">一般連結</option>
+                          <option value="home">首頁</option>
+                          <option value="materials">烘焙材料</option>
+                          <option value="group_buy">團購</option>
+                          <option value="recipes">食譜</option>
+                          <option value="member">會員中心</option>
+                        </select>
+                      </label>
+                      <label className="flex items-center gap-2 pt-6 text-sm text-coffee">
+                        <input
+                          type="checkbox"
+                          checked={item.enabled !== false}
+                          onChange={(event) =>
+                            updateItem(section.id, item.id, { enabled: event.target.checked })
+                          }
+                        />
+                        顯示
+                      </label>
+                      <label className="flex items-center gap-2 pt-6 text-sm text-coffee">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(item.requiresAuth)}
+                          onChange={(event) =>
+                            updateItem(section.id, item.id, { requiresAuth: event.target.checked })
+                          }
+                        />
+                        需要登入
+                      </label>
+                      <label className="flex items-center gap-2 pt-6 text-sm text-coffee">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(item.comingSoon)}
+                          onChange={(event) =>
+                            updateItem(section.id, item.id, { comingSoon: event.target.checked })
+                          }
+                        />
+                        即將開放
+                      </label>
                     </div>
                   </div>
                 ))}
