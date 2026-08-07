@@ -1,4 +1,9 @@
 import { APP_ROUTES } from "@/lib/site-links";
+import {
+  GROUP_BUY_CONSUMER_VISIBLE,
+  isGroupBuyConsumerHref,
+  isGroupBuyConsumerLabel,
+} from "@/lib/features/group-buy-visibility";
 
 export type QuickServiceItem = {
   id: string;
@@ -53,7 +58,7 @@ export const DEFAULT_QUICK_SERVICE_ITEMS: QuickServiceItem[] = [
     imageUrl: `${ICON}/group-buy.svg`,
     href: "/group-buy",
     backgroundColor: "#FFE9E8",
-    enabled: true,
+    enabled: GROUP_BUY_CONSUMER_VISIBLE,
     sortOrder: 20,
   },
   {
@@ -304,6 +309,12 @@ export function listVisibleQuickServices(items: QuickServiceItem[]): QuickServic
   return items
     .filter((i) => i.enabled !== false)
     .filter((i) => i.id !== "store-map" && !/門市地圖|store-map/i.test(`${i.title} ${i.href}`))
+    .filter((i) => {
+      if (GROUP_BUY_CONSUMER_VISIBLE) return true;
+      if (i.id === "group-buy" || i.id === "group_buy") return false;
+      if (isGroupBuyConsumerHref(i.href) || isGroupBuyConsumerLabel(i.title)) return false;
+      return true;
+    })
     .map((i) => {
       if (i.id === "baking" || i.title === "烘焙材料") {
         return { ...i, href: APP_ROUTES.shop };
