@@ -16,7 +16,7 @@ export function SideMenuCategoryRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[72px] w-full items-center gap-3 border-b border-[#F0ECE5] px-1 py-3 text-left last:border-b-0"
+      className="flex min-h-[72px] w-full items-center gap-3 border-b border-[#F0ECE5] px-1 py-3 text-left transition duration-100 last:border-b-0 active:scale-[0.985] active:bg-[#FFF5CC]"
     >
       <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#FFF5CC]">
         {category.imageUrl || category.iconUrl ? (

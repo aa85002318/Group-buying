@@ -17,6 +17,8 @@ export interface SideMenuCategory {
   imageUrl?: string;
   parentId?: string | null;
   childCount: number;
+  /** Active products under this category (materials only; may be 0 if not counted). */
+  productCount?: number;
   enabled: boolean;
   order: number;
   route: string;

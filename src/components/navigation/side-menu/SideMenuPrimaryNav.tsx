@@ -46,7 +46,8 @@ export function SideMenuPrimaryNav({
                   onClick={() => onSelect(item)}
                   aria-current={selected ? "page" : undefined}
                   className={cn(
-                    "relative flex min-h-16 w-full items-center gap-3 rounded-2xl px-4 text-left transition",
+                    "relative flex min-h-16 w-full items-center gap-3 rounded-2xl px-4 text-left transition duration-100",
+                    "active:scale-[0.985] active:bg-[#FFF5CC]",
                     selected
                       ? "bg-[#FFF5CC] text-[#153E73]"
                       : "text-[#153E73] hover:bg-[#FFFEFA]"

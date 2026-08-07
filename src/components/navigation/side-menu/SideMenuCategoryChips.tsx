@@ -13,8 +13,8 @@ export function SideMenuCategoryChips({
   onSelect: (cat: SideMenuCategory) => void;
 }) {
   return (
-    <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex w-max gap-2 pb-1">
+    <div className="overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex w-max snap-x snap-mandatory gap-2 pb-1">
         {categories.map((cat) => {
           const selected = cat.id === selectedId;
           return (
@@ -23,10 +23,11 @@ export function SideMenuCategoryChips({
               type="button"
               onClick={() => onSelect(cat)}
               className={cn(
-                "inline-flex h-10 shrink-0 items-center rounded-full px-4 text-sm font-semibold transition",
+                "inline-flex h-10 shrink-0 snap-start items-center rounded-full px-4 text-sm font-semibold transition duration-[120ms]",
+                "active:scale-[0.98]",
                 selected
                   ? "bg-[#FFD454] text-[#153E73]"
-                  : "border border-[#E8E1D7] bg-white text-[#153E73]"
+                  : "border border-[#E5E7EB] bg-white text-[#153E73]"
               )}
             >
               {cat.name}

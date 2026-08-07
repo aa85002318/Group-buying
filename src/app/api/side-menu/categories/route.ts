@@ -32,18 +32,43 @@ function tableFor(source: SideMenuCategorySource): string {
   return "product_categories";
 }
 
-async function countChildren(
+async function batchChildCounts(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   table: string,
-  parentId: string
-): Promise<number> {
-  const { count } = await supabase
+  parentIds: string[]
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (!parentIds.length) return map;
+  const { data } = await supabase
     .from(table)
-    .select("id", { count: "exact", head: true })
-    .eq("parent_id", parentId)
+    .select("parent_id")
+    .in("parent_id", parentIds)
     .eq("is_active", true);
-  return count ?? 0;
+  for (const row of data ?? []) {
+    const pid = String(row.parent_id);
+    map.set(pid, (map.get(pid) ?? 0) + 1);
+  }
+  return map;
+}
+
+async function batchProductCounts(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  categoryIds: string[]
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (!categoryIds.length) return map;
+  const { data } = await supabase
+    .from("products")
+    .select("primary_category_id")
+    .in("primary_category_id", categoryIds)
+    .eq("is_active", true);
+  for (const row of data ?? []) {
+    const cid = String(row.primary_category_id);
+    map.set(cid, (map.get(cid) ?? 0) + 1);
+  }
+  return map;
 }
 
 async function mapRows(
@@ -53,14 +78,22 @@ async function mapRows(
   table: string,
   rows: RawRow[]
 ): Promise<SideMenuCategory[]> {
-  return Promise.all(
-    rows.map(async (row) => {
-      const childCount = await countChildren(supabase, table, String(row.id)).catch(
-        () => 0
-      );
-      return mapCategoryBySource(source, row, childCount);
-    })
-  );
+  const ids = rows.map((r) => String(r.id));
+  const [childMap, productMap] = await Promise.all([
+    batchChildCounts(supabase, table, ids),
+    source === "materials"
+      ? batchProductCounts(supabase, ids)
+      : Promise.resolve(new Map<string, number>()),
+  ]);
+
+  return rows.map((row) => {
+    const id = String(row.id);
+    const mapped = mapCategoryBySource(source, row, childMap.get(id) ?? 0);
+    return {
+      ...mapped,
+      productCount: productMap.get(id) ?? 0,
+    };
+  });
 }
 
 export async function GET(request: Request) {
@@ -93,7 +126,6 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const table = tableFor(source);
-
     const selectCols = "*";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
