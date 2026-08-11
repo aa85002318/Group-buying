@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { FEATURES } from "@/lib/features";
+import { APP_ROUTES, canonicalizeAppHref } from "@/lib/site-links";
 
 export type CmsLinkType =
   | "none"
@@ -33,17 +35,17 @@ const LINK_TYPES: Array<{ id: CmsLinkType; label: string }> = [
   { id: "category", label: "商品分類" },
   { id: "recipe", label: "食譜" },
   { id: "article", label: "文章" },
-  { id: "group_buy", label: "團購活動" },
+  ...(FEATURES.groupBuying ? [{ id: "group_buy" as const, label: "團購活動" }] : []),
   { id: "live", label: "直播" },
   { id: "member", label: "會員頁面" },
   { id: "custom", label: "自訂網址" },
 ];
 
 const INTERNAL_PAGES = [
-  { id: "home", label: "首頁", href: "/" },
-  { id: "shop", label: "商城", href: "/shop" },
-  { id: "group-buy", label: "團購", href: "/group-buy" },
-  { id: "recipes", label: "食譜", href: "/recipes" },
+  { id: "home", label: "首頁", href: APP_ROUTES.home },
+  { id: "shop", label: "商城", href: APP_ROUTES.shop },
+  ...(FEATURES.groupBuying ? [{ id: "group-buy", label: "團購", href: "/group-buy" }] : []),
+  { id: "recipes", label: "食譜", href: APP_ROUTES.recipes },
   { id: "articles", label: "文章中心", href: "/articles" },
   {
     id: "promo",
@@ -56,10 +58,10 @@ const INTERNAL_PAGES = [
     href: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
   },
   { id: "live", label: "直播", href: "/live" },
-  { id: "stores", label: "門市", href: "/stores" },
-  { id: "member", label: "會員中心", href: "/member" },
-  { id: "support", label: "客服", href: "/support" },
-  { id: "ai", label: "AI 助手", href: "/ai" },
+  { id: "stores", label: "門市", href: APP_ROUTES.stores },
+  { id: "member", label: "會員中心", href: APP_ROUTES.member },
+  { id: "support", label: "客服", href: APP_ROUTES.support },
+  { id: "ai", label: "AI 助手", href: APP_ROUTES.ai },
 ];
 
 type SearchHit = {
@@ -221,7 +223,7 @@ export function CmsLinkPicker({
         <div className="space-y-2">
           <Input
             value={current.href}
-            onChange={(e) => onChange({ ...current, href: e.target.value })}
+            onChange={(e) => onChange({ ...current, href: canonicalizeAppHref(e.target.value) })}
             placeholder="https:// 或 /path"
           />
           <label className="flex items-center gap-2 text-sm">
@@ -255,7 +257,7 @@ async function searchByType(type: CmsLinkType, q: string): Promise<SearchHit[]> 
         .map((p) => ({
           id: String(p.id),
           title: String(p.name ?? "商品"),
-          href: `/products/${p.slug || p.id}`,
+          href: `/shop/products/${p.slug || p.id}`,
           thumb: (p.image_url as string) ?? null,
           status: p.is_active === false ? "下架" : "上架",
         }));
@@ -347,7 +349,7 @@ export function hrefFromCmsLink(link?: CmsLinkValue | null): string {
 }
 
 export function cmsLinkFromHref(href?: string | null): CmsLinkValue {
-  const h = (href ?? "").trim();
+  const h = canonicalizeAppHref((href ?? "").trim());
   if (!h) return emptyLink();
   const internal = INTERNAL_PAGES.find((p) => p.href === h);
   if (internal)

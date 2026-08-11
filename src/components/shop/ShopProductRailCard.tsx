@@ -53,7 +53,7 @@ export function ShopProductRailCard({
   const soldOut = badge === "soldout";
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const link = href ?? `/products/${id}`;
+  const link = href ?? `/shop/products/${id}`;
 
   const onAdd = async (e: React.MouseEvent) => {
     e.preventDefault();

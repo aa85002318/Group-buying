@@ -3,7 +3,7 @@ import { SearchPageClient } from "./SearchPageClient";
 
 export const metadata = {
   title: "搜尋｜CHIMEIDIY",
-  description: "搜尋商品、食譜、團購、最新資訊、FAQ 與門市商品位置。",
+  description: "搜尋商品、食譜、烘焙知識。",
 };
 
 export default function SearchPage() {

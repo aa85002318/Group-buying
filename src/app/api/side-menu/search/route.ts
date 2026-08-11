@@ -100,7 +100,7 @@ export async function GET(request: Request) {
       price: typeof p.price === "number" ? p.price : Number(p.price) || null,
       imageUrl: p.image_url ?? null,
       categoryName: cat?.name ?? null,
-      href: `/products/${p.id}`,
+      href: `/shop/products/${p.id}`,
     };
   });
 

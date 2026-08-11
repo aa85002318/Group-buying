@@ -482,7 +482,7 @@ export function ShopCatalogClient({
                       original_price={original}
                       image_url={product.cover_image || null}
                       badge={productBadge(product)}
-                      href={`/products/${product.id}`}
+                      href={`/shop/products/${product.id}`}
                     />
                   );
                 })}

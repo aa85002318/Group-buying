@@ -299,7 +299,7 @@ export function CheckoutForm() {
     return (
       <div className="space-y-4 py-12 text-center">
         <p className="text-muted-foreground">購物車是空的</p>
-        <Link href="/products" className="text-sm text-primary hover:underline">
+        <Link href="/shop" className="text-sm text-primary hover:underline">
           前往選購
         </Link>
       </div>

@@ -6,8 +6,8 @@ import { OrdersClient } from "@/app/(main)/orders/OrdersClient";
 import { APP_ROUTES } from "@/lib/site-links";
 
 export const metadata: Metadata = {
-  title: "CHIMEIDIY 我的 App 訂單",
-  description: "僅顯示透過 CHIMEIDIY App 建立的商城與團購訂單，不包含門市現場消費紀錄。",
+  title: "CHIMEIDIY 我的訂單",
+  description: "僅顯示透過 CHIMEIDIY App 建立的商城訂單，不包含門市現場消費紀錄。",
 };
 
 export default function MemberOrdersPage() {
@@ -24,7 +24,7 @@ export default function MemberOrdersPage() {
         <div>
           <h1 className="text-xl font-bold text-caramel">我的 App 訂單</h1>
           <p className="mt-1 text-sm text-foreground-secondary">
-            僅顯示透過 CHIMEIDIY App 建立的商城與團購訂單，不包含門市現場消費紀錄。
+            僅顯示透過 CHIMEIDIY App 建立的商城訂單，不包含門市現場消費紀錄。
           </p>
           <p className="mt-1 text-xs text-foreground-secondary">此頁僅顯示 CHIMEIDIY App 訂單。</p>
         </div>

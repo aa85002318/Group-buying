@@ -19,6 +19,7 @@ import {
   type BrandHeroTag,
 } from "./types";
 import type { SearchScope } from "@/components/brand/search/types";
+import { FEATURES } from "@/lib/features";
 
 /** Homepage popular chips — frontend-only for this phase (admin later). */
 const HOME_POPULAR_TAGS: BrandHeroTag[] = [
@@ -26,14 +27,14 @@ const HOME_POPULAR_TAGS: BrandHeroTag[] = [
   { id: "t2", label: "🍪 餅乾", keyword: "餅乾", sortOrder: 20 },
   { id: "t3", label: "🍰 蛋糕", keyword: "蛋糕", sortOrder: 30 },
   { id: "t4", label: "🧈 奶油乳酪", keyword: "奶油乳酪", sortOrder: 40 },
-  { id: "t5", label: "🛒 團購", keyword: "團購", sortOrder: 50 },
+  { id: "t5", label: "🧁 杯子蛋糕", keyword: "杯子蛋糕", sortOrder: 50 },
   { id: "t6", label: "🥬 生鮮", keyword: "生鮮", sortOrder: 60 },
   {
     id: "more",
     label: "更多",
     keyword: "__more__",
     linkType: "url",
-    targetUrl: "/products",
+    targetUrl: "/shop",
     sortOrder: 70,
   },
 ];
@@ -94,7 +95,9 @@ export function BrandHero({
   const mobileUrl = isHome
     ? BRAND_HERO_DEFAULTS.home.mobileImageUrl
     : hero.mobileImageUrl || hero.desktopImageUrl;
-  const tags = isHome ? HOME_POPULAR_TAGS : hero.tags ?? [];
+  const tags = (isHome ? HOME_POPULAR_TAGS : hero.tags ?? []).filter(
+    (t) => FEATURES.groupBuying || !/團購/.test(`${t.label ?? ""}${t.keyword ?? ""}`)
+  );
 
   if (isHome) {
     return (
@@ -138,7 +141,7 @@ export function BrandHero({
             <BrandHeroSearch
               placeholder={
                 hero.searchPlaceholder ||
-                "今天想做什麼？搜尋食譜、商品、團購、生鮮…"
+                "今天想做什麼？搜尋商品、食譜、烘焙知識…"
               }
               scope={scope}
             />

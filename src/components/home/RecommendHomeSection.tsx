@@ -77,7 +77,7 @@ export function RecommendHomeSection() {
               <span className="h-7 w-1.5 rounded-full bg-primary" />
               <h2 className="section-title">猜你喜歡</h2>
             </div>
-            <Link href="/products" className="text-sm font-bold text-primary">
+            <Link href="/shop" className="text-sm font-bold text-primary">
               查看更多
             </Link>
           </div>

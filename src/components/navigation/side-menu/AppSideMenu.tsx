@@ -19,6 +19,7 @@ import { prefetchShopRootCategories } from "@/lib/navigation/side-menu-category-
 import { isSupabaseConfigured } from "@/lib/config";
 import { createClient } from "@/lib/supabase/client";
 import { APP_ROUTES } from "@/lib/site-links";
+import { sideMenuAuthHref } from "@/lib/navigation/side-menu-routes";
 import type {
   SideMenuCategory,
   SideMenuPanelState,
@@ -189,11 +190,15 @@ export function AppSideMenu({ open, onOpenChange, triggerRef }: AppSideMenuProps
   const handlePrimary = useCallback(
     (item: SideMenuPrimaryItem) => {
       if (item.comingSoon) {
-        showToast("團購功能即將開放");
+        showToast("此功能即將開放");
         return;
       }
       if (item.section === "home") {
         navigateAway(item.route || APP_ROUTES.home);
+        return;
+      }
+      if (item.requiresAuth) {
+        navigateAway(sideMenuAuthHref(item.route || APP_ROUTES.member, loggedIn));
         return;
       }
       if (item.section === "materials") {
@@ -208,7 +213,7 @@ export function AppSideMenu({ open, onOpenChange, triggerRef }: AppSideMenuProps
       }
       if (item.route) navigateAway(item.route);
     },
-    [history, navigateAway, showToast]
+    [history, loggedIn, navigateAway, showToast]
   );
 
   const handleCategory = useCallback(

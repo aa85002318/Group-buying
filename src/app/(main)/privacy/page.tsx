@@ -30,7 +30,7 @@ export default async function PrivacyPage() {
 
       <h2>一、資料控管者</h2>
       <p>
-        本服務由棋美點心屋／CHIMEIDIY 團購營運。如有隱私相關問題，請透過客服中心或 Email：
+        本服務由棋美點心屋／CHIMEIDIY 烘焙生活平台營運。如有隱私相關問題，請透過客服中心或 Email：
         <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> 與我們聯絡。
       </p>
 
@@ -46,7 +46,7 @@ export default async function PrivacyPage() {
       <h2>三、資料使用目的</h2>
       <ul>
         <li>會員註冊、登入、身分驗證與帳號管理</li>
-        <li>處理團購訂單、付款確認、門市取貨與售後服務</li>
+        <li>處理商城訂單、付款確認、門市取貨與售後服務</li>
         <li>寄送訂單／取貨／系統相關通知（Email 或 LINE，視您綁定情況）</li>
         <li>客服處理、爭議處理與法令遵循</li>
         <li>改善服務品質、防詐欺與系統安全</li>

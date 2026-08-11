@@ -48,7 +48,7 @@ export function BrandHeroSearch({
         id="hero-search-input"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder={placeholder || "今天想做什麼？搜尋食譜、商品、團購、生鮮…"}
+        placeholder={placeholder || "今天想做什麼？搜尋商品、食譜、烘焙知識…"}
         className="min-w-0 flex-1 bg-transparent text-[15px] text-[#153E73] outline-none placeholder:text-[#8791A3]"
         autoComplete="off"
         style={{ height: "100%" }}

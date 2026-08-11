@@ -40,7 +40,7 @@ export function defaultSiteDocumentContent(key: SiteDocumentKey): string {
   if (key === "privacy") {
     return `<p>歡迎使用 ${brand}。我們重視您的隱私，本政策說明我們如何蒐集、使用、保存與保護個人資料。使用本服務即表示您已閱讀並同意本政策。</p>
 <h2>一、資料控管者</h2>
-<p>本服務由棋美點心屋／CHIMEIDIY 團購營運。如有隱私相關問題，請透過客服中心或 Email：<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> 與我們聯絡。</p>
+<p>本服務由棋美點心屋／CHIMEIDIY 烘焙生活平台營運。如有隱私相關問題，請透過客服中心或 Email：<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a> 與我們聯絡。</p>
 <h2>二、我們蒐集的資料</h2>
 <ul>
 <li>帳號資料：姓名、Email、手機號碼、生日、會員編號</li>
@@ -52,7 +52,7 @@ export function defaultSiteDocumentContent(key: SiteDocumentKey): string {
 <h2>三、資料使用目的</h2>
 <ul>
 <li>會員註冊、登入、身分驗證與帳號管理</li>
-<li>處理團購訂單、付款確認、門市取貨與售後服務</li>
+<li>處理商城訂單、付款確認、門市取貨與售後服務</li>
 <li>寄送訂單／取貨／系統相關通知（Email 或 LINE，視您綁定情況）</li>
 <li>客服處理、爭議處理與法令遵循</li>
 <li>改善服務品質、防詐欺與系統安全</li>

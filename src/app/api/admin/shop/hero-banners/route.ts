@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { canonicalizeAppHref } from "@/lib/site-links";
 import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
@@ -20,7 +21,10 @@ function toPayload(body: Record<string, unknown>) {
     subtitle: body.subtitle ? String(body.subtitle).trim() : null,
     image_url: desktop || null,
     mobile_image_url: mobile || null,
-    link_url: body.link_url != null ? String(body.link_url).trim() || null : body.link != null ? String(body.link).trim() || null : null,
+    link_url: (() => {
+      const raw = body.link_url != null ? String(body.link_url).trim() : body.link != null ? String(body.link).trim() : "";
+      return raw ? canonicalizeAppHref(raw) : null;
+    })(),
     link_target: linkTargetRaw === "_blank" ? "_blank" : "_self",
     button_text: body.button_text ? String(body.button_text).trim() : null,
     placement: SHOP_HERO_BANNER_TYPE,

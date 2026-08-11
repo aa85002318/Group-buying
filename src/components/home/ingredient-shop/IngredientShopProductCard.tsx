@@ -40,7 +40,7 @@ export function IngredientShopProductCard({ product }: IngredientShopProductCard
   const soldOut = isProductSoldOut(product);
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const href = `/products/${product.id}`;
+  const href = `/shop/products/${product.id}`;
 
   const onAdd = async (e: React.MouseEvent) => {
     e.preventDefault();

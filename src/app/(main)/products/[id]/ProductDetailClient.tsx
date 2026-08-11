@@ -303,7 +303,7 @@ export default function ProductDetailClient({ id }: { id: string }) {
           <h1 className="text-base font-bold">商品詳情</h1>
           <div className="flex items-center gap-1">
             <Link
-              href="/products"
+              href="/shop"
               aria-label="搜尋商品"
               className="flex h-11 w-11 items-center justify-center rounded-full"
             >

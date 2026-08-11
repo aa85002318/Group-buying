@@ -141,7 +141,7 @@ export default function MemberFavoritesPage() {
                       {p.image_url && <Image src={p.image_url} alt={p.name} fill className="object-cover" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <Link href={`/products/${p.id}`} className="line-clamp-2 font-medium text-foreground">
+                      <Link href={`/shop/products/${p.id}`} className="line-clamp-2 font-medium text-foreground">
                         {p.name}
                       </Link>
                       <p className="mt-1 font-bold text-primary">{formatCurrency(Number(p.price))}</p>

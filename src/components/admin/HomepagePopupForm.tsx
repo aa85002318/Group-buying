@@ -272,7 +272,7 @@ export function HomepagePopupForm({
               onChange={(e) => {
                 const v = e.target.value as HomepagePopupLinkType;
                 set("link_type", v);
-                if (v === "ai_tools") set("link_url", "/ai-tools");
+                if (v === "ai_tools") set("link_url", "/ai");
                 if (v === "member") set("link_url", "/member");
                 if (v === "support") set("link_url", "/support");
               }}

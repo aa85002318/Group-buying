@@ -91,7 +91,7 @@ export function OrdersClient({ hideTitle = false, appOrdersOnly = false }: Order
           <h1 className="text-xl font-bold text-caramel">{titleBase}</h1>
           {appOrdersOnly && (
             <p className="mt-1 text-sm text-foreground-secondary">
-              僅顯示透過 CHIMEIDIY App 建立的商城與團購訂單，不包含門市現場消費紀錄。
+              僅顯示透過 CHIMEIDIY App 建立的商城訂單，不包含門市現場消費紀錄。
             </p>
           )}
         </div>

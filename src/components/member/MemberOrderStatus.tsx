@@ -27,7 +27,7 @@ export function MemberOrderStatus({ counts }: { counts: MemberOrderCounts | null
       <div className="flex items-end justify-between gap-2 px-0.5">
         <div>
           <h2 className="text-base font-bold text-[#153E73]">我的訂單</h2>
-          <p className="mt-0.5 text-xs text-[#687386]">僅 App 商城／團購訂單</p>
+          <p className="mt-0.5 text-xs text-[#687386]">僅 App 商城訂單</p>
         </div>
         <Link href={APP_ROUTES.memberOrders} className="text-xs font-semibold text-[#79C7E8]">
           全部

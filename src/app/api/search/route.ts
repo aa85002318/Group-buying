@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       type: "product",
       id: p.id,
       title: p.name,
-      href: `/products/${p.id}`,
+      href: `/shop/products/${p.id}`,
       snippet: p.description,
     });
   }

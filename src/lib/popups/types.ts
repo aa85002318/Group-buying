@@ -1,3 +1,5 @@
+import { canonicalizeAppHref } from "@/lib/site-links";
+
 /** 首頁彈跳公告 — types, link helpers, dismiss keys */
 
 export type HomepagePopupStatus = "draft" | "scheduled" | "active" | "ended" | "disabled";
@@ -87,7 +89,7 @@ export const LINK_TYPE_OPTIONS: Array<{ value: HomepagePopupLinkType; label: str
   { value: "news", label: "最新資訊", pathHint: "/news/{slug}" },
   { value: "video", label: "影音", pathHint: "/videos/{id}" },
   { value: "course", label: "課程", pathHint: "/courses/{id}" },
-  { value: "ai_tools", label: "AI 工具", pathHint: "/ai-tools" },
+  { value: "ai_tools", label: "AI 工具", pathHint: "/ai" },
   { value: "member", label: "會員中心", pathHint: "/member" },
   { value: "support", label: "客服中心", pathHint: "/support" },
   { value: "custom", label: "自訂路徑", pathHint: "/" },
@@ -115,7 +117,7 @@ export function validatePopupLink(
 ): { ok: true; url: string } | { ok: false; error: string } {
   const raw = (linkUrl ?? "").trim();
   if (!raw) {
-    if (linkType === "ai_tools") return { ok: true, url: "/ai-tools" };
+    if (linkType === "ai_tools") return { ok: true, url: "/ai" };
     if (linkType === "member") return { ok: true, url: "/member" };
     if (linkType === "support") return { ok: true, url: "/support" };
     return { ok: false, error: "請填寫連結網址" };
@@ -130,7 +132,7 @@ export function validatePopupLink(
     }
     return { ok: true, url: raw };
   }
-  if (raw.startsWith("/")) return { ok: true, url: raw };
+  if (raw.startsWith("/")) return { ok: true, url: canonicalizeAppHref(raw) };
   if (/^https:\/\//i.test(raw)) return { ok: true, url: raw };
   return { ok: false, error: "內部路徑請以 / 開頭" };
 }
@@ -138,11 +140,11 @@ export function validatePopupLink(
 export function resolvePopupHref(popup: Pick<HomepagePopup, "link_type" | "link_url" | "linked_resource_id">): string | null {
   const type = popup.link_type;
   const id = popup.linked_resource_id?.trim();
-  if (type === "ai_tools") return "/ai-tools";
+  if (type === "ai_tools") return "/ai";
   if (type === "member") return "/member";
   if (type === "support") return "/support";
   if (id) {
-    if (type === "product") return `/products/${id}`;
+    if (type === "product") return `/shop/products/${id}`;
     if (type === "category") return `/shop/category/${id}`;
     if (type === "group_buy") return `/group-buy/${id}`;
     if (type === "recipe") return `/recipes/${id}`;

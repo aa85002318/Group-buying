@@ -91,7 +91,7 @@ export function getClosingSoonProducts(
     seen.add(product.id);
     items.push({
       ...product,
-      href: `/products/${product.id}`,
+      href: `/shop/products/${product.id}`,
       cutoff_at: product.preorder_deadline,
     });
   }

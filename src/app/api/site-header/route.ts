@@ -11,6 +11,11 @@ import {
   normalizeSideMenuSections,
   type HeaderNavItem,
 } from "@/lib/site-header";
+import {
+  filterConsumerGroupBuyLinks,
+  filterSideMenuSectionsForGroupBuyVisibility,
+} from "@/lib/features/group-buy-visibility";
+import { canonicalizeAppHref } from "@/lib/site-links";
 
 export async function GET() {
   if (!isSupabaseConfigured()) {
@@ -66,7 +71,7 @@ export async function GET() {
         fallback.push({
           id: `category-${c.id}`,
           label: c.name,
-          href: `/products?category=${encodeURIComponent(c.slug)}`,
+          href: `/shop/category/${c.slug}`,
           icon_emoji: c.icon_emoji ?? undefined,
         });
       }
@@ -78,19 +83,29 @@ export async function GET() {
   const promoItems = normalizeHeaderPromoItems(settings?.promo_items);
   const sideMenuSections = normalizeSideMenuSections(settings?.side_menu_sections);
 
+  const resolvedSections =
+    sideMenuSections.length > 0 ? sideMenuSections : DEFAULT_SIDE_MENU_SECTIONS;
+
   return NextResponse.json({
     brandTitle,
     brandSubtitle,
-    links: navItems.map((item) => ({
-      href: item.href,
+    links: filterConsumerGroupBuyLinks(navItems).map((item) => ({
+      href: canonicalizeAppHref(item.href),
       label: item.label,
       badge: item.badge,
       icon_emoji: item.icon_emoji,
     })),
-    promoItems: Array.isArray(settings?.promo_items)
-      ? promoItems
-      : DEFAULT_HEADER_PROMO_ITEMS,
-    sideMenuSections:
-      sideMenuSections.length > 0 ? sideMenuSections : DEFAULT_SIDE_MENU_SECTIONS,
+    promoItems: filterConsumerGroupBuyLinks(
+      Array.isArray(settings?.promo_items) ? promoItems : DEFAULT_HEADER_PROMO_ITEMS
+    ),
+    sideMenuSections: filterSideMenuSectionsForGroupBuyVisibility(
+      resolvedSections.map((section) => ({
+        ...section,
+        items: (section.items ?? []).map((item) => ({
+          ...item,
+          href: canonicalizeAppHref(item.href),
+        })),
+      }))
+    ),
   });
 }

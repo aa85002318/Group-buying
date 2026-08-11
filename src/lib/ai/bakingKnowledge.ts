@@ -82,24 +82,113 @@ export function scaleRecipe(ingredients: ScaleIngredient[], fromServings: number
   }));
 }
 
-export type OvenMode = "上下火" | "旋風" | "瓦斯";
+export type OvenMode =
+  | "家用小烤箱"
+  | "上下火烤箱"
+  | "旋風烤箱"
+  | "對流烤箱"
+  | "商用烤箱"
+  | "氣炸鍋"
+  | "上下火"
+  | "旋風"
+  | "瓦斯";
 
-/** Approximate oven conversion table for home bakers */
-export function convertOvenTemp(celsius: number, from: OvenMode, to: OvenMode): { temp: number; note: string } {
-  let temp = celsius;
-  if (from === to) return { temp, note: "模式相同，溫度不變。" };
+const OVEN_TO_CONVENTIONAL: Record<string, (c: number) => number> = {
+  家用小烤箱: (c) => c + 5,
+  上下火烤箱: (c) => c,
+  上下火: (c) => c,
+  旋風烤箱: (c) => c + 15,
+  旋風: (c) => c + 15,
+  對流烤箱: (c) => c + 15,
+  商用烤箱: (c) => c + 10,
+  氣炸鍋: (c) => c + 20,
+  瓦斯: (c) => c + 10,
+};
 
-  // Normalize to 上下火 first
-  if (from === "旋風") temp = Math.round(celsius * 1.1);
-  if (from === "瓦斯") temp = Math.round(celsius + 10);
+const CONVENTIONAL_TO_OVEN: Record<string, (c: number) => { temp: number; note: string; timeFactor: number }> = {
+  家用小烤箱: (c) => ({
+    temp: c - 5,
+    note: "小烤箱熱源近，建議略降溫並放中下層，避免表面過快上色。",
+    timeFactor: 1.05,
+  }),
+  上下火烤箱: (c) => ({ temp: c, note: "以上下火為基準溫度。", timeFactor: 1 }),
+  上下火: (c) => ({ temp: c, note: "以上下火為基準溫度。", timeFactor: 1 }),
+  旋風烤箱: (c) => ({
+    temp: c - 15,
+    note: "旋風熱對流較強，通常降溫 10–20°C，時間可略縮短。",
+    timeFactor: 0.9,
+  }),
+  旋風: (c) => ({
+    temp: c - 15,
+    note: "旋風熱對流較強，通常降溫 10–20°C，時間可略縮短。",
+    timeFactor: 0.9,
+  }),
+  對流烤箱: (c) => ({
+    temp: c - 15,
+    note: "對流烤箱類似旋風，建議降溫並觀察上色。",
+    timeFactor: 0.9,
+  }),
+  商用烤箱: (c) => ({
+    temp: c - 10,
+    note: "商用烤箱蓄熱強，建議略降溫並確認實際爐溫。",
+    timeFactor: 0.95,
+  }),
+  氣炸鍋: (c) => ({
+    temp: c - 20,
+    note: "氣炸鍋空間小、風量大，務必降溫並縮短時間，中途檢查。",
+    timeFactor: 0.8,
+  }),
+  瓦斯: (c) => ({
+    temp: c - 10,
+    note: "瓦斯烤箱上下火溫差較大，建議中層並適時轉向。",
+    timeFactor: 1,
+  }),
+};
 
-  if (to === "旋風") {
-    return { temp: Math.round(temp / 1.1), note: "旋風烤箱熱對流較強，建議降溫約 10–20°C，並縮短時間。" };
-  }
-  if (to === "瓦斯") {
-    return { temp: Math.round(temp - 10), note: "瓦斯烤箱上下火溫差較大，建議中層烘烤並適時旋轉烤盤。" };
-  }
-  return { temp, note: "以電烤箱上下火為基準溫度。" };
+/** Approximate oven conversion — programmatic, not model-guessed. */
+export function convertOvenTemp(
+  celsius: number,
+  from: OvenMode,
+  to: OvenMode,
+  minutes?: number
+): {
+  temp: number;
+  timeMin: number | null;
+  timeMax: number | null;
+  preheat: boolean;
+  rack: string;
+  rotate: boolean;
+  colorCheck: string;
+  note: string;
+} {
+  const toConv = OVEN_TO_CONVENTIONAL[from] ?? ((c: number) => c);
+  const fromTarget = CONVENTIONAL_TO_OVEN[to] ?? CONVENTIONAL_TO_OVEN["上下火烤箱"];
+  const conventional = toConv(celsius);
+  const result = fromTarget(conventional);
+  const baseTime = minutes && minutes > 0 ? minutes : null;
+  return {
+    temp: Math.round(result.temp),
+    timeMin: baseTime ? Math.max(5, Math.round(baseTime * result.timeFactor * 0.9)) : null,
+    timeMax: baseTime ? Math.round(baseTime * result.timeFactor * 1.05) : null,
+    preheat: to !== "氣炸鍋",
+    rack: to === "家用小烤箱" ? "中下層" : "中層",
+    rotate: to === "氣炸鍋" || to === "家用小烤箱" || to.includes("瓦斯"),
+    colorCheck: "最後 5–8 分鐘以目視確認上色，勿只依賴時間。",
+    note: `${result.note} 此為經驗換算，不同品牌與爐況差異很大，請以成品狀態為準。`,
+  };
+}
+
+export function panVolumeRatio(fromSize: string, toSize: string): number | null {
+  const parse = (s: string) => {
+    const nums = s.match(/(\d+(\.\d+)?)/g)?.map(Number) ?? [];
+    if (nums.length >= 2) return nums[0] * nums[1];
+    if (nums.length === 1) return Math.PI * Math.pow(nums[0] / 2, 2);
+    return null;
+  };
+  const a = parse(fromSize);
+  const b = parse(toSize);
+  if (!a || !b) return null;
+  return Math.round((b / a) * 100) / 100;
 }
 
 export const SUBSTITUTIONS: Record<string, Array<{ alt: string; ratio: string; note: string }>> = {
@@ -155,7 +244,43 @@ export const FAILURE_CAUSES: Array<{ keywords: string[]; title: string; causes: 
     fixes: ["用約 35–40°C 溫水活化酵母", "延長發酵或放溫暖處", "鹽與酵母分開加入", "揉至擴展階段"],
   },
   {
-    keywords: ["濕黏", "沒熟", "中心濕"],
+    keywords: ["開裂", "裂開", "表面裂"],
+    title: "表面開裂",
+    causes: ["烤箱溫度偏高", "麵糊水分不足", "入爐前靜置過久表面乾燥"],
+    fixes: ["略降溫 10°C", "增加少許液體", "入爐前可輕噴水霧"],
+  },
+  {
+    keywords: ["攤平", "攤開", "太薄"],
+    title: "餅乾攤平",
+    causes: ["奶油過軟或融化", "糖油比例偏高", "烤盤太熱、麵團未冷藏"],
+    fixes: ["奶油保持冰冷", "烤前冷藏 20–30 分鐘", "使用冷烤盤"],
+  },
+  {
+    keywords: ["油水分離", "乳化失敗", "結塊"],
+    title: "油水分離",
+    causes: ["材料溫差過大", "一次加水太多", "奶油溫度不對"],
+    fixes: ["材料接近室溫再拌", "分次加液體", "隔熱水隔回溫再乳化"],
+  },
+  {
+    keywords: ["奶油霜", "霜失敗", "消掉"],
+    title: "奶油霜失敗",
+    causes: ["奶油過軟或過硬", "糖粉受潮", "打發不足或過度"],
+    fixes: ["奶油約 18–20°C", "糖粉過篩", "打發至挺立即可"],
+  },
+  {
+    keywords: ["上色不均", "一邊焦", "顏色不均"],
+    title: "上色不均",
+    causes: ["烤箱熱點", "烤盤位置偏一邊", "未轉向"],
+    fixes: ["中途轉向", "使用中層", "避免貼近發熱管"],
+  },
+  {
+    keywords: ["過乾", "太乾", "乾柴"],
+    title: "成品過乾",
+    causes: ["烤太久", "液體不足", "低筋粉過量"],
+    fixes: ["提前觀察上色", "增加油脂或液體", "確認秤重"],
+  },
+  {
+    keywords: ["濕黏", "沒熟", "中心濕", "未熟"],
     title: "中心未熟／濕黏",
     causes: ["溫度過高外表先上色", "烘烤時間不足", "模具材質導熱差"],
     fixes: ["略降溫並延長時間", "用竹籤測試中心", "使用淺色金屬模較均勻"],
@@ -178,7 +303,7 @@ export function analyzeFailure(symptom: string) {
 export function aiSupportReply(content: string): string {
   const q = content.toLowerCase();
   if (/訂單|查單|order/.test(q)) return "請至「我的訂單」查看狀態，或提供訂單編號。待付款請完成匯款／門市繳費後回報。";
-  if (/配送|宅配|運費|寄送/.test(q)) return "目前團購以門市取貨為主；宅配與超商取貨即將開放。取貨請出示訂單 QR Code。";
+  if (/配送|宅配|運費|寄送/.test(q)) return "目前以門市取貨為主；宅配與超商取貨即將開放。取貨請出示訂單 QR Code。";
   if (/付款|匯款|刷卡|金流/.test(q)) return "支援門市付款與銀行匯款。匯款後請於訂單頁回報後五碼；線上刷卡即將開放。";
   if (/課程|報名|教室/.test(q)) return "請至「課程中心」查看場次與剩餘名額。報名成功後會產生電子票券 QR Code 供報到。";
   if (/直播|live|youtube|fb/.test(q)) return "請至「直播專區」觀看進行中或回放內容。直播中商品可於直播頁同步選購。";

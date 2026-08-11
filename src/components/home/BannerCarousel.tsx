@@ -112,7 +112,7 @@ export function BannerCarousel({ banners, autoPlayMs = 5000 }: BannerCarouselPro
 
           <div className="absolute inset-y-0 left-0 flex w-[66%] flex-col justify-center px-5 py-5 text-white md:w-[62%] md:px-10">
             <span className="mb-2 w-fit rounded-full bg-white/20 px-3 py-1 text-xs font-black backdrop-blur-sm">
-              CHIMEIDIY 團購
+              CHIMEIDIY
             </span>
             {current.offer && (
               <p className="text-2xl font-black tracking-tight text-warning drop-shadow md:text-4xl">

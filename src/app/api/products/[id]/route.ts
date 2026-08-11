@@ -25,12 +25,25 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const select =
+    "*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)";
+  let { data, error } = await supabase
     .from("products")
-    .select("*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)")
+    .select(select)
     .eq("id", id)
     .eq("is_active", true)
-    .single();
+    .maybeSingle();
+
+  if (!data) {
+    const bySlug = await supabase
+      .from("products")
+      .select(select)
+      .eq("slug", id)
+      .eq("is_active", true)
+      .maybeSingle();
+    data = bySlug.data;
+    error = bySlug.error;
+  }
 
   if (error || !data) {
     return NextResponse.json({ error: "商品不存在" }, { status: 404 });
@@ -42,7 +55,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const { data: rows } = await admin
       .from("product_images")
       .select("*")
-      .eq("product_id", id)
+      .eq("product_id", data.id)
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
     productImages = rows ?? [];

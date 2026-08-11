@@ -102,7 +102,7 @@ export default function RegisterForm() {
   if (sent) {
     return (
       <div className="flex min-h-[calc(100vh-var(--header-height))] flex-col items-center justify-center gap-6 p-4">
-        <Logo size="auth" withText markOnly textLayout="below" align="center" priority title="CHIMEIDIY 團購" subtitle="棋美點心屋" />
+        <Logo size="auth" withText markOnly textLayout="below" align="center" priority title="CHIMEIDIY 烘焙生活平台" subtitle="棋美點心屋" />
         <div className="w-full max-w-sm space-y-4 rounded-xl bg-white p-6 text-center shadow-card">
           <h1 className="text-lg font-bold text-coffee">
             {sendWarning ? "帳號已建立" : "請查收驗證信"}
@@ -131,9 +131,9 @@ export default function RegisterForm() {
 
   return (
     <div className="flex min-h-[calc(100vh-var(--header-height))] flex-col items-center justify-center gap-6 p-4">
-      <Logo size="auth" withText markOnly textLayout="below" align="center" priority title="CHIMEIDIY 團購" subtitle="棋美點心屋" />
+      <Logo size="auth" withText markOnly textLayout="below" align="center" priority title="CHIMEIDIY 烘焙生活平台" subtitle="棋美點心屋" />
       <div className="w-full max-w-sm space-y-6 rounded-xl bg-white p-6 shadow-card">
-        <p className="text-center text-sm text-coffee/70">加入會員，開始團購</p>
+        <p className="text-center text-sm text-coffee/70">加入會員，開始探索烘焙生活</p>
         {ref && <p className="text-center text-xs text-primary">推薦碼：{ref}</p>}
         <form onSubmit={handleRegister} className="space-y-4">
           <Input

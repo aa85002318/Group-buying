@@ -31,7 +31,7 @@ export type HomeQuickEntryConfig = {
 export const DEFAULT_MEMBER_SHORTCUTS: MemberShortcut[] = [
   {
     id: "orders",
-    label: "團購訂單",
+    label: "我的訂單",
     href: APP_ROUTES.memberOrders,
     emoji: "📦",
   },

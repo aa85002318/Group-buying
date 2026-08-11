@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { canonicalizeAppHref } from "@/lib/site-links";
 import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
@@ -21,7 +22,8 @@ function toCmsUpdates(body: Record<string, unknown>) {
     updates.mobile_image_url = m ? String(m).trim() : null;
   }
   if (body.link !== undefined || body.link_url !== undefined) {
-    updates.link_url = body.link != null ? String(body.link).trim() : body.link_url != null ? String(body.link_url).trim() : null;
+    const raw = body.link != null ? String(body.link).trim() : body.link_url != null ? String(body.link_url).trim() : "";
+    updates.link_url = raw ? canonicalizeAppHref(raw) : null;
   }
   if (body.link_target !== undefined) {
     updates.link_target = String(body.link_target).trim() === "_blank" ? "_blank" : "_self";

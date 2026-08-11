@@ -1,8 +1,10 @@
+import { FEATURES } from "@/lib/features";
+
 /**
  * Temporary consumer-facing switch: hide group-buy surfaces while
- * shop + recipes are the primary focus. Flip to true to restore.
+ * shop + recipes are the primary focus. Flip FEATURES.groupBuying to restore.
  */
-export const GROUP_BUY_CONSUMER_VISIBLE = false;
+export const GROUP_BUY_CONSUMER_VISIBLE = FEATURES.groupBuying;
 
 /** Homepage CMS keys that are group-buy oriented. */
 export const HIDDEN_HOME_GROUP_BUY_KEYS = new Set<string>([

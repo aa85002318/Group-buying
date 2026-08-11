@@ -1,11 +1,6 @@
-import type { Metadata } from "next";
-import { AiToolsClient } from "./AiToolsClient";
+import { permanentRedirect } from "next/navigation";
+import { APP_ROUTES } from "@/lib/site-links";
 
-export const metadata: Metadata = {
-  title: "CHIMEIDIY AI 烘焙助手",
-  description: "選產品、找食譜、用現有材料做甜點。規則引擎預覽，可串接 AI API。",
-};
-
-export default function AiToolsPage() {
-  return <AiToolsClient />;
+export default function AiToolsRedirect() {
+  permanentRedirect(APP_ROUTES.ai);
 }

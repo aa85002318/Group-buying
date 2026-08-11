@@ -33,6 +33,36 @@ const nextConfig = {
         destination: "/shop/category/:slug",
         permanent: true,
       },
+      {
+        source: "/notifications",
+        destination: "/member/notifications",
+        permanent: true,
+      },
+      {
+        source: "/ai-tools",
+        destination: "/ai",
+        permanent: true,
+      },
+      {
+        source: "/ai-tools/:path*",
+        destination: "/ai",
+        permanent: true,
+      },
+      {
+        source: "/products",
+        destination: "/shop",
+        permanent: true,
+      },
+      {
+        source: "/products/:slug",
+        destination: "/shop/products/:slug",
+        permanent: true,
+      },
+      {
+        source: "/member/favorites",
+        destination: "/favorites",
+        permanent: true,
+      },
     ];
   },
   images: {

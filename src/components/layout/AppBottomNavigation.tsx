@@ -49,9 +49,9 @@ const NAV_ITEMS: NavItem[] = [
   {
     key: "favorites",
     label: "收藏",
-    href: APP_ROUTES.memberFavorites,
+    href: APP_ROUTES.favorites,
     icon: Heart,
-    match: (p) => p.startsWith("/member/favorites"),
+    match: (p) => p.startsWith("/favorites") || p.startsWith("/member/favorites"),
   },
   {
     key: "member",

@@ -9,7 +9,7 @@ import { Search, Sparkles } from "lucide-react";
  * `seam` enables negative-margin overlap used under the hero.
  */
 export function ShopSearchBar({
-  placeholder = "今天想做什麼？搜尋食譜、商品、團購、生鮮…",
+  placeholder = "今天想做什麼？搜尋商品、食譜、烘焙知識…",
   seam = true,
 }: {
   placeholder?: string;

@@ -75,7 +75,7 @@ export default function MemberRecentPage() {
           <p className="font-semibold text-caramel">還沒有瀏覽紀錄</p>
           <p className="mt-1 text-sm text-foreground-secondary">去逛逛熱門商品吧！</p>
           <Link
-            href="/products"
+            href="/shop"
             className="mt-4 inline-flex h-11 items-center rounded-button bg-primary px-5 text-sm font-bold text-white"
           >
             逛商品

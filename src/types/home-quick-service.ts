@@ -1,4 +1,4 @@
-import { APP_ROUTES } from "@/lib/site-links";
+import { APP_ROUTES, canonicalizeAppHref } from "@/lib/site-links";
 import {
   GROUP_BUY_CONSUMER_VISIBLE,
   isGroupBuyConsumerHref,
@@ -127,7 +127,7 @@ export const DEFAULT_QUICK_SERVICE_ITEMS: QuickServiceItem[] = [
 export const DEFAULT_MEMBER_SHORTCUT_ITEMS: MemberShortcutItem[] = [
   {
     id: "orders",
-    title: "團購訂單",
+    title: "我的訂單",
     imageUrl: `${ICON}/shortcut-orders.svg`,
     href: APP_ROUTES.memberOrders,
     enabled: true,
@@ -363,7 +363,7 @@ export function listVisibleQuickServices(items: QuickServiceItem[]): QuickServic
       if (/shop\/categories/i.test(i.href)) {
         return { ...i, href: APP_ROUTES.shop };
       }
-      return i;
+      return { ...i, href: canonicalizeAppHref(i.href) };
     })
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -374,6 +374,9 @@ export function listVisibleMemberShortcuts(
 ): MemberShortcutItem[] {
   return items
     .filter((i) => i.enabled !== false)
+    .map((i) =>
+      i.id === "orders" || i.title === "團購訂單" ? { ...i, title: "我的訂單" } : i
+    )
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }

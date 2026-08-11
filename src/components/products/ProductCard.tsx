@@ -90,7 +90,7 @@ export function ProductCard({
   showQuickAdd = true,
   variant = "default",
 }: ProductCardProps) {
-  const link = href ?? `/products/${id}`;
+  const link = href ?? `/shop/products/${id}`;
   const resolvedBadge: ProductBadge | undefined =
     badge ??
     (isGroupBuy || groupBuyLabel ? "groupBuy" : undefined) ??

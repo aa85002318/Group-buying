@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { canonicalizeAppHref } from "@/lib/site-links";
 import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
@@ -22,7 +23,10 @@ function toCmsPayload(body: Record<string, unknown>) {
     alt_text: body.alt_text != null ? String(body.alt_text).trim() : String(body.title ?? "").trim(),
     image_url: desktop || null,
     mobile_image_url: mobile || null,
-    link_url: body.link ? String(body.link).trim() : body.link_url ? String(body.link_url).trim() : null,
+    link_url: (() => {
+      const raw = body.link ? String(body.link).trim() : body.link_url ? String(body.link_url).trim() : "";
+      return raw ? canonicalizeAppHref(raw) : null;
+    })(),
     link_target,
     button_text: body.button_text ? String(body.button_text).trim() : null,
     placement: type,

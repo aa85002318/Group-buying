@@ -1,7 +1,13 @@
+import { canonicalizeAppHref } from "@/lib/site-links";
+
 /** Validate internal paths or http(s) URLs. Reject javascript: and data: */
 
+export function normalizeCmsHref(raw: string | null | undefined): string {
+  return canonicalizeAppHref((raw ?? "").trim());
+}
+
 export function isSafeLinkUrl(raw: string | null | undefined): boolean {
-  const value = (raw ?? "").trim();
+  const value = normalizeCmsHref(raw);
   if (!value) return true;
   if (/^(javascript|data|vbscript):/i.test(value)) return false;
   if (value.startsWith("/")) {

@@ -81,7 +81,7 @@ export function RecommendedProducts({ productId }: RecommendedProductsProps) {
     <section className="space-y-3 border-t border-border pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-coffee">推薦商品</h2>
-        <Link href="/products" className="text-sm text-primary hover:underline">
+        <Link href="/shop" className="text-sm text-primary hover:underline">
           查看更多
         </Link>
       </div>

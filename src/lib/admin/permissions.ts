@@ -439,6 +439,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         label: "團購畫布",
         roles: ["admin"],
       },
+      { href: "/admin/ai", label: "AI 助手", roles: ["admin"] },
       { href: "/admin/media", label: "素材庫", roles: ["admin", "content_editor"] },
       { href: "/admin/side-menu", label: "全站側選單", roles: ["admin", "content_editor"] },
       { href: "/admin/banners", label: "共用 Banner", roles: ["admin", "content_editor"] },

@@ -26,7 +26,7 @@ export const DEFAULT_GROUP_BUY_HERO = {
   link: "/group-buy",
   searchPlaceholder:
     HOME_HERO_DEFAULTS.searchPlaceholder ||
-    "今天想做什麼？搜尋食譜、商品、團購、生鮮…",
+    "今天想做什麼？搜尋商品、食譜、烘焙知識…",
 } as const;
 
 /** Brand yellow — same as homepage `.home-hero` (#FDE045). */

@@ -17,7 +17,7 @@ const SECONDARY: Array<{
   cardClass?: string;
 }> = [
   {
-    href: "/ai-tools",
+    href: "/ai",
     title: "AI 烘焙助手",
     description: "不知道怎麼選？問問我",
     icon: Sparkles,

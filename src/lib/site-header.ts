@@ -1,3 +1,5 @@
+import { canonicalizeAppHref } from "@/lib/site-links";
+
 export type HeaderNavBadge = "hot" | "live";
 
 export type HeaderNavItem = {
@@ -80,8 +82,7 @@ export const DEFAULT_HEADER_NAV_ITEMS: HeaderNavItem[] = [
   { id: "shop", label: "烘焙材料", href: "/shop", icon_emoji: "🛍️" },
   { id: "recipes", label: "食譜影音", href: "/recipes", icon_emoji: "🎬" },
   { id: "member", label: "門市會員", href: "/member", icon_emoji: "👤" },
-  { id: "group_buy", label: "團購", href: "/group-buy", badge: "hot", icon_emoji: "🔥" },
-  { id: "ai", label: "AI 工具", href: "/ai-tools", icon_emoji: "✨" },
+  { id: "ai", label: "AI烘焙助手", href: "/ai", icon_emoji: "✨" },
   {
     id: "promo",
     label: "優惠活動",
@@ -197,7 +198,7 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         id: "ai",
         label: "AI 烘焙助手",
         description: "選品與食材食譜",
-        href: "/ai-tools",
+        href: "/ai",
         icon: "sparkles",
         color: "pink",
       },
@@ -214,7 +215,7 @@ export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
         id: "new",
         label: "本日上架",
         description: "今天最新上架商品",
-        href: "/products?sort=newest",
+        href: "/shop?sort=newest",
         icon: "package",
         color: "berry",
       },
@@ -428,7 +429,7 @@ export function normalizeHeaderNavItems(raw: unknown): HeaderNavItem[] {
         ? record.icon_emoji.trim()
         : undefined;
 
-    items.push({ id, label, href, badge, icon_emoji });
+    items.push({ id, label, href: canonicalizeAppHref(href), badge, icon_emoji });
   }
   return items;
 }
@@ -461,7 +462,7 @@ export function normalizeHeaderPromoItems(raw: unknown): HeaderPromoItem[] {
         : undefined;
     const href =
       typeof record.href === "string" && isValidHeaderHref(record.href)
-        ? record.href.trim()
+        ? canonicalizeAppHref(record.href.trim())
         : undefined;
     const font_size =
       record.font_size === "small" ||
@@ -540,7 +541,7 @@ export function normalizeSideMenuSections(raw: unknown): SideMenuSection[] {
           typeof item.description === "string" && item.description.trim()
             ? item.description.trim()
             : undefined,
-        href,
+        href: canonicalizeAppHref(href),
         icon: SIDE_MENU_ICONS.has(item.icon as SideMenuIconKey)
           ? (item.icon as SideMenuIconKey)
           : "sparkles",

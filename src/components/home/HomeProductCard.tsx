@@ -22,7 +22,7 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
   const { addItem } = useCart();
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const href = product.href ?? `/products/${product.id}`;
+  const href = product.href ?? `/shop/products/${product.id}`;
   const saving =
     product.original_price && product.original_price > product.price
       ? product.original_price - product.price

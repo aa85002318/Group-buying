@@ -47,13 +47,13 @@ export const HOME_HERO_MOBILE_IMAGE = "/brand/hero-home-mobile.png?v=20260730j";
 
 export const HOME_HERO_DEFAULTS: HomeHeroData = {
   title: "今天想做點什麼？",
-  description: "探索食譜、團購、生鮮、居家好物\n讓每一天的生活更簡單。",
+  description: "探索食譜、商城與烘焙生活\n讓每一天的生活更簡單。",
   desktopImageUrl: HOME_HERO_DESKTOP_IMAGE,
   mobileImageUrl: HOME_HERO_MOBILE_IMAGE,
   imageAlt: "CHIMEiDIY Lifestyle 首頁主視覺",
   desktopObjectPosition: "center",
   mobileObjectPosition: "center top",
-  searchPlaceholder: "今天想做什麼？搜尋食譜、商品、團購、生鮮…",
+  searchPlaceholder: "今天想做什麼？搜尋商品、食譜、烘焙知識…",
   searchScope: "global",
   showPopularTags: false,
   // Banner art already includes copy — hide overlays by default
@@ -64,14 +64,14 @@ export const HOME_HERO_DEFAULTS: HomeHeroData = {
     { id: "t2", label: "🍪 餅乾", keyword: "餅乾", sortOrder: 20 },
     { id: "t3", label: "🍰 蛋糕", keyword: "蛋糕", sortOrder: 30 },
     { id: "t4", label: "🧈 奶油乳酪", keyword: "奶油乳酪", sortOrder: 40 },
-    { id: "t5", label: "🛒 團購", keyword: "團購", sortOrder: 50 },
+    { id: "t5", label: "🧁 杯子蛋糕", keyword: "杯子蛋糕", sortOrder: 50 },
     { id: "t6", label: "🥬 生鮮", keyword: "生鮮", sortOrder: 60 },
     {
       id: "more",
       label: "更多",
       keyword: "__more__",
       linkType: "url",
-      targetUrl: "/products",
+      targetUrl: "/shop",
       sortOrder: 70,
     },
   ],

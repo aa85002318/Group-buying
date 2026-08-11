@@ -126,7 +126,7 @@ export function SideMenuSearchPanel({
                 查看全部分類
               </Link>
               <Link
-                href="/ai-tools"
+                href="/ai"
                 onClick={onNavigate}
                 className="inline-flex h-11 items-center justify-center rounded-2xl border border-[#E8E1D7] text-sm font-bold text-[#153E73]"
               >

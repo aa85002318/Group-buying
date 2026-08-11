@@ -12,7 +12,7 @@ export default function SupportOrdersPage() {
       </Link>
       <h1 className="text-xl font-bold text-caramel">訂單問題</h1>
       <p className="text-sm text-foreground-secondary">
-        僅協助 CHIMEIDIY App 建立的商城與團購訂單，不含門市 POS 現場消費。
+        僅協助 CHIMEIDIY App 建立的商城訂單，不含門市 POS 現場消費。
       </p>
       <div className="space-y-2">
         <Link href={APP_ROUTES.memberOrders ?? "/member/orders"} className="block rounded-2xl bg-surface p-4 font-medium shadow-card">

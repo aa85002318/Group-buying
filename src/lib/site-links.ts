@@ -16,7 +16,7 @@ export const APP_ROUTES = {
   memberGifts: "/member/gifts",
   memberGiftVouchers: "/member/benefits/vouchers",
   memberGiftsMy: "/member/gifts/my",
-  memberFavorites: "/member/favorites",
+  memberFavorites: "/favorites",
   memberAddresses: "/member/addresses",
   memberNotifications: "/member/notifications",
   memberSettings: "/member/settings",
@@ -39,21 +39,23 @@ export const APP_ROUTES = {
   privacy: "/privacy",
   terms: "/terms",
   accountDeletion: "/account-deletion",
-  products: "/products",
+  products: "/shop",
   bakingMaterials: "/shop",
   shop: "/shop",
   shopCategories: "/shop",
+  shopSearch: "/shop/search",
   recipes: "/recipes",
   news: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
   promotions: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95",
-  aiTools: "/ai-tools",
+  aiTools: "/ai",
   storeMap: "/stores",
   search: "/search",
   cart: "/cart",
-  notifications: "/notifications",
+  notifications: "/member/notifications",
+  favorites: "/favorites",
   checkout: "/checkout",
-  /** Legacy path — prefer memberOrders for member hub copy */
-  orders: "/orders",
+  /** Canonical member orders path */
+  orders: "/member/orders",
   live: "/live",
   articles: "/articles",
   courses: "/courses",
@@ -77,7 +79,7 @@ export interface SiteLinkItem {
 }
 
 const LINK_META: Record<AppRouteKey, { label: string; description?: string }> = {
-  home: { label: "前台首頁", description: "團購商城首頁" },
+  home: { label: "前台首頁", description: "CHIMEIDIY 烘焙生活平台首頁" },
   register: { label: "會員註冊", description: "姓名、手機、生日、Email 註冊" },
   login: { label: "會員登入", description: "登入後可下單、查訂單" },
   profile: { label: "會員中心", description: "個人資料與功能選單" },
@@ -86,7 +88,7 @@ const LINK_META: Record<AppRouteKey, { label: string; description?: string }> = 
   memberProfile: { label: "會員資料", description: "姓名、聯絡方式與地址" },
   memberBarcode: { label: "會員條碼", description: "門市識別 App 會員身分" },
   memberCarrier: { label: "發票載具", description: "儲存及出示手機條碼" },
-  memberOrders: { label: "我的 App 訂單", description: "僅 App 商城與團購訂單" },
+  memberOrders: { label: "我的訂單", description: "商城與門市取貨訂單" },
   memberBenefits: { label: "門市會員禮", description: "會員禮、滿額贈與兌換紀錄" },
   memberGifts: { label: "會員禮（別名）", description: "導向 /member/benefits" },
   memberGiftVouchers: { label: "我的兌換券", description: "可兌換與已兌換票券" },
@@ -126,8 +128,10 @@ const LINK_META: Record<AppRouteKey, { label: string; description?: string }> = 
   search: { label: "全站搜尋", description: "商品／內容／門市位置" },
   cart: { label: "購物車", description: "需登入" },
   notifications: { label: "通知中心", description: "活動與訂單通知" },
+  favorites: { label: "收藏", description: "收藏的商品與食譜" },
+  shopSearch: { label: "商城搜尋", description: "搜尋上架商品" },
   checkout: { label: "結帳", description: "需登入且完成 Email 驗證" },
-  orders: { label: "我的 App 訂單", description: "僅 App 商城與團購訂單（舊路徑）" },
+  orders: { label: "我的訂單", description: "商城與門市取貨訂單" },
   live: { label: "直播中心", description: "直播中、倒數、回放" },
   articles: { label: "文章中心", description: "烘焙知識與食譜" },
   courses: { label: "課程中心", description: "烘焙課程報名" },
@@ -162,4 +166,39 @@ export function getSiteLinks(keys: AppRouteKey[] = PRIMARY_SITE_LINK_KEYS): Site
       absoluteUrl: `${base}${href}`,
     };
   });
+}
+
+export function productPath(idOrSlug: string) {
+  return `/shop/products/${idOrSlug}`;
+}
+
+export function recipePath(slug: string) {
+  return `/recipes/${slug}`;
+}
+
+/** Convert legacy consumer hrefs to the canonical phase-1 routes. */
+export function canonicalizeAppHref(href: string | null | undefined): string {
+  if (!href) return "";
+  if (!href.startsWith("/")) return href;
+  const hashIndex = href.indexOf("#");
+  const hash = hashIndex >= 0 ? href.slice(hashIndex) : "";
+  const withoutHash = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
+  const [path, query] = withoutHash.split("?");
+  const q = query ? `?${query}` : "";
+
+  if (path === "/notifications") return `/member/notifications${q}${hash}`;
+  if (path === "/ai-tools" || path.startsWith("/ai-tools/")) {
+    return `/ai${path.slice("/ai-tools".length)}${q}${hash}`;
+  }
+  if (path === "/products") return `/shop${q}${hash}`;
+  if (path.startsWith("/products/")) {
+    return `/shop/products/${path.slice("/products/".length)}${q}${hash}`;
+  }
+  if (path === "/orders" || path.startsWith("/orders/")) {
+    return `/member/orders${path.slice("/orders".length)}${q}${hash}`;
+  }
+  if (path === "/member/favorites" || path.startsWith("/member/favorites/")) {
+    return `/favorites${path.slice("/member/favorites".length)}${q}${hash}`;
+  }
+  return href;
 }
