@@ -149,7 +149,9 @@ function prepareRow(
   rowNum: number,
   categories: CategoryNode[],
   rootId: string | null,
-  brandResolver: (name: string) => Promise<string | null>
+  brandResolver: (name: string) => Promise<string | null>,
+  suppliers: Array<{ id: string; name: string }>,
+  defaultSupplierId: string | null
 ): Promise<{ prepared?: PreparedRow; error?: string }> {
   return (async () => {
     const mapped = canonicalizeImportRow(row);
@@ -182,6 +184,18 @@ function prepareRow(
     const brandName = mapped.brand;
     const brandId = brandName ? await brandResolver(brandName) : null;
 
+    const supplierByName = new Map(suppliers.map((s) => [s.name.trim().toLowerCase(), s]));
+    const defaultSupplier = defaultSupplierId
+      ? suppliers.find((s) => s.id === defaultSupplierId) ?? null
+      : null;
+    const excelSupplier = mapped.supplier;
+    const matchedSupplier = excelSupplier
+      ? supplierByName.get(excelSupplier.toLowerCase()) ?? null
+      : defaultSupplier;
+    if (excelSupplier && !matchedSupplier) {
+      return { error: `找不到廠商「${excelSupplier}」，請選後台既有供應商` };
+    }
+
     const statusRaw = mapped.status;
     const { status, is_active } = statusRaw ? parseStatus(statusRaw) : { status: "draft", is_active: false };
 
@@ -209,6 +223,8 @@ function prepareRow(
       status,
       is_active,
       brand_id: brandId,
+      supplier_id: matchedSupplier?.id ?? null,
+      supplier_name: matchedSupplier?.name ?? null,
       category_id: primaryCategoryId,
       primary_category_id: primaryCategoryId,
       image_url: imageUrl || null,
@@ -310,6 +326,15 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
   const { rootId, categories } = await loadBakingCategories(admin);
+  const { data: supplierRows } = await admin
+    .from("suppliers")
+    .select("id, name")
+    .eq("is_active", true);
+  const suppliers = (supplierRows ?? []) as Array<{ id: string; name: string }>;
+  const defaultSupplierId =
+    typeof body.supplier_id === "string" && suppliers.some((s) => s.id === body.supplier_id)
+      ? body.supplier_id
+      : null;
   const brandCache = new Map<string, string>();
 
   const brandResolver = (name: string) => resolveBrandId(admin, name, brandCache);
@@ -318,7 +343,15 @@ export async function POST(request: Request) {
   const errors: ImportError[] = [];
 
   for (let i = 0; i < rows.length; i++) {
-    const result = await prepareRow(rows[i], i + 2, categories, rootId, brandResolver);
+    const result = await prepareRow(
+      rows[i],
+      i + 2,
+      categories,
+      rootId,
+      brandResolver,
+      suppliers,
+      defaultSupplierId
+    );
     if (result.error) {
       errors.push({ row: i + 2, message: result.error });
     } else if (result.prepared) {

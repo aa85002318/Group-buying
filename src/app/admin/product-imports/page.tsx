@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle, Download, Upload } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -13,6 +13,7 @@ const ENGLISH_HEADERS = [
   "product_slug",
   "product_sku",
   "brand",
+  "supplier",
   "category_path",
   "additional_categories",
   "variant_name",
@@ -33,6 +34,7 @@ const SAMPLE_ROW: Record<(typeof ENGLISH_HEADERS)[number], string> = {
   product_slug: "demo-high-gluten-flour",
   product_sku: "BM-FLOUR-001",
   brand: "示範品牌",
+  supplier: "",
   category_path: "麵粉 > 高筋麵粉",
   additional_categories: "",
   variant_name: "1kg",
@@ -75,6 +77,21 @@ export default function AdminProductImportsPage() {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [suppliers, setSuppliers] = useState<Array<{ id: string; name: string; is_active?: boolean }>>([]);
+  const [supplierId, setSupplierId] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/suppliers")
+      .then((r) => r.json())
+      .then((d) =>
+        setSuppliers(
+          ((d.suppliers ?? []) as Array<{ id: string; name: string; is_active?: boolean }>).filter(
+            (s) => s.is_active !== false
+          )
+        )
+      )
+      .catch(() => setSuppliers([]));
+  }, []);
 
   const previewRows = useMemo(() => rows.slice(0, 10), [rows]);
 
@@ -102,7 +119,7 @@ export default function AdminProductImportsPage() {
         const res = await fetch("/api/admin/product-imports", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rows: chunk }),
+          body: JSON.stringify({ rows: chunk, supplier_id: supplierId || undefined }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "匯入失敗");
@@ -167,7 +184,33 @@ export default function AdminProductImportsPage() {
 
         <section className="rounded-[20px] border border-border bg-white p-6 shadow-card">
           <h2 className="text-lg font-bold text-foreground">2. 上傳檔案</h2>
-          <p className="mt-2 text-sm text-foreground-secondary">選擇填寫完成的 Excel 或 CSV</p>
+          <label className="mt-4 block text-sm font-medium text-foreground">廠商（供應商）</label>
+          <select
+            className="mt-1 h-12 w-full rounded-[16px] border border-border bg-white px-3 text-sm"
+            value={supplierId}
+            onChange={(e) => setSupplierId(e.target.value)}
+          >
+            <option value="">不指定／依 Excel supplier 欄</option>
+            {suppliers.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-foreground-muted">
+            {suppliers.length === 0 ? (
+              <>
+                尚無供應商，請先到{" "}
+                <Link href="/admin/suppliers" className="underline">
+                  供應商管理
+                </Link>{" "}
+                新增。
+              </>
+            ) : (
+              <>廠商與分類以內台資料為準，Excel 名稱需完全一致。</>
+            )}
+          </p>
+          <p className="mt-4 text-sm text-foreground-secondary">選擇填寫完成的 Excel 或 CSV</p>
           <input
             type="file"
             accept=".xlsx,.xls,.csv"

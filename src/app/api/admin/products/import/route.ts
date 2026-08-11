@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   const { error: authError, auth } = await requireAdmin();
   if (authError) return authError;
 
-  let body: { rows?: unknown };
+  let body: { rows?: unknown; supplier_id?: unknown; default_category_id?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -46,8 +46,23 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
 
-  const { data: categories } = await admin.from("product_categories").select("id, name");
+  const [{ data: categories }, { data: suppliers }] = await Promise.all([
+    admin.from("product_categories").select("id, name"),
+    admin.from("suppliers").select("id, name").eq("is_active", true),
+  ]);
   const categoryByName = new Map((categories ?? []).map((c) => [c.name.trim(), c.id]));
+  const supplierByName = new Map(
+    (suppliers ?? []).map((s) => [s.name.trim().toLowerCase(), s])
+  );
+  const defaultSupplier =
+    typeof body.supplier_id === "string"
+      ? (suppliers ?? []).find((s) => s.id === body.supplier_id) ?? null
+      : null;
+  const defaultCategoryId =
+    typeof body.default_category_id === "string" &&
+    (categories ?? []).some((c) => c.id === body.default_category_id)
+      ? body.default_category_id
+      : null;
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i] ?? {};
@@ -71,9 +86,20 @@ export async function POST(request: Request) {
       }
 
       const categoryName = pickImportValue(row, "分類", "category");
-      const categoryId = categoryName ? categoryByName.get(categoryName) ?? null : null;
+      const categoryId = categoryName
+        ? categoryByName.get(categoryName) ?? null
+        : defaultCategoryId;
       if (categoryName && !categoryId) {
         errors.push(`${label}：找不到分類「${categoryName}」，請填後台既有分類名稱`);
+        continue;
+      }
+
+      const supplierName = pickImportValue(row, "廠商", "供應商", "supplier", "supplier_name");
+      const matchedSupplier = supplierName
+        ? supplierByName.get(supplierName.toLowerCase()) ?? null
+        : defaultSupplier;
+      if (supplierName && !matchedSupplier) {
+        errors.push(`${label}：找不到廠商「${supplierName}」，請選後台既有供應商`);
         continue;
       }
 
@@ -112,6 +138,8 @@ export async function POST(request: Request) {
         rich_description: pickImportValue(row, "介紹", "description") || null,
         category_id: categoryId,
         primary_category_id: categoryId,
+        supplier_id: matchedSupplier?.id ?? null,
+        supplier_name: matchedSupplier?.name ?? null,
         slug: slugifyTitle(name),
         status: "draft",
         is_active: false,

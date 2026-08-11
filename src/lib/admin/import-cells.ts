@@ -51,6 +51,7 @@ const IMPORT_FIELD_ALIASES: Record<string, string[]> = {
   product_slug: ["product_slug", "slug"],
   product_sku: ["product_sku", "SKU", "sku", "商品編號"],
   brand: ["brand", "品牌"],
+  supplier: ["supplier", "supplier_name", "廠商", "供應商"],
   category_path: ["category_path", "分類", "category"],
   additional_categories: ["additional_categories"],
   variant_name: ["variant_name", "規格"],
