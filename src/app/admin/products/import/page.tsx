@@ -60,16 +60,29 @@ export default function AdminProductImportPage() {
 
     try {
       const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: "array" });
+      const workbook = XLSX.read(new Uint8Array(buffer), { type: "array", cellDates: true });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet);
+      if (!sheet) throw new Error("檔案裡沒有工作表");
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+        defval: "",
+        raw: false,
+      });
+      if (rows.length === 0) throw new Error("沒有可匯入的資料列，請確認第一列是欄位名稱");
 
       const res = await fetch("/api/admin/products/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rows }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { error?: string; imported?: number; errors?: string[] };
+      try {
+        data = JSON.parse(text) as { error?: string; imported?: number; errors?: string[] };
+      } catch {
+        throw new Error(
+          res.ok ? "伺服器回傳格式錯誤" : `匯入失敗（HTTP ${res.status}）`
+        );
+      }
       if (!res.ok) throw new Error(data.error ?? "匯入失敗");
       setResult({ imported: data.imported ?? 0, errors: data.errors ?? [] });
     } catch (e) {
@@ -101,7 +114,7 @@ export default function AdminProductImportPage() {
         <section className="rounded-[20px] border border-border bg-white p-6 shadow-card">
           <h2 className="text-lg font-bold text-foreground">1. 下載範例檔</h2>
           <p className="mt-2 text-sm text-foreground-secondary">
-            欄位包含：名稱、分類、售價、成本、SKU、現貨、預購、溫層、影片、圖片、介紹、批號、效期
+            欄位包含：名稱、分類、售價、成本、SKU、現貨、預購、溫層、影片、圖片、介紹、批號、效期。分類請填後台既有名稱（例如「食品」）；售價／庫存可直接填數字。
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => downloadSample("xlsx")}>

@@ -3,20 +3,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { pickImportValue } from "@/lib/admin/import-cells";
 import { syncAllProductRelations } from "@/lib/services/productRelations";
 
-type ImportRow = Record<string, string>;
+type ImportRow = Record<string, unknown>;
 type ImportError = { row: number; message: string };
 
 const MAX_ROWS = 500;
 const CHUNK_SIZE = 50;
 
 function pick(row: ImportRow, ...keys: string[]): string {
-  for (const key of keys) {
-    const val = row[key]?.trim();
-    if (val) return val;
-  }
-  return "";
+  return pickImportValue(row, ...keys);
 }
 
 function parseTags(raw: string): string[] {
