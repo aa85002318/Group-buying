@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { pickImportValue } from "@/lib/admin/import-cells";
+import { canonicalizeImportRow, normalizeSku, pickImportValue } from "@/lib/admin/import-cells";
 import { syncAllProductRelations } from "@/lib/services/productRelations";
 
 type ImportRow = Record<string, unknown>;
@@ -152,18 +152,21 @@ function prepareRow(
   brandResolver: (name: string) => Promise<string | null>
 ): Promise<{ prepared?: PreparedRow; error?: string }> {
   return (async () => {
-    const name = pick(row, "product_name", "名稱", "name", "商品名稱");
-    const price = pick(row, "price", "售價", "團購價");
-    const sku = pick(row, "product_sku", "variant_sku", "SKU", "sku");
+    const mapped = canonicalizeImportRow(row);
+    const name = mapped.product_name || pick(row, "product_name", "名稱", "name", "商品名稱");
+    const price = mapped.price || pick(row, "price", "售價", "團購價", "成本", "cost");
+    const sku = normalizeSku(
+      mapped.product_sku || pick(row, "product_sku", "variant_sku", "SKU", "sku")
+    );
 
     if (!name) return { error: "缺少 product_name" };
     if (!price || Number.isNaN(Number(price))) return { error: "缺少或無效的 price" };
     if (!sku) return { error: "缺少 product_sku 或 variant_sku" };
 
-    const categoryPath = pick(row, "category_path", "分類", "category");
+    const categoryPath = mapped.category_path;
     const primaryCategoryId = resolveCategoryPath(categoryPath, categories, rootId);
 
-    const additionalRaw = pick(row, "additional_categories");
+    const additionalRaw = mapped.additional_categories;
     const additionalIds = additionalRaw
       .split(/[,，|]/)
       .map((p) => p.trim())
@@ -176,23 +179,23 @@ function prepareRow(
       ...additionalIds.filter((id) => id !== primaryCategoryId),
     ];
 
-    const brandName = pick(row, "brand", "品牌");
+    const brandName = mapped.brand;
     const brandId = brandName ? await brandResolver(brandName) : null;
 
-    const statusRaw = pick(row, "status", "狀態");
+    const statusRaw = mapped.status;
     const { status, is_active } = statusRaw ? parseStatus(statusRaw) : { status: "draft", is_active: false };
 
-    const stock = Number(pick(row, "stock", "現貨") || 0);
-    const safetyStock = Number(pick(row, "safety_stock", "安全庫存") || 0);
-    const salePrice = pick(row, "sale_price", "特價");
-    const imageUrl = pick(row, "image_url", "圖片", "image");
-    const slug = pick(row, "product_slug", "slug");
-    const storageType = parseStorageType(pick(row, "storage_type", "溫層"));
-    const tags = parseTags(pick(row, "tags", "標籤"));
-    const searchKeywords = parseKeywords(pick(row, "search_keywords", "搜尋關鍵字"));
+    const stock = Number(mapped.stock || 0);
+    const safetyStock = Number(mapped.safety_stock || 0);
+    const salePrice = mapped.sale_price;
+    const imageUrl = mapped.image_url;
+    const slug = mapped.product_slug;
+    const storageType = parseStorageType(mapped.storage_type);
+    const tags = parseTags(mapped.tags);
+    const searchKeywords = parseKeywords(mapped.search_keywords);
 
-    const variantName = pick(row, "variant_name", "規格");
-    const variantSku = pick(row, "variant_sku");
+    const variantName = mapped.variant_name;
+    const variantSku = mapped.variant_sku;
 
     const productRow: Record<string, unknown> = {
       name,

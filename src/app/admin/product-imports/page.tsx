@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle, Download, Upload } from "lucide-react";
 import * as XLSX from "xlsx";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
+import { canonicalizeImportRow } from "@/lib/admin/import-cells";
 
 const ENGLISH_HEADERS = [
   "product_name",
@@ -81,11 +82,11 @@ export default function AdminProductImportsPage() {
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(new Uint8Array(buffer), { type: "array", cellDates: true });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const parsed = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {
+    const parsed = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
       defval: "",
-      raw: false,
+      raw: true,
     });
-    setRows(parsed);
+    setRows(parsed.map((row) => canonicalizeImportRow(row)));
     setStep("preview");
     setResult(null);
   };
@@ -150,7 +151,7 @@ export default function AdminProductImportsPage() {
         <section className="rounded-[20px] border border-border bg-white p-6 shadow-card">
           <h2 className="text-lg font-bold text-foreground">1. 下載範例檔</h2>
           <p className="mt-2 text-sm text-foreground-secondary">
-            欄位：product_name, product_sku, brand, category_path（例：麵粉 &gt; 高筋麵粉）等
+            英文欄位：product_name, product_sku, brand, category_path（例：麵粉 &gt; 高筋麵粉）。也接受中文表頭：名稱、SKU、分類、售價。
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => downloadSample("xlsx")}>
