@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { pickImportValue, toIsoDate } from "@/lib/admin/import-cells";
+import { normalizeSku, pickImportValue, toIsoDate } from "@/lib/admin/import-cells";
 import { syncAllProductRelations } from "@/lib/services/productRelations";
 import { slugifyTitle } from "@/lib/videos/embed";
 
@@ -55,10 +55,12 @@ export async function POST(request: Request) {
 
     try {
       const name = pickImportValue(row, "商品名稱", "名稱", "name");
-      const price = pickImportValue(row, "售價", "price", "團購價");
+      const price =
+        pickImportValue(row, "售價", "price", "團購價") ||
+        pickImportValue(row, "成本", "cost");
 
       if (!name || !price) {
-        errors.push(`${label}：缺少名稱或售價`);
+        errors.push(`${label}：缺少名稱或售價（售價欄空白時可用成本欄）`);
         continue;
       }
 
@@ -75,16 +77,22 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const { storage_type, ...temp } = parseTemperature(
-        pickImportValue(row, "溫層", "temperature")
-      );
+      const tempRaw =
+        pickImportValue(row, "溫層", "temperature") ||
+        (/常溫|冷藏|冷凍/.test(pickImportValue(row, "影片", "video"))
+          ? pickImportValue(row, "影片", "video")
+          : "");
+      const { storage_type, ...temp } = parseTemperature(tempRaw);
+      const videoUrl = /常溫|冷藏|冷凍/.test(pickImportValue(row, "影片", "video"))
+        ? ""
+        : pickImportValue(row, "影片", "video");
       const images = pickImportValue(row, "圖片", "image", "image_url");
       const batchNumber = pickImportValue(row, "批號", "batch");
       const expiry = toIsoDate(pickImportValue(row, "效期", "expiry"));
       const spec = pickImportValue(row, "規格", "spec", "unit");
       const barcode = pickImportValue(row, "條碼", "barcode");
       const safetyStock = pickImportValue(row, "安全庫存", "safety_stock");
-      const sku = pickImportValue(row, "商品編號", "SKU", "sku");
+      const sku = normalizeSku(pickImportValue(row, "商品編號", "SKU", "sku"));
       const stock = Number(pickImportValue(row, "現貨", "stock") || 0);
       const preorder = Number(pickImportValue(row, "預購", "preorder") || 0);
 
@@ -143,12 +151,12 @@ export async function POST(request: Request) {
             ]
           : [],
         variants: [],
-        videos: pickImportValue(row, "影片", "video")
+        videos: videoUrl
           ? [
               {
                 id: "video",
                 title: name,
-                url: pickImportValue(row, "影片", "video"),
+                url: videoUrl,
                 video_type: "youtube",
                 cover_url: "",
                 sort_order: 0,

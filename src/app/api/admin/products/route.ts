@@ -186,39 +186,57 @@ export async function GET(request: Request) {
   }
 
   const admin = createAdminClient();
-  let query = admin
-    .from("products")
-    .select("*, product_categories(name, slug), group_buy_categories(name, slug)")
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
+  const categoryEmbed =
+    "product_categories:product_categories!products_category_id_fkey(name, slug), primary_category:product_categories!products_primary_category_id_fkey(name, slug)";
+  const selectAttempts = [
+    `*, ${categoryEmbed}, group_buy_categories(name, slug)`,
+    `*, ${categoryEmbed}`,
+    "*",
+  ];
 
-  if (search) query = query.ilike("name", `%${search}%`);
-
-  const { data: firstData, error: fetchError } = await query;
-  let data = firstData;
-  if (fetchError) {
-    // Soft fallback if group_buy_categories embed is unavailable
-    let fallback = admin
+  let data: Record<string, unknown>[] | null = null;
+  let fetchError: { message: string } | null = null;
+  for (const columns of selectAttempts) {
+    let query = admin
       .from("products")
-      .select("*, product_categories(name, slug)")
+      .select(columns)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
-    if (search) fallback = fallback.ilike("name", `%${search}%`);
-    const second = await fallback;
-    if (second.error) {
-      return NextResponse.json({ error: second.error.message }, { status: 500 });
+    if (search) query = query.ilike("name", `%${search}%`);
+    const result = await query;
+    if (!result.error) {
+      data = (result.data ?? []) as Record<string, unknown>[];
+      fetchError = null;
+      break;
     }
-    data = second.data;
+    fetchError = result.error;
+  }
+  if (fetchError) {
+    return NextResponse.json({ error: fetchError.message }, { status: 500 });
   }
 
-  const normalized = (data ?? []).map((p) => ({
-    ...p,
-    images: Array.isArray(p.images) ? p.images : p.image_url ? [p.image_url] : [],
-  }));
+  const normalized = (data ?? []).map((p) => {
+    const category =
+      (p.product_categories as { name?: string } | null) ??
+      (p.primary_category as { name?: string } | null) ??
+      null;
+    return {
+      ...p,
+      product_categories: category,
+      images: Array.isArray(p.images) ? p.images : p.image_url ? [p.image_url] : [],
+    };
+  });
 
-  const withPickup = await attachPickupStoresToProducts(admin, normalized);
-  const products = await attachProductRelations(admin, withPickup);
-  return NextResponse.json({ products });
+  try {
+    const withPickup = await attachPickupStoresToProducts(
+      admin,
+      normalized as Array<Record<string, unknown> & { id: string }>
+    );
+    const products = await attachProductRelations(admin, withPickup);
+    return NextResponse.json({ products });
+  } catch {
+    return NextResponse.json({ products: normalized });
+  }
 }
 
 export async function POST(request: Request) {

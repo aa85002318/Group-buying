@@ -16,10 +16,10 @@ import type { Product } from "@/lib/types/database";
 export default function AdminProductsPage() {
   const { profile } = useAdminShell();
   const isAdmin = profile?.role === "admin";
-  const { paginated, search, setSearch, page, setPage, totalPages, loading } = useAdminList<Product>(
+  const { paginated, search, setSearch, page, setPage, totalPages, loading, error } = useAdminList<Product>(
     "/api/admin/products",
     "products",
-    ["name"]
+    ["name", "sku"]
   );
   const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0 });
 
@@ -127,7 +127,13 @@ export default function AdminProductsPage() {
         </Link>
       </div>
 
-      <AdminTable
+      {error ? (
+        <p className="rounded-[16px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          商品列表載入失敗：{error}
+        </p>
+      ) : null}
+
+      <AdminTable>
         columns={[
           {
             key: "name",

@@ -41,10 +41,33 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
   const { data, error: fetchError } = await admin
     .from("products")
-    .select("id, name, sku, stock, preorder_stock, safety_stock, min_stock_alert, inventory_mode, is_active, expected_arrival_date, product_categories(name)")
+    .select("id, name, sku, stock, preorder_stock, safety_stock, min_stock_alert, inventory_mode, is_active, expected_arrival_date, product_categories:product_categories!products_category_id_fkey(name)")
     .order("name");
 
-  if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
+  if (fetchError) {
+    const fallback = await admin
+      .from("products")
+      .select("id, name, sku, stock, preorder_stock, safety_stock, min_stock_alert, inventory_mode, is_active, expected_arrival_date")
+      .order("name");
+    if (fallback.error) return NextResponse.json({ error: fallback.error.message }, { status: 500 });
+    const items = (fallback.data ?? []).map((p) => ({
+      ...p,
+      product_categories: null,
+      category_name: null,
+      brand_name: null as string | null,
+    }));
+    if (summary) {
+      return NextResponse.json({
+        summary: {
+          total: items.length,
+          active: items.filter((p) => p.is_active).length,
+          lowStock: items.filter((p) => p.stock <= (p.min_stock_alert ?? 5)).length,
+          outOfStock: items.filter((p) => p.stock <= 0).length,
+        },
+      });
+    }
+    return NextResponse.json({ items });
+  }
 
   let items = (data ?? []).map((p) => ({
     ...p,

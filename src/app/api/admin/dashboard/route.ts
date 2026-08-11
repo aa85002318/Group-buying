@@ -203,7 +203,7 @@ export async function GET() {
     admin.from("products").select("id, name, group_buy_end_at").eq("is_closing_soon", true).limit(5),
     admin.from("orders").select("total_amount, created_at").gte("created_at", daysAgo(6)),
     admin.from("order_items").select("product_id, quantity, products(name)").limit(200),
-    admin.from("products").select("category_id, product_categories(name)").limit(200),
+    admin.from("products").select("category_id, product_categories:product_categories!products_category_id_fkey(name)").limit(200),
     admin.from("customer_statistics").select("gender"),
     admin.from("customer_statistics").select("city"),
     admin.from("videos").select("view_count"),

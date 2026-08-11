@@ -73,15 +73,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const admin = createAdminClient();
   const { data, error: fetchError } = await admin
     .from("products")
-    .select("*, product_categories(name, slug)")
+    .select("*, product_categories:product_categories!products_category_id_fkey(name, slug), primary_category:product_categories!products_primary_category_id_fkey(name, slug)")
     .eq("id", id)
     .single();
 
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
   const pickup_store_ids = await fetchProductPickupStoreIds(admin, id);
+  const category =
+    (data.product_categories as { name?: string } | null) ??
+    (data.primary_category as { name?: string } | null) ??
+    null;
   return NextResponse.json({
     product: {
       ...data,
+      product_categories: category,
       images: Array.isArray(data.images) ? data.images : data.image_url ? [data.image_url] : [],
       pickup_store_ids,
     },

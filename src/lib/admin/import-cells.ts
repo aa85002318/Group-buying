@@ -3,13 +3,30 @@ export function cellText(value: unknown): string {
   if (value == null) return "";
   if (typeof value === "string") return value.trim();
   if (typeof value === "number" && Number.isFinite(value)) {
-    return Number.isInteger(value) ? String(value) : String(value);
+    if (Number.isInteger(value) || Math.abs(value) >= 1e11) {
+      return String(Math.round(value));
+    }
+    return String(value);
   }
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return value.toISOString().slice(0, 10);
   }
   if (typeof value === "boolean") return value ? "true" : "false";
   return String(value).trim();
+}
+
+/** Expand Excel scientific notation when the value is still a safe integer. */
+export function normalizeSku(value: string): string {
+  const raw = value.trim();
+  if (!raw) return "";
+  if (/^\d+\.?\d*e[+-]?\d+$/i.test(raw)) {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n <= Number.MAX_SAFE_INTEGER) {
+      return String(Math.round(n));
+    }
+  }
+  if (/^\d+\.0+$/.test(raw)) return raw.replace(/\.0+$/, "");
+  return raw;
 }
 
 export function pickImportValue(row: Record<string, unknown>, ...keys: string[]): string {

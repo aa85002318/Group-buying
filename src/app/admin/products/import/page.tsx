@@ -41,6 +41,11 @@ const SAMPLE_ROW = [
 
 function downloadSample(format: "xlsx" | "csv") {
   const ws = XLSX.utils.aoa_to_sheet([SAMPLE_HEADERS, SAMPLE_ROW]);
+  if (ws.E2) {
+    ws.E2.t = "s";
+    ws.E2.v = "SKU-DEMO001";
+    ws.E2.z = "@";
+  }
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "商品匯入範例");
   XLSX.writeFile(wb, `chimeidiy-product-import-sample.${format}`, {
@@ -65,7 +70,7 @@ export default function AdminProductImportPage() {
       if (!sheet) throw new Error("檔案裡沒有工作表");
       const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
         defval: "",
-        raw: false,
+        raw: true,
       });
       if (rows.length === 0) throw new Error("沒有可匯入的資料列，請確認第一列是欄位名稱");
 
@@ -151,6 +156,11 @@ export default function AdminProductImportPage() {
       {result && (
         <div className="rounded-[20px] border border-border bg-white p-6">
           <p className="font-bold text-foreground">成功匯入 {result.imported} 筆商品</p>
+          {result.imported > 0 ? (
+            <p className="mt-2 text-sm text-foreground-secondary">
+              匯入商品預設為草稿、未上架，可在商品主檔搜尋名稱後編輯上架。
+            </p>
+          ) : null}
           {result.errors.length > 0 && (
             <ul className="mt-3 space-y-1 text-sm text-red-600">
               {result.errors.map((err) => (
@@ -158,6 +168,11 @@ export default function AdminProductImportPage() {
               ))}
             </ul>
           )}
+          {result.imported > 0 ? (
+            <Link href="/admin/products" className="mt-4 inline-block">
+              <Button variant="secondary">前往商品主檔</Button>
+            </Link>
+          ) : null}
         </div>
       )}
     </div>
