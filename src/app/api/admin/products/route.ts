@@ -194,7 +194,7 @@ export async function GET(request: Request) {
     "*",
   ];
 
-  let data: Record<string, unknown>[] | null = null;
+  let data: Record<string, unknown>[] = [];
   let fetchError: { message: string } | null = null;
   for (const columns of selectAttempts) {
     let query = admin
@@ -205,7 +205,7 @@ export async function GET(request: Request) {
     if (search) query = query.ilike("name", `%${search}%`);
     const result = await query;
     if (!result.error) {
-      data = (result.data ?? []) as Record<string, unknown>[];
+      data = (result.data as unknown as Record<string, unknown>[]) ?? [];
       fetchError = null;
       break;
     }
@@ -215,23 +215,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: fetchError.message }, { status: 500 });
   }
 
-  const normalized = (data ?? []).map((p) => {
+  const normalized = data.map((p) => {
     const category =
       (p.product_categories as { name?: string } | null) ??
       (p.primary_category as { name?: string } | null) ??
       null;
     return {
       ...p,
+      id: String(p.id ?? ""),
       product_categories: category,
       images: Array.isArray(p.images) ? p.images : p.image_url ? [p.image_url] : [],
     };
   });
 
   try {
-    const withPickup = await attachPickupStoresToProducts(
-      admin,
-      normalized as Array<Record<string, unknown> & { id: string }>
-    );
+    const withPickup = await attachPickupStoresToProducts(admin, normalized);
     const products = await attachProductRelations(admin, withPickup);
     return NextResponse.json({ products });
   } catch {

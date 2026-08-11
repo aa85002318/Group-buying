@@ -133,7 +133,7 @@ export default function AdminProductsPage() {
         </p>
       ) : null}
 
-      <AdminTable>
+      <AdminTable
         columns={[
           {
             key: "name",
