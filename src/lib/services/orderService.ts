@@ -72,6 +72,8 @@ export class OrderError extends Error {
       | "GROUP_BUY_CLOSED"
       | "GROUP_BUY_LIMIT"
       | "TEMPERATURE_SPLIT"
+      | "STORE_PICKUP_UNAVAILABLE"
+      | "STORE_PICKUP_CLOSED"
   ) {
     super(message);
     this.name = "OrderError";
@@ -310,6 +312,31 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { or
     if (!product || Number(product.stock) < item.quantity) {
       throw new OrderError(`${product?.name ?? "商品"} 庫存不足`, "OUT_OF_STOCK");
     }
+
+    if (shipmentMethod === "store_pickup" && input.storeId) {
+      const { data: pickupLinks } = await admin
+        .from("product_pickup_stores")
+        .select("store_id")
+        .eq("product_id", item.productId);
+      if (
+        pickupLinks &&
+        pickupLinks.length > 0 &&
+        !pickupLinks.some((l) => l.store_id === input.storeId)
+      ) {
+        throw new OrderError(`${product.name} 不支援指定門市取貨`, "STORE_PICKUP_UNAVAILABLE");
+      }
+    }
+  }
+
+  if (shipmentMethod === "store_pickup" && input.storeId) {
+    const { data: store } = await admin
+      .from("stores")
+      .select("id, pickup_available, is_active")
+      .eq("id", input.storeId)
+      .maybeSingle();
+    if (!store || store.is_active === false || store.pickup_available === false) {
+      throw new OrderError("此門市目前未開放取貨", "STORE_PICKUP_CLOSED");
+    }
   }
 
   const { data: profile } = await admin
@@ -331,6 +358,11 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { or
       pickup_store_id: input.storeId ?? null,
       group_buy_event_id: resolvedGroupBuyEventId,
       status: "awaiting_payment",
+      fulfillment_status: "pending_payment",
+      estimated_ready_at:
+        shipmentMethod === "store_pickup"
+          ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          : null,
       subtotal,
       discount_amount: discount,
       store_credit_used: storeCreditUsed,
@@ -427,6 +459,25 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { or
     }
   }
 
+  await admin.from("order_status_logs").insert({
+    order_id: order.id,
+    from_status: null,
+    to_status: "pending_payment",
+    actor_id: input.userId,
+    actor_role: "member",
+    note: "會員送出訂單",
+  });
+
+  await admin.from("inventory_reservations").insert(
+    pricedItems.map((item) => ({
+      order_id: order.id,
+      product_id: item.productId,
+      store_id: input.storeId ?? null,
+      quantity: item.quantity,
+      status: "held",
+    }))
+  );
+
   await notifyOrderCreated(admin, input.userId, order.id, orderNumber);
 
   return {
@@ -437,7 +488,7 @@ export async function createOrder(input: CreateOrderInput): Promise<Order & { or
 }
 
 const ORDER_DETAIL_SELECT =
-  "*, order_items(*), pickup_store:stores!orders_pickup_store_id_fkey(name, address, phone), shipments(*, shipment_store:stores!shipments_store_id_fkey(name, address)), payments(*)";
+  "*, order_items(*), pickup_store:stores!orders_pickup_store_id_fkey(name, address, phone, business_hours, map_url, navigation_url), shipments(*, shipment_store:stores!shipments_store_id_fkey(name, address, phone, business_hours, map_url, navigation_url)), payments(*), order_status_logs(*)";
 
 const ORDER_LIST_SELECT =
   "*, order_items(*), pickup_store:stores!orders_pickup_store_id_fkey(name, address), shipments(method, status), payments(gateway, status)";

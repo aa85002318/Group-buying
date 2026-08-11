@@ -14,11 +14,21 @@ export type OrderStatus =
   | "awaiting_payment"
   | "payment_reported"
   | "payment_confirmed"
+  | "pending_payment"
+  | "payment_failed"
+  | "paid"
   | "preparing"
   | "ready_for_pickup"
+  | "shipped"
+  | "picked_up"
+  | "delivered"
   | "completed"
+  | "cancel_requested"
   | "cancelled"
-  | "refunded";
+  | "refund_pending"
+  | "refunded"
+  | "pickup_expired"
+  | "exception";
 
 export type OrderPaymentStatus =
   | "unpaid"
@@ -568,6 +578,7 @@ export interface Store {
   visibility?: unknown;
   line_url?: string | null;
   pickup_available?: boolean;
+  city?: string | null;
   sort_order?: number;
   is_default?: boolean;
   is_active: boolean;
@@ -587,6 +598,11 @@ export interface Order {
   pickup_store_id?: string | null;
   group_buy_event_id: string | null;
   status: OrderStatus;
+  fulfillment_status?: string | null;
+  pickup_deadline_at?: string | null;
+  ready_at?: string | null;
+  picked_up_at?: string | null;
+  estimated_ready_at?: string | null;
   subtotal: number;
   discount: number;
   shipping_fee: number;

@@ -82,6 +82,8 @@ export function CheckoutForm() {
   const { items, total, clear } = useCart();
   const [stores, setStores] = useState<Store[]>([]);
   const [storeId, setStoreId] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
+  const [preferredStoreId, setPreferredStoreId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentGateway>("store_cash");
   const [shipmentMethod, setShipmentMethod] = useState<ShipmentMethod>("store_pickup");
   const [recipientName, setRecipientName] = useState("");
@@ -115,13 +117,21 @@ export function CheckoutForm() {
   }
 
   useEffect(() => {
-    fetch("/api/stores")
-      .then((r) => r.json())
-      .then((storesRes) => {
-        if (Array.isArray(storesRes.stores) && storesRes.stores.length > 0) {
-          setStores(storesRes.stores);
-          setStoreId(storesRes.stores[0].id);
-        }
+    Promise.all([
+      fetch("/api/stores?channel=website").then((r) => r.json()),
+      fetch("/api/member/preferred-store").then((r) => r.json()).catch(() => ({})),
+    ])
+      .then(([storesRes, preferredRes]) => {
+        const list = (storesRes.stores ?? []) as Store[];
+        setStores(list);
+        const preferred = preferredRes.preferredStoreId as string | null;
+        setPreferredStoreId(preferred);
+        const initial =
+          (preferred && list.find((s) => s.id === preferred && s.pickup_available !== false)?.id) ||
+          list.find((s) => s.pickup_available !== false)?.id ||
+          list[0]?.id ||
+          "";
+        setStoreId(initial);
       })
       .catch(() => {});
 
@@ -190,6 +200,24 @@ export function CheckoutForm() {
 
   const shippingFee = useMemo(() => shippingFeeForMethod(shipmentMethod), [shipmentMethod]);
   const grandTotal = Math.max(0, total + shippingFee);
+  const storeCities = useMemo(() => {
+    const set = new Set(
+      stores.map((s) => (s as Store & { city?: string }).city).filter((c): c is string => Boolean(c))
+    );
+    return Array.from(set);
+  }, [stores]);
+  const filteredStores = useMemo(() => {
+    return stores.filter((s) => {
+      if (s.pickup_available === false) return false;
+      if (!cityFilter) return true;
+      return (s as Store & { city?: string }).city === cityFilter;
+    });
+  }, [stores, cityFilter]);
+  const estimatedPickupDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toLocaleDateString("zh-TW");
+  }, []);
 
   async function submitOrder() {
     if (items.length === 0) return;
@@ -199,6 +227,11 @@ export function CheckoutForm() {
     }
     if (shipmentMethod === "store_pickup" && !storeId) {
       alert("請選擇取貨門市");
+      return;
+    }
+    const selectedStore = stores.find((s) => s.id === storeId);
+    if (shipmentMethod === "store_pickup" && selectedStore?.pickup_available === false) {
+      alert("此門市目前未開放取貨，請改選其他門市");
       return;
     }
     if (!recipientName.trim() || !recipientPhone.trim()) {
@@ -355,18 +388,31 @@ export function CheckoutForm() {
         {shipmentMethod === "store_pickup" && (
           <div className="space-y-2">
             <label className="block text-sm font-medium">取貨門市</label>
+            {storeCities.length > 0 && (
+              <select
+                className="input-field min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                value={cityFilter}
+                onChange={(e) => setCityFilter(e.target.value)}
+              >
+                <option value="">全部縣市</option>
+                {storeCities.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            )}
             <select
-              className="input-field w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+              className="input-field min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
               value={storeId}
               onChange={(e) => setStoreId(e.target.value)}
-              disabled={stores.length === 0}
+              disabled={filteredStores.length === 0}
             >
-              {stores.length === 0 ? (
-                <option value="">尚無門市資料</option>
+              {filteredStores.length === 0 ? (
+                <option value="">尚無開放取貨門市</option>
               ) : (
-                stores.map((s) => (
+                filteredStores.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
+                    {preferredStoreId === s.id ? "（預設）" : ""}
                   </option>
                 ))
               )}
@@ -378,6 +424,10 @@ export function CheckoutForm() {
                 <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
                   <p className="text-muted-foreground">地址：{store.address}</p>
                   {store.phone && <p className="text-muted-foreground">電話：{store.phone}</p>}
+                  {store.business_hours && (
+                    <p className="text-muted-foreground">營業時間：{store.business_hours}</p>
+                  )}
+                  <p className="mt-1 text-[#153E73]">預計可取貨日：{estimatedPickupDate}</p>
                   <div className="mt-2 rounded-md bg-amber-50 px-2 py-1.5 text-amber-950">
                     <p className="text-xs font-medium">注意事項</p>
                     <p className="mt-0.5 whitespace-pre-wrap text-xs">

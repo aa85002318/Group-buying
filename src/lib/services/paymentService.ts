@@ -2,7 +2,6 @@ import { randomBytes } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSupabaseConfigured } from "@/lib/config";
 import type { PaymentGateway } from "@/lib/types/database";
-import { sendOrderLineNotification } from "@/lib/line/notifications";
 
 export type CreatePaymentInput = {
   orderId: string;
@@ -106,18 +105,34 @@ export async function handlePaymentCallback(payload: Record<string, unknown>) {
       .update({
         payment_status: "paid_online",
         status: "payment_confirmed",
-        pickup_status: "ready",
+        fulfillment_status: "paid",
+        pickup_status: "pending",
       })
       .eq("id", payment.order_id);
 
-    await sendOrderLineNotification(payment.order_id, "payment_confirmed").catch((e) => {
-      console.warn("[line] payment_confirmed notification failed:", e);
-    });
+    const { transitionOrderStatus } = await import("@/lib/fulfillment/transitions");
+    await transitionOrderStatus({
+      orderId: payment.order_id,
+      to: "paid",
+      actorId: null,
+      actorRole: "system",
+      note: "金流付款成功",
+    }).catch((e) => console.warn("[payment] fulfillment transition failed:", e));
+
+    await admin
+      .from("inventory_reservations")
+      .update({ status: "committed" })
+      .eq("order_id", payment.order_id)
+      .eq("status", "held");
   } else {
     await admin
       .from("payments")
       .update({ status: "failed", raw_response: payload })
       .eq("id", payment.id);
+    await admin
+      .from("orders")
+      .update({ fulfillment_status: "payment_failed" })
+      .eq("id", payment.order_id);
   }
 
   return { ok: true, payment_id: payment.id, paid };

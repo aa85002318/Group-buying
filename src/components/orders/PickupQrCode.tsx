@@ -6,16 +6,20 @@ import { ORDER_PAYMENT_STATUS_LABELS, ORDER_PICKUP_STATUS_LABELS } from "@/lib/u
 
 export function PickupQrCode({ orderId }: { orderId: string }) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [pin, setPin] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/orders/${orderId}/pickup-qr`)
-      .then((r) => r.json())
-      .then((d) => {
+      .then(async (r) => {
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error ?? "無法產生取貨碼");
         if (d.qr_data_url) setQrDataUrl(d.qr_data_url);
-        else setError(d.error ?? "無法產生取貨碼");
+        setPin(d.pin ?? null);
+        setExpiresAt(d.expires_at ?? null);
       })
-      .catch(() => setError("載入失敗"));
+      .catch((e) => setError(e instanceof Error ? e.message : "載入失敗"));
   }, [orderId]);
 
   if (error) return <p className="text-center text-sm text-muted-foreground">{error}</p>;
@@ -26,8 +30,16 @@ export function PickupQrCode({ orderId }: { orderId: string }) {
       <div className="rounded-xl bg-white p-3 shadow-card">
         <Image src={qrDataUrl} alt="取貨 QR Code" width={280} height={280} unoptimized />
       </div>
+      {pin ? (
+        <p className="text-center text-2xl font-black tracking-[0.35em] text-[#153E73]">{pin}</p>
+      ) : null}
+      {expiresAt ? (
+        <p className="text-center text-xs text-muted-foreground">
+          最晚取貨：{new Date(expiresAt).toLocaleDateString("zh-TW")}
+        </p>
+      ) : null}
       <p className="text-center text-xs text-muted-foreground">
-        請於門市出示此 QR Code 取貨（不含個人資料）
+        請於門市出示 QR Code 或 6 位取貨碼。核銷後立即失效。
       </p>
     </div>
   );

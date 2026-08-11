@@ -8,6 +8,7 @@ import {
   type StoreAnnouncement,
   type StoreProfile,
 } from "@/lib/admin/store-profile";
+import { extractTaiwanCity } from "@/lib/stores/taiwan-city";
 
 function activeAnnouncements(items: StoreAnnouncement[]): StoreAnnouncement[] {
   const now = Date.now();
@@ -59,6 +60,7 @@ function publicStore(row: StoreProfile) {
     seo: row.seo,
     service_flags: row.service_flags,
     pickup_available: row.pickup_available,
+    city: extractTaiwanCity(row.address),
     sort_order: row.sort_order,
     is_default: row.is_default,
     is_active: row.is_active,

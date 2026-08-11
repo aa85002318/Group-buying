@@ -8,7 +8,6 @@ import { PickupQrCode, OrderStatusBadges } from "@/components/orders/PickupQrCod
 import {
   formatCurrency,
   formatDate,
-  ORDER_STATUS_LABELS,
   PAYMENT_GATEWAY_LABELS,
   SHIPMENT_METHOD_LABELS,
   SHIPMENT_STATUS_LABELS,
@@ -19,11 +18,40 @@ import {
   ORDER_PAYMENT_FLOW_STEPS,
   paymentDeadlineAt,
 } from "@/lib/payment/instructions";
+import {
+  FULFILLMENT_STATUS_LABELS,
+  canonicalizeStatus,
+  fulfillmentLabel,
+  pickupCodeAllowed,
+  type FulfillmentStatus,
+} from "@/lib/fulfillment/status";
 import type { Order, OrderItem, OrderPayment, Shipment, Store } from "@/lib/types/database";
+import { APP_ROUTES } from "@/lib/site-links";
+
+const PROGRESS_STEPS: FulfillmentStatus[] = [
+  "pending_payment",
+  "paid",
+  "preparing",
+  "ready_for_pickup",
+  "picked_up",
+  "completed",
+];
+
+function progressIndex(status: FulfillmentStatus) {
+  if (status === "shipped") return 3;
+  if (status === "delivered") return 4;
+  if (["cancel_requested", "cancelled", "refund_pending", "refunded", "exception", "pickup_expired"].includes(status)) {
+    return -1;
+  }
+  const i = PROGRESS_STEPS.indexOf(status);
+  if (status === "payment_failed") return 0;
+  return i;
+}
 
 function isPaid(order: Order, payment?: OrderPayment | null) {
   if (["paid_online", "paid_store"].includes(order.payment_status ?? "")) return true;
-  if (["payment_confirmed", "preparing", "ready_for_pickup", "completed"].includes(order.status)) {
+  const fulfillment = canonicalizeStatus(order.status, order.fulfillment_status);
+  if (["paid", "preparing", "ready_for_pickup", "shipped", "picked_up", "delivered", "completed"].includes(fulfillment)) {
     return true;
   }
   if (payment && ["paid_online", "paid_store"].includes(payment.status)) return true;
@@ -76,21 +104,47 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   const gateway = payment?.gateway ?? order.payment_method;
   const deadline = paymentDeadlineAt(order.created_at);
   const bank = getBankTransferInfo();
+  const fulfillment = canonicalizeStatus(order.status, order.fulfillment_status);
   const awaiting =
-    !paid && ["awaiting_payment", "payment_reported", "pending"].includes(order.status);
+    !paid && ["pending_payment", "payment_failed"].includes(fulfillment);
 
   return (
     <div className="space-y-4">
-      <Link href="/orders" className="text-sm text-primary hover:underline">
+      <Link href={APP_ROUTES.memberOrders} className="text-sm text-primary hover:underline">
         ← 我的訂單
       </Link>
 
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-bold text-coffee">訂單詳情</h1>
-        <Badge>{ORDER_STATUS_LABELS[order.status] ?? order.status}</Badge>
+        <Badge>{fulfillmentLabel(fulfillment)}</Badge>
       </div>
 
       <OrderStatusBadges paymentStatus={order.payment_status} pickupStatus={order.pickup_status} />
+
+      {progressIndex(fulfillment) >= 0 && (
+        <ol className="grid grid-cols-3 gap-2 rounded-xl bg-surface p-3 text-xs shadow-card sm:grid-cols-6">
+          {PROGRESS_STEPS.map((step, idx) => {
+            const current = progressIndex(fulfillment);
+            const done = idx <= current;
+            return (
+              <li
+                key={step}
+                className={`min-h-11 rounded-lg px-2 py-2 text-center ${
+                  done ? "bg-[#FFD454] font-semibold text-[#153E73]" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {FULFILLMENT_STATUS_LABELS[step]}
+              </li>
+            );
+          })}
+        </ol>
+      )}
+
+      {order.estimated_ready_at && (
+        <p className="text-sm text-[#153E73]">
+          預計取貨／送達：{formatDate(order.estimated_ready_at)}
+        </p>
+      )}
 
       {awaiting && (
         <div className="space-y-3 rounded-xl border border-warning/30 bg-warning-soft p-4 text-sm text-foreground">
@@ -176,10 +230,28 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
               </p>
             )}
             {shipment.method === "store_pickup" && pickupStore && (
-              <p>
-                <span className="text-muted-foreground">取貨門市：</span>
-                {pickupStore.name} — {pickupStore.address}
-              </p>
+              <div className="space-y-1">
+                <p>
+                  <span className="text-muted-foreground">取貨門市：</span>
+                  {pickupStore.name}
+                </p>
+                <p className="text-muted-foreground">{pickupStore.address}</p>
+                {pickupStore.phone && <p>電話：{pickupStore.phone}</p>}
+                {pickupStore.business_hours && <p>營業時間：{pickupStore.business_hours}</p>}
+                {order.pickup_deadline_at && (
+                  <p>最晚取貨日：{formatDate(order.pickup_deadline_at)}</p>
+                )}
+                {pickupStore.navigation_url || pickupStore.map_url ? (
+                  <a
+                    href={pickupStore.navigation_url || pickupStore.map_url || "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-11 items-center text-primary underline"
+                  >
+                    門市導航
+                  </a>
+                ) : null}
+              </div>
             )}
             {shipment.address && (
               <p>
@@ -232,12 +304,12 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
 
       {shipment?.method === "store_pickup" && (
         <div className="rounded-xl bg-surface p-4 shadow-card">
-          <h2 className="mb-3 font-medium">取貨 QR Code</h2>
-          {paid ? (
+          <h2 className="mb-3 font-medium">取貨碼</h2>
+          {pickupCodeAllowed(fulfillment) ? (
             <PickupQrCode orderId={order.id} />
           ) : (
             <p className="rounded-lg bg-muted px-3 py-4 text-center text-sm text-muted-foreground">
-              付款確認後才會開放取貨 QR Code。請先完成匯款回報或至門市繳費。
+              取貨碼僅在「可取貨」時顯示。請待門市完成備貨後再出示。
             </p>
           )}
         </div>
@@ -281,6 +353,33 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           <p className="whitespace-pre-wrap text-muted-foreground">{order.notes}</p>
         </div>
       )}
+
+      {Array.isArray((order as unknown as { order_status_logs?: Array<{ id: string; to_status: string; note?: string | null; created_at: string }> }).order_status_logs) && (
+        <div className="rounded-xl bg-surface p-4 shadow-card">
+          <h2 className="mb-2 font-medium">訂單狀態紀錄</h2>
+          <ul className="space-y-2 text-sm">
+            {(
+              (order as unknown as { order_status_logs: Array<{ id: string; to_status: string; note?: string | null; created_at: string }> })
+                .order_status_logs ?? []
+            )
+              .slice()
+              .sort((a, b) => a.created_at.localeCompare(b.created_at))
+              .map((log) => (
+                <li key={log.id} className="flex justify-between gap-3 border-b border-border/60 py-1 last:border-0">
+                  <span>
+                    {FULFILLMENT_STATUS_LABELS[log.to_status as FulfillmentStatus] ?? log.to_status}
+                    {log.note ? ` · ${log.note}` : ""}
+                  </span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{formatDate(log.created_at)}</span>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      <Link href={APP_ROUTES.support} className="inline-flex min-h-11 items-center text-sm text-primary underline">
+        聯絡客服
+      </Link>
     </div>
   );
 }

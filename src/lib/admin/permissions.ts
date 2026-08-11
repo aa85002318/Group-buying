@@ -16,6 +16,8 @@ export const STORE_STAFF_ADMIN_PATHS = [
   "/admin/orders",
   "/admin/payments",
   "/admin/pickup",
+  "/admin/store-orders",
+  "/admin/pos",
   "/admin/products/labels",
   "/admin/member-gifts",
 ] as const;
@@ -62,6 +64,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
 export const CUSTOMER_SERVICE_ADMIN_PATHS = [
   "/admin",
   "/admin/orders",
+  "/admin/store-orders",
   "/admin/members",
   "/admin/support",
   "/admin/support-settings",
@@ -324,8 +327,10 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin", "store_staff", "store_manager", "customer_service"],
     items: [
       { href: "/admin/orders", label: "App 訂單", roles: ["admin", "store_staff", "store_manager", "customer_service"] },
+      { href: "/admin/store-orders", label: "門市取貨", roles: ["admin", "store_staff", "store_manager", "customer_service"] },
+      { href: "/admin/pos/pickup", label: "POS 取貨核銷", roles: ["admin", "store_staff", "store_manager"] },
       { href: "/admin/payments", label: "付款", roles: ["admin", "store_staff", "store_manager"] },
-      { href: "/admin/pickup", label: "取貨核銷", roles: ["admin", "store_staff", "store_manager"] },
+      { href: "/admin/pickup", label: "取貨核銷（舊）", roles: ["admin", "store_staff", "store_manager"], hiddenFromSidebar: true },
       { href: "/admin/payment-records", label: "金流紀錄", roles: ["admin"] },
       { href: "/admin/integrations/ecpay", label: "綠界串接", roles: ["admin"] },
       { href: "/admin/corporate", label: "企業詢價", roles: ["admin"] },

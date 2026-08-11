@@ -43,16 +43,25 @@ export const ROLE_LABELS: Record<string, string> = {
 };
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
-  pending: "待處理",
-  awaiting_payment: "待付款（尚未正式成立）",
-  payment_reported: "已回報匯款（待確認）",
-  payment_confirmed: "付款已確認（訂單成立）",
+  pending: "待付款",
+  awaiting_payment: "待付款",
+  payment_reported: "待付款",
+  pending_payment: "待付款",
+  payment_failed: "付款失敗",
+  payment_confirmed: "已付款",
   paid: "已付款",
   preparing: "備貨中",
-  ready_for_pickup: "待取貨",
+  ready_for_pickup: "可取貨",
+  shipped: "已出貨",
+  picked_up: "已取貨",
+  delivered: "已送達",
   completed: "已完成",
+  cancel_requested: "取消申請中",
   cancelled: "已取消",
+  refund_pending: "退款處理中",
   refunded: "已退款",
+  pickup_expired: "逾期未取",
+  exception: "異常處理中",
 };
 
 export const ORDER_PAYMENT_STATUS_LABELS: Record<string, string> = {

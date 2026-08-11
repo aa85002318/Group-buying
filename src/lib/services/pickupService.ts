@@ -11,16 +11,8 @@ export function generatePickupToken(): string {
   return randomBytes(16).toString("hex");
 }
 
-export async function createPickupCodeForOrder(orderId: string, pickupToken: string) {
-  if (!isSupabaseConfigured()) return { pickup_token: pickupToken };
-
-  const admin = createAdminClient();
-  const { error } = await admin.from("pickup_codes").insert({
-    order_id: orderId,
-    pickup_token: pickupToken,
-    qr_payload: pickupToken,
-  });
-  if (error) throw new Error(error.message);
+/** Token is stored on the order; hashed PIN is issued only when ready_for_pickup. */
+export async function createPickupCodeForOrder(_orderId: string, pickupToken: string) {
   return { pickup_token: pickupToken };
 }
 
@@ -127,6 +119,7 @@ export async function confirmStorePayment(
     .update({
       payment_status: "paid_store",
       status: "payment_confirmed",
+      fulfillment_status: "paid",
       updated_at: new Date().toISOString(),
     })
     .eq("id", orderId)
@@ -134,6 +127,21 @@ export async function confirmStorePayment(
     .single();
 
   if (error) throw new Error(error.message);
+
+  const { transitionOrderStatus } = await import("@/lib/fulfillment/transitions");
+  await transitionOrderStatus({
+    orderId,
+    to: "paid",
+    actorId: staffUserId,
+    actorRole: "store_staff",
+    note: "門市確認收款",
+  }).catch((e) => console.warn("[pickup] fulfillment paid transition failed:", e));
+
+  await admin
+    .from("inventory_reservations")
+    .update({ status: "committed" })
+    .eq("order_id", orderId)
+    .eq("status", "held");
 
   await admin.from("payments").insert({
     order_id: orderId,
