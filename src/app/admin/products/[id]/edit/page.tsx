@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Printer, Save } from "lucide-react";
+import { ArrowLeft, Printer, Save, Trash2 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminProductEditor } from "@/components/admin/v2/AdminProductEditor";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ type Supplier = { id: string; name: string };
 
 export default function AdminProductEditPage() {
   const params = useParams();
+  const router = useRouter();
   const productId = params.id as string;
 
   const [form, setForm] = useState<AdminProductFormV2>(emptyProductFormV2());
@@ -94,6 +95,21 @@ export default function AdminProductEditPage() {
     }
   };
 
+  const remove = async () => {
+    if (!confirm(`確定刪除「${form.name || "此商品"}」？此操作無法復原。`)) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/products/${productId}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "刪除失敗");
+      router.push("/admin/products");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "刪除失敗");
+      setSaving(false);
+    }
+  };
+
   if (loading) return <p className="text-foreground-secondary">載入中…</p>;
 
   return (
@@ -118,6 +134,15 @@ export default function AdminProductEditPage() {
                 列印價格牌
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              className="text-red-600 hover:bg-red-50"
+              disabled={saving}
+              onClick={() => void remove()}
+            >
+              <Trash2 className="mr-1.5 h-4 w-4" />
+              刪除
+            </Button>
             <Button onClick={save} disabled={saving} className="bg-primary hover:bg-[#E63D6A]">
               <Save className="mr-1.5 h-4 w-4" />
               {saving ? "儲存中…" : "儲存商品"}

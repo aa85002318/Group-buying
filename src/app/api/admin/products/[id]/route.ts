@@ -145,10 +145,37 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   }
 
   const admin = createAdminClient();
-  const { data: old } = await admin.from("products").select("*").eq("id", id).single();
-  const { error } = await admin.from("products").update({ is_active: false, status: "inactive" }).eq("id", id);
+  const { data: old } = await admin.from("products").select("id, name, sku").eq("id", id).maybeSingle();
+  if (!old) {
+    return NextResponse.json({ error: "找不到商品" }, { status: 404 });
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  await logAudit(auth!.profile.id, "delete", "product", id, old, { status: "inactive" }, _request as never);
+  const { count: orderCount } = await admin
+    .from("order_items")
+    .select("id", { count: "exact", head: true })
+    .eq("product_id", id);
+
+  if ((orderCount ?? 0) > 0) {
+    return NextResponse.json(
+      { error: "此商品已有訂單紀錄，無法刪除。請改為下架以保留歷史訂單。", code: "has_orders" },
+      { status: 409 }
+    );
+  }
+
+  const { error } = await admin.from("products").delete().eq("id", id);
+  if (error) {
+    const blocked = /foreign key|violates foreign key/i.test(error.message);
+    return NextResponse.json(
+      {
+        error: blocked
+          ? "此商品仍被其他資料引用，無法刪除。請改為下架。"
+          : error.message,
+        code: blocked ? "in_use" : undefined,
+      },
+      { status: blocked ? 409 : 500 }
+    );
+  }
+
+  await logAudit(auth!.profile.id, "delete", "product", id, old, null, _request as never);
   return NextResponse.json({ ok: true });
 }

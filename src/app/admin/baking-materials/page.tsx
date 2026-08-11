@@ -63,6 +63,7 @@ export default function AdminBakingMaterialsPage() {
   const [brand, setBrand] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const pageSize = 20;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -103,6 +104,21 @@ export default function AdminBakingMaterialsPage() {
   useEffect(() => {
     setPage(1);
   }, [search, category, brand, status]);
+
+  const removeProduct = async (product: BakingProduct) => {
+    if (!confirm(`確定刪除「${product.name}」？此操作無法復原。`)) return;
+    setDeletingId(product.id);
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "刪除失敗");
+      await load();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "刪除失敗");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const statusLabel = (s: string) => {
     const map: Record<string, string> = {
@@ -271,11 +287,22 @@ export default function AdminBakingMaterialsPage() {
             key: "actions",
             header: "",
             render: (p) => (
-              <Link href={`/admin/products/${p.id}/edit`}>
-                <Button size="sm" variant="ghost">
-                  編輯
+              <div className="flex justify-end gap-1">
+                <Link href={`/admin/products/${p.id}/edit`}>
+                  <Button size="sm" variant="ghost">
+                    編輯
+                  </Button>
+                </Link>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-red-600"
+                  disabled={deletingId === p.id}
+                  onClick={() => void removeProduct(p)}
+                >
+                  {deletingId === p.id ? "刪除中…" : "刪除"}
                 </Button>
-              </Link>
+              </div>
             ),
           },
         ]}

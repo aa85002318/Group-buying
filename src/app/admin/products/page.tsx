@@ -16,12 +16,14 @@ import type { Product } from "@/lib/types/database";
 export default function AdminProductsPage() {
   const { profile } = useAdminShell();
   const isAdmin = profile?.role === "admin";
-  const { paginated, search, setSearch, page, setPage, totalPages, loading, error } = useAdminList<Product>(
+  const { paginated, search, setSearch, page, setPage, totalPages, loading, error, refresh } = useAdminList<Product>(
     "/api/admin/products",
     "products",
     ["name", "sku"]
   );
   const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0 });
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -30,6 +32,27 @@ export default function AdminProductsPage() {
       .then((d) => setStats(d.summary ?? { total: 0, active: 0, lowStock: 0 }))
       .catch(() => {});
   }, [isAdmin]);
+
+  const removeProduct = async (product: Product) => {
+    if (!confirm(`確定刪除「${product.name}」？此操作無法復原。`)) return;
+    setDeletingId(product.id);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "刪除失敗");
+      await refresh();
+      if (isAdmin) {
+        const summaryRes = await fetch("/api/admin/inventory?summary=true");
+        const summaryData = await summaryRes.json();
+        setStats(summaryData.summary ?? { total: 0, active: 0, lowStock: 0 });
+      }
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "刪除失敗");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -132,6 +155,11 @@ export default function AdminProductsPage() {
           商品列表載入失敗：{error}
         </p>
       ) : null}
+      {actionError ? (
+        <p className="rounded-[16px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {actionError}
+        </p>
+      ) : null}
 
       <AdminTable
         columns={[
@@ -207,6 +235,15 @@ export default function AdminProductsPage() {
                     <Link href={`/admin/products/${p.id}/edit`}>
                       <Button size="sm" variant="secondary">編輯</Button>
                     </Link>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 hover:bg-red-50"
+                      disabled={deletingId === p.id}
+                      onClick={() => void removeProduct(p)}
+                    >
+                      {deletingId === p.id ? "刪除中…" : "刪除"}
+                    </Button>
                   </>
                 ) : null}
               </div>
