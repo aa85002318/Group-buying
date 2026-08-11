@@ -15,6 +15,11 @@ import { useSideMenuHistory } from "@/hooks/useSideMenuHistory";
 import { useRecentItems } from "@/hooks/useRecentItems";
 import { useCategoryPrefetch } from "@/hooks/useCategoryPrefetch";
 import { DEFAULT_SIDE_MENU_PRIMARY } from "@/lib/navigation/side-menu-registry";
+import {
+  DEFAULT_SIDE_MENU_SECTIONS,
+  sideMenuSectionsToPrimaryItems,
+  type SideMenuSection,
+} from "@/lib/site-header";
 import { prefetchShopRootCategories } from "@/lib/navigation/side-menu-category-cache";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createClient } from "@/lib/supabase/client";
@@ -49,6 +54,9 @@ export function AppSideMenu({ open, onOpenChange, triggerRef }: AppSideMenuProps
     favorites?: number;
   }>({});
   const [query, setQuery] = useState("");
+  const [primaryItems, setPrimaryItems] = useState<SideMenuPrimaryItem[]>(
+    DEFAULT_SIDE_MENU_PRIMARY
+  );
   const history = useSideMenuHistory();
   const recent = useRecentItems();
   const scrollYRef = useRef(0);
@@ -58,6 +66,20 @@ export function AppSideMenu({ open, onOpenChange, triggerRef }: AppSideMenuProps
   useCategoryPrefetch(true);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    fetch("/api/site-header")
+      .then((response) => response.json())
+      .then((data: { sideMenuSections?: SideMenuSection[] }) => {
+        const sections =
+          Array.isArray(data.sideMenuSections) && data.sideMenuSections.length > 0
+            ? data.sideMenuSections
+            : DEFAULT_SIDE_MENU_SECTIONS;
+        const items = sideMenuSectionsToPrimaryItems(sections);
+        if (items.length > 0) setPrimaryItems(items);
+      })
+      .catch(() => {});
+  }, []);
 
   // Open / close with exit animation — never wait on APIs
   useEffect(() => {
@@ -270,7 +292,7 @@ export function AppSideMenu({ open, onOpenChange, triggerRef }: AppSideMenuProps
                   onNavigate={close}
                 />
                 <SideMenuPrimaryNav
-                  items={DEFAULT_SIDE_MENU_PRIMARY}
+                  items={primaryItems}
                   activeSection={
                     pathname === "/"
                       ? "home"
@@ -329,6 +351,7 @@ export function AppSideMenu({ open, onOpenChange, triggerRef }: AppSideMenuProps
       loggedIn,
       memberName,
       pathname,
+      primaryItems,
       query,
       recent,
     ]

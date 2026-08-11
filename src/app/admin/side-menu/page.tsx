@@ -22,17 +22,27 @@ import {
 } from "@/lib/site-header";
 
 const ICON_OPTIONS: Array<{ value: SideMenuIconKey; label: string }> = [
+  { value: "house", label: "首頁" },
+  { value: "shopping-bag", label: "商城" },
+  { value: "wheat", label: "商品分類" },
+  { value: "gift", label: "禮物" },
+  { value: "book", label: "食譜" },
+  { value: "sparkles", label: "精選 / AI" },
+  { value: "heart", label: "收藏" },
+  { value: "user", label: "會員" },
+  { value: "clipboard", label: "訂單" },
+  { value: "store", label: "門市" },
+  { value: "newspaper", label: "最新消息" },
+  { value: "tag", label: "優惠" },
+  { value: "headphones", label: "客服" },
   { value: "flame", label: "火焰" },
   { value: "package", label: "新品包裹" },
   { value: "clock", label: "倒數時鐘" },
   { value: "star", label: "星星" },
-  { value: "shopping-bag", label: "購物袋" },
   { value: "radio", label: "直播" },
   { value: "play", label: "播放" },
   { value: "video", label: "影音" },
   { value: "article", label: "文章" },
-  { value: "sparkles", label: "精選" },
-  { value: "gift", label: "禮物" },
 ];
 
 const COLOR_OPTIONS: Array<{ value: SideMenuColorKey; label: string }> = [
@@ -204,11 +214,25 @@ export default function AdminSideMenuPage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="Hamburger Side Menu"
-        description="獨立管理首頁左上角側邊選單的區塊、文案、連結、圖示與顏色"
+        description="與前台漢堡選單同步：主要入口、文案、連結、圖示與顯示狀態"
         actions={
-          <Button onClick={save} disabled={loading || saving}>
-            {saving ? "儲存中…" : "儲存側邊選單"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading || saving}
+              onClick={() => {
+                setSections(DEFAULT_SIDE_MENU_SECTIONS);
+                setMessage("已載入前台目前選單，請按「儲存側邊選單」寫入後台");
+                setError(null);
+              }}
+            >
+              同步前台預設
+            </Button>
+            <Button onClick={save} disabled={loading || saving}>
+              {saving ? "儲存中…" : "儲存側邊選單"}
+            </Button>
+          </div>
         }
       />
 
@@ -405,7 +429,7 @@ export default function AdminSideMenuPage() {
                         >
                           <option value="">一般連結</option>
                           <option value="home">首頁</option>
-                          <option value="materials">烘焙材料</option>
+                          <option value="materials">商品分類</option>
                           <option value="group_buy">團購</option>
                           <option value="recipes">食譜</option>
                           <option value="member">會員中心</option>

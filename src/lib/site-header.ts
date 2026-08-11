@@ -1,4 +1,6 @@
 import { canonicalizeAppHref } from "@/lib/site-links";
+import { DEFAULT_SIDE_MENU_PRIMARY } from "@/lib/navigation/side-menu-registry";
+import type { SideMenuPrimaryItem } from "@/types/navigation";
 
 export type HeaderNavBadge = "hot" | "live";
 
@@ -33,7 +35,17 @@ export type SideMenuIconKey =
   | "video"
   | "article"
   | "sparkles"
-  | "gift";
+  | "gift"
+  | "house"
+  | "wheat"
+  | "book"
+  | "heart"
+  | "user"
+  | "clipboard"
+  | "store"
+  | "newspaper"
+  | "tag"
+  | "headphones";
 
 export type SideMenuColorKey =
   | "berry"
@@ -124,276 +136,102 @@ export const DEFAULT_HEADER_PROMO_ITEMS: HeaderPromoItem[] = [
   },
 ];
 
+const SIDE_MENU_ITEM_META: Record<
+  string,
+  { description: string; color: SideMenuColorKey }
+> = {
+  home: { description: "回到首頁", color: "berry" },
+  shop: { description: "烘焙材料與商品", color: "pink" },
+  materials: { description: "展開烘焙材料分類", color: "orange" },
+  group_buy: { description: "限時開團與收單", color: "orange" },
+  recipes: { description: "食譜教學與短影音", color: "yellow" },
+  ai: { description: "選品與食材食譜", color: "pink" },
+  favorites: { description: "收藏商品與食譜", color: "coral" },
+  member: { description: "條碼、載具與福利", color: "green" },
+  orders: { description: "訂單狀態與取貨", color: "berry" },
+  benefits: { description: "會員禮、滿額贈與兌換券", color: "yellow" },
+  stores: { description: "地址與營業時間", color: "green" },
+  news: { description: "文章分類：最新消息", color: "blue" },
+  promotions: { description: "文章分類：優惠活動", color: "orange" },
+  support: { description: "LINE、社群與表單", color: "blue" },
+};
+
+const PRIMARY_ICON_KEYS = new Set<string>([
+  "flame",
+  "package",
+  "clock",
+  "star",
+  "shopping-bag",
+  "radio",
+  "play",
+  "video",
+  "article",
+  "sparkles",
+  "gift",
+  "house",
+  "wheat",
+  "book",
+  "heart",
+  "user",
+  "clipboard",
+  "store",
+  "newspaper",
+  "tag",
+  "headphones",
+]);
+
+function asSideMenuIcon(icon?: string): SideMenuIconKey {
+  return PRIMARY_ICON_KEYS.has(icon ?? "") ? (icon as SideMenuIconKey) : "sparkles";
+}
+
+/** Consumer hamburger entries — kept in sync with DEFAULT_SIDE_MENU_PRIMARY. */
 export const DEFAULT_SIDE_MENU_SECTIONS: SideMenuSection[] = [
   {
-    id: "services",
-    title: "主要服務",
+    id: "primary",
+    title: "主要入口",
     icon: "sparkles",
     color: "berry",
     kind: "links",
-    items: [
-      {
-        id: "shop",
-        label: "烘焙材料",
-        description: "原料、器具、包裝",
-        href: "/shop",
-        icon: "package",
-        color: "berry",
-        section: "materials",
-        enabled: true,
-        order: 20,
-      },
-      {
-        id: "recipes",
-        label: "食譜影音",
-        description: "食譜教學與短影音",
-        href: "/recipes",
-        icon: "article",
-        color: "yellow",
-        section: "recipes",
-        enabled: true,
-        order: 40,
-      },
-      {
-        id: "member",
-        label: "門市會員",
-        description: "條碼、載具與福利",
-        href: "/member",
-        icon: "star",
-        color: "green",
-        section: "member",
-        requiresAuth: true,
-        enabled: true,
-        order: 50,
-      },
-      {
-        id: "group_buy",
-        label: "團購",
-        description: "限時開團與收單",
-        href: "/group-buy",
-        icon: "flame",
-        color: "orange",
-        section: "group_buy",
-        comingSoon: true,
-        enabled: true,
-        order: 30,
-      },
-      {
-        id: "news",
-        label: "最新消息",
-        description: "文章分類：最新消息",
-        href: "/articles?category=%E6%9C%80%E6%96%B0%E6%B6%88%E6%81%AF",
-        icon: "article",
-        color: "blue",
-      },
-      {
-        id: "promo",
-        label: "優惠活動",
-        description: "文章分類：優惠活動",
-        href: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95",
-        icon: "star",
-        color: "orange",
-      },
-      {
-        id: "ai",
-        label: "AI 烘焙助手",
-        description: "選品與食材食譜",
-        href: "/ai",
-        icon: "sparkles",
-        color: "pink",
-      },
-    ],
-  },
-  {
-    id: "today",
-    title: "今日必逛",
-    icon: "flame",
-    color: "coral",
-    kind: "links",
-    items: [
-      {
-        id: "new",
-        label: "本日上架",
-        description: "今天最新上架商品",
-        href: "/shop?sort=newest",
-        icon: "package",
-        color: "berry",
-      },
-      {
-        id: "ending",
-        label: "即將收單",
-        description: "即將截止下單商品",
-        href: "/group-buy",
-        icon: "clock",
-        color: "orange",
-      },
-      {
-        id: "weekly",
-        label: "本週精選",
-        description: "本週推薦商品",
-        href: "/group-buy",
-        icon: "star",
-        color: "yellow",
-      },
-      {
-        id: "popular",
-        label: "熱門商品",
-        description: "最多人購買",
-        href: "/shop",
-        icon: "flame",
-        color: "coral",
-      },
-    ],
-  },
-  {
-    id: "categories",
-    title: "商品分類",
-    icon: "shopping-bag",
-    color: "pink",
-    kind: "categories",
-    items: [
-      {
-        id: "category-trigger",
-        label: "瀏覽所有分類",
-        description: "點擊展開商品分類",
-        href: "/categories",
-        icon: "shopping-bag",
-        color: "pink",
-      },
-    ],
-  },
-  {
-    id: "support",
-    title: "服務與支援",
-    icon: "article",
-    color: "blue",
-    kind: "links",
-    items: [
-      {
-        id: "support",
-        label: "客服中心",
-        description: "LINE、社群與表單",
-        href: "/support",
-        icon: "article",
-        color: "blue",
-      },
-      {
-        id: "stores",
-        label: "門市資訊",
-        description: "地址與營業時間",
-        href: "/stores",
-        icon: "package",
-        color: "green",
-      },
-      {
-        id: "faq",
-        label: "常見問題",
-        description: "FAQ",
-        href: "/faq",
-        icon: "article",
-        color: "yellow",
-      },
-      {
-        id: "about",
-        label: "關於 CHIMEIDIY",
-        description: "品牌與烘焙生活平台",
-        href: "/corporate",
-        icon: "star",
-        color: "berry",
-      },
-    ],
-  },
-  {
-    id: "member",
-    title: "會員",
-    icon: "star",
-    color: "green",
-    kind: "links",
-    items: [
-      {
-        id: "orders",
-        label: "我的訂單",
-        description: "訂單狀態與取貨",
-        href: "/orders",
-        icon: "package",
-        color: "berry",
-      },
-      {
-        id: "favorites",
-        label: "我的收藏",
-        description: "收藏商品與食譜",
-        href: "/member/favorites",
-        icon: "star",
-        color: "coral",
-      },
-      {
-        id: "member-gifts",
-        label: "門市會員禮",
-        description: "會員禮、滿額贈與兌換券",
-        href: "/member/benefits",
-        icon: "gift",
-        color: "yellow",
-      },
-      {
-        id: "carrier",
-        label: "發票載具",
-        description: "手機條碼載具",
-        href: "/member/carrier",
-        icon: "article",
-        color: "green",
-      },
-      {
-        id: "account",
-        label: "帳號設定",
-        description: "個人資料與通知",
-        href: "/member/settings/account",
-        icon: "star",
-        color: "blue",
-      },
-    ],
-  },
-  {
-    id: "content",
-    title: "影音內容",
-    icon: "video",
-    color: "blue",
-    kind: "links",
-    items: [
-      {
-        id: "live",
-        label: "直播預告",
-        description: "播放中的直播與即將開始",
-        href: "/live",
-        icon: "radio",
-        color: "coral",
-      },
-      {
-        id: "replay",
-        label: "直播回放",
-        description: "所有直播留存影片",
-        href: "/videos",
-        icon: "play",
-        color: "blue",
-      },
-      {
-        id: "tutorial",
-        label: "影音教學",
-        description: "短影音、一分鐘教學",
-        href: "/videos",
-        icon: "video",
-        color: "blue",
-      },
-      {
-        id: "articles",
-        label: "文章專區",
-        description: "食譜、開箱、推薦文章",
-        href: "/articles",
-        icon: "article",
-        color: "yellow",
-      },
-    ],
+    items: DEFAULT_SIDE_MENU_PRIMARY.map((item) => {
+      const meta = SIDE_MENU_ITEM_META[item.id];
+      return {
+        id: item.id,
+        label: item.label,
+        description: meta?.description,
+        href: item.route ?? "/",
+        icon: asSideMenuIcon(item.icon),
+        color: meta?.color ?? "berry",
+        section: item.section,
+        requiresAuth: item.requiresAuth,
+        comingSoon: item.comingSoon,
+        enabled: item.enabled,
+        order: item.order,
+      };
+    }),
   },
 ];
+
+export function sideMenuSectionsToPrimaryItems(
+  sections: SideMenuSection[]
+): SideMenuPrimaryItem[] {
+  const items: SideMenuPrimaryItem[] = [];
+  for (const section of sections) {
+    for (const item of section.items) {
+      items.push({
+        id: item.id,
+        label: item.label,
+        icon: item.icon,
+        route: item.href,
+        section: item.section,
+        requiresAuth: item.requiresAuth,
+        enabled: item.enabled !== false,
+        comingSoon: item.comingSoon,
+        order: item.order ?? items.length + 1,
+      });
+    }
+  }
+  return items.sort((a, b) => a.order - b.order);
+}
 
 export function isValidHeaderHref(href: string): boolean {
   const value = href.trim();
@@ -488,6 +326,16 @@ const SIDE_MENU_ICONS = new Set<SideMenuIconKey>([
   "article",
   "sparkles",
   "gift",
+  "house",
+  "wheat",
+  "book",
+  "heart",
+  "user",
+  "clipboard",
+  "store",
+  "newspaper",
+  "tag",
+  "headphones",
 ]);
 
 const SIDE_MENU_COLORS = new Set<SideMenuColorKey>([

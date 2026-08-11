@@ -42,7 +42,7 @@ export function BakingCatalogSideMenu({ className }: { className?: string }) {
   const serviceSections: SideMenuSection[] = useMemo(
     () =>
       DEFAULT_SIDE_MENU_SECTIONS.filter(
-        (s) => s.id === "services" || s.id === "support" || s.id === "member"
+        (s) => s.id === "primary" || s.id === "services" || s.id === "support" || s.id === "member"
       ).map((section) => ({
         ...section,
         items: section.items.map((item) => ({
