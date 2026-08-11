@@ -83,7 +83,7 @@ export function SideMenuPanelShell({
   return (
     <div
       className={cn(
-        "absolute inset-0 flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-white",
+        "absolute inset-0 flex h-[100dvh] max-h-[100dvh] min-w-0 flex-col overflow-hidden bg-white",
         "rounded-r-[24px] shadow-[4px_0_24px_rgba(21,62,115,0.12)]",
         "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]",
         className

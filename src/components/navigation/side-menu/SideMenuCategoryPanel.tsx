@@ -231,8 +231,8 @@ export function SideMenuCategoryPanel({
       list.categories.length === 0;
 
     return (
-      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
-        <div className="shrink-0 space-y-2 border-b border-[#F0ECE5] py-3">
+      <div className="grid min-h-0 min-w-0 w-full flex-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
+        <div className="min-w-0 shrink-0 space-y-2 border-b border-[#F0ECE5] py-3">
           {showRootSkeleton ? (
             <SideMenuCategorySkeleton chips={5} rows={0} showLabel={slowLoad} />
           ) : roots.error ? (
@@ -256,7 +256,7 @@ export function SideMenuCategoryPanel({
           )}
         </div>
 
-        <div className="min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+        <div className="min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
           <div
             className={cn(
               "px-4 pt-2 transition duration-150 ease-out",
@@ -334,15 +334,17 @@ export function SideMenuCategoryPanel({
           </div>
         </div>
 
-        <div className="shrink-0 space-y-2 border-t border-[#F0ECE5] px-4 pb-5 pt-3">
+        <div className="min-w-0 w-full shrink-0 space-y-2 border-t border-[#F0ECE5] px-4 pb-7 pr-6 pt-3">
           <Link
             href={selectedMain?.route || APP_ROUTES.shop}
             onClick={onNavigate}
-            className="flex h-12 items-center justify-center rounded-2xl border border-[#E8E1D7] text-sm font-bold text-[#153E73] active:scale-[0.985] active:bg-[#FFF5CC]"
+            className="box-border flex min-h-12 w-full min-w-0 max-w-full items-center justify-center rounded-2xl border border-[#E8E1D7] px-3 py-2 text-center text-sm font-bold leading-snug text-[#153E73] active:scale-[0.985] active:bg-[#FFF5CC]"
           >
-            {selectedMain
-              ? `查看「${selectedMain.name}」全部商品`
-              : "查看全部烘焙材料"}
+            <span className="min-w-0 max-w-full break-words">
+              {selectedMain
+                ? `查看「${selectedMain.name}」全部商品`
+                : "查看全部烘焙材料"}
+            </span>
           </Link>
           <FavoritesPreview loggedIn={loggedIn} onNavigate={onNavigate} />
         </div>
@@ -425,13 +427,13 @@ function FavoritesPreview({
   }, [loggedIn]);
 
   return (
-    <section>
+    <section className="min-w-0 w-full">
       <h3 className="text-sm font-bold text-[#153E73]">我的最愛</h3>
       {!loggedIn ? (
         <Link
           href={`${APP_ROUTES.login}?next=${encodeURIComponent(APP_ROUTES.memberFavorites)}`}
           onClick={onNavigate}
-          className="mt-2 block rounded-2xl bg-[#EEF8FC] px-3 py-3 text-sm font-medium text-[#153E73]"
+          className="mt-2 block w-full min-w-0 max-w-full rounded-2xl bg-[#EEF8FC] px-3 py-3 text-sm font-medium text-[#153E73]"
         >
           登入後查看收藏
         </Link>

@@ -328,7 +328,7 @@ export function AppSideMenu({ open, onOpenChange, triggerRef }: AppSideMenuProps
           ) : null}
 
           {panel.level > 1 && !panel.isSearch ? (
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <SideMenuCategoryPanel
                 section={panel.section as SideMenuSectionKey}
                 categoryId={panel.categoryId}
