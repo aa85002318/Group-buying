@@ -11,7 +11,7 @@ import { isSupabaseConfigured } from "@/lib/config";
 import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
 import { getAuthErrorMessage } from "@/lib/auth/error-messages";
 import { GENDER_LABELS, type ProfileGender } from "@/lib/services/profileService";
-import { isValidBirthday, isValidTaiwanPhone } from "@/lib/validation/customer";
+import { isValidBirthday } from "@/lib/validation/customer";
 import { CITY_NAMES, TAIWAN_CITIES } from "@/lib/taiwan-regions";
 import { APP_ROUTES } from "@/lib/site-links";
 
@@ -80,10 +80,6 @@ export default function MemberProfilePage() {
       setErrorMessage("請填寫姓名");
       return;
     }
-    if (!isValidTaiwanPhone(form.phone)) {
-      setErrorMessage("請輸入有效的手機號碼（09 開頭，共 10 碼）");
-      return;
-    }
     if (form.birthday && !isValidBirthday(form.birthday)) {
       setErrorMessage("請輸入有效的生日");
       return;
@@ -96,7 +92,6 @@ export default function MemberProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           full_name: form.full_name,
-          phone: form.phone,
           birthday: form.birthday || null,
           gender: form.gender || null,
           city: form.city || null,
@@ -163,10 +158,16 @@ export default function MemberProfilePage() {
                 <Input
                   type="tel"
                   value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="min-h-12"
-                  required
+                  disabled
+                  className="min-h-12 bg-surface-soft"
                 />
+                <p className="mt-1 text-xs text-foreground-secondary">
+                  變更手機請至{" "}
+                  <Link href={APP_ROUTES.memberPhoneChange} className="text-caramel underline">
+                    帳號設定 → 變更手機
+                  </Link>
+                  （含重複檢查與驗證）
+                </p>
               </div>
 
               <div>

@@ -28,6 +28,16 @@ export async function PATCH(request: Request) {
 
   const admin = createAdminClient();
   if (parsed.updates.phone) {
+    const currentPhone = (auth.profile as { phone?: string | null }).phone ?? null;
+    if (currentPhone && parsed.updates.phone !== currentPhone) {
+      return NextResponse.json(
+        {
+          error: "變更手機號碼請至「帳號設定 > 變更手機」完成驗證",
+          code: "PHONE_CHANGE_REQUIRED",
+        },
+        { status: 400 }
+      );
+    }
     const taken = await isPhoneTaken(admin, parsed.updates.phone, auth.user.id);
     if (taken) {
       return NextResponse.json({ error: "此手機號碼已被其他會員使用" }, { status: 409 });

@@ -12,6 +12,7 @@ import { ROLE_LABELS } from "@/lib/utils";
 import { getAuthErrorMessage } from "@/lib/auth/error-messages";
 import { getSafeRedirectPath } from "@/lib/auth/safe-redirect";
 import { requestVerificationEmail } from "@/lib/auth/send-verification-client";
+import { APP_ROUTES } from "@/lib/site-links";
 
 export default function LoginClient() {
   const router = useRouter();
@@ -113,6 +114,13 @@ export default function LoginClient() {
       } catch (err) {
         console.warn("[line] bind error:", err);
       }
+    }
+
+    // Record login device for security review
+    try {
+      await fetch("/api/member/login-devices", { method: "POST" });
+    } catch {
+      // non-blocking
     }
 
     router.push(getSafeRedirectPath(next, "/"));
@@ -244,6 +252,14 @@ export default function LoginClient() {
         <form onSubmit={handleLogin} className="space-y-4">
           <Input type="email" placeholder="電子郵件" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <Input type="password" placeholder="密碼" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <div className="flex justify-end">
+            <Link
+              href={APP_ROUTES.forgotPassword}
+              className="text-xs font-medium text-primary hover:text-primary/80"
+            >
+              忘記密碼？
+            </Link>
+          </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "登入中..." : "登入"}
           </Button>
