@@ -219,7 +219,7 @@ export function SideMenuCategoryPanel({
     );
   }
 
-  // Materials L2 — grid: chips fixed, content scrolls, footer sticky area in scroll
+  // Materials L2 — chips fixed, list scrolls, view-all footer stays inside the drawer
   if (isMaterialsRoot) {
     const list = children;
     const showRootSkeleton = roots.loading && roots.categories.length === 0;
@@ -231,7 +231,7 @@ export function SideMenuCategoryPanel({
       list.categories.length === 0;
 
     return (
-      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden">
+      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
         <div className="shrink-0 space-y-2 border-b border-[#F0ECE5] py-3">
           {showRootSkeleton ? (
             <SideMenuCategorySkeleton chips={5} rows={0} showLabel={slowLoad} />
@@ -278,7 +278,7 @@ export function SideMenuCategoryPanel({
             ) : null}
 
             {emptyChildren && selectedMain ? (
-              <div className="flex min-h-[240px] flex-col items-center justify-center px-2 py-10 text-center">
+              <div className="flex min-h-[160px] flex-col items-center justify-center px-2 py-8 text-center">
                 {(selectedMain.productCount ?? 0) > 0 ? (
                   <>
                     <p className="text-sm text-[#687386]">
@@ -329,21 +329,22 @@ export function SideMenuCategoryPanel({
                 }}
               />
             ))}
-          </div>
 
-          <div className="space-y-3 px-4 pb-4 pt-3">
-            <Link
-              href={selectedMain?.route || APP_ROUTES.shop}
-              onClick={onNavigate}
-              className="flex h-12 items-center justify-center rounded-2xl border border-[#E8E1D7] text-sm font-bold text-[#153E73] active:scale-[0.985] active:bg-[#FFF5CC]"
-            >
-              {selectedMain
-                ? `查看「${selectedMain.name}」全部商品`
-                : "查看全部烘焙材料"}
-            </Link>
             <SideMenuRecentItems items={recentBrowse} onNavigate={onNavigate} />
-            <FavoritesPreview loggedIn={loggedIn} onNavigate={onNavigate} />
           </div>
+        </div>
+
+        <div className="shrink-0 space-y-2 border-t border-[#F0ECE5] px-4 pb-5 pt-3">
+          <Link
+            href={selectedMain?.route || APP_ROUTES.shop}
+            onClick={onNavigate}
+            className="flex h-12 items-center justify-center rounded-2xl border border-[#E8E1D7] text-sm font-bold text-[#153E73] active:scale-[0.985] active:bg-[#FFF5CC]"
+          >
+            {selectedMain
+              ? `查看「${selectedMain.name}」全部商品`
+              : "查看全部烘焙材料"}
+          </Link>
+          <FavoritesPreview loggedIn={loggedIn} onNavigate={onNavigate} />
         </div>
       </div>
     );
@@ -351,7 +352,7 @@ export function SideMenuCategoryPanel({
 
   const layer = categoryId ? drilled : children;
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 pb-6">
       {layer.loading && !layer.categories.length ? (
         <SideMenuCategorySkeleton chips={0} rows={6} />
       ) : null}

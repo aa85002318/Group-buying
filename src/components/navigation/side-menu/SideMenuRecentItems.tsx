@@ -13,7 +13,7 @@ export function SideMenuRecentItems({
   if (!items.length) return null;
 
   return (
-    <section className="mt-4 px-4">
+    <section className="mt-4">
       <h3 className="text-sm font-bold text-[#153E73]">最近瀏覽</h3>
       <div className="mt-2 flex flex-wrap gap-2">
         {items.map((item) => (

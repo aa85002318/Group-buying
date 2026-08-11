@@ -328,15 +328,17 @@ export function AppSideMenu({ open, onOpenChange, triggerRef }: AppSideMenuProps
           ) : null}
 
           {panel.level > 1 && !panel.isSearch ? (
-            <SideMenuCategoryPanel
-              section={panel.section as SideMenuSectionKey}
-              categoryId={panel.categoryId}
-              loggedIn={loggedIn}
-              recentBrowse={recent.recentBrowse}
-              onOpenCategory={handleCategory}
-              onNavigate={close}
-              onPushBrowse={recent.pushBrowse}
-            />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <SideMenuCategoryPanel
+                section={panel.section as SideMenuSectionKey}
+                categoryId={panel.categoryId}
+                loggedIn={loggedIn}
+                recentBrowse={recent.recentBrowse}
+                onOpenCategory={handleCategory}
+                onNavigate={close}
+                onPushBrowse={recent.pushBrowse}
+              />
+            </div>
           ) : null}
         </>
       );
