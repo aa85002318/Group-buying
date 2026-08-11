@@ -117,8 +117,13 @@ export default function AdminNotificationsPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="通知管理"
+        title="通知中心"
         description="App 內通知（訂單／團購／活動／福利／門市／系統）。不含 POS 消費通知；正式推播可預留但不串接付費服務。"
+        actions={
+          <a href="/admin/site-pages" className="text-sm text-[#153E73] underline">
+            返回說明與法務
+          </a>
+        }
       />
 
       <section className="max-w-2xl space-y-3 rounded-xl bg-white p-4 shadow-card">

@@ -43,6 +43,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/shop/ai-chips",
   "/admin/content",
   "/admin/faqs",
+  "/admin/site-pages",
   "/admin/cms",
   "/admin/articles",
   "/admin/livestreams",
@@ -66,6 +67,7 @@ export const CUSTOMER_SERVICE_ADMIN_PATHS = [
   "/admin/support-settings",
   "/admin/notifications",
   "/admin/faqs",
+  "/admin/site-pages",
   "/admin/member-gifts",
 ] as const;
 
@@ -382,7 +384,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/rewards", label: "點數紀錄", roles: ["admin"] },
       { href: "/admin/support", label: "客服", roles: ["admin", "customer_service"] },
       { href: "/admin/support-settings", label: "客服設定", roles: ["admin", "customer_service"] },
-      { href: "/admin/notifications", label: "通知管理", roles: ["admin", "customer_service"] },
       { href: "/admin/commission-records", label: "分潤紀錄", roles: ["admin"] },
     ],
   },
@@ -549,9 +550,46 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/videos", label: "影音", roles: ["admin", "content_editor"] },
       { href: "/admin/livestreams", label: "直播", roles: ["admin", "content_editor"] },
       { href: "/admin/themes", label: "季節主題", roles: ["admin", "content_editor"] },
-      { href: "/admin/faqs", label: "FAQ", roles: ["admin", "content_editor", "customer_service"] },
       { href: "/admin/courses", label: "課程", roles: ["admin"] },
       { href: "/admin/home/recipe-kits", label: "材料包", roles: ["admin", "content_editor"] },
+    ],
+  },
+  {
+    id: "site-help",
+    label: "說明與法務",
+    icon: "FileText",
+    roles: ["admin", "content_editor", "customer_service"],
+    items: [
+      {
+        href: "/admin/site-pages",
+        label: "總覽",
+        roles: ["admin", "content_editor", "customer_service"],
+      },
+      {
+        href: "/admin/site-pages/shipping",
+        label: "配送說明",
+        roles: ["admin", "content_editor", "customer_service"],
+      },
+      {
+        href: "/admin/faqs",
+        label: "常見問題",
+        roles: ["admin", "content_editor", "customer_service"],
+      },
+      {
+        href: "/admin/notifications",
+        label: "通知中心",
+        roles: ["admin", "customer_service"],
+      },
+      {
+        href: "/admin/site-pages/terms",
+        label: "服務條款",
+        roles: ["admin", "content_editor", "customer_service"],
+      },
+      {
+        href: "/admin/site-pages/privacy",
+        label: "隱私權政策",
+        roles: ["admin", "content_editor", "customer_service"],
+      },
     ],
   },
   {

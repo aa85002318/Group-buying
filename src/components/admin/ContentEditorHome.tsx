@@ -21,6 +21,7 @@ const WORKSPACE: Array<{ title: string; href: string; Icon: LucideIcon; tone: st
   { title: "共用 Banner", href: "/admin/banners", Icon: Megaphone, tone: "#EEF8FC" },
   { title: "彈跳公告", href: "/admin/content/popups", Icon: Newspaper, tone: "#FFF5CC" },
   { title: "最新資訊", href: "/admin/news", Icon: Newspaper, tone: "#EFF9EE" },
+  { title: "說明與法務", href: "/admin/site-pages", Icon: FileText, tone: "#FFF8E1" },
 ];
 
 function greeting(name?: string | null) {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Bell,
   FileQuestion,
+  FileText,
   Headphones,
   MessageSquare,
   ShoppingBag,
@@ -18,8 +19,9 @@ const WORKSPACE: Array<{ title: string; href: string; Icon: LucideIcon; tone: st
   { title: "客服工單", href: "/admin/support", Icon: Headphones, tone: "#FFF5CC" },
   { title: "App 訂單", href: "/admin/orders", Icon: ShoppingBag, tone: "#EEF8FC" },
   { title: "會員查詢", href: "/admin/members", Icon: Users, tone: "#EFF9EE" },
-  { title: "通知管理", href: "/admin/notifications", Icon: Bell, tone: "#FFF0EE" },
-  { title: "FAQ", href: "/admin/faqs", Icon: FileQuestion, tone: "#F3EEFF" },
+  { title: "說明與法務", href: "/admin/site-pages", Icon: FileText, tone: "#FFF8E1" },
+  { title: "通知中心", href: "/admin/notifications", Icon: Bell, tone: "#FFF0EE" },
+  { title: "常見問題", href: "/admin/faqs", Icon: FileQuestion, tone: "#F3EEFF" },
   { title: "客服設定", href: "/admin/support-settings", Icon: MessageSquare, tone: "#EEF8FC" },
 ];
 

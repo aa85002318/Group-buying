@@ -36,6 +36,8 @@ const CMS_TYPES = new Set([
   "home_recipe_kits",
   "homepage_popup",
   "site_header_settings",
+  "site_legal_document",
+  "site_legal_documents",
 ]);
 
 const STORE_TYPES = new Set([

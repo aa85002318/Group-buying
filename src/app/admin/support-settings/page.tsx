@@ -86,12 +86,21 @@ export default function AdminSupportSettingsPage() {
           value={form.support_info}
           onChange={(e) => setForm({ ...form, support_info: e.target.value })}
         />
-        <textarea
-          className="input-field min-h-[80px] w-full"
-          placeholder="配送說明"
-          value={form.shipping_info}
-          onChange={(e) => setForm({ ...form, shipping_info: e.target.value })}
-        />
+        <div>
+          <textarea
+            className="input-field min-h-[80px] w-full"
+            placeholder="配送說明"
+            value={form.shipping_info}
+            onChange={(e) => setForm({ ...form, shipping_info: e.target.value })}
+          />
+          <p className="mt-1 text-xs text-[#8A94A6]">
+            建議改至{" "}
+            <a href="/admin/site-pages/shipping" className="underline">
+              說明與法務 → 配送說明
+            </a>
+            編輯（會與此欄位同步）。
+          </p>
+        </div>
         <textarea
           className="input-field min-h-[80px] w-full"
           placeholder="退換貨說明"

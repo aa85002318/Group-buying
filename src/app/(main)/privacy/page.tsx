@@ -2,13 +2,26 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDocument } from "@/components/legal/LegalDocument";
 import { BRAND_NAME, BRAND_SUBTITLE, SUPPORT_EMAIL } from "@/lib/env";
+import { getSiteDocument, renderSiteDocumentHtml } from "@/lib/site-pages/service";
+import { formatLegalUpdatedAt } from "@/lib/site-pages/types";
 
 export const metadata: Metadata = {
   title: `隱私權政策｜${BRAND_NAME}`,
   description: `${BRAND_NAME}（${BRAND_SUBTITLE}）隱私權政策，說明個人資料蒐集、使用與您的權利。`,
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const doc = await getSiteDocument("privacy", { publishedOnly: true });
+  if (doc?.content.trim()) {
+    return (
+      <LegalDocument
+        title={doc.title || "隱私權政策"}
+        updatedAt={formatLegalUpdatedAt(doc.updated_at)}
+        html={renderSiteDocumentHtml(doc)}
+      />
+    );
+  }
+
   return (
     <LegalDocument title="隱私權政策" updatedAt="2026年7月16日">
       <p>
@@ -53,8 +66,10 @@ export default function PrivacyPage() {
       <ul>
         <li>查詢、閱覽與請求製給複製本</li>
         <li>請求補充或更正（可至「會員中心 → 編輯會員資料」）</li>
-        <li>請求停止蒐集、處理、利用或刪除帳號（見{" "}
-          <Link href="/account-deletion">刪除帳號說明</Link>）</li>
+        <li>
+          請求停止蒐集、處理、利用或刪除帳號（見{" "}
+          <Link href="/account-deletion">刪除帳號說明</Link>）
+        </li>
       </ul>
       <p>部分請求可能因法令或未完成訂單而有合理限制。</p>
 

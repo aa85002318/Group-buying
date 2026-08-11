@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  FileText,
   Gift,
   LayoutDashboard,
   LayoutTemplate,
@@ -42,6 +43,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   BookOpen,
   LayoutTemplate,
   Newspaper,
+  FileText,
   Boxes,
   Settings,
 };
@@ -59,7 +61,8 @@ function pathnameMatchesHref(pathname: string, href: string): boolean {
     pathOnly === "/admin" ||
     pathOnly === "/admin/store" ||
     pathOnly === "/admin/recipes" ||
-    pathOnly === "/admin/group-buy"
+    pathOnly === "/admin/group-buy" ||
+    pathOnly === "/admin/site-pages"
   ) {
     return false;
   }

@@ -2,13 +2,26 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalDocument } from "@/components/legal/LegalDocument";
 import { BRAND_NAME, BRAND_SUBTITLE, SUPPORT_EMAIL } from "@/lib/env";
+import { getSiteDocument, renderSiteDocumentHtml } from "@/lib/site-pages/service";
+import { formatLegalUpdatedAt } from "@/lib/site-pages/types";
 
 export const metadata: Metadata = {
   title: `服務條款｜${BRAND_NAME}`,
   description: `${BRAND_NAME}（${BRAND_SUBTITLE}）服務條款，說明使用規範、訂單與取貨相關約定。`,
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const doc = await getSiteDocument("terms", { publishedOnly: true });
+  if (doc?.content.trim()) {
+    return (
+      <LegalDocument
+        title={doc.title || "服務條款"}
+        updatedAt={formatLegalUpdatedAt(doc.updated_at)}
+        html={renderSiteDocumentHtml(doc)}
+      />
+    );
+  }
+
   return (
     <LegalDocument title="服務條款" updatedAt="2026年7月16日">
       <p>

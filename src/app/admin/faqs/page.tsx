@@ -111,7 +111,15 @@ export default function AdminFaqsPage() {
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader title="FAQ 管理" description="常見問題：分類、熱門、排序、啟停用" />
+      <AdminPageHeader
+        title="常見問題"
+        description="分類、熱門、排序、啟停用。可從「說明與法務」總覽進入。"
+        actions={
+          <a href="/admin/site-pages" className="text-sm text-[#153E73] underline">
+            返回說明與法務
+          </a>
+        }
+      />
 
       <div className="max-w-2xl space-y-3 rounded-xl bg-white p-4 shadow-card">
         <h2 className="font-medium">{editingId ? "編輯 FAQ" : "新增 FAQ"}</h2>

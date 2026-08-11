@@ -1333,6 +1333,18 @@ export interface FaqItem {
   updated_at: string;
 }
 
+export interface SiteLegalDocument {
+  document_key: "privacy" | "terms" | "shipping";
+  title: string;
+  content: string;
+  content_format: "html" | "plain";
+  document_version: string;
+  is_published: boolean;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SupportSettings {
   id: string;
   settings_key: string;
