@@ -27,19 +27,22 @@ create index if not exists idx_home_ingredient_categories_sort
 alter table home_ingredient_categories enable row level security;
 
 -- Public read of enabled rows
+drop policy if exists "public_read_ingredient_categories" on home_ingredient_categories;
 create policy "public_read_ingredient_categories"
   on home_ingredient_categories for select
   using (enabled = true);
 
 -- Service role bypass (used by admin client)
+drop policy if exists "service_role_all_ingredient_categories" on home_ingredient_categories;
 create policy "service_role_all_ingredient_categories"
   on home_ingredient_categories for all
   using (auth.role() = 'service_role')
   with check (auth.role() = 'service_role');
 
--- Add ingredient_categories block to homepage_blocks if not present
+-- Add ingredient_categories block if not present
+-- (homepage_blocks.block_key is no longer unique after multi-instance migration)
 insert into homepage_blocks (block_key, title, subtitle, is_visible, sort_order, config)
-values (
+select
   'ingredient_categories',
   '找材料',
   null,
@@ -52,14 +55,15 @@ values (
     "desktop_cols": 10,
     "mobile_cols": 5
   }'::jsonb
-)
-on conflict (block_key) do nothing;
+where not exists (
+  select 1 from homepage_blocks where block_key = 'ingredient_categories' limit 1
+);
 
--- Seed default categories
+-- Seed default categories (idempotent)
 insert into home_ingredient_categories
   (display_name, category_id, custom_url, sort_order, enabled, badge, icon_mode)
-values
-  ('麵粉',     null, '/products?category=flour',     10, true, null,  'ip'),
+select * from (values
+  ('麵粉',     null::text, '/products?category=flour'::text,     10, true, null::text,  'ip'::text),
   ('巧克力',   null, '/products?category=chocolate', 20, true, 'HOT', 'ip'),
   ('乳製品',   null, '/products?category=dairy',     30, true, null,  'ip'),
   ('烘焙原料', null, '/products?category=raw',       40, true, null,  'ip'),
@@ -68,4 +72,6 @@ values
   ('包裝材料', null, '/products?category=packaging', 70, true, null,  'ip'),
   ('冷凍食品', null, '/products?category=frozen',    80, true, null,  'ip'),
   ('冷藏食品', null, '/products?category=chilled',   90, true, null,  'ip'),
-  ('更多分類', null, '/products',                    99, true, null,  'ip');
+  ('更多分類', null, '/products',                    99, true, null,  'ip')
+) as v(display_name, category_id, custom_url, sort_order, enabled, badge, icon_mode)
+where not exists (select 1 from home_ingredient_categories limit 1);
