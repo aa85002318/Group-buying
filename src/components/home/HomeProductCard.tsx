@@ -93,11 +93,11 @@ export function HomeProductCard({ product, variant, rank }: HomeProductCardProps
   return (
     <article
       className={cn(
-        "flex h-[280px] flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:h-[320px] md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]",
+        "flex flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_5px_16px_rgba(21,62,115,0.05)] transition duration-300 md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_20px_rgba(21,62,115,0.08)]",
         variant === "closing" ? "border-[#F16458]" : "border-[#E9EDF2]"
       )}
     >
-      <Link href={href} className="relative block h-[135px] shrink-0 overflow-hidden bg-[#F4F6F8] md:h-[165px] xl:h-[170px]" aria-label={product.name}>
+      <Link href={href} className="relative block aspect-square w-full shrink-0 overflow-hidden bg-[#F4F6F8]" aria-label={product.name}>
         {product.image_url ? (
           <Image
             src={product.image_url}
