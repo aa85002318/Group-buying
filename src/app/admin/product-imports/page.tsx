@@ -7,6 +7,7 @@ import * as XLSX from "xlsx";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { canonicalizeImportRow } from "@/lib/admin/import-cells";
+import { sortNamedOptions } from "@/lib/admin/category-tree";
 
 const ENGLISH_HEADERS = [
   "product_name",
@@ -93,6 +94,7 @@ export default function AdminProductImportsPage() {
       .catch(() => setSuppliers([]));
   }, []);
 
+  const sortedSuppliers = useMemo(() => sortNamedOptions(suppliers), [suppliers]);
   const previewRows = useMemo(() => rows.slice(0, 10), [rows]);
 
   const handleFile = async (file: File) => {
@@ -191,7 +193,7 @@ export default function AdminProductImportsPage() {
             onChange={(e) => setSupplierId(e.target.value)}
           >
             <option value="">不指定／依 Excel supplier 欄</option>
-            {suppliers.map((s) => (
+            {sortedSuppliers.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>

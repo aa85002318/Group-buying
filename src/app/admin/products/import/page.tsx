@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Upload } from "lucide-react";
 import * as XLSX from "xlsx";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { CategoryGroupedSelect } from "@/components/admin/CategoryGroupedSelect";
 import { Button } from "@/components/ui/button";
+import { buildCategoryTree, flattenCategoryTree, sortNamedOptions } from "@/lib/admin/category-tree";
+import type { ProductCategory } from "@/lib/types/database";
 
 const SAMPLE_HEADERS = [
   "名稱",
@@ -62,9 +65,17 @@ export default function AdminProductImportPage() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ imported: number; errors: string[] } | null>(null);
   const [suppliers, setSuppliers] = useState<Option[]>([]);
-  const [categories, setCategories] = useState<Option[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [supplierId, setSupplierId] = useState("");
   const [categoryId, setCategoryId] = useState("");
+
+  const sortedSuppliers = useMemo(() => sortNamedOptions(suppliers), [suppliers]);
+  const categoryHint = useMemo(() => {
+    const names = flattenCategoryTree(buildCategoryTree(categories))
+      .slice(0, 4)
+      .map((row) => row.category.name);
+    return names.join("、");
+  }, [categories]);
 
   useEffect(() => {
     Promise.all([
@@ -75,7 +86,7 @@ export default function AdminProductImportPage() {
         setSuppliers(
           ((supplierRes.suppliers ?? []) as Option[]).filter((s) => s.is_active !== false)
         );
-        setCategories((categoryRes.categories ?? []) as Option[]);
+        setCategories((categoryRes.categories ?? []) as ProductCategory[]);
       })
       .catch(() => {
         setSuppliers([]);
@@ -174,14 +185,14 @@ export default function AdminProductImportPage() {
             onChange={(e) => setSupplierId(e.target.value)}
           >
             <option value="">不指定／依 Excel 廠商欄</option>
-            {suppliers.map((s) => (
+            {sortedSuppliers.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
             ))}
           </select>
           <p className="mt-1 text-xs text-foreground-muted">
-            {suppliers.length === 0 ? (
+            {sortedSuppliers.length === 0 ? (
               <>
                 尚無供應商，請先到{" "}
                 <Link href="/admin/suppliers" className="underline">
@@ -190,23 +201,16 @@ export default function AdminProductImportPage() {
                 新增。
               </>
             ) : (
-              <>共 {suppliers.length} 家後台廠商</>
+              <>共 {sortedSuppliers.length} 家後台廠商，依名稱排序</>
             )}
           </p>
 
           <label className="mt-4 block text-sm font-medium text-foreground">預設分類</label>
-          <select
-            className="mt-1 h-12 w-full rounded-[16px] border border-border bg-white px-3 text-sm"
+          <CategoryGroupedSelect
+            categories={categories}
             value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="">不指定／依 Excel 分類欄</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            onChange={setCategoryId}
+          />
           <p className="mt-1 text-xs text-foreground-muted">
             {categories.length === 0 ? (
               <>
@@ -217,7 +221,10 @@ export default function AdminProductImportPage() {
                 新增。
               </>
             ) : (
-              <>Excel 分類欄需與後台名稱完全一致，例如：{categories.slice(0, 4).map((c) => c.name).join("、")}</>
+              <>
+                下拉依大分類 → 小分類排列。Excel 分類欄需與後台名稱完全一致
+                {categoryHint ? `，例如：${categoryHint}` : ""}
+              </>
             )}
           </p>
         </section>
