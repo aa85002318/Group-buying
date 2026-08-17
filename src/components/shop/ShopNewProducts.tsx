@@ -32,54 +32,40 @@ function resolveBadge(p: Product): ShopRailBadge {
 export function ShopNewProducts({
   products: productsProp,
   className,
+  title = "新品上架",
+  limit = 10,
 }: {
   products?: Product[];
   className?: string;
+  title?: string;
+  limit?: number;
 }) {
   const [products, setProducts] = useState<Product[]>(productsProp ?? []);
+  const [loaded, setLoaded] = useState(Boolean(productsProp));
 
   useEffect(() => {
     if (productsProp) {
       setProducts(productsProp);
+      setLoaded(true);
       return;
     }
     let cancelled = false;
-    fetch("/api/shop/new-products?limit=10", { cache: "no-store" })
+    fetch(`/api/shop/new-products?limit=${limit}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
         if (Array.isArray(d.products)) setProducts(d.products);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
-  }, [productsProp]);
+  }, [productsProp, limit]);
 
-  if (!products.length) {
-    return (
-      <section
-        className={cn("shop-new-products w-full bg-white", className)}
-        aria-label="新品上架"
-      >
-        <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
-          <GroupBuyHubHeader
-            title={
-              <span className="inline-flex flex-wrap items-center gap-2">
-                新品上架
-                <span className="rounded-[6px] bg-[#FF8A3D] px-1.5 py-0.5 text-xs font-bold leading-none text-white">
-                  NEW
-                </span>
-              </span>
-            }
-            href="/shop/new-arrivals"
-            linkLabel="查看更多"
-          />
-          <p className="py-6 text-center text-sm text-[#687386]">目前尚無新品</p>
-        </div>
-      </section>
-    );
-  }
+  if (!loaded || !products.length) return null;
 
   return (
     <section
@@ -88,14 +74,14 @@ export function ShopNewProducts({
     >
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
         <GroupBuyHubHeader
-          title={
-            <span className="inline-flex flex-wrap items-center gap-2">
-              新品上架
-              <span className="rounded-[6px] bg-[#FF8A3D] px-1.5 py-0.5 text-xs font-bold leading-none text-white">
-                NEW
+            title={
+              <span className="inline-flex flex-wrap items-center gap-2">
+                {title}
+                <span className="rounded-[6px] bg-[#FF8A3D] px-1.5 py-0.5 text-xs font-bold leading-none text-white">
+                  NEW
+                </span>
               </span>
-            </span>
-          }
+            }
           href="/shop/new-arrivals"
           linkLabel="查看更多"
         />

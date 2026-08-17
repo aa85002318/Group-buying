@@ -1,4 +1,4 @@
-/** Shop hub IP welcome CMS — never hardcode mascot art in the storefront. */
+/** Shop hub home CMS — version C quick-entry storefront + leftover welcome fields. */
 
 export const SHOP_WELCOME_YELLOW = "#FFD454";
 
@@ -17,8 +17,18 @@ export type ShopDecorationSlot = {
   y: number;
 };
 
+export type ShopProductBlockId = "popular" | "new" | "featured";
+
+export type ShopProductBlockSettings = {
+  visible: boolean;
+  title: string;
+  limit: number;
+  sort: "hot" | "new" | "featured";
+};
+
 export type ShopHomeSettings = {
   show_welcome_section: boolean;
+  shop_title: string;
   welcome_eyebrow: string;
   welcome_title: string;
   welcome_subtitle: string;
@@ -34,6 +44,7 @@ export type ShopHomeSettings = {
   search_placeholder: string;
   show_popular_keywords: boolean;
   decorations: [ShopDecorationSlot, ShopDecorationSlot, ShopDecorationSlot];
+  product_blocks: Record<ShopProductBlockId, ShopProductBlockSettings>;
 };
 
 export type ShopPopularKeyword = {
@@ -53,8 +64,15 @@ export const DEFAULT_DECORATION: ShopDecorationSlot = {
   y: 12,
 };
 
+export const DEFAULT_SHOP_PRODUCT_BLOCKS: Record<ShopProductBlockId, ShopProductBlockSettings> = {
+  popular: { visible: true, title: "熱門商品", limit: 10, sort: "hot" },
+  new: { visible: true, title: "新品上架", limit: 10, sort: "new" },
+  featured: { visible: false, title: "精選商品", limit: 8, sort: "featured" },
+};
+
 export const DEFAULT_SHOP_HOME_SETTINGS: ShopHomeSettings = {
-  show_welcome_section: true,
+  show_welcome_section: false,
+  shop_title: "商城",
   welcome_eyebrow: "歡迎來到",
   welcome_title: "CHIMEiDIY",
   welcome_subtitle: "烘焙材料這裡都有！\n一起享受烘焙的快樂時光 ✨",
@@ -74,6 +92,7 @@ export const DEFAULT_SHOP_HOME_SETTINGS: ShopHomeSettings = {
     { ...DEFAULT_DECORATION, x: 88, y: 8, size: 22 },
     { ...DEFAULT_DECORATION, x: 78, y: 62, size: 24 },
   ],
+  product_blocks: { ...DEFAULT_SHOP_PRODUCT_BLOCKS },
 };
 
 export const DEFAULT_SHOP_POPULAR_KEYWORDS: ShopPopularKeyword[] = [
@@ -136,10 +155,32 @@ function parseDecoration(raw: unknown, fallback: ShopDecorationSlot, urlCol?: un
   };
 }
 
+function parseProductBlocks(raw: unknown): Record<ShopProductBlockId, ShopProductBlockSettings> {
+  const src = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const one = (id: ShopProductBlockId): ShopProductBlockSettings => {
+    const d = DEFAULT_SHOP_PRODUCT_BLOCKS[id];
+    const row = src[id] && typeof src[id] === "object" ? (src[id] as Record<string, unknown>) : {};
+    const sort = row.sort === "new" || row.sort === "featured" || row.sort === "hot" ? row.sort : d.sort;
+    return {
+      visible: row.visible !== undefined ? Boolean(row.visible) : d.visible,
+      title: String(row.title ?? "").trim() || d.title,
+      limit: Math.min(12, Math.max(4, Number(row.limit ?? d.limit) || d.limit)),
+      sort,
+    };
+  };
+  return { popular: one("popular"), new: one("new"), featured: one("featured") };
+}
+
 export function parseShopHomeSettings(
   row: Record<string, unknown> | null | undefined
 ): ShopHomeSettings {
-  if (!row) return { ...DEFAULT_SHOP_HOME_SETTINGS, decorations: DEFAULT_SHOP_HOME_SETTINGS.decorations.map((d) => ({ ...d })) as ShopHomeSettings["decorations"] };
+  if (!row) {
+    return {
+      ...DEFAULT_SHOP_HOME_SETTINGS,
+      decorations: DEFAULT_SHOP_HOME_SETTINGS.decorations.map((d) => ({ ...d })) as ShopHomeSettings["decorations"],
+      product_blocks: { ...DEFAULT_SHOP_PRODUCT_BLOCKS },
+    };
+  }
 
   const defaults = DEFAULT_SHOP_HOME_SETTINGS.decorations;
   const rawDeco = Array.isArray(row.decorations) ? row.decorations : [];
@@ -151,7 +192,8 @@ export function parseShopHomeSettings(
   ];
 
   return {
-    show_welcome_section: row.show_welcome_section !== false,
+    show_welcome_section: row.show_welcome_section === true,
+    shop_title: asText(row.shop_title, DEFAULT_SHOP_HOME_SETTINGS.shop_title),
     welcome_eyebrow: asText(row.welcome_eyebrow, DEFAULT_SHOP_HOME_SETTINGS.welcome_eyebrow),
     welcome_title: asText(row.welcome_title, DEFAULT_SHOP_HOME_SETTINGS.welcome_title),
     welcome_subtitle: asText(row.welcome_subtitle, DEFAULT_SHOP_HOME_SETTINGS.welcome_subtitle),
@@ -173,6 +215,7 @@ export function parseShopHomeSettings(
     ),
     show_popular_keywords: row.show_popular_keywords !== false,
     decorations,
+    product_blocks: parseProductBlocks(row.product_blocks),
   };
 }
 
@@ -180,6 +223,7 @@ export function settingsToDbPayload(settings: ShopHomeSettings, updatedBy?: stri
   return {
     singleton_key: "main",
     show_welcome_section: settings.show_welcome_section,
+    shop_title: settings.shop_title,
     welcome_eyebrow: settings.welcome_eyebrow,
     welcome_title: settings.welcome_title,
     welcome_subtitle: settings.welcome_subtitle,
@@ -198,6 +242,7 @@ export function settingsToDbPayload(settings: ShopHomeSettings, updatedBy?: stri
     decoration_2_url: settings.decorations[1]?.url ?? null,
     decoration_3_url: settings.decorations[2]?.url ?? null,
     decorations: settings.decorations,
+    product_blocks: settings.product_blocks,
     updated_at: new Date().toISOString(),
     updated_by: updatedBy ?? null,
   };

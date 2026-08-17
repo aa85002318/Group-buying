@@ -41,7 +41,7 @@ export const SHOP_LAYOUT_SECTION_LABELS: Record<ShopLayoutSectionId, string> = {
   inspiration: "烘焙靈感牆",
   "ai-assistant": "AI 助手卡",
   "info-banners": "訂購／企業 Banner",
-  hero: "商城 Hero Banner（已改為 IP 歡迎區）",
+  hero: "商城 Hero Banner（版本 C 已停用大型 Hero）",
 };
 
 export type ShopLayoutSettings = {

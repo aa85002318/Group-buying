@@ -10,26 +10,22 @@ import {
 } from "@/lib/shop/home-product-rails";
 
 const SELECT =
-  "id, name, slug, price, sale_price, website_price, original_price, msrp, image_url, stock, status, is_active, is_hot, is_new, is_popular, popular_sort_order, hot_sort_order, new_sort_order, package_spec, unit, specifications, publish_website, product_scope, view_count, cart_add_count, favorite_count, allow_oversell, inventory_mode, category_id, brands:brand_id(name)";
-
-function hotScore(p: Parameters<typeof engagementScore>[0]): number {
-  return 10_000 - Number(p.hot_sort_order ?? 100) + engagementScore(p);
-}
+  "id, name, slug, price, sale_price, website_price, original_price, msrp, image_url, stock, status, is_active, is_hot, is_new, is_featured, is_popular, popular_sort_order, hot_sort_order, new_sort_order, package_spec, unit, specifications, publish_website, product_scope, view_count, cart_add_count, favorite_count, allow_oversell, inventory_mode, category_id, brands:brand_id(name)";
 
 /**
- * GET /api/shop/popular-products
- * Manual HOT products (is_hot), ordered by category then hot_sort_order.
+ * GET /api/shop/featured-products
+ * Manual 精選 (is_featured). Hidden on storefront when empty.
  */
 export async function GET(request: Request) {
   const limit = Math.min(
     12,
-    Math.max(1, Number(new URL(request.url).searchParams.get("limit") ?? 10) || 10)
+    Math.max(1, Number(new URL(request.url).searchParams.get("limit") ?? 8) || 8)
   );
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json({
       products: mockProducts
-        .filter((p) => p.is_hot)
+        .filter((p) => p.is_featured)
         .filter(isSellableShopProduct)
         .slice(0, limit),
       source: "fallback",
@@ -57,7 +53,7 @@ export async function GET(request: Request) {
       .select(SELECT)
       .eq("is_active", true)
       .eq("publish_website", true)
-      .eq("is_hot", true)
+      .eq("is_featured", true)
       .limit(Math.max(limit * 8, 40));
 
     if (catIds.length === 1) {
@@ -74,15 +70,14 @@ export async function GET(request: Request) {
     const products = sortProductsByShopHomeCategories(
       ((data ?? []) as Record<string, unknown>[])
         .map(normalizeShopProductRow)
-        .filter(isSellableShopProduct)
-        .filter((p) => p.is_hot === true),
+        .filter(isSellableShopProduct),
       categories,
-      hotScore
+      engagementScore
     ).slice(0, limit);
 
     return NextResponse.json({
       products,
-      source: "is_hot",
+      source: "is_featured",
       categories: categories.length,
     });
   } catch (e) {

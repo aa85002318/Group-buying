@@ -35,6 +35,15 @@ export function normalizeShopProductRow(row: Record<string, unknown>): Product {
   return { ...(row as unknown as Product), brands };
 }
 
+/** Manual NEW flag, auto-cleared after new_until. */
+export function isShopNewActive(p: Pick<Product, "is_new" | "new_until">, now = Date.now()) {
+  if (!p.is_new) return false;
+  if (!p.new_until) return true;
+  const t = new Date(String(p.new_until)).getTime();
+  if (Number.isNaN(t)) return true;
+  return t >= now;
+}
+
 /**
  * Sort products by category shop_home_sort_order, then by scoreFn desc.
  * Products without a matching home category go last.

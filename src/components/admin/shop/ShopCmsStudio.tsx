@@ -43,17 +43,25 @@ type ShopSectionDef = {
 
 const SHOP_SECTIONS: ShopSectionDef[] = [
   {
+    id: "home",
+    label: "商城首頁設定",
+    description: "快捷入口、首頁分類、活動 Banner、商品區塊（版本 C）。",
+    href: "/admin/shop/home",
+    group: "main",
+    tip: "營運請集中在此頁維護，不要把入口散落在多個 CMS 頁。",
+  },
+  {
     id: "welcome",
-    label: "IP 歡迎區",
-    description: "Header 下方黃色 Welcome：IP 主素材、文案、搜尋框、熱門搜尋。",
+    label: "IP 歡迎區（舊版）",
+    description: "舊大型 Welcome／IP 素材。版本 C 已改為快捷入口，建議關閉。",
     href: "/admin/shop/welcome",
     group: "extra",
-    tip: "IP 請用透明 PNG／WebP，不要把黃底合成進角色圖。",
+    tip: "IP 請用透明 PNG／WebP。前台版本 C 不再顯示此區。",
   },
   {
     id: "categories",
     label: "商品分類",
-    description: "搜尋欄下方圓形主分類（預設 6 格含全部分類）。",
+    description: "搜尋欄下方圓形主分類（5 個 + 全部分類）。亦可於「商城首頁設定」Tab 管理。",
     href: "/admin/shop/categories",
     group: "main",
     layoutId: "categories",
@@ -70,7 +78,7 @@ const SHOP_SECTIONS: ShopSectionDef[] = [
   {
     id: "promo",
     label: "活動 Banner",
-    description: "5:2 活動輪播，可新增多張。",
+    description: "5:2 活動輪播。亦可於「商城首頁設定」Tab 管理。",
     href: "/admin/shop/promo-banners",
     group: "main",
     layoutId: "promo",
@@ -127,7 +135,7 @@ const SHOP_SECTIONS: ShopSectionDef[] = [
   {
     id: "hero",
     label: "商城 Hero Banner",
-    description: "舊大型 Hero（已由 IP 歡迎區取代，建議關閉）。",
+    description: "舊大型 Hero（版本 C 已改為快捷入口，請保持關閉）。",
     href: "/admin/shop/hero-banners",
     group: "extra",
     layoutId: "hero",

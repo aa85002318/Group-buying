@@ -649,8 +649,15 @@
 
   .shop-promo-carousel__frame {
     aspect-ratio: 5 / 2;
-    min-height: 140px;
+    min-height: 120px;
+    max-height: 180px;
     border-radius: 18px !important;
+  }
+
+  @media (min-width: 768px) {
+    .shop-promo-carousel__frame {
+      max-height: 240px;
+    }
   }
 
   .scrollbar-hide {

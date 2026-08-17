@@ -244,13 +244,22 @@ export function AdminProductEditor({
                 </AdminField>
               ) : null}
               {form.is_new ? (
-                <AdminField label="新品排序（new_sort_order）">
-                  <AdminInput
-                    type="number"
-                    value={form.new_sort_order}
-                    onChange={(e) => patch({ new_sort_order: e.target.value })}
-                  />
-                </AdminField>
+                <>
+                  <AdminField label="新品排序（new_sort_order）">
+                    <AdminInput
+                      type="number"
+                      value={form.new_sort_order}
+                      onChange={(e) => patch({ new_sort_order: e.target.value })}
+                    />
+                  </AdminField>
+                  <AdminField label="新品到期（new_until）">
+                    <AdminInput
+                      type="datetime-local"
+                      value={form.new_until}
+                      onChange={(e) => patch({ new_until: e.target.value })}
+                    />
+                  </AdminField>
+                </>
               ) : null}
             </div>
           )}

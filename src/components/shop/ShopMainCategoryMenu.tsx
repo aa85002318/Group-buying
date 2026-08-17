@@ -51,15 +51,6 @@ function CategoryIcon({
   );
 }
 
-function CategorySkeleton() {
-  return (
-    <div className="flex min-w-0 flex-col items-center gap-2">
-      <div className="h-14 w-14 animate-pulse rounded-full bg-[#F1F2F7] md:h-16 md:w-16" />
-      <div className="h-3 w-10 animate-pulse rounded bg-[#F1F2F7]" />
-    </div>
-  );
-}
-
 /**
  * Shop home circular main-category menu — 6 slots (5 CMS + 全部分類).
  */
@@ -71,12 +62,10 @@ export function ShopMainCategoryMenu({
   const [categories, setCategories] = useState<ShopCategoryItem[]>(() =>
     buildShopHomeCategories(categoriesProp ?? DEFAULT_SHOP_CATEGORIES)
   );
-  const [loading, setLoading] = useState(!categoriesProp);
 
   useEffect(() => {
     if (categoriesProp) {
       setCategories(buildShopHomeCategories(categoriesProp));
-      setLoading(false);
       return;
     }
     let cancelled = false;
@@ -90,8 +79,6 @@ export function ShopMainCategoryMenu({
         setCategories(buildShopHomeCategories(list as ShopCategoryItem[]));
       } catch {
         // keep defaults
-      } finally {
-        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
@@ -103,41 +90,38 @@ export function ShopMainCategoryMenu({
     <section
       className="shop-category-menu w-full bg-[#FFFEFA]"
       aria-label="商品主分類"
-      aria-busy={loading}
     >
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <div
           className={cn(
-            "shop-category-menu__track grid grid-cols-6 gap-2",
-            "md:gap-4"
+            "shop-category-menu__track grid grid-cols-6 gap-1.5 overflow-x-auto",
+            "min-[390px]:gap-2 md:gap-4"
           )}
         >
-          {loading
-            ? Array.from({ length: 6 }).map((_, i) => <CategorySkeleton key={i} />)
-            : categories.map((category, index) => (
-                <Link
-                  key={category.id}
-                  href={category.href}
-                  className={cn(
-                    "group flex min-w-0 flex-col items-center gap-1.5 text-center"
-                  )}
-                  aria-label={category.name}
-                >
-                  <div
-                    className={cn(
-                      "flex h-14 w-14 items-center justify-center rounded-full",
-                      "transition-transform group-hover:-translate-y-1 group-active:scale-95",
-                      "md:h-16 md:w-16"
-                    )}
-                    style={{ backgroundColor: category.bgColor }}
-                  >
-                    <CategoryIcon category={category} index={index} />
-                  </div>
-                  <span className="text-xs font-medium text-[#153E73] md:text-sm">
-                    {category.name}
-                  </span>
-                </Link>
-              ))}
+          {categories.map((category, index) => (
+            <Link
+              key={category.id}
+              href={category.href}
+              className={cn(
+                "group flex min-w-0 flex-col items-center gap-1.5 text-center"
+              )}
+              aria-label={category.name}
+            >
+              <div
+                className={cn(
+                  "flex h-11 w-11 items-center justify-center rounded-full",
+                  "transition-transform group-hover:-translate-y-1 group-active:scale-95",
+                  "min-[390px]:h-14 min-[390px]:w-14 md:h-16 md:w-16"
+                )}
+                style={{ backgroundColor: category.bgColor }}
+              >
+                <CategoryIcon category={category} index={index} />
+              </div>
+              <span className="text-xs font-medium text-[#153E73] md:text-sm">
+                {category.name}
+              </span>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

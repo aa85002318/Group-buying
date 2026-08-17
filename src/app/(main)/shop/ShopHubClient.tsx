@@ -3,12 +3,13 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
-import { ShopWelcomeSection } from "@/components/shop/ShopWelcomeSection";
+import { ShopHomeTopBand } from "@/components/shop/ShopHomeTopBand";
 import { ShopMainCategoryMenu } from "@/components/shop/ShopMainCategoryMenu";
 import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
 import { PopularProducts } from "@/components/shop/PopularProducts";
 import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
 import { ShopNewProducts } from "@/components/shop/ShopNewProducts";
+import { ShopFeaturedProducts } from "@/components/shop/ShopFeaturedProducts";
 import { ShopInspirationWall } from "@/components/shop/ShopInspirationWall";
 import { ShopAiRecipeAssistant } from "@/components/shop/ShopAiRecipeAssistant";
 import { ShopOrderingInfo } from "@/components/shop/ShopOrderingInfo";
@@ -17,7 +18,13 @@ import {
   DEFAULT_SHOP_PAGE_SETTINGS,
   type ShopPageSettings,
 } from "@/lib/shop/page-settings";
-import { SHOP_WELCOME_YELLOW } from "@/lib/shop/home-settings";
+import {
+  DEFAULT_SHOP_HOME_SETTINGS,
+  DEFAULT_SHOP_PRODUCT_BLOCKS,
+  SHOP_WELCOME_YELLOW,
+  type ShopHomeSettings,
+  type ShopProductBlockSettings,
+} from "@/lib/shop/home-settings";
 import {
   DEFAULT_SHOP_LAYOUT,
   mergeShopLayoutSettings,
@@ -42,7 +49,10 @@ function resolvePlaneYellow(settings: ShopPageSettings, welcomeYellow?: string) 
   return header;
 }
 
-function renderSection(id: ShopLayoutSectionId) {
+function renderSection(
+  id: ShopLayoutSectionId,
+  blocks: Record<"popular" | "new" | "featured", ShopProductBlockSettings>
+) {
   switch (id) {
     case "categories":
       return <ShopMainCategoryMenu key={id} />;
@@ -51,9 +61,23 @@ function renderSection(id: ShopLayoutSectionId) {
     case "promo":
       return <ShopPromoCarousel key={id} />;
     case "popular":
-      return <PopularProducts key={id} />;
+      if (!blocks.popular.visible) return null;
+      return (
+        <PopularProducts
+          key={id}
+          title={blocks.popular.title}
+          limit={blocks.popular.limit}
+        />
+      );
     case "new":
-      return <ShopNewProducts key={id} />;
+      if (!blocks.new.visible) return null;
+      return (
+        <ShopNewProducts
+          key={id}
+          title={blocks.new.title}
+          limit={blocks.new.limit}
+        />
+      );
     case "inspiration":
       return (
         <Suspense key={id} fallback={null}>
@@ -75,12 +99,14 @@ function renderSection(id: ShopLayoutSectionId) {
 }
 
 /**
- * Shop hub layout — from search bar to footer, every major block is 20px apart.
+ * Shop hub Version C — search, quick links, categories first.
  * Section order / visibility come from CMS layout (draft preview via ?preview=draft).
  */
 export function ShopHubClient() {
   const [layout, setLayout] = useState<ShopLayoutSettings>(DEFAULT_SHOP_LAYOUT);
-  const [welcomeYellow, setWelcomeYellow] = useState(SHOP_WELCOME_YELLOW);
+  const [homeSettings, setHomeSettings] = useState<ShopHomeSettings>(
+    DEFAULT_SHOP_HOME_SETTINGS
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -103,8 +129,7 @@ export function ShopHubClient() {
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
-        const hex = String(d?.settings?.welcome_background_color ?? "").toUpperCase();
-        if (hex) setWelcomeYellow(hex);
+        if (d?.settings) setHomeSettings(d.settings as ShopHomeSettings);
       })
       .catch(() => {});
 
@@ -114,7 +139,10 @@ export function ShopHubClient() {
   }, []);
 
   const pageSettings = layout.appearance ?? DEFAULT_SHOP_PAGE_SETTINGS;
-  const planeYellow = resolvePlaneYellow(pageSettings, welcomeYellow);
+  const planeYellow = resolvePlaneYellow(
+    pageSettings,
+    homeSettings.welcome_background_color
+  );
   const unifiedSettings: ShopPageSettings = {
     ...pageSettings,
     header_bg_color: planeYellow,
@@ -122,11 +150,20 @@ export function ShopHubClient() {
     header_border_color: null,
   };
 
+  const productBlocks = homeSettings.product_blocks ?? DEFAULT_SHOP_PRODUCT_BLOCKS;
+
   const mainSections = useMemo(() => {
     return layout.sectionOrder.filter(
       (id) => id !== "hero" && layout.sections[id] !== false
     );
   }, [layout]);
+
+  const featuredAfterId = useMemo(() => {
+    if (!productBlocks.featured.visible) return null;
+    if (mainSections.includes("new")) return "new";
+    if (mainSections.includes("popular")) return "popular";
+    return null;
+  }, [mainSections, productBlocks.featured.visible]);
 
   return (
     <div className="shop-hub space-y-0 bg-[#FFFEFA]">
@@ -134,12 +171,26 @@ export function ShopHubClient() {
         className="shop-hub-hero-plane w-full max-w-none"
         style={{ backgroundColor: planeYellow }}
       >
-        <ShopHeader settings={unifiedSettings} title="商城" showSearch={false} />
-        <ShopWelcomeSection backgroundColor={planeYellow} />
+        <ShopHeader
+          settings={unifiedSettings}
+          title={homeSettings.shop_title || "商城"}
+          showSearch={false}
+        />
+        <ShopHomeTopBand backgroundColor={planeYellow} settings={homeSettings} />
       </div>
 
       <main className="shop-hub-main flex flex-col gap-[20px] bg-[#FFFEFA] pb-[20px] pt-[20px]">
-        {mainSections.map((id) => renderSection(id))}
+        {mainSections.map((id) => (
+          <div key={id} className="contents">
+            {renderSection(id, productBlocks)}
+            {id === featuredAfterId ? (
+              <ShopFeaturedProducts
+                title={productBlocks.featured.title}
+                limit={productBlocks.featured.limit}
+              />
+            ) : null}
+          </div>
+        ))}
 
         <div className="shop-hub-body mx-auto w-full max-w-7xl px-4 md:px-6">
           <Link

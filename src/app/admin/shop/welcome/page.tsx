@@ -76,14 +76,19 @@ export default function AdminShopWelcomePage() {
     <div className="space-y-4">
       <AdminPageHeader
         title="IP 歡迎區"
-        description="商城首頁黃色 Welcome 區：IP 主素材、文案、搜尋框與熱門搜尋。素材請用透明 PNG／WebP，不要把黃底合成進角色圖。"
+        description="舊版 IP Welcome。版本 C 商城首頁已改為快捷入口，請改到「商城首頁設定」維護。"
         actions={
-          <Link
-            href="/admin/shop?section=welcome"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            返回商城 CMS
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/shop/home" className={buttonVariants({ variant: "default" })}>
+              商城首頁設定
+            </Link>
+            <Link
+              href="/admin/shop?section=welcome"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              返回商城 CMS
+            </Link>
+          </div>
         }
       />
 
