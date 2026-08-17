@@ -56,13 +56,21 @@ export function AdminProductNewClient() {
   useEffect(() => {
     Promise.all([
       fetch("/api/admin/categories?catalog=baking-materials").then((r) => r.json()),
+      fetch("/api/admin/categories").then((r) => r.json()),
       fetch("/api/stores").then((r) => r.json()),
       fetch("/api/admin/brands").then((r) => r.json()),
       fetch("/api/admin/suppliers").then((r) => r.json()),
       fetch("/api/admin/group-buy-categories").then((r) => r.json()),
     ])
-      .then(([catRes, storeRes, brandRes, supplierRes, gbCatRes]) => {
-        setCategories(catRes.categories ?? []);
+      .then(([bakingRes, allCatRes, storeRes, brandRes, supplierRes, gbCatRes]) => {
+        const merged = new Map<string, ProductCategory>();
+        for (const c of [
+          ...((bakingRes.categories ?? []) as ProductCategory[]),
+          ...((allCatRes.categories ?? []) as ProductCategory[]),
+        ]) {
+          merged.set(c.id, c);
+        }
+        setCategories(Array.from(merged.values()));
         setStores(storeRes.stores ?? []);
         setBrands(brandRes.brands ?? []);
         setSuppliers(supplierRes.suppliers ?? []);

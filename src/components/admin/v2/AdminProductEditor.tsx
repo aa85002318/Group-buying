@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   Boxes,
@@ -26,7 +26,8 @@ import {
   AdminSelect,
   AdminTextarea,
 } from "@/components/admin/v2/AdminCard";
-import { CategorySteppedSidebar } from "@/components/admin/CategorySteppedSidebar";
+import { CategoryGroupedPicker } from "@/components/admin/CategoryGroupedPicker";
+import { sortNamedOptions } from "@/lib/admin/category-tree";
 import {
   calcGrossMarginAmount,
   calcGrossMarginRate,
@@ -124,6 +125,8 @@ export function AdminProductEditor({
 }: AdminProductEditorProps) {
   const lockGroupBuy = mode === "group-buy";
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const sortedBrands = useMemo(() => sortNamedOptions(brands), [brands]);
+  const sortedSuppliers = useMemo(() => sortNamedOptions(suppliers), [suppliers]);
   const patch = useCallback(
     (partial: Partial<AdminProductFormV2>) => onChange({ ...form, ...partial }),
     [form, onChange]
@@ -158,11 +161,12 @@ export function AdminProductEditor({
       )}
 
       <AdminCard title="基本資料" description="商品名稱、分類與上架狀態" icon={<Package className="h-5 w-5" />}>
-        <div className="grid gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)]">
-          <CategorySteppedSidebar
+        <div className="grid gap-4 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
+          <CategoryGroupedPicker
             categories={categories}
             selectedIds={form.category_ids}
             onChange={(category_ids) => patch({ category_ids })}
+            title="商品分類設定"
             className="lg:sticky lg:top-4 lg:max-h-[min(70vh,640px)]"
           />
 
@@ -189,7 +193,7 @@ export function AdminProductEditor({
           <AdminField label="品牌">
             <AdminSelect value={form.brand_id} onChange={(e) => patch({ brand_id: e.target.value })}>
               <option value="">選擇品牌</option>
-              {brands.map((b) => (
+              {sortedBrands.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
             </AdminSelect>
@@ -197,7 +201,7 @@ export function AdminProductEditor({
           <AdminField label="供應商">
             <AdminSelect value={form.supplier_id} onChange={(e) => patch({ supplier_id: e.target.value })}>
               <option value="">選擇供應商</option>
-              {suppliers.map((s) => (
+              {sortedSuppliers.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </AdminSelect>
