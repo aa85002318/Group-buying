@@ -593,7 +593,7 @@ export function ShopHomeCms() {
             {tab === "banners" ? (
               <section className="space-y-3 rounded-2xl border border-[#E5EAF1] bg-white p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-[#687386]">小型 5:2 活動 Banner。無資料則前台跳過。</p>
+                  <p className="text-sm text-[#687386]">16:9 活動 Banner 輪播。無資料則前台跳過。</p>
                   <Button type="button" size="sm" onClick={openNewBanner}>
                     新增
                   </Button>
@@ -622,8 +622,8 @@ export function ShopHomeCms() {
                       url={bannerForm.image_url || null}
                       folder="shop/banners"
                       label="Desktop 圖"
-                      hint="建議 1500×600 px、PNG／JPG／WebP、5MB 以下"
-                      aspect="banner52"
+                      hint="建議 1600×900 px、PNG／JPG／WebP、5MB 以下"
+                      aspect="banner169"
                       onChange={(next) =>
                         setBannerForm((f) => ({ ...f, image_url: next.url ?? "" }))
                       }
@@ -632,7 +632,7 @@ export function ShopHomeCms() {
                       url={bannerForm.mobile_image_url || null}
                       folder="shop/banners"
                       label="Mobile 圖（選填）"
-                      hint="建議 1080×900 px"
+                      hint="建議 1080×608 px（16:9）"
                       onChange={(next) =>
                         setBannerForm((f) => ({ ...f, mobile_image_url: next.url ?? "" }))
                       }
@@ -705,9 +705,15 @@ export function ShopHomeCms() {
 
             {tab === "products" ? (
               <section className="space-y-4 rounded-2xl border border-[#E5EAF1] bg-white p-4">
-                {(["popular", "new", "featured"] as ShopProductBlockId[]).map((id) => {
+                {(["new", "popular", "sale", "bundle", "featured"] as ShopProductBlockId[]).map((id) => {
                   const block = settings.product_blocks?.[id] ?? DEFAULT_SHOP_PRODUCT_BLOCKS[id];
-                  const labels = { popular: "熱門商品", new: "新品上架", featured: "精選商品" };
+                  const labels = {
+                    new: "本週上新",
+                    popular: "熱門商品",
+                    sale: "優惠商品",
+                    bundle: "組合優惠",
+                    featured: "精選商品",
+                  };
                   return (
                     <div key={id} className="space-y-2 rounded-xl border border-[#EEF1F6] p-3">
                       <label className="flex items-center gap-2 font-semibold text-[#153E73]">
@@ -760,7 +766,7 @@ export function ShopHomeCms() {
                   );
                 })}
                 <p className="text-sm text-[#687386]">
-                  熱門＝商品主檔 HOT；新品＝NEW，可設 new_until 到期自動取消；精選＝首頁推薦。無資料則前台隱藏該區。
+                  前台順序：本週上新 → 熱門商品 → 優惠商品 → 組合優惠。熱門＝HOT；上新＝NEW；優惠＝特價／本週精選；組合＝團購商品。無資料則隱藏該區。
                 </p>
                 <Button type="button" onClick={() => void saveBasic()} disabled={saving}>
                   {saving ? "儲存中…" : "儲存商品區塊"}
@@ -831,7 +837,7 @@ export function ShopHomeCms() {
                   <img
                     src={liveBanner.mobile_image_url || liveBanner.image_url || ""}
                     alt=""
-                    className="h-[120px] w-full rounded-[16px] object-cover"
+                    className="aspect-video w-full rounded-[16px] object-cover"
                   />
                 </div>
               ) : (

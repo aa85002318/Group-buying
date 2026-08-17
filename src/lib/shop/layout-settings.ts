@@ -9,8 +9,10 @@ import {
 export const SHOP_LAYOUT_SECTION_IDS = [
   "categories",
   "promo",
-  "popular",
   "new",
+  "popular",
+  "sale",
+  "bundle",
   "features",
   "info-banners",
   "inspiration",
@@ -24,8 +26,10 @@ export type ShopLayoutSectionId = (typeof SHOP_LAYOUT_SECTION_IDS)[number];
 export const SHOP_LAYOUT_MAIN_IDS: ShopLayoutSectionId[] = [
   "categories",
   "promo",
-  "popular",
   "new",
+  "popular",
+  "sale",
+  "bundle",
   "features",
   "info-banners",
   "inspiration",
@@ -36,8 +40,10 @@ export const SHOP_LAYOUT_SECTION_LABELS: Record<ShopLayoutSectionId, string> = {
   categories: "商品分類",
   features: "三格特色",
   promo: "活動 Banner",
+  new: "本週上新",
   popular: "熱門商品",
-  new: "新品上架",
+  sale: "優惠商品",
+  bundle: "組合優惠",
   inspiration: "烘焙靈感牆",
   "ai-assistant": "AI 助手卡",
   "info-banners": "訂購／企業 Banner",
@@ -71,6 +77,23 @@ function isSectionId(id: unknown): id is ShopLayoutSectionId {
   );
 }
 
+const SHOP_HOME_PRODUCT_RAILS: ShopLayoutSectionId[] = [
+  "new",
+  "popular",
+  "sale",
+  "bundle",
+];
+
+function pinProductRailsAfterPromo(order: ShopLayoutSectionId[]): ShopLayoutSectionId[] {
+  const rest = order.filter((id) => !SHOP_HOME_PRODUCT_RAILS.includes(id));
+  const insertAt = rest.includes("promo")
+    ? rest.indexOf("promo") + 1
+    : rest.includes("categories")
+      ? rest.indexOf("categories") + 1
+      : 0;
+  return [...rest.slice(0, insertAt), ...SHOP_HOME_PRODUCT_RAILS, ...rest.slice(insertAt)];
+}
+
 export function mergeShopLayoutSettings(input: unknown): ShopLayoutSettings {
   const raw =
     input && typeof input === "object" ? (input as Record<string, unknown>) : {};
@@ -93,7 +116,7 @@ export function mergeShopLayoutSettings(input: unknown): ShopLayoutSettings {
   }
 
   return {
-    sectionOrder: order,
+    sectionOrder: pinProductRailsAfterPromo(order),
     sections,
     appearance: parseShopPageSettings(
       (raw.appearance as Record<string, unknown> | undefined) ??

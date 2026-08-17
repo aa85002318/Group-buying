@@ -56,7 +56,7 @@ function BannerMedia({
 }
 
 /**
- * 5:2 promo banner carousel under shop category menu.
+ * 16:9 promo banner carousel under shop category menu.
  */
 export function ShopPromoCarousel() {
   const [banners, setBanners] = useState<ShopPromoBanner[]>([]);

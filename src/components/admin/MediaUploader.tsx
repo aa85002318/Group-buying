@@ -18,7 +18,7 @@ type MediaUploaderProps = {
   hint?: string;
   folder: string;
   bucket?: string;
-  aspect?: "square" | "contain" | "banner52";
+  aspect?: "square" | "contain" | "banner52" | "banner169";
   previewContain?: boolean;
 };
 
@@ -54,7 +54,13 @@ export function MediaUploader({
   });
 
   const aspectClass =
-    aspect === "banner52" ? "aspect-[5/2]" : aspect === "contain" ? "aspect-square" : "aspect-square";
+    aspect === "banner169"
+      ? "aspect-video"
+      : aspect === "banner52"
+        ? "aspect-[5/2]"
+        : aspect === "contain"
+          ? "aspect-square"
+          : "aspect-square";
 
   const readImageSize = (src: string) =>
     new Promise<{ w: number; h: number }>((resolve) => {

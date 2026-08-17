@@ -17,13 +17,13 @@ export type ShopDecorationSlot = {
   y: number;
 };
 
-export type ShopProductBlockId = "popular" | "new" | "featured";
+export type ShopProductBlockId = "new" | "popular" | "sale" | "bundle" | "featured";
 
 export type ShopProductBlockSettings = {
   visible: boolean;
   title: string;
   limit: number;
-  sort: "hot" | "new" | "featured";
+  sort: "hot" | "new" | "featured" | "sale" | "bundle";
 };
 
 export type ShopHomeSettings = {
@@ -65,8 +65,10 @@ export const DEFAULT_DECORATION: ShopDecorationSlot = {
 };
 
 export const DEFAULT_SHOP_PRODUCT_BLOCKS: Record<ShopProductBlockId, ShopProductBlockSettings> = {
+  new: { visible: true, title: "本週上新", limit: 10, sort: "new" },
   popular: { visible: true, title: "熱門商品", limit: 10, sort: "hot" },
-  new: { visible: true, title: "新品上架", limit: 10, sort: "new" },
+  sale: { visible: true, title: "優惠商品", limit: 10, sort: "sale" },
+  bundle: { visible: true, title: "組合優惠", limit: 10, sort: "bundle" },
   featured: { visible: false, title: "精選商品", limit: 8, sort: "featured" },
 };
 
@@ -160,15 +162,30 @@ function parseProductBlocks(raw: unknown): Record<ShopProductBlockId, ShopProduc
   const one = (id: ShopProductBlockId): ShopProductBlockSettings => {
     const d = DEFAULT_SHOP_PRODUCT_BLOCKS[id];
     const row = src[id] && typeof src[id] === "object" ? (src[id] as Record<string, unknown>) : {};
-    const sort = row.sort === "new" || row.sort === "featured" || row.sort === "hot" ? row.sort : d.sort;
+    const sort =
+      row.sort === "new" ||
+      row.sort === "featured" ||
+      row.sort === "hot" ||
+      row.sort === "sale" ||
+      row.sort === "bundle"
+        ? row.sort
+        : d.sort;
+    let title = String(row.title ?? "").trim() || d.title;
+    if (id === "new" && title === "新品上架") title = "本週上新";
     return {
       visible: row.visible !== undefined ? Boolean(row.visible) : d.visible,
-      title: String(row.title ?? "").trim() || d.title,
+      title,
       limit: Math.min(12, Math.max(4, Number(row.limit ?? d.limit) || d.limit)),
       sort,
     };
   };
-  return { popular: one("popular"), new: one("new"), featured: one("featured") };
+  return {
+    new: one("new"),
+    popular: one("popular"),
+    sale: one("sale"),
+    bundle: one("bundle"),
+    featured: one("featured"),
+  };
 }
 
 export function parseShopHomeSettings(

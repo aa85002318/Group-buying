@@ -32,7 +32,7 @@ function resolveBadge(p: Product): ShopRailBadge {
 export function ShopNewProducts({
   products: productsProp,
   className,
-  title = "新品上架",
+  title = "本週上新",
   limit = 10,
 }: {
   products?: Product[];
@@ -70,7 +70,7 @@ export function ShopNewProducts({
   return (
     <section
       className={cn("shop-new-products w-full bg-white", className)}
-      aria-label="新品上架"
+      aria-label="本週上新"
     >
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
         <GroupBuyHubHeader

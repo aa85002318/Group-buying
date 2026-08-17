@@ -1,4 +1,4 @@
-/** Shop home 5:2 promo banner (cms_banners.placement = shop_promo). */
+/** Shop home 16:9 promo banner (cms_banners.placement = shop_promo). */
 
 export type ShopPromoLinkType =
   | "product"

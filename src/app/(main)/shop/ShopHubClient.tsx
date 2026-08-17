@@ -9,6 +9,8 @@ import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
 import { PopularProducts } from "@/components/shop/PopularProducts";
 import { ShopFeatureBlocks } from "@/components/shop/ShopFeatureBlocks";
 import { ShopNewProducts } from "@/components/shop/ShopNewProducts";
+import { ShopSaleProducts } from "@/components/shop/ShopSaleProducts";
+import { ShopBundleProducts } from "@/components/shop/ShopBundleProducts";
 import { ShopFeaturedProducts } from "@/components/shop/ShopFeaturedProducts";
 import { ShopInspirationWall } from "@/components/shop/ShopInspirationWall";
 import { ShopAiRecipeAssistant } from "@/components/shop/ShopAiRecipeAssistant";
@@ -41,6 +43,11 @@ const LEGACY_SHOP_YELLOWS = new Set([
   "#FDE045",
 ]);
 
+type ProductBlocks = Record<
+  "new" | "popular" | "sale" | "bundle" | "featured",
+  ShopProductBlockSettings
+>;
+
 function resolvePlaneYellow(settings: ShopPageSettings, welcomeYellow?: string) {
   const welcome = (welcomeYellow || "").toUpperCase();
   if (welcome && !LEGACY_SHOP_YELLOWS.has(welcome)) return welcome;
@@ -49,10 +56,7 @@ function resolvePlaneYellow(settings: ShopPageSettings, welcomeYellow?: string) 
   return header;
 }
 
-function renderSection(
-  id: ShopLayoutSectionId,
-  blocks: Record<"popular" | "new" | "featured", ShopProductBlockSettings>
-) {
+function renderSection(id: ShopLayoutSectionId, blocks: ProductBlocks) {
   switch (id) {
     case "categories":
       return <ShopMainCategoryMenu key={id} />;
@@ -60,6 +64,11 @@ function renderSection(
       return <ShopFeatureBlocks key={id} />;
     case "promo":
       return <ShopPromoCarousel key={id} />;
+    case "new":
+      if (!blocks.new.visible) return null;
+      return (
+        <ShopNewProducts key={id} title={blocks.new.title} limit={blocks.new.limit} />
+      );
     case "popular":
       if (!blocks.popular.visible) return null;
       return (
@@ -69,13 +78,18 @@ function renderSection(
           limit={blocks.popular.limit}
         />
       );
-    case "new":
-      if (!blocks.new.visible) return null;
+    case "sale":
+      if (!blocks.sale.visible) return null;
       return (
-        <ShopNewProducts
+        <ShopSaleProducts key={id} title={blocks.sale.title} limit={blocks.sale.limit} />
+      );
+    case "bundle":
+      if (!blocks.bundle.visible) return null;
+      return (
+        <ShopBundleProducts
           key={id}
-          title={blocks.new.title}
-          limit={blocks.new.limit}
+          title={blocks.bundle.title}
+          limit={blocks.bundle.limit}
         />
       );
     case "inspiration":
@@ -99,8 +113,8 @@ function renderSection(
 }
 
 /**
- * Shop hub Version C — search, quick links, categories first.
- * Section order / visibility come from CMS layout (draft preview via ?preview=draft).
+ * Shop hub Version C — search, quick links, categories, then 16:9 promo
+ * and product rails: 本週上新 → 熱門 → 優惠 → 組合優惠.
  */
 export function ShopHubClient() {
   const [layout, setLayout] = useState<ShopLayoutSettings>(DEFAULT_SHOP_LAYOUT);
@@ -150,7 +164,10 @@ export function ShopHubClient() {
     header_border_color: null,
   };
 
-  const productBlocks = homeSettings.product_blocks ?? DEFAULT_SHOP_PRODUCT_BLOCKS;
+  const productBlocks: ProductBlocks = {
+    ...DEFAULT_SHOP_PRODUCT_BLOCKS,
+    ...(homeSettings.product_blocks ?? {}),
+  };
 
   const mainSections = useMemo(() => {
     return layout.sectionOrder.filter(
@@ -158,12 +175,10 @@ export function ShopHubClient() {
     );
   }, [layout]);
 
-  const featuredAfterId = useMemo(() => {
-    if (!productBlocks.featured.visible) return null;
-    if (mainSections.includes("new")) return "new";
-    if (mainSections.includes("popular")) return "popular";
-    return null;
-  }, [mainSections, productBlocks.featured.visible]);
+  const lastProductRail = useMemo(() => {
+    const rails: ShopLayoutSectionId[] = ["bundle", "sale", "popular", "new"];
+    return rails.find((id) => mainSections.includes(id)) ?? null;
+  }, [mainSections]);
 
   return (
     <div className="shop-hub space-y-0 bg-[#FFFEFA]">
@@ -183,7 +198,7 @@ export function ShopHubClient() {
         {mainSections.map((id) => (
           <div key={id} className="contents">
             {renderSection(id, productBlocks)}
-            {id === featuredAfterId ? (
+            {id === lastProductRail && productBlocks.featured.visible ? (
               <ShopFeaturedProducts
                 title={productBlocks.featured.title}
                 limit={productBlocks.featured.limit}

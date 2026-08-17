@@ -44,6 +44,41 @@ export function isShopNewActive(p: Pick<Product, "is_new" | "new_until">, now = 
   return t >= now;
 }
 
+export function shopDisplayPrice(p: Product): { price: number; original?: number | null } {
+  const price = Number(p.sale_price ?? p.website_price ?? p.price ?? 0);
+  const original = Number(p.original_price ?? p.msrp ?? 0);
+  return {
+    price,
+    original: original > price ? original : null,
+  };
+}
+
+/** On-sale: discounted vs original/MSRP, or weekly pick. */
+export function isShopOnSale(p: Product): boolean {
+  if (p.is_weekly_pick) return true;
+  const { price, original } = shopDisplayPrice(p);
+  return Boolean(original && original > price && price > 0);
+}
+
+export function saleScore(p: Product): number {
+  const { price, original } = shopDisplayPrice(p);
+  const pct = original && original > 0 ? (original - price) / original : 0;
+  return pct * 1000 + (p.is_weekly_pick ? 80 : 0);
+}
+
+export function isLiveGroupBuyProduct(p: Product, now = Date.now()): boolean {
+  if (!p.is_group_buy) return false;
+  if (p.group_buy_start_at) {
+    const start = new Date(String(p.group_buy_start_at)).getTime();
+    if (!Number.isNaN(start) && start > now) return false;
+  }
+  if (p.group_buy_end_at) {
+    const end = new Date(String(p.group_buy_end_at)).getTime();
+    if (!Number.isNaN(end) && end < now) return false;
+  }
+  return true;
+}
+
 /**
  * Sort products by category shop_home_sort_order, then by scoreFn desc.
  * Products without a matching home category go last.

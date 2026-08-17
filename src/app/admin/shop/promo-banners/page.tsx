@@ -124,7 +124,7 @@ export default function AdminShopPromoBannersPage() {
       return;
     }
     if (!form.image_url.trim()) {
-      alert("請上傳桌面圖片（建議 1500×600 px，比例 5:2）");
+      alert("請上傳桌面圖片（建議 1600×900 px，比例 16:9）");
       return;
     }
     setSaving(true);
@@ -205,8 +205,8 @@ export default function AdminShopPromoBannersPage() {
   return (
     <div className="space-y-4">
       <AdminPageHeader
-        title="商城 5:2 活動 Banner"
-        description="可新增多張、刪除或停用。顯示於商品分類下方，建議桌面 1500×600、手機 1080×432（皆 5:2）。"
+        title="商城 16:9 活動 Banner"
+        description="可新增多張、刪除或停用。顯示於商品分類下方，建議桌面 1600×900、手機 1080×608（皆 16:9 輪播）。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/admin/shop?section=promo" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
@@ -228,15 +228,16 @@ export default function AdminShopPromoBannersPage() {
               {editingId ? "編輯 Banner" : "新增 Banner"}
             </p>
             <AdminImageUpload
-              label="桌面圖片（建議 1500 × 600 px，比例 5:2）"
+              label="桌面圖片（建議 1600 × 900 px，比例 16:9）"
               images={form.image_url ? [form.image_url] : []}
               onChange={(images) => setForm({ ...form, image_url: images[0] ?? "" })}
               uploadFolder="banners/shop/promo/desktop"
               maxImages={1}
               multiple={false}
+              aspectRatio="video"
             />
             <AdminImageUpload
-              label="手機圖片（建議 1080 × 432 px，比例 5:2；未設定則用桌面圖）"
+              label="手機圖片（建議 1080 × 608 px，比例 16:9；未設定則用桌面圖）"
               images={form.mobile_image_url ? [form.mobile_image_url] : []}
               onChange={(images) =>
                 setForm({ ...form, mobile_image_url: images[0] ?? "" })
@@ -244,6 +245,7 @@ export default function AdminShopPromoBannersPage() {
               uploadFolder="banners/shop/promo/mobile"
               maxImages={1}
               multiple={false}
+              aspectRatio="video"
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
@@ -359,8 +361,8 @@ export default function AdminShopPromoBannersPage() {
           </div>
 
           <div className="rounded-xl bg-white p-4 shadow-card">
-            <p className="mb-2 text-sm font-medium text-coffee">即時預覽（5:2）</p>
-            <div className="relative aspect-[5/2] overflow-hidden rounded-2xl bg-[#F7F8FB]">
+            <p className="mb-2 text-sm font-medium text-coffee">即時預覽（16:9）</p>
+            <div className="relative aspect-video overflow-hidden rounded-2xl bg-[#F7F8FB]">
               {previewSrc ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
