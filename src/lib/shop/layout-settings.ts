@@ -8,13 +8,13 @@ import {
 
 export const SHOP_LAYOUT_SECTION_IDS = [
   "categories",
-  "features",
   "promo",
   "popular",
   "new",
+  "features",
+  "info-banners",
   "inspiration",
   "ai-assistant",
-  "info-banners",
   "hero",
 ] as const;
 
@@ -23,13 +23,13 @@ export type ShopLayoutSectionId = (typeof SHOP_LAYOUT_SECTION_IDS)[number];
 /** Sections rendered in the main column (hero stays in the yellow plane). */
 export const SHOP_LAYOUT_MAIN_IDS: ShopLayoutSectionId[] = [
   "categories",
-  "features",
   "promo",
   "popular",
   "new",
+  "features",
+  "info-banners",
   "inspiration",
   "ai-assistant",
-  "info-banners",
 ];
 
 export const SHOP_LAYOUT_SECTION_LABELS: Record<ShopLayoutSectionId, string> = {
@@ -41,7 +41,7 @@ export const SHOP_LAYOUT_SECTION_LABELS: Record<ShopLayoutSectionId, string> = {
   inspiration: "烘焙靈感牆",
   "ai-assistant": "AI 助手卡",
   "info-banners": "訂購／企業 Banner",
-  hero: "商城 Hero Banner",
+  hero: "商城 Hero Banner（已改為 IP 歡迎區）",
 };
 
 export type ShopLayoutSettings = {
@@ -51,9 +51,11 @@ export type ShopLayoutSettings = {
 };
 
 function defaultSections(): Record<ShopLayoutSectionId, boolean> {
-  return Object.fromEntries(
+  const all = Object.fromEntries(
     SHOP_LAYOUT_SECTION_IDS.map((id) => [id, true])
   ) as Record<ShopLayoutSectionId, boolean>;
+  all.hero = false;
+  return all;
 }
 
 export const DEFAULT_SHOP_LAYOUT: ShopLayoutSettings = {

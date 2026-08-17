@@ -53,16 +53,15 @@ function CategoryIcon({
 
 function CategorySkeleton() {
   return (
-    <div className="flex min-w-[72px] flex-col items-center gap-2 md:min-w-[84px] lg:min-w-0">
-      <div className="h-16 w-16 animate-pulse rounded-full bg-[#F1F2F7] md:h-[76px] md:w-[76px] lg:h-[88px] lg:w-[88px]" />
+    <div className="flex min-w-0 flex-col items-center gap-2">
+      <div className="h-14 w-14 animate-pulse rounded-full bg-[#F1F2F7] md:h-16 md:w-16" />
       <div className="h-3 w-10 animate-pulse rounded bg-[#F1F2F7]" />
     </div>
   );
 }
 
 /**
- * Shop home circular main-category menu — under search.
- * Desktop: up to 8 CMS categories +「全部分類」. Mobile: horizontal scroll.
+ * Shop home circular main-category menu — 6 slots (5 CMS + 全部分類).
  */
 export function ShopMainCategoryMenu({
   categories: categoriesProp,
@@ -102,34 +101,33 @@ export function ShopMainCategoryMenu({
 
   return (
     <section
-      className="shop-category-menu w-full bg-white"
+      className="shop-category-menu w-full bg-[#FFFEFA]"
       aria-label="商品主分類"
       aria-busy={loading}
     >
       <div className="mx-auto max-w-7xl px-4 md:px-6">
         <div
           className={cn(
-            "shop-category-menu__track flex gap-3 overflow-x-auto scrollbar-hide",
-            "lg:grid lg:grid-cols-9 lg:gap-5 lg:overflow-visible"
+            "shop-category-menu__track grid grid-cols-6 gap-2",
+            "md:gap-4"
           )}
         >
           {loading
-            ? Array.from({ length: 9 }).map((_, i) => <CategorySkeleton key={i} />)
+            ? Array.from({ length: 6 }).map((_, i) => <CategorySkeleton key={i} />)
             : categories.map((category, index) => (
                 <Link
                   key={category.id}
                   href={category.href}
                   className={cn(
-                    "group flex min-w-[72px] flex-col items-center gap-1.5 text-center",
-                    "md:min-w-[84px] lg:min-w-0"
+                    "group flex min-w-0 flex-col items-center gap-1.5 text-center"
                   )}
                   aria-label={category.name}
                 >
                   <div
                     className={cn(
-                      "flex h-16 w-16 items-center justify-center rounded-full",
+                      "flex h-14 w-14 items-center justify-center rounded-full",
                       "transition-transform group-hover:-translate-y-1 group-active:scale-95",
-                      "md:h-[76px] md:w-[76px] lg:h-[88px] lg:w-[88px]"
+                      "md:h-16 md:w-16"
                     )}
                     style={{ backgroundColor: category.bgColor }}
                   >

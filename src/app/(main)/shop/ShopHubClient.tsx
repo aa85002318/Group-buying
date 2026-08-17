@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ShopHeader } from "@/components/shop/ShopHeader";
-import { ShopHeroBanner } from "@/components/shop/ShopHeroBanner";
+import { ShopWelcomeSection } from "@/components/shop/ShopWelcomeSection";
 import { ShopMainCategoryMenu } from "@/components/shop/ShopMainCategoryMenu";
 import { ShopPromoCarousel } from "@/components/shop/ShopPromoCarousel";
 import { PopularProducts } from "@/components/shop/PopularProducts";
@@ -15,9 +15,9 @@ import { ShopOrderingInfo } from "@/components/shop/ShopOrderingInfo";
 import { ShopCorporateInquiry } from "@/components/shop/ShopCorporateInquiry";
 import {
   DEFAULT_SHOP_PAGE_SETTINGS,
-  SHOP_BRAND_YELLOW,
   type ShopPageSettings,
 } from "@/lib/shop/page-settings";
+import { SHOP_WELCOME_YELLOW } from "@/lib/shop/home-settings";
 import {
   DEFAULT_SHOP_LAYOUT,
   mergeShopLayoutSettings,
@@ -25,7 +25,7 @@ import {
   type ShopLayoutSettings,
 } from "@/lib/shop/layout-settings";
 
-/** Older CMS yellows → unify to homepage hero yellow (#FDE045). */
+/** Older CMS yellows → unify to shop welcome yellow (#FFD454). */
 const LEGACY_SHOP_YELLOWS = new Set([
   "#FEDB49",
   "#FCCA30",
@@ -34,11 +34,11 @@ const LEGACY_SHOP_YELLOWS = new Set([
   "#FDE045",
 ]);
 
-function resolvePlaneYellow(settings: ShopPageSettings) {
+function resolvePlaneYellow(settings: ShopPageSettings, welcomeYellow?: string) {
+  const welcome = (welcomeYellow || "").toUpperCase();
+  if (welcome && !LEGACY_SHOP_YELLOWS.has(welcome)) return welcome;
   const header = (settings.header_bg_color || "").toUpperCase();
-  const hero = (settings.hero_bg_color || "").toUpperCase();
-  if (!header || LEGACY_SHOP_YELLOWS.has(header)) return SHOP_BRAND_YELLOW;
-  if (!hero || LEGACY_SHOP_YELLOWS.has(hero)) return SHOP_BRAND_YELLOW;
+  if (!header || LEGACY_SHOP_YELLOWS.has(header)) return SHOP_WELCOME_YELLOW;
   return header;
 }
 
@@ -80,6 +80,7 @@ function renderSection(id: ShopLayoutSectionId) {
  */
 export function ShopHubClient() {
   const [layout, setLayout] = useState<ShopLayoutSettings>(DEFAULT_SHOP_LAYOUT);
+  const [welcomeYellow, setWelcomeYellow] = useState(SHOP_WELCOME_YELLOW);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,13 +98,23 @@ export function ShopHubClient() {
         setLayout(mergeShopLayoutSettings(d.settings));
       })
       .catch(() => {});
+
+    fetch("/api/shop/home-settings", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const hex = String(d?.settings?.welcome_background_color ?? "").toUpperCase();
+        if (hex) setWelcomeYellow(hex);
+      })
+      .catch(() => {});
+
     return () => {
       cancelled = true;
     };
   }, []);
 
   const pageSettings = layout.appearance ?? DEFAULT_SHOP_PAGE_SETTINGS;
-  const planeYellow = resolvePlaneYellow(pageSettings);
+  const planeYellow = resolvePlaneYellow(pageSettings, welcomeYellow);
   const unifiedSettings: ShopPageSettings = {
     ...pageSettings,
     header_bg_color: planeYellow,
@@ -117,19 +128,17 @@ export function ShopHubClient() {
     );
   }, [layout]);
 
-  const showHero = layout.sections.hero !== false;
-
   return (
-    <div className="shop-hub space-y-0 bg-white">
+    <div className="shop-hub space-y-0 bg-[#FFFEFA]">
       <div
         className="shop-hub-hero-plane w-full max-w-none"
         style={{ backgroundColor: planeYellow }}
       >
-        <ShopHeader settings={unifiedSettings} title="商城" />
-        {showHero ? <ShopHeroBanner backgroundColor={planeYellow} /> : null}
+        <ShopHeader settings={unifiedSettings} title="商城" showSearch={false} />
+        <ShopWelcomeSection backgroundColor={planeYellow} />
       </div>
 
-      <main className="shop-hub-main flex flex-col gap-[20px] pb-[20px]">
+      <main className="shop-hub-main flex flex-col gap-[20px] bg-[#FFFEFA] pb-[20px] pt-[20px]">
         {mainSections.map((id) => renderSection(id))}
 
         <div className="shop-hub-body mx-auto w-full max-w-7xl px-4 md:px-6">

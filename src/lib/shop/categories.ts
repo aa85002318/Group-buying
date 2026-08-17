@@ -50,8 +50,8 @@ export const DEFAULT_SHOP_CATEGORIES: ShopCategoryItem[] = [
     bgColor: "#FFF5D9",
   },
   {
-    id: "butter",
-    name: "奶油",
+    id: "dairy",
+    name: "乳製品",
     image: "/images/shop/categories/butter.png",
     href: shopCategoryHref("dairy"),
     bgColor: "#FFF5D9",
@@ -71,32 +71,11 @@ export const DEFAULT_SHOP_CATEGORIES: ShopCategoryItem[] = [
     bgColor: "#FFF0E2",
   },
   {
-    id: "baking-mold",
-    name: "烘焙模具",
-    image: "/images/shop/categories/baking-mold.png",
-    href: shopCategoryHref("tools"),
-    bgColor: "#EAF4DA",
-  },
-  {
     id: "baking-tools",
-    name: "烘焙工具",
+    name: "烘焙器具",
     image: "/images/shop/categories/baking-tools.png",
     href: shopCategoryHref("tools"),
     bgColor: "#EEE9FF",
-  },
-  {
-    id: "frozen",
-    name: "冷凍冷藏",
-    image: "/images/shop/categories/frozen.png",
-    href: shopCategoryHref("frozen-goods"),
-    bgColor: "#DFF3FF",
-  },
-  {
-    id: "food",
-    name: "食品食材",
-    image: "/images/shop/categories/food.png",
-    href: shopCategoryHref("ingredients"),
-    bgColor: "#FFE5E5",
   },
 ];
 
@@ -108,8 +87,8 @@ export const SHOP_ALL_CATEGORIES_ITEM: ShopCategoryItem = {
   bgColor: "#F1F2F7",
 };
 
-/** Max product categories before appending「全部分類」. */
-export const SHOP_HOME_CATEGORY_LIMIT = 8;
+/** Max product categories before appending「全部分類」→ 6 circles on home. */
+export const SHOP_HOME_CATEGORY_LIMIT = 5;
 
 export function buildShopHomeCategories(
   items: ShopCategoryItem[] = DEFAULT_SHOP_CATEGORIES

@@ -43,9 +43,17 @@ type ShopSectionDef = {
 
 const SHOP_SECTIONS: ShopSectionDef[] = [
   {
+    id: "welcome",
+    label: "IP 歡迎區",
+    description: "Header 下方黃色 Welcome：IP 主素材、文案、搜尋框、熱門搜尋。",
+    href: "/admin/shop/welcome",
+    group: "extra",
+    tip: "IP 請用透明 PNG／WebP，不要把黃底合成進角色圖。",
+  },
+  {
     id: "categories",
     label: "商品分類",
-    description: "搜尋欄下方圓形主分類：文字、logo、色卡。",
+    description: "搜尋欄下方圓形主分類（預設 6 格含全部分類）。",
     href: "/admin/shop/categories",
     group: "main",
     layoutId: "categories",
@@ -111,15 +119,15 @@ const SHOP_SECTIONS: ShopSectionDef[] = [
   },
   {
     id: "appearance",
-    label: "頁首／Hero 外觀",
-    description: "頁首底色、Hero 底色銜接（寫入版面草稿）。",
+    label: "頁首／Welcome 外觀",
+    description: "頁首與 IP 歡迎區底色銜接（寫入版面草稿）。",
     href: "/admin/shop/appearance",
     group: "extra",
   },
   {
     id: "hero",
     label: "商城 Hero Banner",
-    description: "滿寬主視覺圖，高度隨圖。",
+    description: "舊大型 Hero（已由 IP 歡迎區取代，建議關閉）。",
     href: "/admin/shop/hero-banners",
     group: "extra",
     layoutId: "hero",
