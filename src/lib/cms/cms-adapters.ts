@@ -3,7 +3,11 @@ import { resolveBlockTypeFromLegacyKey, getBlockDefinition } from "@/lib/cms/blo
 import { getPageRegistryEntry, registryEntryToCmsPage } from "@/lib/cms/page-registry";
 import type { HomepageBlock } from "@/lib/types/database";
 import type { ShopLayoutSettings } from "@/lib/shop/layout-settings";
-import { SHOP_LAYOUT_SECTION_LABELS } from "@/lib/shop/layout-settings";
+import {
+  mergeShopLayoutSettings,
+  SHOP_LAYOUT_SECTION_LABELS,
+} from "@/lib/shop/layout-settings";
+import type { ShopHomeSettings } from "@/lib/shop/home-settings";
 import type { GroupBuyPageSettings } from "@/lib/group-buy/page-settings";
 import { SECTION_LABELS as GROUP_BUY_SECTION_LABELS } from "@/lib/group-buy/page-settings";
 
@@ -72,38 +76,52 @@ export function adaptHomeBlocksToCmsPage(
   });
 }
 
-/** shop_layout → CmsPage */
+/** shop_layout → CmsPage (version C: search + quick links, then layout sections). */
 export function adaptShopLayoutToCmsPage(
   layout: ShopLayoutSettings,
-  meta?: { draftVersion?: number; updatedAt?: string }
+  meta?: {
+    draftVersion?: number;
+    updatedAt?: string;
+    homeSettings?: ShopHomeSettings | null;
+  }
 ): CmsPage {
   const entry = getPageRegistryEntry("shop")!;
-  const order = layout.sectionOrder?.length
-    ? layout.sectionOrder
-    : (Object.keys(layout.sections) as (keyof typeof layout.sections)[]);
+  const merged = mergeShopLayoutSettings(layout);
   const cmsBlocks: CmsBlock[] = [];
-  // Hero is separate plane but still a block
+
   cmsBlocks.push(
-    blockFromLegacy(
-      "hero",
-      0,
-      layout.sections.hero !== false,
-      { appearance: layout.appearance },
-      SHOP_LAYOUT_SECTION_LABELS.hero
-    )
+    blockFromLegacy("shop_search", 0, true, {}, "搜尋與熱門關鍵字")
   );
-  order.forEach((id, i) => {
+  cmsBlocks.push(
+    blockFromLegacy("quick_links", 1, true, {}, "快捷入口")
+  );
+
+  merged.sectionOrder.forEach((id) => {
     if (id === "hero") return;
     cmsBlocks.push(
       blockFromLegacy(
         id,
-        i + 1,
-        layout.sections[id] !== false,
+        cmsBlocks.length,
+        merged.sections[id] !== false,
         {},
         SHOP_LAYOUT_SECTION_LABELS[id] ?? id
       )
     );
   });
+
+  const featured = meta?.homeSettings?.product_blocks?.featured;
+  if (featured) {
+    cmsBlocks.push(
+      blockFromLegacy(
+        "featured",
+        cmsBlocks.length,
+        featured.visible !== false,
+        { title: featured.title, limit: featured.limit },
+        featured.title || "精選商品"
+      )
+    );
+  }
+
   return registryEntryToCmsPage(entry, {
     blocks: cmsBlocks,
     blockCount: cmsBlocks.length,
