@@ -28,6 +28,7 @@ type Props = {
   previewPath?: string;
   backHref?: string;
   legacyHref?: string;
+  legacyLabel?: string;
   readOnly?: boolean;
   publishDisabled?: boolean;
   saveDisabled?: boolean;
@@ -51,6 +52,7 @@ export function CmsEditorToolbar({
   previewPath,
   backHref = "/admin/frontend-cms",
   legacyHref,
+  legacyLabel = "經典編輯器",
   readOnly,
   publishDisabled = true,
   saveDisabled = true,
@@ -98,7 +100,7 @@ export function CmsEditorToolbar({
               href={legacyHref}
               className={buttonVariants({ variant: "outline", size: "sm" })}
             >
-              經典編輯器
+              {legacyLabel}
             </Link>
           ) : null}
           {previewPath ? (

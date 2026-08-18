@@ -48,12 +48,15 @@ export const CMS_BLOCK_REGISTRY: CmsBlockDefinition[] = [
   def("carousel_banner", "輪播 Banner", "nav", {
     legacyKeys: ["group_buy_banner"],
   }),
-  def("search_bar", "搜尋列", "nav", { legacyKeys: ["hot_searches"] }),
+  def("search_bar", "搜尋與熱門關鍵字", "nav", {
+    legacyKeys: ["hot_searches", "shop_search"],
+    allowedPageIds: ["shop", "home"],
+  }),
   def("category_entry", "分類入口", "nav", {
     legacyKeys: ["categories", "popular_categories", "ingredient_categories"],
   }),
-  def("quick_services", "快捷服務", "nav", {
-    legacyKeys: ["quick_entry", "service_shortcuts", "quick_menu"],
+  def("quick_services", "快捷入口", "nav", {
+    legacyKeys: ["quick_entry", "quick_links", "service_shortcuts", "quick_menu"],
   }),
   def("tab_menu", "頁籤選單", "nav", { legacyKeys: ["tabs"] }),
   def("breadcrumb", "麵包屑", "nav"),
@@ -68,10 +71,20 @@ export const CMS_BLOCK_REGISTRY: CmsBlockDefinition[] = [
   def("popular_products", "熱門商品", "product", {
     legacyKeys: ["popular", "popular_baking_products"],
   }),
-  def("new_products", "新品上架", "product", {
+  def("new_products", "本週上新", "product", {
     legacyKeys: ["new", "weekly_new_products"],
   }),
-  def("recommended_products", "推薦商品", "product"),
+  def("sale_products", "優惠商品", "product", {
+    legacyKeys: ["sale"],
+    allowedPageIds: ["shop"],
+  }),
+  def("bundle_products", "組合優惠", "product", {
+    legacyKeys: ["bundle"],
+    allowedPageIds: ["shop"],
+  }),
+  def("recommended_products", "精選商品", "product", {
+    legacyKeys: ["featured"],
+  }),
   def("ingredient_shop", "一鍵買齊材料", "product", {
     legacyKeys: ["ingredient_shop"],
   }),
