@@ -49,7 +49,16 @@ export function AdminRichTextEditor({
     onChange(ref.current?.innerHTML ?? "");
   };
 
-  /** 在 contentEditable 失焦前儲存 selection（供工具列按鈕還原）。 */
+  /**
+   * 阻止工具列控制項的 mousedown 把焦點從 contentEditable 搶走，
+   * 讓 selection 完整保留。對 <select> 不呼叫（會干擾下拉展開），
+   * 改用 saveSelection + restoreSelection 處理。
+   */
+  const keepFocus = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
+
+  /** 給 <select> 下拉用：在失焦前快照 selection。 */
   const saveSelection = () => {
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
@@ -57,7 +66,7 @@ export function AdminRichTextEditor({
     }
   };
 
-  /** 還原 selection 後把焦點切回編輯器。 */
+  /** 還原 <select> 造成失焦後的 selection。 */
   const restoreSelection = () => {
     ref.current?.focus();
     const sel = window.getSelection();
@@ -69,7 +78,6 @@ export function AdminRichTextEditor({
   };
 
   const run = (command: string, arg?: string) => {
-    restoreSelection();
     document.execCommand(command, false, arg);
     emit();
   };
@@ -105,14 +113,13 @@ export function AdminRichTextEditor({
   };
 
   const insertLink = () => {
-    restoreSelection();
     const url = window.prompt("請輸入連結網址", "https://");
     if (!url) return;
     run("createLink", url);
   };
 
   const insertTable = () => {
-    restoreSelection();
+    ref.current?.focus();
     document.execCommand(
       "insertHTML",
       false,
@@ -158,7 +165,6 @@ export function AdminRichTextEditor({
   };
 
   const insertImageByUrl = () => {
-    restoreSelection();
     const url = window.prompt("請輸入圖片網址", "https://");
     if (!url) return;
     document.execCommand(
@@ -172,19 +178,19 @@ export function AdminRichTextEditor({
   return (
     <div className="overflow-hidden rounded-lg border border-border">
       <div className="flex flex-wrap items-center gap-1 border-b border-border bg-muted/50 p-2">
-        <Button type="button" size="sm" variant="secondary" onClick={() => run("bold")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("bold")}>
           粗體
         </Button>
-        <Button type="button" size="sm" variant="secondary" onClick={() => run("italic")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("italic")}>
           斜體
         </Button>
-        <Button type="button" size="sm" variant="secondary" onClick={() => run("underline")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("underline")}>
           底線
         </Button>
-        <Button type="button" size="sm" variant="secondary" onClick={() => run("formatBlock", "<h2>")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("formatBlock", "<h2>")}>
           H2
         </Button>
-        <Button type="button" size="sm" variant="secondary" onClick={() => run("formatBlock", "<h3>")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("formatBlock", "<h3>")}>
           H3
         </Button>
         <span className="mx-1 h-5 w-px bg-border" />
@@ -229,10 +235,10 @@ export function AdminRichTextEditor({
             </option>
           ))}
         </select>
-        <Button type="button" size="sm" variant="secondary" onClick={() => run("insertUnorderedList")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("insertUnorderedList")}>
           項目符號
         </Button>
-        <Button type="button" size="sm" variant="secondary" onClick={() => insertLink()}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => insertLink()}>
           連結
         </Button>
         <input
@@ -250,17 +256,18 @@ export function AdminRichTextEditor({
           size="sm"
           variant="secondary"
           disabled={uploadingImage}
+          onMouseDown={keepFocus}
           onClick={() => imageInputRef.current?.click()}
         >
           {uploadingImage ? "上傳中…" : "插入圖片"}
         </Button>
-        <Button type="button" size="sm" variant="secondary" onClick={() => insertImageByUrl()}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => insertImageByUrl()}>
           圖片網址
         </Button>
-        <Button type="button" size="sm" variant="secondary" onClick={() => insertTable()}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => insertTable()}>
           表格
         </Button>
-        <Button type="button" size="sm" variant="secondary" onClick={() => run("removeFormat")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("removeFormat")}>
           清除格式
         </Button>
         <Button
