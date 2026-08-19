@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   BRAND_FONT_OPTIONS,
   type BrandFontId,
@@ -96,9 +96,11 @@ export function AdminBrandFontPicker({
 export function AdminBrandFontSelect({
   onChange,
   placeholder = "字型",
+  onMouseDown,
 }: {
   onChange: (id: BrandFontId) => void;
   placeholder?: string;
+  onMouseDown?: React.MouseEventHandler<HTMLSelectElement>;
 }) {
   useBrandFontPreviewCss();
 
@@ -106,6 +108,7 @@ export function AdminBrandFontSelect({
     <select
       className="max-w-[10rem] rounded border border-border bg-white px-2 py-1 text-xs"
       defaultValue=""
+      onMouseDown={onMouseDown}
       onChange={(e) => {
         if (e.target.value) {
           onChange(e.target.value as BrandFontId);

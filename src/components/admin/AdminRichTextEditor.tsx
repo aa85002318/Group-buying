@@ -34,6 +34,7 @@ export function AdminRichTextEditor({
 }: AdminRichTextEditorProps) {
   const ref = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const savedRange = useRef<Range | null>(null);
   const [htmlMode, setHtmlMode] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   useBrandFontPreviewCss();
@@ -48,8 +49,27 @@ export function AdminRichTextEditor({
     onChange(ref.current?.innerHTML ?? "");
   };
 
-  const run = (command: string, arg?: string) => {
+  /** 在 contentEditable 失焦前儲存 selection（供工具列按鈕還原）。 */
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      savedRange.current = sel.getRangeAt(0).cloneRange();
+    }
+  };
+
+  /** 還原 selection 後把焦點切回編輯器。 */
+  const restoreSelection = () => {
     ref.current?.focus();
+    const sel = window.getSelection();
+    if (!sel) return;
+    sel.removeAllRanges();
+    if (savedRange.current) {
+      sel.addRange(savedRange.current);
+    }
+  };
+
+  const run = (command: string, arg?: string) => {
+    restoreSelection();
     document.execCommand(command, false, arg);
     emit();
   };
@@ -58,7 +78,7 @@ export function AdminRichTextEditor({
     const opt = getBrandFont(id);
     const familyCss = opt.family.replace(/"/g, "'");
     const familyName = opt.family.split(",")[0]!.replace(/"/g, "").trim();
-    ref.current?.focus();
+    restoreSelection();
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
       const range = sel.getRangeAt(0);
@@ -85,13 +105,14 @@ export function AdminRichTextEditor({
   };
 
   const insertLink = () => {
+    restoreSelection();
     const url = window.prompt("請輸入連結網址", "https://");
     if (!url) return;
     run("createLink", url);
   };
 
   const insertTable = () => {
-    ref.current?.focus();
+    restoreSelection();
     document.execCommand(
       "insertHTML",
       false,
@@ -137,9 +158,9 @@ export function AdminRichTextEditor({
   };
 
   const insertImageByUrl = () => {
+    restoreSelection();
     const url = window.prompt("請輸入圖片網址", "https://");
     if (!url) return;
-    ref.current?.focus();
     document.execCommand(
       "insertHTML",
       false,
@@ -167,10 +188,15 @@ export function AdminRichTextEditor({
           H3
         </Button>
         <span className="mx-1 h-5 w-px bg-border" />
-        <AdminBrandFontSelect onChange={applyFont} placeholder="字型" />
+        <AdminBrandFontSelect
+          onChange={applyFont}
+          placeholder="字型"
+          onMouseDown={saveSelection}
+        />
         <select
           className="rounded border border-border bg-white px-2 py-1 text-xs"
           defaultValue=""
+          onMouseDown={saveSelection}
           onChange={(e) => {
             if (e.target.value) run("fontSize", e.target.value);
             e.target.value = "";
@@ -188,6 +214,7 @@ export function AdminRichTextEditor({
         <select
           className="rounded border border-border bg-white px-2 py-1 text-xs"
           defaultValue=""
+          onMouseDown={saveSelection}
           onChange={(e) => {
             if (e.target.value) run("foreColor", e.target.value);
             e.target.value = "";
@@ -261,6 +288,8 @@ export function AdminRichTextEditor({
           data-placeholder={placeholder}
           onInput={emit}
           onBlur={emit}
+          onMouseUp={saveSelection}
+          onKeyUp={saveSelection}
         />
       )}
     </div>
