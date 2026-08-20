@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { AdminBrandFontSelect, useBrandFontPreviewCss } from "@/components/admin/AdminBrandFontPicker";
 import { getBrandFont, type BrandFontId } from "@/lib/branding";
 
 const SIZES = [
-  { label: "小", value: "2" },
-  { label: "中", value: "3" },
-  { label: "大", value: "5" },
-  { label: "特大", value: "6" },
+  { label: "小", value: "12px" },
+  { label: "中", value: "16px" },
+  { label: "大", value: "20px" },
+  { label: "特大", value: "28px" },
 ];
 
 const COLORS = [
@@ -19,6 +19,16 @@ const COLORS = [
   { label: "藍色", value: "#1D4ED8" },
   { label: "綠色", value: "#15803D" },
 ];
+
+const EDITOR_CLASS =
+  "input-field min-h-[220px] rounded-none border-0 outline-none " +
+  "[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-6 " +
+  "[&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 " +
+  "[&_li]:my-0.5 [&_li]:list-item [&_li]:pl-0 " +
+  "[&_h2]:my-2 [&_h2]:text-xl [&_h2]:font-extrabold " +
+  "[&_h3]:my-2 [&_h3]:text-lg [&_h3]:font-bold " +
+  "[&_a]:text-primary [&_a]:underline " +
+  "[&_table]:w-full [&_th]:border [&_td]:border";
 
 interface AdminRichTextEditorProps {
   value: string;
@@ -40,8 +50,11 @@ export function AdminRichTextEditor({
   useBrandFontPreviewCss();
 
   useEffect(() => {
-    if (!htmlMode && ref.current && ref.current.innerHTML !== value) {
-      ref.current.innerHTML = value || "";
+    const editor = ref.current;
+    if (htmlMode || !editor) return;
+    if (document.activeElement === editor) return;
+    if (editor.innerHTML !== (value || "")) {
+      editor.innerHTML = value || "";
     }
   }, [htmlMode, value]);
 
@@ -49,77 +62,146 @@ export function AdminRichTextEditor({
     onChange(ref.current?.innerHTML ?? "");
   };
 
-  /**
-   * 阻止工具列控制項的 mousedown 把焦點從 contentEditable 搶走，
-   * 讓 selection 完整保留。對 <select> 不呼叫（會干擾下拉展開），
-   * 改用 saveSelection + restoreSelection 處理。
-   */
-  const keepFocus = (e: React.MouseEvent) => {
+  const keepFocus = (e: MouseEvent) => {
     e.preventDefault();
   };
 
-  /** 給 <select> 下拉用：在失焦前快照 selection。 */
   const saveSelection = () => {
     const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      savedRange.current = sel.getRangeAt(0).cloneRange();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (ref.current && ref.current.contains(range.commonAncestorContainer)) {
+      savedRange.current = range.cloneRange();
     }
   };
 
-  /** 還原 <select> 造成失焦後的 selection。 */
   const restoreSelection = () => {
-    ref.current?.focus();
+    const editor = ref.current;
+    if (!editor) return;
+    editor.focus();
     const sel = window.getSelection();
     if (!sel) return;
     sel.removeAllRanges();
     if (savedRange.current) {
-      sel.addRange(savedRange.current);
+      try {
+        sel.addRange(savedRange.current);
+      } catch {
+        /* range may be stale after HTML rewrite */
+      }
     }
   };
 
+  const applyInline = (styles: Record<string, string>) => {
+    restoreSelection();
+    const editor = ref.current;
+    const sel = window.getSelection();
+    if (!editor || !sel) return;
+    if (sel.rangeCount === 0) {
+      const fallback = document.createRange();
+      fallback.selectNodeContents(editor);
+      sel.addRange(fallback);
+    }
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) {
+      const node = range.startContainer;
+      if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+        range.setStart(node, 0);
+        range.setEnd(node, node.textContent.length);
+      } else if (editor.childNodes.length) {
+        range.selectNodeContents(editor);
+      }
+    }
+    const span = document.createElement("span");
+    for (const [key, val] of Object.entries(styles)) {
+      span.style.setProperty(key, val);
+    }
+    try {
+      range.surroundContents(span);
+    } catch {
+      const frag = range.extractContents();
+      span.appendChild(frag);
+      range.insertNode(span);
+    }
+    sel.removeAllRanges();
+    const after = document.createRange();
+    after.selectNodeContents(span);
+    sel.addRange(after);
+    savedRange.current = after.cloneRange();
+    emit();
+  };
+
   const run = (command: string, arg?: string) => {
+    restoreSelection();
+    document.execCommand("styleWithCSS", false, "true");
     document.execCommand(command, false, arg);
+    emit();
+  };
+
+  const applyHeading = (tag: "h2" | "h3") => {
+    restoreSelection();
+    document.execCommand("formatBlock", false, tag);
+    if (!ref.current?.querySelector(tag)) {
+      document.execCommand("formatBlock", false, `<${tag}>`);
+    }
+    emit();
+  };
+
+  const applyList = () => {
+    restoreSelection();
+    const editor = ref.current;
+    const sel = window.getSelection();
+    if (!editor || !sel) return;
+
+    const inList =
+      sel.anchorNode instanceof Element
+        ? sel.anchorNode.closest("ul,ol")
+        : sel.anchorNode?.parentElement?.closest("ul,ol");
+    if (inList && editor.contains(inList)) {
+      document.execCommand("insertUnorderedList");
+      emit();
+      return;
+    }
+
+    const ok = document.execCommand("insertUnorderedList");
+    const hasList = Boolean(editor.querySelector("ul"));
+    if (!ok || !hasList) {
+      const range = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+      const raw =
+        range && !range.collapsed
+          ? range.toString()
+          : (editor.innerText || "").trim();
+      const lines = raw.split(/\n+/).map((t) => t.trim()).filter(Boolean);
+      const items = (lines.length ? lines : [" "])
+        .map((t) => `<li>${escapeHtml(t)}</li>`)
+        .join("");
+      if (range && !range.collapsed) {
+        range.deleteContents();
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = `<ul>${items}</ul>`;
+        range.insertNode(wrapper.firstChild!);
+      } else {
+        editor.insertAdjacentHTML("beforeend", `<ul>${items}</ul>`);
+      }
+    }
     emit();
   };
 
   const applyFont = (id: BrandFontId) => {
     const opt = getBrandFont(id);
     const familyCss = opt.family.replace(/"/g, "'");
-    const familyName = opt.family.split(",")[0]!.replace(/"/g, "").trim();
-    restoreSelection();
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
-      const range = sel.getRangeAt(0);
-      const span = document.createElement("span");
-      span.style.fontFamily = familyCss;
-      try {
-        range.surroundContents(span);
-      } catch {
-        const frag = range.extractContents();
-        span.appendChild(frag);
-        range.insertNode(span);
-      }
-      sel.removeAllRanges();
-      const after = document.createRange();
-      after.selectNodeContents(span);
-      after.collapse(false);
-      sel.addRange(after);
-      emit();
-      return;
-    }
-    document.execCommand("styleWithCSS", false, "true");
-    document.execCommand("fontName", false, familyName);
-    emit();
+    applyInline({ "font-family": familyCss });
   };
 
   const insertLink = () => {
+    restoreSelection();
     const url = window.prompt("請輸入連結網址", "https://");
     if (!url) return;
-    run("createLink", url);
+    document.execCommand("createLink", false, url);
+    emit();
   };
 
   const insertTable = () => {
-    ref.current?.focus();
+    restoreSelection();
     document.execCommand(
       "insertHTML",
       false,
@@ -149,7 +231,7 @@ export function AdminRichTextEditor({
       const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error ?? "上傳失敗");
-      ref.current?.focus();
+      restoreSelection();
       document.execCommand(
         "insertHTML",
         false,
@@ -165,6 +247,7 @@ export function AdminRichTextEditor({
   };
 
   const insertImageByUrl = () => {
+    restoreSelection();
     const url = window.prompt("請輸入圖片網址", "https://");
     if (!url) return;
     document.execCommand(
@@ -187,10 +270,10 @@ export function AdminRichTextEditor({
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("underline")}>
           底線
         </Button>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("formatBlock", "<h2>")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => applyHeading("h2")}>
           H2
         </Button>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("formatBlock", "<h3>")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => applyHeading("h3")}>
           H3
         </Button>
         <span className="mx-1 h-5 w-px bg-border" />
@@ -204,7 +287,7 @@ export function AdminRichTextEditor({
           defaultValue=""
           onMouseDown={saveSelection}
           onChange={(e) => {
-            if (e.target.value) run("fontSize", e.target.value);
+            if (e.target.value) applyInline({ "font-size": e.target.value });
             e.target.value = "";
           }}
         >
@@ -222,7 +305,7 @@ export function AdminRichTextEditor({
           defaultValue=""
           onMouseDown={saveSelection}
           onChange={(e) => {
-            if (e.target.value) run("foreColor", e.target.value);
+            if (e.target.value) applyInline({ color: e.target.value });
             e.target.value = "";
           }}
         >
@@ -235,10 +318,10 @@ export function AdminRichTextEditor({
             </option>
           ))}
         </select>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("insertUnorderedList")}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={applyList}>
           項目符號
         </Button>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => insertLink()}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertLink}>
           連結
         </Button>
         <input
@@ -261,10 +344,10 @@ export function AdminRichTextEditor({
         >
           {uploadingImage ? "上傳中…" : "插入圖片"}
         </Button>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => insertImageByUrl()}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertImageByUrl}>
           圖片網址
         </Button>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => insertTable()}>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertTable}>
           表格
         </Button>
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("removeFormat")}>
@@ -289,7 +372,7 @@ export function AdminRichTextEditor({
       ) : (
         <div
           ref={ref}
-          className="input-field min-h-[220px] rounded-none border-0 prose prose-sm max-w-none"
+          className={EDITOR_CLASS}
           contentEditable
           suppressContentEditableWarning
           data-placeholder={placeholder}
@@ -301,4 +384,12 @@ export function AdminRichTextEditor({
       )}
     </div>
   );
+}
+
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
