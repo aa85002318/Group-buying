@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const GLASS_BTN =
-  "shop-header-glass inline-flex h-[42px] w-[42px] shrink-0 items-center justify-center text-[#153E73] transition hover:brightness-[1.02] active:scale-[0.98]";
+  "shop-header-glass inline-flex h-11 w-11 shrink-0 items-center justify-center text-[#153E73] transition hover:brightness-[1.02] active:scale-[0.98]";
 
 /**
  * Hub header — sits above hero on the yellow plane (no absolute overlap).
@@ -23,11 +23,14 @@ export function ShopHeader({
   settings: settingsProp,
   title = "商城",
   searchHref = "/shop/search",
+  showSearch = true,
 }: {
   settings?: ShopPageSettings;
   title?: string;
   /** Header search icon destination (shop search or page-local focus). */
   searchHref?: string;
+  /** Shop hub hides this — a full search bar sits in the welcome section. */
+  showSearch?: boolean;
 }) {
   const { items } = useCart();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -60,7 +63,7 @@ export function ShopHeader({
       className="shop-header-bar relative z-30 w-full shrink-0"
       style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
     >
-      <div className="mx-auto flex h-[48px] w-full max-w-[1440px] items-center gap-2 px-[15px] pb-2 md:px-6">
+      <div className="mx-auto flex h-[56px] w-full max-w-[1440px] items-center gap-2 px-[15px] pb-2 md:h-[60px] md:px-6">
         <div className="flex flex-1 items-center justify-start">
           <AppHamburgerMenu className={cn(GLASS_BTN, "!min-h-0 !min-w-0 !rounded-full")} />
         </div>
@@ -89,9 +92,11 @@ export function ShopHeader({
               </span>
             ) : null}
           </Link>
-          <Link href={searchHref} className={GLASS_BTN} aria-label="搜尋">
-            <Search className="h-5 w-5" aria-hidden />
-          </Link>
+          {showSearch ? (
+            <Link href={searchHref} className={GLASS_BTN} aria-label="搜尋">
+              <Search className="h-5 w-5" aria-hidden />
+            </Link>
+          ) : null}
         </div>
       </div>
     </header>

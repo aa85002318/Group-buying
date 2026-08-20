@@ -34,51 +34,40 @@ function resolveBadge(p: Product): ShopRailBadge | null {
 export function PopularProducts({
   products: productsProp,
   className,
+  title = "熱門商品",
+  limit = 10,
 }: {
   products?: Product[];
   className?: string;
+  title?: string;
+  limit?: number;
 }) {
   const [products, setProducts] = useState<Product[]>(productsProp ?? []);
+  const [loaded, setLoaded] = useState(Boolean(productsProp));
 
   useEffect(() => {
     if (productsProp) {
       setProducts(productsProp);
+      setLoaded(true);
       return;
     }
     let cancelled = false;
-    fetch("/api/shop/popular-products?limit=10", { cache: "no-store" })
+    fetch(`/api/shop/popular-products?limit=${limit}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return;
         if (Array.isArray(d.products)) setProducts(d.products);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
-  }, [productsProp]);
+  }, [productsProp, limit]);
 
-  if (!products.length) {
-    return (
-      <section
-        className={cn("shop-popular-products w-full bg-white", className)}
-        aria-label="熱門商品"
-      >
-        <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
-          <GroupBuyHubHeader
-            title={
-              <>
-                <span aria-hidden>🔥 </span>熱門商品
-              </>
-            }
-            href="/shop/popular"
-            linkLabel="查看更多"
-          />
-          <p className="py-6 text-center text-sm text-[#687386]">目前尚無熱門商品</p>
-        </div>
-      </section>
-    );
-  }
+  if (!loaded || !products.length) return null;
 
   return (
     <section
@@ -89,7 +78,7 @@ export function PopularProducts({
         <GroupBuyHubHeader
           title={
             <>
-              <span aria-hidden>🔥 </span>熱門商品
+              <span aria-hidden>🔥 </span>{title}
             </>
           }
           href="/shop/popular"

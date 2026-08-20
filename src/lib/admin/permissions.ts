@@ -337,6 +337,19 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     ],
   },
   {
+    id: "integrations",
+    label: "串接設定",
+    icon: "Settings",
+    roles: ["admin"],
+    items: [
+      { href: "/admin/integrations/ecpay", label: "綠界串接", roles: ["admin"] },
+      { href: "/admin/notifications", label: "App 內容推播", roles: ["admin"] },
+      { href: "/admin/integrations/line-oa", label: "LINE 私域串接", roles: ["admin"] },
+      { href: "/admin/integrations/line-login", label: "LINE 登入串接", roles: ["admin"] },
+      { href: "/admin/email-templates", label: "Email 內容修改", roles: ["admin"] },
+    ],
+  },
+  {
     id: "member-gifts",
     label: "門市會員禮",
     icon: "Gift",
@@ -432,6 +445,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       {
         href: "/admin/frontend-cms/shop",
         label: "商城畫布",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/shop/home",
+        label: "商城首頁設定",
         roles: ["admin", "content_editor"],
       },
       {

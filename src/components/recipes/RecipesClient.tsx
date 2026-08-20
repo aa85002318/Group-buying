@@ -206,7 +206,7 @@ function RecipeHeroBanner({ hero }: { hero: RecipesPageSettingsResponse["hero"] 
   const mobileHero = hero.mobile_image_url || DEFAULT_RECIPE_HERO_MOBILE;
 
   const media = (
-    <section className="relative w-full overflow-hidden bg-[#FEE169]">
+    <section className="relative w-full overflow-hidden bg-[#FEE169] pt-[10px]">
       <picture>
         <source media="(min-width: 768px)" srcSet={desktopHero} />
         {/* eslint-disable-next-line @next/next/no-img-element */}

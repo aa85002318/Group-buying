@@ -52,6 +52,12 @@ function mapProductBody(body: Record<string, unknown>) {
             typeof body.disclaimer === "string" ? body.disclaimer : undefined
           )
         : undefined,
+    is_featured: body.is_featured,
+    is_hot: body.is_hot,
+    is_new: body.is_new,
+    hot_sort_order: body.hot_sort_order,
+    new_sort_order: body.new_sort_order,
+    new_until: body.new_until !== undefined ? body.new_until || null : undefined,
     status: status ?? (is_active === false ? "inactive" : "active"),
     sort_order: body.sort_order,
     expected_arrival_date: body.expected_arrival_date,

@@ -14,7 +14,7 @@ import {
 } from "@/lib/recipes/recipe-media-upload-server";
 
 const IMAGE_MAX_SIZE = 5 * 1024 * 1024;
-const ALLOWED_BUCKETS = ["product-images", "recipe-media"] as const;
+const ALLOWED_BUCKETS = ["product-images", "recipe-media", "cms-assets"] as const;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 /**

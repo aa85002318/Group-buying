@@ -12,19 +12,26 @@ import {
 const SELECT =
   "id, name, slug, price, sale_price, website_price, original_price, msrp, image_url, stock, status, is_active, is_hot, is_new, is_popular, popular_sort_order, hot_sort_order, new_sort_order, package_spec, unit, specifications, publish_website, product_scope, view_count, cart_add_count, favorite_count, allow_oversell, inventory_mode, category_id, brands:brand_id(name)";
 
+function hotScore(p: Parameters<typeof engagementScore>[0]): number {
+  return 10_000 - Number(p.hot_sort_order ?? 100) + engagementScore(p);
+}
+
 /**
  * GET /api/shop/popular-products
- * Auto: products in shop-home categories, ordered by category sort then engagement.
+ * Manual HOT products (is_hot), ordered by category then hot_sort_order.
  */
 export async function GET(request: Request) {
   const limit = Math.min(
-    24,
+    12,
     Math.max(1, Number(new URL(request.url).searchParams.get("limit") ?? 10) || 10)
   );
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json({
-      products: mockProducts.filter(isSellableShopProduct).slice(0, limit),
+      products: mockProducts
+        .filter((p) => p.is_hot)
+        .filter(isSellableShopProduct)
+        .slice(0, limit),
       source: "fallback",
     });
   }
@@ -50,6 +57,7 @@ export async function GET(request: Request) {
       .select(SELECT)
       .eq("is_active", true)
       .eq("publish_website", true)
+      .eq("is_hot", true)
       .limit(Math.max(limit * 8, 40));
 
     if (catIds.length === 1) {
@@ -66,14 +74,15 @@ export async function GET(request: Request) {
     const products = sortProductsByShopHomeCategories(
       ((data ?? []) as Record<string, unknown>[])
         .map(normalizeShopProductRow)
-        .filter(isSellableShopProduct),
+        .filter(isSellableShopProduct)
+        .filter((p) => p.is_hot === true),
       categories,
-      engagementScore
+      hotScore
     ).slice(0, limit);
 
     return NextResponse.json({
       products,
-      source: "category_auto",
+      source: "is_hot",
       categories: categories.length,
     });
   } catch (e) {

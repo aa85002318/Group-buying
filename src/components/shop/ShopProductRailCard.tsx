@@ -14,11 +14,13 @@ import {
   PRODUCT_RAIL_IMAGE_FRAME,
 } from "@/lib/ui/product-rail";
 
-export type ShopRailBadge = "new" | "hot" | "soldout";
+export type ShopRailBadge = "new" | "hot" | "soldout" | "sale" | "bundle";
 
 const BADGE_STYLES: Record<ShopRailBadge, { label: string; className: string }> = {
   new: { label: "NEW", className: "bg-[#FF8A3D] text-white" },
   hot: { label: "HOT", className: "bg-[#E53935] text-white" },
+  sale: { label: "優惠", className: "bg-[#F16458] text-white" },
+  bundle: { label: "組合", className: "bg-[#153E73] text-white" },
   soldout: { label: "售完", className: "bg-[#E9EDF2] text-[#687386]" },
 };
 

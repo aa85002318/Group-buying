@@ -50,6 +50,7 @@ export type AdminProductFormV2 = {
   is_featured: boolean;
   is_hot: boolean;
   is_new: boolean;
+  new_until: string;
   hot_sort_order: string;
   new_sort_order: string;
   is_weekly_pick: boolean;
@@ -124,6 +125,7 @@ export const emptyProductFormV2 = (): AdminProductFormV2 => ({
   is_featured: false,
   is_hot: false,
   is_new: false,
+  new_until: "",
   hot_sort_order: "100",
   new_sort_order: "100",
   is_weekly_pick: false,
@@ -203,6 +205,7 @@ type ExtendedProduct = Product & {
   is_featured?: boolean;
   is_hot?: boolean;
   is_new?: boolean;
+  new_until?: string | null;
   hot_sort_order?: number;
   new_sort_order?: number;
   is_weekly_pick?: boolean;
@@ -235,6 +238,14 @@ type ExtendedProduct = Product & {
   related_product_ids?: string[] | null;
 };
 
+function toLocalInput(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
   const images =
     p.images && p.images.length > 0
@@ -262,6 +273,7 @@ export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
     is_featured: p.is_featured ?? false,
     is_hot: p.is_hot ?? false,
     is_new: p.is_new ?? false,
+    new_until: toLocalInput(p.new_until),
     hot_sort_order: String(p.hot_sort_order ?? 100),
     new_sort_order: String(p.new_sort_order ?? 100),
     is_weekly_pick: p.is_weekly_pick ?? false,
@@ -345,6 +357,7 @@ export function formV2ToPayload(form: AdminProductFormV2) {
     is_featured: form.is_featured,
     is_hot: form.is_hot,
     is_new: form.is_new,
+    new_until: form.new_until ? new Date(form.new_until).toISOString() : null,
     hot_sort_order: Number(form.hot_sort_order) || 100,
     new_sort_order: Number(form.new_sort_order) || 100,
     is_weekly_pick: form.is_weekly_pick,

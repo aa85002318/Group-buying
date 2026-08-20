@@ -14,21 +14,6 @@ import {
 } from "@/lib/shop/promo-banners";
 import { cn } from "@/lib/utils";
 
-const FALLBACK_SLIDES: ShopPromoBanner[] = [
-  {
-    id: "fallback-1",
-    title: "會員日全館免運",
-    desktop_image_url: "/images/shop/promo/member-day-5x2.jpg?v=20260803a",
-    mobile_image_url: "/images/shop/promo/member-day-5x2.jpg?v=20260803a",
-    link_type: "page",
-    link_url: "/auth/register",
-    button_text: "加入會員",
-    sort_order: 10,
-    is_active: true,
-    subtitle: "每月 15 號 · 會員享全館免運優惠",
-  },
-];
-
 function BannerMedia({
   banner,
   failed,
@@ -71,10 +56,11 @@ function BannerMedia({
 }
 
 /**
- * 5:2 promo banner carousel under shop category menu.
+ * 16:9 promo banner carousel under shop category menu.
  */
 export function ShopPromoCarousel() {
-  const [banners, setBanners] = useState<ShopPromoBanner[]>(FALLBACK_SLIDES);
+  const [banners, setBanners] = useState<ShopPromoBanner[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [selected, setSelected] = useState(0);
   const [failedIds, setFailedIds] = useState<Record<string, boolean>>({});
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -118,7 +104,10 @@ export function ShopPromoCarousel() {
           );
         if (mapped.length) setBanners(mapped);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -141,11 +130,13 @@ export function ShopPromoCarousel() {
   }, [emblaApi, onSelect]);
 
   const slideClass =
-    "shop-promo-carousel__frame relative min-w-0 flex-[0_0_100%] overflow-hidden rounded-none bg-[#F7F8FB]";
+    "shop-promo-carousel__frame relative min-w-0 flex-[0_0_100%] overflow-hidden rounded-[18px] bg-[#F7F8FB]";
+
+  if (!loaded || banners.length === 0) return null;
 
   return (
     <section
-      className="shop-promo-carousel w-full bg-white"
+      className="shop-promo-carousel w-full bg-[#FFFEFA]"
       aria-label="商城活動 Banner"
     >
       <div className="mx-auto max-w-[1200px] px-4 md:px-6">

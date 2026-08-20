@@ -30,6 +30,7 @@ export function ProductCard({
         imageAlt={name}
         title={name}
         description={spec}
+        aspectClassName="aspect-square"
         badges={
           <>
             {badges.map((b) => (

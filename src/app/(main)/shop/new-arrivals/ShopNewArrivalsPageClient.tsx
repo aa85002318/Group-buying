@@ -30,7 +30,7 @@ export function ShopNewArrivalsPageClient() {
     <div className="mx-auto w-full max-w-[1200px] space-y-4 px-4 py-5 md:px-6">
       <div className="flex items-center justify-between gap-2">
         <h1 className="flex items-center gap-2 text-xl font-bold text-[#153E73]">
-          新品上架
+          本週上新
           <span className="rounded-[6px] bg-[#FF8A3D] px-1.5 py-0.5 text-xs font-bold leading-none text-white">
             NEW
           </span>
@@ -44,7 +44,7 @@ export function ShopNewArrivalsPageClient() {
         <p className="text-sm text-[#687386]">載入中…</p>
       ) : products.length === 0 ? (
         <p className="rounded-2xl border border-[#EEEEEE] bg-white p-6 text-sm text-[#687386]">
-          目前尚無新品。
+          目前尚無本週上新。
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">

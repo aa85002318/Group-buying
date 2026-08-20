@@ -484,7 +484,7 @@
     margin: 0;
     padding: 0;
     border: none;
-    background: #fde045;
+    background: #ffd454;
     overflow: visible;
   }
 
@@ -562,7 +562,7 @@
   .shop-category-menu {
     padding-top: 0;
     padding-bottom: 0;
-    background: #ffffff;
+    background: #fffefa;
   }
 
   .shop-category-menu__track {
@@ -644,13 +644,13 @@
 
   .shop-promo-carousel {
     padding-bottom: 0;
-    background: #ffffff;
+    background: #fffefa;
   }
 
   .shop-promo-carousel__frame {
-    aspect-ratio: 5 / 2;
-    min-height: 140px;
-    border-radius: 0 !important;
+    aspect-ratio: 16 / 9;
+    min-height: 160px;
+    border-radius: 18px !important;
   }
 
   .scrollbar-hide {

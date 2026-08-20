@@ -482,6 +482,9 @@ export interface Product {
   product_channels?: Array<{ channel: string; is_enabled: boolean }>;
   is_hot?: boolean;
   is_new?: boolean;
+  new_until?: string | null;
+  is_featured?: boolean;
+  is_weekly_pick?: boolean;
   is_popular?: boolean;
   popular_sort_order?: number;
   hot_sort_order?: number;
