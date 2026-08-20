@@ -79,7 +79,6 @@ export function mergeShopLayoutSettings(input: unknown): ShopLayoutSettings {
       if (typeof v === "boolean") sections[id] = v;
     }
   }
-  sections.hero = false;
 
   const order: ShopLayoutSectionId[] = [];
   if (Array.isArray(raw.sectionOrder)) {

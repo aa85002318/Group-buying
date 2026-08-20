@@ -18,7 +18,6 @@ import { summarizeValidation, validateCmsPageForPublish } from "@/lib/cms/cms-va
 type Props = {
   initialPage: CmsPage;
   legacyHref?: string;
-  legacyLabel?: string;
   /** Local canvas edits only — do not write live contracts */
   readOnly?: boolean;
   allowLocalEdit?: boolean;
@@ -32,7 +31,6 @@ type Props = {
 export function CmsEditorShell({
   initialPage,
   legacyHref,
-  legacyLabel,
   readOnly = true,
   allowLocalEdit = true,
   versions = [],
@@ -112,7 +110,6 @@ export function CmsEditorShell({
         onRedo={editor.redo}
         previewPath={page?.previewPath}
         legacyHref={legacyHref}
-        legacyLabel={legacyLabel}
         readOnly={!canMutateLocal}
         saveDisabled={!onSaveDraft || !interactive}
         publishDisabled={!onPublish || !interactive || !validation.canPublish}

@@ -51,7 +51,6 @@ export const CMS_PAGE_REGISTRY: CmsPageRegistryEntry[] = [
     systemRequired: true,
     hasLayoutCms: true,
     adapter: "shop",
-    description: "商城首頁：搜尋、快捷入口、分類、活動 Banner、商品列（與前台版本 C 對齊）",
   },
   {
     id: "category",

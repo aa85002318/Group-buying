@@ -43,65 +43,13 @@ type ShopSectionDef = {
 
 const SHOP_SECTIONS: ShopSectionDef[] = [
   {
-    id: "home",
-    label: "搜尋與快捷入口",
-    description: "黃底頂部：商城標題、搜尋、熱門關鍵字、4 個快捷入口。對應前台固定區塊。",
-    href: "/admin/shop/home",
-    group: "main",
-    tip: "此區不在版面拖拉清單內，內容請到「商城首頁設定」即時維護。",
-  },
-  {
     id: "categories",
     label: "商品分類",
-    description: "搜尋欄下方圓形主分類（5 個 + 全部分類）。亦可於「商城首頁設定」Tab 管理。",
-    href: "/admin/shop/home?tab=categories",
+    description: "搜尋欄下方圓形主分類：文字、logo、色卡。",
+    href: "/admin/shop/categories",
     group: "main",
     layoutId: "categories",
     tip: "調整顯示於商城首頁的主分類與排序。",
-  },
-  {
-    id: "promo",
-    label: "活動 Banner",
-    description: "16:9 活動輪播。亦可於「商城首頁設定」Tab 管理。",
-    href: "/admin/shop/home?tab=banners",
-    group: "main",
-    layoutId: "promo",
-  },
-  {
-    id: "new",
-    label: "本週上新",
-    description: "依新品旗標／上架期間自動排序。",
-    href: "/admin/shop/home?tab=products",
-    group: "main",
-    layoutId: "new",
-    tip: "請至商品主檔標記新品。前台固定接在 Banner 之後。",
-  },
-  {
-    id: "popular",
-    label: "熱門商品",
-    description: "依商城主分類自動排序預覽。",
-    href: "/admin/shop/home?tab=products",
-    group: "main",
-    layoutId: "popular",
-    tip: "熱門商品由商品主檔標記驅動。",
-  },
-  {
-    id: "sale",
-    label: "優惠商品",
-    description: "特價或本週精選商品橫向滑動列。",
-    href: "/admin/shop/home?tab=products",
-    group: "main",
-    layoutId: "sale",
-    tip: "售價低於原價／MSRP，或勾選本週精選。",
-  },
-  {
-    id: "bundle",
-    label: "組合優惠",
-    description: "進行中的團購／組合商品。",
-    href: "/admin/shop/home?tab=products",
-    group: "main",
-    layoutId: "bundle",
-    tip: "來源為商品主檔「團購商品」。",
   },
   {
     id: "features",
@@ -110,6 +58,32 @@ const SHOP_SECTIONS: ShopSectionDef[] = [
     href: "/admin/shop/features",
     group: "main",
     layoutId: "features",
+  },
+  {
+    id: "promo",
+    label: "活動 Banner",
+    description: "5:2 活動輪播，可新增多張。",
+    href: "/admin/shop/promo-banners",
+    group: "main",
+    layoutId: "promo",
+  },
+  {
+    id: "popular",
+    label: "熱門商品",
+    description: "依商城主分類自動排序預覽。",
+    href: "/admin/shop/popular-products",
+    group: "main",
+    layoutId: "popular",
+    tip: "熱門商品由商品主檔標記驅動；此頁為預覽與說明。",
+  },
+  {
+    id: "new",
+    label: "新品上架",
+    description: "依新品旗標／上架時間自動排序。",
+    href: "/admin/shop/new-products",
+    group: "main",
+    layoutId: "new",
+    tip: "請至商品主檔標記新品。",
   },
   {
     id: "inspiration",
@@ -136,33 +110,26 @@ const SHOP_SECTIONS: ShopSectionDef[] = [
     layoutId: "info-banners",
   },
   {
-    id: "welcome",
-    label: "IP 歡迎區（舊版）",
-    description: "舊大型 Welcome／IP 素材。版本 C 已改為快捷入口，建議關閉。",
-    href: "/admin/shop/welcome",
-    group: "extra",
-    tip: "IP 請用透明 PNG／WebP。前台版本 C 不再顯示此區。",
-  },
-  {
     id: "appearance",
-    label: "頁首／Welcome 外觀",
-    description: "頁首與搜尋區底色銜接（寫入版面草稿）。",
-    href: "/admin/shop/home?tab=basic",
+    label: "頁首／Hero 外觀",
+    description: "頁首底色、Hero 底色銜接（寫入版面草稿）。",
+    href: "/admin/shop/appearance",
     group: "extra",
   },
   {
     id: "hero",
     label: "商城 Hero Banner",
-    description: "舊大型 Hero（版本 C 已改為快捷入口，請保持關閉）。",
+    description: "滿寬主視覺圖，高度隨圖。",
     href: "/admin/shop/hero-banners",
     group: "extra",
+    layoutId: "hero",
   },
   {
     id: "ai-assistant",
     label: "AI 助手卡",
     description: "商城內暖黃 AI 功能卡（不是 /ai 頁）。",
     href: "/admin/shop/ai-assistant",
-    group: "main",
+    group: "extra",
     layoutId: "ai-assistant",
   },
   {
@@ -306,7 +273,7 @@ export function ShopCmsStudio() {
         <div className="space-y-3">
           <CmsStudioHeader
             title="商城 CMS"
-            description="對齊前台商城首頁：搜尋／快捷入口固定在頂部；其下為分類、Banner、商品列。"
+            description="區塊顯示／排序與外觀先存草稿；細項內容（Banner 圖等）仍進階編輯後即時上線。"
             status={status}
             actions={
               <>
@@ -350,7 +317,7 @@ export function ShopCmsStudio() {
                   </p>
                 ) : null}
                 <p className="rounded-lg border border-[#FFE149]/60 bg-[#FFFBEA] px-3 py-2 text-xs text-[#153E73]">
-                  搜尋、快捷入口、分類 Icon、活動 Banner 請到「商城首頁設定」編輯（儲存即上線）。此處草稿只控制下方區塊顯示／排序。
+                  版面草稿控制顯示／排序／外觀色。Banner、分類等素材內容請進階編輯（仍儲存即上線）。
                 </p>
               </div>
             }
@@ -358,7 +325,7 @@ export function ShopCmsStudio() {
           <CmsVersionPublishBar
             apiPath="/api/admin/shop/layout"
             title="商城版面草稿與發布"
-            description="儲存草稿不會改訪客看到的 /shop；按「發布上線」後才套用區塊顯示與外觀。搜尋／快捷入口內容仍即時上線。"
+            description="儲存草稿不會改訪客看到的 /shop；按「發布上線」後才套用區塊顯示與外觀。"
             previewHref={previewHref}
             publishConfirm="確定將商城版面草稿發布到線上？"
             publishDisabled={dirty}
@@ -373,26 +340,6 @@ export function ShopCmsStudio() {
       }
       sectionList={
         <div className="flex h-full min-h-0 flex-col">
-          <div className="border-b border-[#E8EBF0] p-2">
-            <p className="px-1 pb-1 text-[11px] font-bold uppercase tracking-wide text-[#153E73]/50">
-              固定頂部（前台黃底）
-            </p>
-            <button
-              type="button"
-              className={cn(
-                "w-full rounded-xl px-3 py-2 text-left text-[14px] font-semibold",
-                selectedId === "home"
-                  ? "bg-[#FFF5C7] text-[#153E73]"
-                  : "text-[#153E73]/80 hover:bg-[#FFFBEA]"
-              )}
-              onClick={() => selectSection("home")}
-            >
-              搜尋與快捷入口
-              <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">
-                商城首頁設定 · 即時上線
-              </span>
-            </button>
-          </div>
           <CmsSectionList
             title="商城頁面區塊"
             items={listItems}

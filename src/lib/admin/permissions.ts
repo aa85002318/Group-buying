@@ -435,11 +435,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         roles: ["admin", "content_editor"],
       },
       {
-        href: "/admin/shop/home",
-        label: "商城首頁設定",
-        roles: ["admin", "content_editor"],
-      },
-      {
         href: "/admin/frontend-cms/group_buy",
         label: "團購畫布",
         roles: ["admin"],

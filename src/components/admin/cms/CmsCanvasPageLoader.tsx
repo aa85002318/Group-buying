@@ -18,7 +18,7 @@ import type { GroupBuyPageSettings } from "@/lib/group-buy/page-settings";
 
 const LEGACY_HREF: Record<string, string> = {
   home: "/admin/home",
-  shop: "/admin/shop/home",
+  shop: "/admin/shop",
   group_buy: "/admin/group-buy/settings",
   recipes: "/admin/recipes/settings",
   global_header: "/admin/header-promos",
@@ -52,18 +52,13 @@ export function CmsCanvasPageLoader({ pageId }: { pageId: string }) {
         );
         setVersions([]);
       } else if (pageId === "shop") {
-        const [layoutRes, homeRes] = await Promise.all([
-          fetch("/api/admin/shop/layout"),
-          fetch("/api/admin/shop/home-settings"),
-        ]);
-        const data = await layoutRes.json();
-        if (!layoutRes.ok) throw new Error(data.error ?? "載入失敗");
-        const home = homeRes.ok ? await homeRes.json() : {};
+        const res = await fetch("/api/admin/shop/layout");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "載入失敗");
         setPage(
           adaptShopLayoutToCmsPage(data.settings as ShopLayoutSettings, {
             draftVersion: data.draft?.version_number,
             updatedAt: data.draft?.updated_at,
-            homeSettings: home.settings ?? null,
           })
         );
         setVersions((data.versions ?? []) as CmsVersionLite[]);
@@ -121,7 +116,6 @@ export function CmsCanvasPageLoader({ pageId }: { pageId: string }) {
       <CmsEditorShell
         initialPage={page}
         legacyHref={LEGACY_HREF[pageId]}
-        legacyLabel={pageId === "shop" ? "商城首頁設定" : undefined}
         readOnly={false}
         allowLocalEdit
         versions={versions}

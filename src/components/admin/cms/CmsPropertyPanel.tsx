@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import type { CmsBlock } from "@/types/cms";
 import { ImageUploader } from "@/components/admin/cms/ImageUploader";
@@ -11,20 +10,6 @@ import {
   type CmsLinkValue,
 } from "@/components/admin/home/CmsLinkPicker";
 import { CMS_IMAGE_SPECS } from "@/components/admin/home/CmsImageField";
-
-const SHOP_HOME_CONTENT_HREF: Record<string, string> = {
-  shop_search: "/admin/shop/home?tab=basic",
-  hot_searches: "/admin/shop/home?tab=basic",
-  quick_links: "/admin/shop/home?tab=quick-links",
-  quick_entry: "/admin/shop/home?tab=quick-links",
-  categories: "/admin/shop/home?tab=categories",
-  promo: "/admin/shop/home?tab=banners",
-  new: "/admin/shop/home?tab=products",
-  popular: "/admin/shop/home?tab=products",
-  sale: "/admin/shop/home?tab=products",
-  bundle: "/admin/shop/home?tab=products",
-  featured: "/admin/shop/home?tab=products",
-};
 
 type Props = {
   block: CmsBlock | null;
@@ -118,15 +103,6 @@ export function CmsPropertyPanel({ block, pageId, onChange, readOnly }: Props) {
             <br />
             正式寫入仍走既有草稿 API；畫布變更預設為本機預覽。
           </p>
-        ) : null}
-
-        {pageId === "shop" && block.sourceKey && SHOP_HOME_CONTENT_HREF[block.sourceKey] ? (
-          <Link
-            href={SHOP_HOME_CONTENT_HREF[block.sourceKey]!}
-            className="inline-flex rounded-xl bg-[#FFE149] px-3 py-2 text-center text-sm font-bold text-[#153E73]"
-          >
-            前往商城首頁設定
-          </Link>
         ) : null}
       </div>
     </div>
