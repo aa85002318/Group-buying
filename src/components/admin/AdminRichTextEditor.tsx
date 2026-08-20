@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { AdminBrandFontSelect, useBrandFontPreviewCss } from "@/components/admin/AdminBrandFontPicker";
-import { getBrandFont, type BrandFontId } from "@/lib/branding";
+import { useBrandFontPreviewCss } from "@/components/admin/AdminBrandFontPicker";
+import { BRAND_FONT_OPTIONS, getBrandFont, type BrandFontId } from "@/lib/branding";
 import { brandGoogleFontsHref } from "@/lib/branding/fonts";
 
 const SIZES = [
@@ -27,6 +27,8 @@ const LINE_HEIGHTS = [
   { label: "寬鬆", value: "1.8" },
   { label: "超寬", value: "2.2" },
 ];
+
+const FONT_OPTIONS = BRAND_FONT_OPTIONS.filter((f) => f.id !== "system");
 
 const EDITOR_CLASS =
   "input-field min-h-[220px] rounded-none border-0 outline-none " +
@@ -55,6 +57,7 @@ export function AdminRichTextEditor({
   const savedRange = useRef<Range | null>(null);
   const [htmlMode, setHtmlMode] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [openMenu, setOpenMenu] = useState<"font" | "size" | "color" | "line" | null>(null);
   useBrandFontPreviewCss();
 
   useEffect(() => {
@@ -66,6 +69,13 @@ export function AdminRichTextEditor({
     }
   }, [htmlMode, value]);
 
+  useEffect(() => {
+    if (!openMenu) return;
+    const close = () => setOpenMenu(null);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [openMenu]);
+
   const emit = () => {
     onChange(ref.current?.innerHTML ?? "");
   };
@@ -74,77 +84,116 @@ export function AdminRichTextEditor({
     e.preventDefault();
   };
 
-  const saveSelectionRef = () => {
+  /** Only store non-collapsed ranges inside the editor; never overwrite with a caret. */
+  const saveSelection = () => {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
-    if (ref.current && ref.current.contains(range.commonAncestorContainer)) {
-      savedRange.current = range.cloneRange();
-    }
-  };
-
-  const saveSelection = () => {
-    saveSelectionRef();
+    if (!ref.current?.contains(range.commonAncestorContainer)) return;
+    if (range.collapsed) return;
+    savedRange.current = range.cloneRange();
   };
 
   useEffect(() => {
-    const onSelectionChange = () => saveSelectionRef();
+    const onSelectionChange = () => saveSelection();
     document.addEventListener("selectionchange", onSelectionChange);
     return () => document.removeEventListener("selectionchange", onSelectionChange);
   }, []);
 
   const restoreSelection = () => {
     const editor = ref.current;
-    if (!editor) return;
+    if (!editor) return false;
     editor.focus();
     const sel = window.getSelection();
-    if (!sel) return;
-    sel.removeAllRanges();
+    if (!sel) return false;
     if (savedRange.current) {
+      sel.removeAllRanges();
       try {
         sel.addRange(savedRange.current);
+        return true;
       } catch {
-        /* range may be stale after HTML rewrite */
+        /* range may be stale */
       }
     }
+    return sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed;
   };
 
-  const applyInline = (styles: Record<string, string>) => {
+  const getWorkingRange = (): Range | null => {
     restoreSelection();
     const editor = ref.current;
     const sel = window.getSelection();
-    if (!editor || !sel) return;
-    if (sel.rangeCount === 0) {
-      const fallback = document.createRange();
-      fallback.selectNodeContents(editor);
-      sel.addRange(fallback);
-    }
-    const range = sel.getRangeAt(0);
-    if (range.collapsed) {
-      const node = range.startContainer;
-      if (node.nodeType === Node.TEXT_NODE && node.textContent) {
-        range.setStart(node, 0);
-        range.setEnd(node, node.textContent.length);
-      } else if (editor.childNodes.length) {
-        range.selectNodeContents(editor);
+    if (!editor || !sel) return null;
+    if (sel.rangeCount === 0 || sel.getRangeAt(0).collapsed) {
+      if (savedRange.current && !savedRange.current.collapsed) {
+        sel.removeAllRanges();
+        try {
+          sel.addRange(savedRange.current);
+        } catch {
+          return null;
+        }
+      } else {
+        return null;
       }
     }
-    const span = document.createElement("span");
-    for (const [key, val] of Object.entries(styles)) {
-      span.style.setProperty(key, val);
+    return sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+  };
+
+  /** Wrap each text node in the selection so font/size/color survive across <br>/blocks. */
+  const applyInline = (styles: Record<string, string>) => {
+    const editor = ref.current;
+    const range = getWorkingRange();
+    if (!editor || !range || range.collapsed) {
+      window.alert("請先反白要套用格式的文字，再選擇字型／大小／顏色。");
+      return;
     }
-    try {
-      range.surroundContents(span);
-    } catch {
-      const frag = range.extractContents();
-      span.appendChild(frag);
-      range.insertNode(span);
+
+    const textNodes = collectTextNodesInRange(range, editor);
+    if (textNodes.length === 0) {
+      window.alert("請先反白要套用格式的文字，再選擇字型／大小／顏色。");
+      return;
     }
-    sel.removeAllRanges();
-    const after = document.createRange();
-    after.selectNodeContents(span);
-    sel.addRange(after);
-    savedRange.current = after.cloneRange();
+
+    let firstSpan: HTMLElement | null = null;
+    let lastSpan: HTMLElement | null = null;
+
+    for (const { node, start, end } of textNodes) {
+      if (start >= end) continue;
+      const full = node.textContent ?? "";
+      const before = full.slice(0, start);
+      const mid = full.slice(start, end);
+      const after = full.slice(end);
+      if (!mid) continue;
+
+      const span = document.createElement("span");
+      for (const [key, val] of Object.entries(styles)) {
+        span.style.setProperty(key, val);
+      }
+      span.textContent = mid;
+
+      const parent = node.parentNode;
+      if (!parent) continue;
+      const frag = document.createDocumentFragment();
+      if (before) frag.appendChild(document.createTextNode(before));
+      frag.appendChild(span);
+      if (after) frag.appendChild(document.createTextNode(after));
+      parent.replaceChild(frag, node);
+
+      if (!firstSpan) firstSpan = span;
+      lastSpan = span;
+    }
+
+    if (firstSpan && lastSpan) {
+      const sel = window.getSelection();
+      if (sel) {
+        const after = document.createRange();
+        after.setStartBefore(firstSpan);
+        after.setEndAfter(lastSpan);
+        sel.removeAllRanges();
+        sel.addRange(after);
+        savedRange.current = after.cloneRange();
+      }
+    }
+    setOpenMenu(null);
     emit();
   };
 
@@ -207,16 +256,18 @@ export function AdminRichTextEditor({
   const applyFont = (id: BrandFontId) => {
     ensureFontStylesheet(id);
     const opt = getBrandFont(id);
+    // Quote first family name for reliable CSS; keep fallbacks.
     applyInline({ "font-family": opt.family });
   };
 
   const applyLineHeight = (value: string) => {
-    restoreSelection();
     const editor = ref.current;
-    const sel = window.getSelection();
-    if (!editor || !sel || sel.rangeCount === 0) return;
-
-    const range = sel.getRangeAt(0);
+    const range = getWorkingRange();
+    if (!editor) return;
+    if (!range || range.collapsed) {
+      window.alert("請先反白要調整行距的文字。");
+      return;
+    }
     const blocks = collectBlocksInRange(range, editor);
     if (blocks.length === 0) {
       applyInline({ "line-height": value });
@@ -225,6 +276,7 @@ export function AdminRichTextEditor({
     for (const el of blocks) {
       el.style.lineHeight = value;
     }
+    setOpenMenu(null);
     emit();
   };
 
@@ -294,6 +346,13 @@ export function AdminRichTextEditor({
     emit();
   };
 
+  const toggleMenu = (menu: typeof openMenu) => (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    saveSelection();
+    setOpenMenu((cur) => (cur === menu ? null : menu));
+  };
+
   return (
     <div className="overflow-hidden rounded-lg border border-border">
       <div className="flex flex-wrap items-center gap-1 border-b border-border bg-muted/50 p-2">
@@ -313,65 +372,94 @@ export function AdminRichTextEditor({
           H3
         </Button>
         <span className="mx-1 h-5 w-px bg-border" />
-        <AdminBrandFontSelect
-          onChange={applyFont}
-          placeholder="字型"
-          onMouseDown={saveSelection}
-        />
-        <select
-          className="rounded border border-border bg-white px-2 py-1 text-xs"
-          defaultValue=""
-          onMouseDown={saveSelection}
-          onChange={(e) => {
-            if (e.target.value) applyInline({ "font-size": e.target.value });
-            e.target.value = "";
-          }}
+
+        <ToolbarMenu
+          label="字型"
+          open={openMenu === "font"}
+          onToggle={toggleMenu("font")}
         >
-          <option value="" disabled>
-            文字大小
-          </option>
+          {FONT_OPTIONS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              className="block w-full px-3 py-2 text-left text-xs hover:bg-[#FFF5C7]"
+              style={{ fontFamily: f.family }}
+              onMouseDown={keepFocus}
+              onClick={(e) => {
+                e.stopPropagation();
+                applyFont(f.id);
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </ToolbarMenu>
+
+        <ToolbarMenu
+          label="文字大小"
+          open={openMenu === "size"}
+          onToggle={toggleMenu("size")}
+        >
           {SIZES.map((s) => (
-            <option key={s.value} value={s.value}>
+            <button
+              key={s.value}
+              type="button"
+              className="block w-full px-3 py-2 text-left text-xs hover:bg-[#FFF5C7]"
+              style={{ fontSize: s.value }}
+              onMouseDown={keepFocus}
+              onClick={(e) => {
+                e.stopPropagation();
+                applyInline({ "font-size": s.value });
+              }}
+            >
               {s.label}
-            </option>
+            </button>
           ))}
-        </select>
-        <select
-          className="rounded border border-border bg-white px-2 py-1 text-xs"
-          defaultValue=""
-          onMouseDown={saveSelection}
-          onChange={(e) => {
-            if (e.target.value) applyInline({ color: e.target.value });
-            e.target.value = "";
-          }}
+        </ToolbarMenu>
+
+        <ToolbarMenu
+          label="文字顏色"
+          open={openMenu === "color"}
+          onToggle={toggleMenu("color")}
         >
-          <option value="" disabled>
-            文字顏色
-          </option>
           {COLORS.map((c) => (
-            <option key={c.value} value={c.value}>
+            <button
+              key={c.value}
+              type="button"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-[#FFF5C7]"
+              onMouseDown={keepFocus}
+              onClick={(e) => {
+                e.stopPropagation();
+                applyInline({ color: c.value });
+              }}
+            >
+              <span className="inline-block h-3 w-3 rounded-full border border-border" style={{ background: c.value }} />
               {c.label}
-            </option>
+            </button>
           ))}
-        </select>
-        <select
-          className="rounded border border-border bg-white px-2 py-1 text-xs"
-          defaultValue=""
-          onMouseDown={saveSelection}
-          onChange={(e) => {
-            if (e.target.value) applyLineHeight(e.target.value);
-            e.target.value = "";
-          }}
+        </ToolbarMenu>
+
+        <ToolbarMenu
+          label="行距"
+          open={openMenu === "line"}
+          onToggle={toggleMenu("line")}
         >
-          <option value="" disabled>
-            行距
-          </option>
           {LINE_HEIGHTS.map((lh) => (
-            <option key={lh.value} value={lh.value}>
-              {lh.label}
-            </option>
+            <button
+              key={lh.value}
+              type="button"
+              className="block w-full px-3 py-2 text-left text-xs hover:bg-[#FFF5C7]"
+              onMouseDown={keepFocus}
+              onClick={(e) => {
+                e.stopPropagation();
+                applyLineHeight(lh.value);
+              }}
+            >
+              {lh.label}（{lh.value}）
+            </button>
           ))}
-        </select>
+        </ToolbarMenu>
+
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={applyList}>
           項目符號
         </Button>
@@ -431,14 +519,43 @@ export function AdminRichTextEditor({
           suppressContentEditableWarning
           data-placeholder={placeholder}
           onInput={emit}
-          onBlur={() => {
-            saveSelectionRef();
-            emit();
-          }}
+          onBlur={emit}
           onMouseUp={saveSelection}
           onKeyUp={saveSelection}
         />
       )}
+      <p className="border-t border-border bg-muted/30 px-3 py-1.5 text-[11px] text-foreground-muted">
+        變更字型／大小／顏色／行距前，請先反白文字再點選。明體、圓體差異最明顯。
+      </p>
+    </div>
+  );
+}
+
+function ToolbarMenu({
+  label,
+  open,
+  onToggle,
+  children,
+}: {
+  label: string;
+  open: boolean;
+  onToggle: (e: MouseEvent) => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        className="rounded border border-border bg-white px-2 py-1 text-xs font-medium text-foreground hover:bg-[#FFFBEA]"
+        onMouseDown={onToggle}
+      >
+        {label} ▾
+      </button>
+      {open ? (
+        <div className="absolute left-0 top-full z-30 mt-1 max-h-64 min-w-[12rem] overflow-y-auto rounded-md border border-border bg-white py-1 shadow-lg">
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -475,6 +592,29 @@ function collectBlocksInRange(range: Range, editor: HTMLElement): HTMLElement[] 
     }
   }
   return Array.from(found);
+}
+
+function collectTextNodesInRange(
+  range: Range,
+  editor: HTMLElement
+): Array<{ node: Text; start: number; end: number }> {
+  const out: Array<{ node: Text; start: number; end: number }> = [];
+  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode() as Text | null;
+  while (node) {
+    if (!range.intersectsNode(node)) {
+      node = walker.nextNode() as Text | null;
+      continue;
+    }
+    const len = node.textContent?.length ?? 0;
+    let start = 0;
+    let end = len;
+    if (node === range.startContainer) start = range.startOffset;
+    if (node === range.endContainer) end = range.endOffset;
+    if (start < end) out.push({ node, start, end });
+    node = walker.nextNode() as Text | null;
+  }
+  return out;
 }
 
 function ensureFontStylesheet(id: BrandFontId) {
