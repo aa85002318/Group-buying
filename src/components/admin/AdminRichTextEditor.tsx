@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { AdminBrandFontSelect, useBrandFontPreviewCss } from "@/components/admin/AdminBrandFontPicker";
 import { getBrandFont, type BrandFontId } from "@/lib/branding";
+import { brandGoogleFontsHref } from "@/lib/branding/fonts";
 
 const SIZES = [
   { label: "小", value: "12px" },
@@ -18,6 +19,13 @@ const COLORS = [
   { label: "紅色", value: "#B91C1C" },
   { label: "藍色", value: "#1D4ED8" },
   { label: "綠色", value: "#15803D" },
+];
+
+const LINE_HEIGHTS = [
+  { label: "緊密", value: "1.2" },
+  { label: "標準", value: "1.5" },
+  { label: "寬鬆", value: "1.8" },
+  { label: "超寬", value: "2.2" },
 ];
 
 const EDITOR_CLASS =
@@ -66,7 +74,7 @@ export function AdminRichTextEditor({
     e.preventDefault();
   };
 
-  const saveSelection = () => {
+  const saveSelectionRef = () => {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
@@ -74,6 +82,16 @@ export function AdminRichTextEditor({
       savedRange.current = range.cloneRange();
     }
   };
+
+  const saveSelection = () => {
+    saveSelectionRef();
+  };
+
+  useEffect(() => {
+    const onSelectionChange = () => saveSelectionRef();
+    document.addEventListener("selectionchange", onSelectionChange);
+    return () => document.removeEventListener("selectionchange", onSelectionChange);
+  }, []);
 
   const restoreSelection = () => {
     const editor = ref.current;
@@ -187,9 +205,27 @@ export function AdminRichTextEditor({
   };
 
   const applyFont = (id: BrandFontId) => {
+    ensureFontStylesheet(id);
     const opt = getBrandFont(id);
-    const familyCss = opt.family.replace(/"/g, "'");
-    applyInline({ "font-family": familyCss });
+    applyInline({ "font-family": opt.family });
+  };
+
+  const applyLineHeight = (value: string) => {
+    restoreSelection();
+    const editor = ref.current;
+    const sel = window.getSelection();
+    if (!editor || !sel || sel.rangeCount === 0) return;
+
+    const range = sel.getRangeAt(0);
+    const blocks = collectBlocksInRange(range, editor);
+    if (blocks.length === 0) {
+      applyInline({ "line-height": value });
+      return;
+    }
+    for (const el of blocks) {
+      el.style.lineHeight = value;
+    }
+    emit();
   };
 
   const insertLink = () => {
@@ -318,6 +354,24 @@ export function AdminRichTextEditor({
             </option>
           ))}
         </select>
+        <select
+          className="rounded border border-border bg-white px-2 py-1 text-xs"
+          defaultValue=""
+          onMouseDown={saveSelection}
+          onChange={(e) => {
+            if (e.target.value) applyLineHeight(e.target.value);
+            e.target.value = "";
+          }}
+        >
+          <option value="" disabled>
+            行距
+          </option>
+          {LINE_HEIGHTS.map((lh) => (
+            <option key={lh.value} value={lh.value}>
+              {lh.label}
+            </option>
+          ))}
+        </select>
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={applyList}>
           項目符號
         </Button>
@@ -377,7 +431,10 @@ export function AdminRichTextEditor({
           suppressContentEditableWarning
           data-placeholder={placeholder}
           onInput={emit}
-          onBlur={emit}
+          onBlur={() => {
+            saveSelectionRef();
+            emit();
+          }}
           onMouseUp={saveSelection}
           onKeyUp={saveSelection}
         />
@@ -392,4 +449,42 @@ function escapeHtml(text: string) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+const BLOCK_TAGS = new Set(["P", "DIV", "LI", "H1", "H2", "H3", "H4", "TD", "TH"]);
+
+function collectBlocksInRange(range: Range, editor: HTMLElement): HTMLElement[] {
+  const found = new Set<HTMLElement>();
+  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_ELEMENT);
+  let node = walker.nextNode() as HTMLElement | null;
+  while (node) {
+    if (BLOCK_TAGS.has(node.tagName) && range.intersectsNode(node)) {
+      found.add(node);
+    }
+    node = walker.nextNode() as HTMLElement | null;
+  }
+  if (found.size === 0) {
+    let n: Node | null = range.commonAncestorContainer;
+    if (n.nodeType === Node.TEXT_NODE) n = n.parentElement;
+    while (n && n !== editor) {
+      if (n instanceof HTMLElement && BLOCK_TAGS.has(n.tagName)) {
+        found.add(n);
+        break;
+      }
+      n = n.parentElement;
+    }
+  }
+  return Array.from(found);
+}
+
+function ensureFontStylesheet(id: BrandFontId) {
+  const href = brandGoogleFontsHref([id]);
+  if (!href) return;
+  const linkId = `admin-font-${id}`;
+  if (document.getElementById(linkId)) return;
+  const link = document.createElement("link");
+  link.id = linkId;
+  link.rel = "stylesheet";
+  link.href = href;
+  document.head.appendChild(link);
 }

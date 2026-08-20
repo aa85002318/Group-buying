@@ -120,7 +120,7 @@ export function AdminBrandFontSelect({
         {placeholder}
       </option>
       {BRAND_FONT_OPTIONS.filter((f) => f.id !== "system").map((f) => (
-        <option key={f.id} value={f.id}>
+        <option key={f.id} value={f.id} style={{ fontFamily: f.family }}>
           {f.label}
         </option>
       ))}
