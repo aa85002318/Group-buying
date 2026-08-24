@@ -7,6 +7,9 @@ import { HomeSearchBar } from "@/components/consumer/HomeSearchBar";
 import { StoreLocationResult } from "@/components/consumer/StoreLocationResult";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { searchProductLocations } from "@/lib/mock/consumer-hub";
+import { PRODUCT_IMAGE_FALLBACK } from "@/lib/products/product-images";
+import { plainTextSnippet } from "@/lib/cms/safeHtml";
+import { formatCurrency } from "@/lib/utils";
 
 type Hit = {
   type: string;
@@ -14,6 +17,8 @@ type Hit = {
   title: string;
   href: string;
   snippet?: string | null;
+  imageUrl?: string | null;
+  price?: number | null;
 };
 
 export function SearchPageClient() {
@@ -88,14 +93,7 @@ export function SearchPageClient() {
           <ul className="space-y-2">
             {hits.map((hit: Hit) => (
               <li key={`${hit.type}-${hit.id}`}>
-                <Link href={hit.href} className="card-surface block p-4 hover:bg-surface-soft">
-                  <p className="font-bold text-foreground">{hit.title}</p>
-                  {hit.snippet && (
-                    <p className="mt-1 line-clamp-2 text-sm text-foreground-secondary">
-                      {hit.snippet}
-                    </p>
-                  )}
-                </Link>
+                <SearchHitCard hit={hit} />
               </li>
             ))}
           </ul>
@@ -111,5 +109,41 @@ export function SearchPageClient() {
         </section>
       )}
     </div>
+  );
+}
+
+function SearchHitCard({ hit }: { hit: Hit }) {
+  const snippet = plainTextSnippet(hit.snippet, 90);
+  const showThumb = hit.type === "product";
+  const price = typeof hit.price === "number" && hit.price > 0 ? hit.price : null;
+
+  return (
+    <Link
+      href={hit.href}
+      className="card-surface flex items-start gap-3 p-3 hover:bg-surface-soft"
+    >
+      {showThumb ? (
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#F7F1E7]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={hit.imageUrl || PRODUCT_IMAGE_FALLBACK}
+            alt={hit.title}
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = PRODUCT_IMAGE_FALLBACK;
+            }}
+          />
+        </div>
+      ) : null}
+      <div className="min-w-0 flex-1">
+        <p className="font-bold text-foreground">{hit.title}</p>
+        {snippet ? (
+          <p className="mt-1 line-clamp-2 text-sm text-foreground-secondary">{snippet}</p>
+        ) : null}
+        {price != null ? (
+          <p className="mt-1 text-sm font-semibold text-[#F0645A]">{formatCurrency(price)}</p>
+        ) : null}
+      </div>
+    </Link>
   );
 }

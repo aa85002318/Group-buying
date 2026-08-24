@@ -26,6 +26,7 @@ import {
 } from "@/lib/products/product-images";
 import type { Product } from "@/lib/types/database";
 import { cleanRichTextHtml, looksLikeHtml } from "@/lib/cms/safeHtml";
+import { defaultSiteDocumentContent } from "@/lib/site-pages/defaults";
 
 type Variant = {
   id: string;
@@ -118,8 +119,21 @@ export default function ProductDetailClient({ id }: { id: string }) {
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>("intro");
   const [toast, setToast] = useState<string | null>(null);
+  const [shippingNotice, setShippingNotice] = useState(
+    defaultSiteDocumentContent("shipping")
+  );
   const { addItem, items } = useCart();
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
+
+  useEffect(() => {
+    fetch("/api/site-pages/shipping")
+      .then((r) => r.json())
+      .then((d) => {
+        const content = String(d.document?.content ?? "").trim();
+        if (content) setShippingNotice(content);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -603,9 +617,14 @@ export default function ProductDetailClient({ id }: { id: string }) {
                       ))}
                     </div>
                   ) : null}
-                  <IntroCard title="注意事項">
-                    {product.disclaimer || "請依保存方式存放，開封後請儘速使用。"}
+                  <IntroCard title="配送注意事項">
+                    {shippingNotice}
                   </IntroCard>
+                  <p className="text-xs text-[#667085]">
+                    <Link href="/support/shipping" className="font-medium text-[#153E73] underline">
+                      查看完整配送說明
+                    </Link>
+                  </p>
                 </>
               ) : null}
               {tab === "specs" ? (

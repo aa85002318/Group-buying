@@ -31,7 +31,7 @@ export const SITE_DOCUMENT_META: Record<
     title: "配送說明",
     format: "plain",
     previewPath: "/support/shipping",
-    description: "宅配、運費與運送注意事項",
+    description: "宅配、運費與運送注意事項；此公版會顯示在每一個商品頁的「配送注意事項」",
     seoDescription: `${BRAND_NAME} 配送與運送說明`,
   },
 };
