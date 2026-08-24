@@ -7,6 +7,7 @@ import {
   syncProductPickupStores,
 } from "@/lib/services/productPickupStores";
 import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
+import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
 function mapProductBody(body: Record<string, unknown>) {
   const status = body.status as string | undefined;
@@ -24,7 +25,16 @@ function mapProductBody(body: Record<string, unknown>) {
   return {
     name: body.name,
     slug: body.slug,
-    description: body.description,
+    description:
+      body.description !== undefined
+        ? cleanRichTextHtml(String(body.description ?? "")) || null
+        : undefined,
+    rich_description:
+      body.rich_description !== undefined || body.description !== undefined
+        ? cleanRichTextHtml(
+            String(body.rich_description ?? body.description ?? "")
+          ) || null
+        : undefined,
     short_description: body.short_description,
     specifications: body.specifications,
     price: body.price,

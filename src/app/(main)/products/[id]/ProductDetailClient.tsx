@@ -25,6 +25,7 @@ import {
   type ProductImageItem,
 } from "@/lib/products/product-images";
 import type { Product } from "@/lib/types/database";
+import { cleanRichTextHtml, looksLikeHtml } from "@/lib/cms/safeHtml";
 
 type Variant = {
   id: string;
@@ -785,10 +786,21 @@ export default function ProductDetailClient({ id }: { id: string }) {
 }
 
 function IntroCard({ title, children }: { title: string; children: React.ReactNode }) {
+  const html =
+    typeof children === "string" && looksLikeHtml(children)
+      ? cleanRichTextHtml(children)
+      : null;
   return (
     <div className="rounded-xl border border-[#E8E1D7] bg-[#FFFEFA] p-3">
       <h3 className="mb-2 text-sm font-bold text-[#153E73]">{title}</h3>
-      <div className="whitespace-pre-wrap text-sm leading-relaxed text-[#475467]">{children}</div>
+      {html ? (
+        <div
+          className="text-sm leading-relaxed text-[#475467] [&_h2]:mb-2 [&_h2]:mt-3 [&_h2]:text-base [&_h2]:font-extrabold [&_h3]:mb-1 [&_h3]:mt-2 [&_h3]:text-sm [&_h3]:font-bold [&_img]:my-2 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg [&_li]:my-0.5 [&_li]:list-item [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2 [&_table]:w-full [&_td]:border [&_td]:border-[#E8E1D7] [&_td]:p-1.5 [&_th]:border [&_th]:border-[#E8E1D7] [&_th]:p-1.5 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      ) : (
+        <div className="whitespace-pre-wrap text-sm leading-relaxed text-[#475467]">{children}</div>
+      )}
     </div>
   );
 }
