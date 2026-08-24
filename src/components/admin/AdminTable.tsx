@@ -24,6 +24,7 @@ export function AdminTable<T extends { id: string }>({
   totalPages,
   onPageChange,
   toolbar,
+  getRowClassName,
 }: {
   columns: AdminColumn<T>[];
   rows: T[];
@@ -36,6 +37,7 @@ export function AdminTable<T extends { id: string }>({
   totalPages?: number;
   onPageChange?: (page: number) => void;
   toolbar?: ReactNode;
+  getRowClassName?: (row: T) => string;
 }) {
   return (
     <div className="space-y-4">
@@ -66,7 +68,7 @@ export function AdminTable<T extends { id: string }>({
         ) : (
           <div className="divide-y divide-[var(--admin-border)]">
             {rows.map((row) => (
-              <div key={row.id} className="space-y-2.5 p-4 transition hover:bg-[var(--admin-hover)]">
+              <div key={row.id} className={cn("space-y-2.5 p-4 transition hover:bg-[var(--admin-hover)]", getRowClassName?.(row))}>
                 {columns.map((col) => (
                   <div key={col.key} className="flex items-start justify-between gap-3 text-sm">
                     <span className="shrink-0 text-[var(--admin-muted)]">{col.header}</span>
@@ -117,7 +119,10 @@ export function AdminTable<T extends { id: string }>({
                 rows.map((row) => (
                   <tr
                     key={row.id}
-                    className="border-t border-[var(--admin-border)] transition hover:bg-[var(--admin-hover)]"
+                    className={cn(
+                      "border-t border-[var(--admin-border)] transition hover:bg-[var(--admin-hover)]",
+                      getRowClassName?.(row)
+                    )}
                   >
                     {columns.map((col) => (
                       <td

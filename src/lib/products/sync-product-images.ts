@@ -12,6 +12,8 @@ export async function syncProductImagesTable(
     mainUrl: string | null;
     galleryUrls: string[];
     content: ProductImageItem[];
+    mainAlt?: string | null;
+    galleryAlts?: Array<string | null | undefined>;
   }
 ): Promise<{ ok: boolean; error?: string }> {
   try {
@@ -27,7 +29,7 @@ export async function syncProductImagesTable(
         product_id: productId,
         image_url: opts.mainUrl,
         image_type: "main",
-        alt_text: null,
+        alt_text: opts.mainAlt ?? null,
         caption: null,
         width_mode: "full",
         sort_order: 0,
@@ -41,7 +43,7 @@ export async function syncProductImagesTable(
         product_id: productId,
         image_url: url,
         image_type: "gallery",
-        alt_text: null,
+        alt_text: opts.galleryAlts?.[i] ?? null,
         caption: null,
         width_mode: "full",
         sort_order: i,

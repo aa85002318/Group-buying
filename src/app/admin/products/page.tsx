@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BarChart3, Download, PackagePlus, Printer, Upload } from "lucide-react";
+import { BarChart3, Download, Images, PackagePlus, Printer, Upload } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useAdminShell } from "@/components/admin/AdminShell";
 import { useAdminList } from "@/hooks/useAdminList";
+import { ProductBatchDrawer } from "@/components/admin/products/ProductBatchDrawer";
 import { calcGrossMarginAmount } from "@/lib/admin/product-form-v2";
 import { formatCurrency } from "@/lib/utils";
-import type { Product } from "@/lib/types/database";
+import type { Product, ProductCategory } from "@/lib/types/database";
 
 export default function AdminProductsPage() {
   const { profile } = useAdminShell();
   const isAdmin = profile?.role === "admin";
-  const { paginated, search, setSearch, page, setPage, totalPages, loading, error, refresh } = useAdminList<Product>(
+  const { filtered, search, setSearch, page, setPage, loading, error, refresh } = useAdminList<Product>(
     "/api/admin/products",
     "products",
     ["name", "sku"]
@@ -24,6 +25,23 @@ export default function AdminProductsPage() {
   const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0 });
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [missingImage, setMissingImage] = useState(false);
+  const [missingSubtitle, setMissingSubtitle] = useState(false);
+  const [shipFilter, setShipFilter] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/categories")
+      .then((r) => r.json())
+      .then((d) => setCategories(d.categories ?? []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -54,6 +72,76 @@ export default function AdminProductsPage() {
     }
   };
 
+  const extraFiltered = useMemo(() => {
+    return filtered.filter((p) => {
+      if (statusFilter) {
+        const status = p.status ?? (p.is_active ? "active" : "inactive");
+        if (status !== statusFilter) return false;
+      }
+      if (categoryFilter) {
+        const ids = ((p as { category_ids?: string[] }).category_ids ?? []).concat(p.category_id ? [p.category_id] : []);
+        if (!ids.includes(categoryFilter)) return false;
+      }
+      if (missingImage && p.image_url) return false;
+      if (missingSubtitle && (p.subtitle ?? "").trim()) return false;
+      if (shipFilter) {
+        const flags = p as unknown as Record<string, unknown>;
+        if (!flags[shipFilter]) return false;
+      }
+      const min = priceMin ? Number(priceMin) : null;
+      const max = priceMax ? Number(priceMax) : null;
+      if (min != null && !Number.isNaN(min) && p.price < min) return false;
+      if (max != null && !Number.isNaN(max) && p.price > max) return false;
+      return true;
+    });
+  }, [filtered, statusFilter, categoryFilter, missingImage, missingSubtitle, shipFilter, priceMin, priceMax]);
+
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(extraFiltered.length / pageSize));
+  const paginated = extraFiltered.slice((page - 1) * pageSize, page * pageSize);
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const pageIds = paginated.map((p) => p.id);
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+  const togglePage = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allPageSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+  const selectFiltered = () => setSelected(new Set(extraFiltered.map((p) => p.id)));
+  const clearSelected = () => setSelected(new Set());
+
+  const quickStatus = async (status: "active" | "inactive" | "draft") => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    const res = await fetch("/api/admin/products/batch/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productIds: ids,
+        runMode: "skip_errors",
+        patch: { status: { enabled: true, value: status } },
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setActionError(data.error ?? "批次狀態更新失敗");
+      return;
+    }
+    clearSelected();
+    await refresh();
+  };
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -78,6 +166,15 @@ export default function AdminProductsPage() {
                     <Printer className="mr-1.5 h-4 w-4" />
                     價格牌列印
                   </Button>
+                </Link>
+                <Link href="/admin/products/images/batch">
+                  <Button variant="secondary">
+                    <Images className="mr-1.5 h-4 w-4" />
+                    商品圖片批次上傳
+                  </Button>
+                </Link>
+                <Link href="/admin/products/batch-history">
+                  <Button variant="secondary">操作紀錄</Button>
                 </Link>
                 <Link href="/admin/products/import">
                   <Button variant="secondary">
@@ -150,6 +247,58 @@ export default function AdminProductsPage() {
         </Link>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        <select className="input-field h-10 w-auto" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">全部狀態</option>
+          <option value="active">上架</option>
+          <option value="inactive">下架</option>
+          <option value="draft">草稿</option>
+        </select>
+        <select className="input-field h-10 w-auto max-w-[200px]" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+          <option value="">全部分類</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+        <label className="flex items-center gap-1 text-sm">
+          <input type="checkbox" checked={missingImage} onChange={(e) => setMissingImage(e.target.checked)} />
+          缺少首圖
+        </label>
+        <label className="flex items-center gap-1 text-sm">
+          <input type="checkbox" checked={missingSubtitle} onChange={(e) => setMissingSubtitle(e.target.checked)} />
+          缺少副標
+        </label>
+        <select className="input-field h-10 w-auto" value={shipFilter} onChange={(e) => setShipFilter(e.target.value)}>
+          <option value="">全部配送</option>
+          <option value="temp_ambient">常溫宅配</option>
+          <option value="temp_chilled">冷藏宅配</option>
+          <option value="temp_frozen">冷凍宅配</option>
+          <option value="ship_store_pickup">門市取貨</option>
+        </select>
+        <input className="input-field h-10 w-24" type="number" placeholder="最低價" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} />
+        <input className="input-field h-10 w-24" type="number" placeholder="最高價" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} />
+        {isAdmin ? (
+          <>
+            <Button size="sm" variant="outline" onClick={togglePage}>選取本頁全部</Button>
+            <Button size="sm" variant="outline" onClick={selectFiltered}>選取目前篩選結果全部</Button>
+          </>
+        ) : null}
+      </div>
+
+      {isAdmin && selected.size > 0 ? (
+        <div className="sticky top-2 z-30 flex flex-wrap items-center gap-2 rounded-2xl border border-[#FFD454] bg-[#FFF5CC] p-3 shadow-sm max-md:fixed max-md:inset-x-3 max-md:bottom-16 max-md:top-auto">
+          <span className="text-sm font-bold text-[#153E73]">已選取 {selected.size} 件商品</span>
+          <Button size="sm" onClick={() => setDrawerOpen(true)}>批次編輯</Button>
+          <Button size="sm" variant="secondary" onClick={() => void quickStatus("active")}>上架</Button>
+          <Button size="sm" variant="secondary" onClick={() => void quickStatus("inactive")}>下架</Button>
+          <Button size="sm" variant="secondary" onClick={() => void quickStatus("draft")}>改為草稿</Button>
+          <Link href="/admin/products/images/batch">
+            <Button size="sm" variant="outline">批次圖片</Button>
+          </Link>
+          <Button size="sm" variant="ghost" onClick={clearSelected}>清除選取</Button>
+        </div>
+      ) : null}
+
       {error ? (
         <p className="rounded-[16px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           商品列表載入失敗：{error}
@@ -163,6 +312,13 @@ export default function AdminProductsPage() {
 
       <AdminTable
         columns={[
+          {
+            key: "select",
+            header: "選取",
+            render: (p) => (
+              <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleOne(p.id)} aria-label="選取商品" />
+            ),
+          },
           {
             key: "name",
             header: "商品",
@@ -258,6 +414,7 @@ export default function AdminProductsPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        getRowClassName={(p) => (selected.has(p.id) ? "bg-[#FFF5CC]" : "")}
       />
 
       {isAdmin ? (
@@ -269,6 +426,20 @@ export default function AdminProductsPage() {
           <Button variant="secondary">前往批次匯入</Button>
         </Link>
       </div>
+      ) : null}
+      {isAdmin ? (
+        <ProductBatchDrawer
+          open={drawerOpen}
+          selectedCount={selected.size}
+          productIds={Array.from(selected)}
+          categories={categories}
+          onClose={() => setDrawerOpen(false)}
+          onDone={() => {
+            setDrawerOpen(false);
+            clearSelected();
+            void refresh();
+          }}
+        />
       ) : null}
     </div>
   );
