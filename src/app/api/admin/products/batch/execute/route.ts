@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { syncProductCategories } from "@/lib/services/productRelations";
 import { hasEnabledPatch, type ProductBatchPatch } from "@/lib/admin/product-batch";
-import { bodySchema, previewBatch } from "../preview/route";
+import { previewBatch, productBatchBodySchema } from "@/lib/admin/product-batch-preview";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const parsed = bodySchema.parse(await request.json());
+    const parsed = productBatchBodySchema.parse(await request.json());
     const runMode = parsed.runMode ?? "all_or_nothing";
     const patch = parsed.patch as ProductBatchPatch;
     if (!hasEnabledPatch(patch)) {
