@@ -267,7 +267,7 @@ export default function ProductDetailClient({ id }: { id: string }) {
   if (loading) {
     return (
       <div className="mx-auto max-w-[1200px] space-y-4 px-4 py-4">
-        <div className="aspect-[4/3] max-h-[380px] animate-pulse rounded-2xl bg-[#E8E1D7]/60" />
+        <div className="aspect-square max-w-[560px] animate-pulse rounded-2xl bg-[#E8E1D7]/60" />
         <div className="h-28 animate-pulse rounded-2xl bg-[#E8E1D7]/40" />
       </div>
     );
@@ -361,7 +361,7 @@ export default function ProductDetailClient({ id }: { id: string }) {
       >
         {/* Gallery column */}
         <div className="space-y-3">
-          <div className="relative mx-auto aspect-[4/3] w-full max-h-[380px] overflow-hidden rounded-2xl bg-[#F7F1E7] md:max-h-none md:aspect-square md:max-w-[560px]">
+          <div className="relative mx-auto aspect-square w-full max-w-[560px] overflow-hidden rounded-2xl bg-[#F7F1E7]">
             {active ? (
               <SafeImage
                 src={active.url}

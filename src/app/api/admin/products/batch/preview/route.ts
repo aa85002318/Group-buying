@@ -3,7 +3,6 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { syncProductCategories } from "@/lib/services/productRelations";
 import {
   computeProductPatch,
   hasEnabledPatch,
@@ -208,7 +207,7 @@ export async function previewBatch(productIds: string[], patch: ProductBatchPatc
 }
 
 export async function POST(request: Request) {
-  const { error, auth } = await requireAdmin();
+  const { error } = await requireAdmin();
   if (error) return error;
   try {
     const parsed = bodySchema.parse(await request.json());

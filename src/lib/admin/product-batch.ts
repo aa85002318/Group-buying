@@ -177,7 +177,7 @@ export function applyStyleTemplate(html: string, style: StyleConfig): string {
   const body = cssFrom(style.body);
   const table = cssFrom(style.table);
   const imgMax = style.imageMaxWidth || "100%";
-  let out = safe
+  const out = safe
     .replace(/<h2(\s[^>]*)?>/gi, `<h2 style="${h2}">`)
     .replace(/<h3(\s[^>]*)?>/gi, `<h3 style="${h3}">`)
     .replace(/<p(\s[^>]*)?>/gi, `<p style="${body}">`)
