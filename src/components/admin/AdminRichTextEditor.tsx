@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useBrandFontPreviewCss } from "@/components/admin/AdminBrandFontPicker";
 import { BRAND_FONT_OPTIONS, getBrandFont, type BrandFontId } from "@/lib/branding";
 import { brandGoogleFontsHref } from "@/lib/branding/fonts";
+import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
 const SIZES = [
   { label: "小", value: "12px" },
@@ -77,7 +78,7 @@ export function AdminRichTextEditor({
   }, [openMenu]);
 
   const emit = () => {
-    onChange(ref.current?.innerHTML ?? "");
+    onChange(cleanRichTextHtml(ref.current?.innerHTML ?? ""));
   };
 
   const keepFocus = (e: MouseEvent) => {
@@ -165,9 +166,13 @@ export function AdminRichTextEditor({
       if (!mid) continue;
 
       const span = document.createElement("span");
-      for (const [key, val] of Object.entries(styles)) {
-        span.style.setProperty(key, val);
-      }
+      // setAttribute avoids Chrome copying inherited Tailwind --tw-* vars into innerHTML.
+      span.setAttribute(
+        "style",
+        Object.entries(styles)
+          .map(([key, val]) => `${key}: ${val}`)
+          .join("; ")
+      );
       span.textContent = mid;
 
       const parent = node.parentNode;
@@ -199,7 +204,7 @@ export function AdminRichTextEditor({
 
   const run = (command: string, arg?: string) => {
     restoreSelection();
-    document.execCommand("styleWithCSS", false, "true");
+    document.execCommand("styleWithCSS", false, "false");
     document.execCommand(command, false, arg);
     emit();
   };

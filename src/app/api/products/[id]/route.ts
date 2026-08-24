@@ -7,6 +7,7 @@ import {
   resolveContentImages,
   resolveProductGallery,
 } from "@/lib/products/product-images";
+import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -155,7 +156,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   return NextResponse.json({
-    product: data,
+    product: {
+      ...data,
+      description: cleanRichTextHtml(data.description),
+      rich_description: cleanRichTextHtml(
+        (data as { rich_description?: string | null }).rich_description ?? data.description
+      ),
+    },
     gallery,
     content_images,
     variants,

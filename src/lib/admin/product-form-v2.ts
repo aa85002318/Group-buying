@@ -1,5 +1,6 @@
 import type { Product, ProductScope, ProductStatus } from "@/lib/types/database";
 import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
+import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 import {
   type ProductImageItem,
   resolveContentImages,
@@ -392,8 +393,8 @@ export function formV2ToPayload(form: AdminProductFormV2) {
     weight_grams: form.weight_grams ? Number(form.weight_grams) : null,
     dimensions: form.dimensions.trim() || null,
     pickup_store_ids: form.pickup_store_ids,
-    rich_description: form.rich_description.trim() || null,
-    description: form.rich_description.trim() || null,
+    rich_description: cleanRichTextHtml(form.rich_description) || null,
+    description: cleanRichTextHtml(form.rich_description) || null,
     seo_title: form.seo_title.trim() || null,
     seo_description: form.seo_description.trim() || null,
     seo_keywords: form.seo_keywords.trim() || null,

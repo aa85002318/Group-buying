@@ -16,6 +16,7 @@ import {
   type ProductChannel,
 } from "@/lib/services/productChannelService";
 import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
+import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 import { syncProductImagesTable } from "@/lib/products/sync-product-images";
 import type { ProductImageItem } from "@/lib/products/product-images";
 import { revalidatePath } from "next/cache";
@@ -91,8 +92,12 @@ function mapProductRow(body: Record<string, unknown>) {
     category_id: body.category_id ?? (Array.isArray(body.category_ids) ? body.category_ids[0] : null) ?? null,
     brand_id: body.brand_id ?? null,
     supplier_id: body.supplier_id ?? null,
-    description: body.description ?? body.rich_description ?? null,
-    rich_description: body.rich_description ?? body.description ?? null,
+    description: cleanRichTextHtml(
+      String(body.description ?? body.rich_description ?? "")
+    ) || null,
+    rich_description: cleanRichTextHtml(
+      String(body.rich_description ?? body.description ?? "")
+    ) || null,
     specifications: body.specifications ?? null,
     price: body.price,
     sale_price: body.sale_price ?? body.price ?? null,
