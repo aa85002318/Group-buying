@@ -45,6 +45,7 @@ interface AdminRichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  compact?: boolean;
 }
 
 /** Lightweight HTML editor (bold / size / color / font / image) without extra packages. */
@@ -52,6 +53,7 @@ export function AdminRichTextEditor({
   value,
   onChange,
   placeholder = "輸入文章內容…",
+  compact = false,
 }: AdminRichTextEditorProps) {
   const ref = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -209,7 +211,7 @@ export function AdminRichTextEditor({
     emit();
   };
 
-  const applyHeading = (tag: "h2" | "h3") => {
+  const applyHeading = (tag: "p" | "h2" | "h3") => {
     restoreSelection();
     document.execCommand("formatBlock", false, tag);
     if (!ref.current?.querySelector(tag)) {
@@ -367,8 +369,13 @@ export function AdminRichTextEditor({
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("italic")}>
           斜體
         </Button>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("underline")}>
-          底線
+        {!compact ? (
+          <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("underline")}>
+            底線
+          </Button>
+        ) : null}
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => applyHeading("p")}>
+          段落
         </Button>
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => applyHeading("h2")}>
           H2
@@ -376,6 +383,24 @@ export function AdminRichTextEditor({
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => applyHeading("h3")}>
           H3
         </Button>
+        {compact ? (
+          <>
+            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={applyList}>
+              項目符號
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("insertOrderedList")}>
+              編號
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("justifyLeft")}>
+              左對齊
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("justifyCenter")}>
+              置中
+            </Button>
+          </>
+        ) : null}
+        {!compact ? (
+          <>
         <span className="mx-1 h-5 w-px bg-border" />
 
         <ToolbarMenu
@@ -464,13 +489,23 @@ export function AdminRichTextEditor({
             </button>
           ))}
         </ToolbarMenu>
+          </>
+        ) : null}
 
+        {!compact ? (
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={applyList}>
           項目符號
         </Button>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertLink}>
-          連結
-        </Button>
+        ) : null}
+        {!compact ? (
+          <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertLink}>
+            連結
+          </Button>
+        ) : (
+          <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertLink}>
+            插入連結
+          </Button>
+        )}
         <input
           ref={imageInputRef}
           type="file"
@@ -494,6 +529,8 @@ export function AdminRichTextEditor({
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertImageByUrl}>
           圖片網址
         </Button>
+        {!compact ? (
+          <>
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertTable}>
           表格
         </Button>
@@ -508,6 +545,8 @@ export function AdminRichTextEditor({
         >
           HTML
         </Button>
+          </>
+        ) : null}
       </div>
       {htmlMode ? (
         <textarea
@@ -519,7 +558,7 @@ export function AdminRichTextEditor({
       ) : (
         <div
           ref={ref}
-          className={EDITOR_CLASS}
+          className={compact ? EDITOR_CLASS.replace("min-h-[220px]", "min-h-[280px]") : EDITOR_CLASS}
           contentEditable
           suppressContentEditableWarning
           data-placeholder={placeholder}
