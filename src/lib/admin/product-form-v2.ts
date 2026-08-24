@@ -113,10 +113,45 @@ export function generateSku() {
   return `SKU-${Date.now().toString(36).toUpperCase().slice(-8)}`;
 }
 
+export function generateDatedProductSku() {
+  const d = new Date();
+  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  const hex = Math.floor(Math.random() * 0xffff)
+    .toString(16)
+    .toUpperCase()
+    .padStart(4, "0");
+  return `PRODUCT-${ymd}-${hex}`;
+}
+
+export type ProductFormFieldErrors = Partial<
+  Record<"name" | "sku" | "price" | "category" | "image" | "form", string>
+>;
+
+export function validateProductFormDraftFields(form: AdminProductFormV2): ProductFormFieldErrors {
+  const errors: ProductFormFieldErrors = {};
+  if (!form.name.trim()) errors.name = "商品名稱為必填";
+  if (!form.sku.trim()) errors.sku = "SKU 為必填";
+  if (!form.price || Number(form.price) < 0) errors.price = "請填寫有效的售價";
+  return errors;
+}
+
+export function validateProductFormPublishFields(form: AdminProductFormV2): ProductFormFieldErrors {
+  const errors = validateProductFormDraftFields(form);
+  if (form.category_ids.length === 0) errors.category = "上架前至少需要一個商品分類";
+  const hasMain =
+    Boolean(form.mainImage?.url) ||
+    Boolean(form.images[0]) ||
+    mergeMainGalleryToImages(form.mainImage, form.galleryImages).length > 0;
+  if (!hasMain) errors.image = "上架前至少需要一張商品圖片";
+  const full = validateProductFormV2(form);
+  if (full) errors.form = full;
+  return errors;
+}
+
 export const emptyProductFormV2 = (): AdminProductFormV2 => ({
   name: "",
   subtitle: "",
-  sku: generateSku(),
+  sku: generateDatedProductSku(),
   product_scope: "baking",
   category_ids: [],
   brand_id: "",

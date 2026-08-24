@@ -68,6 +68,7 @@ export function ProductImageManager({
   const galleryRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const dragGallery = useRef<number | null>(null);
   const dragContent = useRef<number | null>(null);
@@ -117,7 +118,10 @@ export function ProductImageManager({
     setUploading(true);
     const next = [...gallery];
     try {
+      let done = 0;
       for (const file of list) {
+        done += 1;
+        setProgress(`正在上傳 ${done} / ${list.length}`);
         const err = validateFile(file, GALLERY_IMAGE_MAX_BYTES);
         if (err) {
           setError(err);
@@ -125,7 +129,7 @@ export function ProductImageManager({
         }
         const result = await uploadProductImage(file, `${folderBase}/gallery`);
         if ("error" in result) {
-          setError(result.error);
+          setError(`${file.name} 上傳失敗`);
           continue;
         }
         next.push({
@@ -137,6 +141,7 @@ export function ProductImageManager({
       }
       onGalleryChange(next.map((g, i) => ({ ...g, sort_order: i })));
     } finally {
+      setProgress(null);
       setUploading(false);
     }
   };
@@ -186,7 +191,7 @@ export function ProductImageManager({
         </p>
       ) : null}
       {busy ? (
-        <p className="text-sm font-medium text-[#153E73]">圖片上傳中，請稍候再儲存…</p>
+        <p className="text-sm font-medium text-[#153E73]">{progress ?? "圖片上傳中，請稍候再儲存…"}</p>
       ) : null}
 
       {/* A. Main */}
@@ -299,16 +304,32 @@ export function ProductImageManager({
                   <GripVertical className="h-4 w-4" />
                 </span>
               </div>
-              <button
-                type="button"
-                className="absolute right-2 top-2 rounded-full bg-white/95 p-1.5 text-[#F16458] shadow"
-                onClick={() => {
-                  if (!window.confirm("確定刪除此附圖？")) return;
-                  onGalleryChange(gallery.filter((_, i) => i !== index).map((g, i) => ({ ...g, sort_order: i })));
-                }}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+              <div className="absolute right-2 top-2 hidden flex-col gap-1 group-hover:flex">
+                <button
+                  type="button"
+                  className="rounded-full bg-white/95 px-2 py-1 text-[10px] font-medium text-[#153E73] shadow"
+                  onClick={() => {
+                    const promoted = gallery[index];
+                    const rest = gallery.filter((_, i) => i !== index);
+                    if (main) {
+                      rest.unshift({ ...main, image_type: "gallery", sort_order: 0 });
+                    }
+                    onMainChange({ ...promoted, image_type: "main", sort_order: 0 });
+                    onGalleryChange(rest.map((g, i) => ({ ...g, sort_order: i })));
+                  }}
+                >
+                  設為主圖
+                </button>
+                <button
+                  type="button"
+                  className="rounded-full bg-white/95 p-1.5 text-[#F16458] shadow"
+                  onClick={() => {
+                    onGalleryChange(gallery.filter((_, i) => i !== index).map((g, i) => ({ ...g, sort_order: i })));
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
               <input
                 className="m-2 w-[calc(100%-1rem)] rounded-lg border border-[#E8E1D7] px-2 py-1 text-[11px]"
                 placeholder="Alt"
