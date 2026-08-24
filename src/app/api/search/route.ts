@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { plainTextSnippet } from "@/lib/cms/safeHtml";
 
 type SearchHit = {
   type: "product" | "article" | "course" | "livestream" | "faq" | "brand";
@@ -9,7 +10,20 @@ type SearchHit = {
   title: string;
   href: string;
   snippet?: string | null;
+  imageUrl?: string | null;
+  price?: number | null;
 };
+
+function productImageUrl(row: {
+  image_url?: string | null;
+  images?: unknown;
+}): string | null {
+  const main = typeof row.image_url === "string" ? row.image_url.trim() : "";
+  if (main) return main;
+  if (!Array.isArray(row.images)) return null;
+  const first = row.images.find((item) => typeof item === "string" && item.trim());
+  return typeof first === "string" ? first.trim() : null;
+}
 
 export async function GET(request: Request) {
   const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";
@@ -29,7 +43,7 @@ export async function GET(request: Request) {
   const [products, articles, courses, livestreams, faqs, brands] = await Promise.all([
     supabase
       .from("products")
-      .select("id, name, description")
+      .select("id, name, description, short_description, image_url, images, price, sale_price")
       .eq("is_active", true)
       .or(`name.ilike.${pattern},description.ilike.${pattern},sku.ilike.${pattern}`)
       .limit(8),
@@ -65,12 +79,16 @@ export async function GET(request: Request) {
   ]);
 
   for (const p of products.data ?? []) {
+    const sale = Number(p.sale_price);
+    const price = Number(p.price);
     results.push({
       type: "product",
       id: p.id,
       title: p.name,
       href: `/shop/products/${p.id}`,
-      snippet: p.description,
+      snippet: plainTextSnippet(p.short_description) ?? plainTextSnippet(p.description),
+      imageUrl: productImageUrl(p),
+      price: Number.isFinite(sale) && sale > 0 ? sale : Number.isFinite(price) ? price : null,
     });
   }
   for (const a of articles.data ?? []) {
@@ -79,7 +97,7 @@ export async function GET(request: Request) {
       id: a.id,
       title: a.title,
       href: `/articles/${a.slug}`,
-      snippet: null,
+      snippet: plainTextSnippet(a.content),
     });
   }
   for (const c of courses.data ?? []) {
@@ -88,7 +106,7 @@ export async function GET(request: Request) {
       id: c.id,
       title: c.title,
       href: `/courses/${c.id}`,
-      snippet: c.description,
+      snippet: plainTextSnippet(c.description),
     });
   }
   for (const l of livestreams.data ?? []) {
@@ -97,7 +115,7 @@ export async function GET(request: Request) {
       id: l.id,
       title: l.title,
       href: `/live/${l.id}`,
-      snippet: l.description,
+      snippet: plainTextSnippet(l.description),
     });
   }
   for (const f of faqs.data ?? []) {
@@ -106,7 +124,7 @@ export async function GET(request: Request) {
       id: f.id,
       title: f.question,
       href: `/faq`,
-      snippet: f.answer,
+      snippet: plainTextSnippet(f.answer),
     });
   }
   for (const b of brands.data ?? []) {

@@ -119,6 +119,9 @@ export default function AdminSiteDocumentEditorPage() {
             {meta.format === "html"
               ? "內容支援基本 HTML（h2、p、ul、li、a）。發布後前台會立即改用此文案。"
               : "純文字內容，前台會保留換行。儲存時會同步客服設定中的配送說明。"}
+            {key === "shipping"
+              ? " 發布後會同步出現在每一個商品頁的「配送注意事項」。"
+              : ""}
           </p>
           <textarea
             className="input-field min-h-[360px] w-full font-mono text-sm"

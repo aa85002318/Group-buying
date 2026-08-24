@@ -79,10 +79,23 @@ export function stripHtmlToText(html: string | null | undefined): string {
   return html
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
     .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Short plain excerpt for search cards / lists. */
+export function plainTextSnippet(
+  html: string | null | undefined,
+  maxLength = 90
+): string | null {
+  const text = stripHtmlToText(html);
+  if (!text) return null;
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength).trimEnd()}…`;
 }
 
