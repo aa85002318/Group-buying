@@ -29,7 +29,7 @@ export const SITE_DOCUMENT_META: Record<
   },
   shipping: {
     title: "配送說明",
-    format: "plain",
+    format: "html",
     previewPath: "/support/shipping",
     description: "宅配、運費與運送注意事項；此公版會顯示在每一個商品頁的「配送注意事項」",
     seoDescription: `${BRAND_NAME} 配送與運送說明`,
@@ -118,11 +118,12 @@ export function defaultSiteDocumentContent(key: SiteDocumentKey): string {
 <p>另請參閱 <a href="/privacy">隱私權政策</a>。</p>`;
   }
 
-  return `宅配與門市取貨說明
-
-1. 宅配：依結帳頁面顯示之運費與配送時程為準。
-2. 滿額免運：以當下活動公告為準。
-3. 冷凍／冷藏商品：請確認收件地址可及時取件，避免商品變質。
-4. 門市取貨：取貨時間與注意事項以訂單與門市公告為準。
-5. 配送異常：請至客服中心或常見問題聯絡我們。`;
+  return `<h2>宅配與門市取貨說明</h2>
+<ul>
+<li>宅配：依結帳頁面顯示之運費與配送時程為準。</li>
+<li>滿額免運：以當下活動公告為準。</li>
+<li>冷凍／冷藏商品：請確認收件地址可及時取件，避免商品變質。</li>
+<li>門市取貨：取貨時間與注意事項以訂單與門市公告為準。</li>
+<li>配送異常：請至客服中心或常見問題聯絡我們。</li>
+</ul>`;
 }

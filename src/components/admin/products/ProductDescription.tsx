@@ -1,24 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { AdminRichTextEditor } from "@/components/admin/AdminRichTextEditor";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ProductContentBlockEditor } from "@/components/admin/products/ProductContentBlockEditor";
 import type { AdminProductFormV2 } from "@/lib/admin/product-form-v2";
-
-const TEMPLATES: Record<string, { label: string; html: string }> = {
-  basic: {
-    label: "基本商品介紹",
-    html: "<h2>商品特色</h2><p>請填寫商品重點說明。</p><h3>使用方式</h3><p></p>",
-  },
-  food: {
-    label: "食品商品介紹",
-    html: "<h2>商品介紹</h2><p></p><h3>保存方式</h3><p>請依包裝標示保存。</p><h3>注意事項</h3><p></p>",
-  },
-  baking: {
-    label: "烘焙材料介紹",
-    html: "<h2>產品說明</h2><p></p><h3>規格</h3><p></p><h3>建議用法</h3><p></p>",
-  },
-};
 
 export function ProductDescription({
   form,
@@ -27,43 +11,53 @@ export function ProductDescription({
   form: AdminProductFormV2;
   patch: (partial: Partial<AdminProductFormV2>) => void;
 }) {
-  const [open, setOpen] = useState(false);
-
-  const apply = (html: string) => {
-    if (form.rich_description.trim() && !confirm("目前商品介紹已有內容，套用模板將取代現有內容。")) return;
-    patch({ rich_description: html });
-    setOpen(false);
-  };
-
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-[#153E73]">③ 商品介紹</h2>
-        <div className="relative">
-          <Button type="button" variant="outline" size="sm" onClick={() => setOpen((v) => !v)}>
-            套用內容模板
-          </Button>
-          {open ? (
-            <div className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
-              {Object.entries(TEMPLATES).map(([key, t]) => (
-                <button
-                  key={key}
-                  type="button"
-                  className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-[#FFF5CC]"
-                  onClick={() => apply(t.html)}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </div>
-      <AdminRichTextEditor
+    <div className="space-y-4">
+      <ProductContentBlockEditor
+        title="③ 商品介紹"
+        section="rich_description"
         value={form.rich_description}
         onChange={(rich_description) => patch({ rich_description })}
-        placeholder="輸入商品詳細介紹…"
+        footer={
+          <p className="mt-2 text-xs text-[#8A94A6]">
+            前台顯示於「商品特色」。公版可至{" "}
+            <Link href="/admin/products/content-templates" className="text-[#153E73] underline">
+              商品內容公版
+            </Link>{" "}
+            編輯。
+          </p>
+        }
       />
-    </section>
+      <ProductContentBlockEditor
+        title="適合用途"
+        section="product_info"
+        value={form.product_info}
+        onChange={(product_info) => patch({ product_info })}
+        footer={
+          <p className="mt-2 text-xs text-[#8A94A6]">前台顯示於商品介紹分頁的「適合用途」。</p>
+        }
+      />
+      <ProductContentBlockEditor
+        title="商品規格"
+        section="specifications"
+        value={form.specifications}
+        onChange={(specifications) => patch({ specifications })}
+        footer={
+          <p className="mt-2 text-xs text-[#8A94A6]">前台顯示於商品介紹分頁的「商品規格」。</p>
+        }
+      />
+      <section className="rounded-xl border border-dashed border-gray-200 bg-[#FFFEFA] p-4">
+        <h2 className="text-sm font-semibold text-[#153E73]">配送注意事項（全站公版）</h2>
+        <p className="mt-1 text-xs leading-relaxed text-[#8A94A6]">
+          此區塊為全站共用，會出現在每一個商品頁的「配送注意事項」，請至配送說明公版編輯，無需在單一商品重複填寫。
+        </p>
+        <Link
+          href="/admin/site-pages/shipping"
+          className="mt-2 inline-block text-sm font-medium text-[#153E73] underline"
+        >
+          編輯配送說明公版 →
+        </Link>
+      </section>
+    </div>
   );
 }

@@ -36,7 +36,10 @@ function mapProductBody(body: Record<string, unknown>) {
           ) || null
         : undefined,
     short_description: body.short_description,
-    specifications: body.specifications,
+    specifications:
+      body.specifications !== undefined
+        ? cleanRichTextHtml(String(body.specifications ?? "")) || null
+        : undefined,
     price: body.price,
     sale_price: body.sale_price ?? body.price,
     original_price: body.original_price,
@@ -54,11 +57,13 @@ function mapProductBody(body: Record<string, unknown>) {
     group_buy_category_id: body.group_buy_category_id,
     max_quantity_per_user: body.max_quantity_per_user,
     supplier_name: body.supplier_name,
-    product_info: body.product_info,
+    product_info:
+      body.product_info !== undefined
+        ? cleanRichTextHtml(String(body.product_info ?? "")) || null
+        : undefined,
     disclaimer:
-      body.product_info !== undefined || body.disclaimer !== undefined
+      body.disclaimer !== undefined
         ? resolveProductDisclaimer(
-            typeof body.product_info === "string" ? body.product_info : undefined,
             typeof body.disclaimer === "string" ? body.disclaimer : undefined
           )
         : undefined,

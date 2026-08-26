@@ -239,6 +239,7 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
       temp_frozen: opts.shipping ? form.temp_frozen : src.temp_frozen,
       rich_description: opts.content ? form.rich_description : "",
       product_info: opts.content ? form.product_info : "",
+      specifications: opts.content ? form.specifications : "",
       seo_title: opts.seo ? form.seo_title : "",
       seo_description: opts.seo ? form.seo_description : "",
       seo_keywords: opts.seo ? form.seo_keywords : "",

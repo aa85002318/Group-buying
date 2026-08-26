@@ -8,10 +8,14 @@ import { brandGoogleFontsHref } from "@/lib/branding/fonts";
 import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
 const SIZES = [
-  { label: "小", value: "12px" },
-  { label: "中", value: "16px" },
-  { label: "大", value: "20px" },
-  { label: "特大", value: "28px" },
+  { label: "12", value: "12px" },
+  { label: "14", value: "14px" },
+  { label: "16", value: "16px" },
+  { label: "18", value: "18px" },
+  { label: "20", value: "20px" },
+  { label: "24", value: "24px" },
+  { label: "28", value: "28px" },
+  { label: "32", value: "32px" },
 ];
 
 const COLORS = [
@@ -427,11 +431,34 @@ export function AdminRichTextEditor({
               onClick={(e) => {
                 e.stopPropagation();
                 applyInline({ "font-size": s.value });
+                setOpenMenu(null);
               }}
             >
-              {s.label}
+              {s.label} px
             </button>
           ))}
+          <div
+            className="flex items-center gap-2 border-t border-gray-100 px-3 py-2"
+            onMouseDown={keepFocus}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="number"
+              min={8}
+              max={72}
+              placeholder="自訂"
+              className="w-16 rounded border border-gray-200 px-2 py-1 text-xs"
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                const n = Number((e.target as HTMLInputElement).value);
+                if (!Number.isFinite(n) || n < 8 || n > 72) return;
+                applyInline({ "font-size": `${Math.round(n)}px` });
+                setOpenMenu(null);
+              }}
+            />
+            <span className="text-[10px] text-[#8A94A6]">px 後按 Enter</span>
+          </div>
         </ToolbarMenu>
 
         <ToolbarMenu

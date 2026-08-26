@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminRichTextEditor } from "@/components/admin/AdminRichTextEditor";
 import { sanitizeCmsHtml } from "@/lib/cms/safeHtml";
 import { SITE_DOCUMENT_META } from "@/lib/site-pages/defaults";
 import { isSiteDocumentKey, type SiteLegalDocument } from "@/lib/site-pages/types";
@@ -79,6 +80,8 @@ export default function AdminSiteDocumentEditorPage() {
     return <p className="text-sm text-error">找不到此文件</p>;
   }
 
+  const useRichEditor = meta.format === "html";
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
@@ -116,18 +119,26 @@ export default function AdminSiteDocumentEditorPage() {
             </label>
           </div>
           <p className="text-xs text-[#8A94A6]">
-            {meta.format === "html"
-              ? "內容支援基本 HTML（h2、p、ul、li、a）。發布後前台會立即改用此文案。"
+            {useRichEditor
+              ? "可用工具列調整文字大小（數字）、顏色、行距等。發布後前台會立即改用此文案。"
               : "純文字內容，前台會保留換行。儲存時會同步客服設定中的配送說明。"}
             {key === "shipping"
               ? " 發布後會同步出現在每一個商品頁的「配送注意事項」。"
               : ""}
           </p>
-          <textarea
-            className="input-field min-h-[360px] w-full font-mono text-sm"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-          />
+          {useRichEditor ? (
+            <AdminRichTextEditor
+              value={content}
+              onChange={setContent}
+              placeholder="輸入頁面內容…"
+            />
+          ) : (
+            <textarea
+              className="input-field min-h-[360px] w-full font-mono text-sm"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          )}
           <div className="flex flex-wrap gap-2">
             <Button onClick={save} disabled={saving}>
               {saving ? "儲存中…" : "儲存"}
@@ -138,12 +149,10 @@ export default function AdminSiteDocumentEditorPage() {
             <Button
               variant="secondary"
               onClick={() => {
-                if (confirm("以系統預設文案覆蓋目前內容？")) {
-                  setContent(defaultContent);
-                }
+                if (confirm("還原為系統預設文案？")) setContent(defaultContent);
               }}
             >
-              載入預設文案
+              還原預設
             </Button>
             <a
               href={meta.previewPath}
@@ -164,7 +173,7 @@ export default function AdminSiteDocumentEditorPage() {
           {preview ? (
             <div className="rounded-xl border border-[#E7EAF0] bg-[#FFFDF6] p-4 text-sm">
               <h3 className="mb-3 font-bold text-[#153E73]">{title || meta.title}</h3>
-              {meta.format === "html" ? (
+              {useRichEditor ? (
                 <div
                   className="space-y-4 leading-relaxed [&_h2]:mt-4 [&_h2]:text-base [&_h2]:font-bold [&_ul]:list-disc [&_ul]:pl-5 [&_a]:text-primary [&_a]:underline"
                   dangerouslySetInnerHTML={{ __html: sanitizeCmsHtml(content) }}

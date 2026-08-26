@@ -309,9 +309,6 @@ export function ProductAdvancedSettings({
             </AdminField>
           </div>
         )}
-        <AdminField label="產品資訊">
-          <AdminTextarea value={form.product_info} onChange={(e) => patch({ product_info: e.target.value })} />
-        </AdminField>
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold">商品影片</p>
           <Button type="button" size="sm" variant="secondary" onClick={() => patch({ videos: [...form.videos, createEmptyVideo()] })}>
