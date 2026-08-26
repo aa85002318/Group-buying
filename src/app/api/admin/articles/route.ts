@@ -3,6 +3,7 @@ import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockArticles } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
 export async function GET(request: Request) {
   const { error } = await requireContentAdmin();
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
       id: `art-${Date.now()}`,
       title: body.title,
       slug: body.slug ?? body.title.toLowerCase().replace(/\s+/g, "-"),
-      content: body.content ?? "",
+      content: cleanRichTextHtml(body.content ?? ""),
       cover_image: body.cover_image ?? null,
       category_id: body.category_id ?? null,
       status: body.status ?? "draft",
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
     .insert({
       title: body.title,
       slug: body.slug ?? body.title.toLowerCase().replace(/\s+/g, "-"),
-      content: body.content ?? "",
+      content: cleanRichTextHtml(body.content ?? ""),
       cover_image: body.cover_image ?? null,
       category_id: body.category_id || null,
       status: body.status ?? "draft",

@@ -6,10 +6,17 @@ import Image from "next/image";
 import type { Article } from "@/lib/types/database";
 import { mockArticles } from "@/lib/mock-data";
 import { getBrandFont } from "@/lib/branding";
-import { brandGoogleFontsHref } from "@/lib/branding/fonts";
+import { brandFontIdsInHtml, brandGoogleFontsHref } from "@/lib/branding/fonts";
+import { RichTextHtml } from "@/components/cms/RichTextHtml";
+import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
-function ensureArticleFonts(titleFont?: string | null, bodyFont?: string | null) {
-  const href = brandGoogleFontsHref([titleFont, bodyFont]);
+function ensureArticleFonts(
+  titleFont?: string | null,
+  bodyFont?: string | null,
+  contentHtml?: string | null
+) {
+  const fromContent = brandFontIdsInHtml(contentHtml ?? "");
+  const href = brandGoogleFontsHref([titleFont, bodyFont, ...fromContent]);
   if (!href) return;
   const id = "article-google-fonts";
   let link = document.getElementById(id) as HTMLLinkElement | null;
@@ -36,13 +43,14 @@ export default function ArticleDetailPage({ params }: { params: { slug: string }
 
   useEffect(() => {
     if (!article) return;
-    ensureArticleFonts(article.title_font, article.body_font);
+    ensureArticleFonts(article.title_font, article.body_font, article.content);
   }, [article]);
 
   if (!article) return <p>載入中…</p>;
 
   const titleFamily = article.title_font ? getBrandFont(article.title_font).family : undefined;
   const bodyFamily = article.body_font ? getBrandFont(article.body_font).family : undefined;
+  const content = cleanRichTextHtml(article.content);
 
   return (
     <article className="space-y-4">
@@ -61,11 +69,9 @@ export default function ArticleDetailPage({ params }: { params: { slug: string }
       <p className="text-xs text-muted-foreground">
         {new Date(article.created_at).toLocaleDateString("zh-TW")}
       </p>
-      <div
-        className="prose prose-sm max-w-none text-coffee"
-        style={bodyFamily ? { fontFamily: bodyFamily } : undefined}
-        dangerouslySetInnerHTML={{ __html: article.content }}
-      />
+      <div style={bodyFamily ? { fontFamily: bodyFamily } : undefined}>
+        <RichTextHtml html={content} className="max-w-none text-coffee" />
+      </div>
     </article>
   );
 }

@@ -3,6 +3,7 @@ import { requireContentAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { mockArticles } from "@/lib/mock-data";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireContentAdmin();
@@ -37,6 +38,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   // Normalize article font fields (empty → null)
   if ("title_font" in body) body.title_font = body.title_font || null;
   if ("body_font" in body) body.body_font = body.body_font || null;
+  if ("content" in body) body.content = cleanRichTextHtml(String(body.content ?? ""));
 
   if (!isSupabaseConfigured()) {
     const idx = mockArticles.findIndex((a) => a.id === id);

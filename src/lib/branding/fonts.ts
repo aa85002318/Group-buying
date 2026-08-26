@@ -143,12 +143,38 @@ export function getBrandFont(id: string | null | undefined): BrandFontOption {
   return BRAND_FONT_OPTIONS.find((f) => f.id === id) ?? BRAND_FONT_OPTIONS[0]!;
 }
 
+/** Primary family name without quotes (e.g. Noto Sans TC). */
+export function brandFontPrimaryName(option: BrandFontOption): string {
+  return option.family.split(",")[0]!.replace(/['"]/g, "").trim();
+}
+
+/**
+ * font-family value safe inside double-quoted HTML style="...".
+ * Brand stacks use double quotes which would break style attributes.
+ */
+export function fontFamilyForInlineStyle(family: string): string {
+  return family.replace(/"/g, "'");
+}
+
+/** Detect brand font ids referenced by inline font-family in HTML. */
+export function brandFontIdsInHtml(html: string | null | undefined): BrandFontId[] {
+  if (!html) return [];
+  const found: BrandFontId[] = [];
+  for (const opt of BRAND_FONT_OPTIONS) {
+    if (opt.id === "system" || !opt.googleFamily) continue;
+    const name = brandFontPrimaryName(opt);
+    if (!name) continue;
+    if (html.includes(name)) found.push(opt.id);
+  }
+  return found;
+}
+
 export function brandFontFaceCss(
   option: BrandFontOption,
   fileUrl: string | null
 ): string {
   if (!option.file || !fileUrl) return "";
-  const familyName = option.family.split(",")[0]!.replace(/"/g, "").trim();
+  const familyName = brandFontPrimaryName(option);
   return `@font-face{font-family:"${familyName}";src:url("${fileUrl}") format("truetype");font-display:swap;font-weight:100 900;font-style:normal;}`;
 }
 
