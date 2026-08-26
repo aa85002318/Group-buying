@@ -79,8 +79,9 @@ export function AdminRichTextEditor({
     const editor = ref.current;
     if (htmlMode || !editor) return;
     if (document.activeElement === editor) return;
-    if (editor.innerHTML !== (value || "")) {
-      editor.innerHTML = value || "";
+    const next = cleanRichTextHtml(value || "");
+    if (editor.innerHTML !== next) {
+      editor.innerHTML = next;
     }
   }, [htmlMode, value]);
 
@@ -92,7 +93,12 @@ export function AdminRichTextEditor({
   }, [openMenu]);
 
   const emit = () => {
-    onChange(cleanRichTextHtml(ref.current?.innerHTML ?? ""));
+    const editor = ref.current;
+    if (!editor) return;
+    // Re-write styles from live CSSOM so contenteditable cannot re-break
+    // font-family with double quotes inside style="...".
+    normalizeEditorInlineStyles(editor);
+    onChange(cleanRichTextHtml(editor.innerHTML));
   };
 
   const keepFocus = (e: MouseEvent) => {
@@ -664,6 +670,23 @@ function serializeInlineStyle(styles: Record<string, string>): string {
       return `${key}: ${safe}`;
     })
     .join("; ");
+}
+
+/** Pull computed inline styles from CSSOM and rewrite quote-safe attributes. */
+function normalizeEditorInlineStyles(editor: HTMLElement) {
+  editor.querySelectorAll<HTMLElement>("[style]").forEach((el) => {
+    const map: Record<string, string> = {};
+    for (let i = 0; i < el.style.length; i += 1) {
+      const prop = el.style.item(i);
+      if (!prop) continue;
+      const val = el.style.getPropertyValue(prop).trim();
+      if (!val) continue;
+      map[prop] = val;
+    }
+    const next = serializeInlineStyle(map);
+    if (next) el.setAttribute("style", next);
+    else el.removeAttribute("style");
+  });
 }
 
 function mergeElementStyle(el: HTMLElement, patch: Record<string, string>) {

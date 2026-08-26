@@ -1,25 +1,25 @@
 import type { ReactNode } from "react";
-import { Noto_Sans_TC } from "next/font/google";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminTopBar } from "@/components/admin/AdminTopBar";
 import { BrandingCssVars } from "@/components/branding/BrandingCssVars";
 import { AdminDesktopSidebar, AdminMobileDrawer } from "@/components/layout/AdminSidebar";
 import "@/styles/admin-theme.css";
 
-const notoSansTC = Noto_Sans_TC({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  variable: "--font-admin-sans",
-});
-
+/**
+ * Admin uses the same brand font CSS vars / Google Fonts loader as the
+ * storefront (via BrandingCssVars). Do not mount next/font here — a second
+ * Noto face made the editor preview look different from the live site.
+ */
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <AdminShell>
       <BrandingCssVars />
       <div
-        className={`admin-app min-h-[100dvh] overflow-x-hidden ${notoSansTC.variable} ${notoSansTC.className}`}
-        style={{ background: "var(--admin-bg, #FFFDF6)" }}
+        className="admin-app min-h-[100dvh] overflow-x-hidden"
+        style={{
+          background: "var(--admin-bg, #FFFDF6)",
+          fontFamily: "var(--font-sans)",
+        }}
       >
         <div className="flex min-h-[100dvh] w-full">
           <AdminDesktopSidebar />
