@@ -40,30 +40,81 @@ export function looksLikeHtml(value: string | null | undefined): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(value);
 }
 
+/** Normalize a CSS declarations string; drop Tailwind vars; quote-safe font-family. */
+export function sanitizeInlineStyleDeclarations(raw: string): string {
+  const kept: string[] = [];
+  for (const part of raw.split(";")) {
+    const decl = part.trim();
+    if (!decl) continue;
+    const idx = decl.indexOf(":");
+    if (idx <= 0) continue;
+    const prop = decl.slice(0, idx).trim();
+    let val = decl.slice(idx + 1).trim();
+    if (!val || prop.startsWith("--") || !ALLOWED_INLINE_STYLE.test(prop)) continue;
+    // Keep font-family safe inside style="..." (double-quoted attribute).
+    if (prop.toLowerCase() === "font-family") {
+      val = val.replace(/"/g, "'");
+    }
+    kept.push(`${prop}: ${val}`);
+  }
+  return kept.join("; ");
+}
+
+/**
+ * Rewrite every style="..." / style='...' so values never use raw " inside
+ * double-quoted attributes (breaks HTML + our previous regex cleaner).
+ */
+function rewriteStyleAttributes(
+  html: string,
+  rewrite: (css: string) => string
+): string {
+  let i = 0;
+  let out = "";
+  while (i < html.length) {
+    const slice = html.slice(i);
+    const match = /\sstyle\s*=\s*/i.exec(slice);
+    if (!match || match.index === undefined) {
+      out += html.slice(i);
+      break;
+    }
+    const abs = i + match.index;
+    out += html.slice(i, abs);
+    const valueStart = abs + match[0].length;
+    const quote = html[valueStart];
+    if (quote === '"' || quote === "'") {
+      let j = valueStart + 1;
+      let css = "";
+      while (j < html.length && html[j] !== quote) {
+        css += html[j];
+        j += 1;
+      }
+      const cleaned = rewrite(css);
+      // Always re-emit as double-quoted attr with single quotes inside CSS.
+      out += cleaned ? ` style="${cleaned}"` : "";
+      i = j < html.length ? j + 1 : j;
+    } else {
+      // Unquoted attribute value — read until whitespace or tag end.
+      let j = valueStart;
+      let css = "";
+      while (j < html.length && !/[\s>]/.test(html[j]!)) {
+        css += html[j];
+        j += 1;
+      }
+      const cleaned = rewrite(css);
+      out += cleaned ? ` style="${cleaned}"` : "";
+      i = j;
+    }
+  }
+  return out;
+}
+
 /**
  * Strip inherited Tailwind CSS variables that Chrome copies onto
  * contenteditable spans (can bloat a product intro to 200KB+ of “亂碼”).
  */
 export function cleanRichTextHtml(html: string | null | undefined): string {
   if (!html) return "";
-  return sanitizeCmsHtml(html).replace(
-    /\sstyle\s*=\s*("([^"]*)"|'([^']*)')/gi,
-    (_match, _quoted: string, doubleQuoted?: string, singleQuoted?: string) => {
-      const raw = doubleQuoted ?? singleQuoted ?? "";
-      const kept: string[] = [];
-      for (const part of raw.split(";")) {
-        const decl = part.trim();
-        if (!decl) continue;
-        const idx = decl.indexOf(":");
-        if (idx <= 0) continue;
-        const prop = decl.slice(0, idx).trim();
-        const val = decl.slice(idx + 1).trim();
-        if (!val || prop.startsWith("--") || !ALLOWED_INLINE_STYLE.test(prop)) continue;
-        kept.push(`${prop}: ${val}`);
-      }
-      return kept.length ? ` style="${kept.join("; ")}"` : "";
-    }
-  );
+  return rewriteStyleAttributes(sanitizeCmsHtml(html), sanitizeInlineStyleDeclarations);
 }
 
 export function externalLinkProps(href: string): { target?: string; rel?: string } {
@@ -98,4 +149,3 @@ export function plainTextSnippet(
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength).trimEnd()}…`;
 }
-

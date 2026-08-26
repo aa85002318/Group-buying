@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "re
 import { Button } from "@/components/ui/button";
 import { useBrandFontPreviewCss } from "@/components/admin/AdminBrandFontPicker";
 import { BRAND_FONT_OPTIONS, getBrandFont, type BrandFontId } from "@/lib/branding";
-import { brandGoogleFontsHref } from "@/lib/branding/fonts";
+import { brandGoogleFontsHref, fontFamilyForInlineStyle } from "@/lib/branding/fonts";
 import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
 const SIZES = [
@@ -179,13 +179,8 @@ export function AdminRichTextEditor({
       if (!mid) continue;
 
       const span = document.createElement("span");
-      // setAttribute avoids Chrome copying inherited Tailwind --tw-* vars into innerHTML.
-      span.setAttribute(
-        "style",
-        Object.entries(styles)
-          .map(([key, val]) => `${key}: ${val}`)
-          .join("; ")
-      );
+      // Single quotes inside font-family so style="..." is valid HTML.
+      span.setAttribute("style", serializeInlineStyle(styles));
       span.textContent = mid;
 
       const parent = node.parentNode;
@@ -274,8 +269,7 @@ export function AdminRichTextEditor({
   const applyFont = (id: BrandFontId) => {
     ensureFontStylesheet(id);
     const opt = getBrandFont(id);
-    // Quote first family name for reliable CSS; keep fallbacks.
-    applyInline({ "font-family": opt.family });
+    applyInline({ "font-family": fontFamilyForInlineStyle(opt.family) });
   };
 
   const applyLineHeight = (value: string) => {
@@ -292,7 +286,7 @@ export function AdminRichTextEditor({
       return;
     }
     for (const el of blocks) {
-      el.style.lineHeight = value;
+      mergeElementStyle(el, { "line-height": value });
     }
     setOpenMenu(null);
     emit();
@@ -603,7 +597,7 @@ export function AdminRichTextEditor({
         />
       )}
       <p className="border-t border-border bg-muted/30 px-3 py-1.5 text-[11px] text-foreground-muted">
-        變更字型／大小／顏色／行距前，請先反白文字再點選。明體、圓體差異最明顯。
+        變更字型／大小／顏色／行距前，請先反白文字再點選。字型與行距會寫入 HTML，前台需載入對應字體後才會正確顯示。
       </p>
     </div>
   );
@@ -644,6 +638,37 @@ function escapeHtml(text: string) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** Build a style attribute value that is safe inside style="...". */
+function serializeInlineStyle(styles: Record<string, string>): string {
+  return Object.entries(styles)
+    .map(([key, val]) => {
+      const safe =
+        key === "font-family" || key.toLowerCase() === "font-family"
+          ? fontFamilyForInlineStyle(val)
+          : val.replace(/"/g, "'");
+      return `${key}: ${safe}`;
+    })
+    .join("; ");
+}
+
+function mergeElementStyle(el: HTMLElement, patch: Record<string, string>) {
+  const current: Record<string, string> = {};
+  const raw = el.getAttribute("style") ?? "";
+  for (const part of raw.split(";")) {
+    const decl = part.trim();
+    if (!decl) continue;
+    const idx = decl.indexOf(":");
+    if (idx <= 0) continue;
+    current[decl.slice(0, idx).trim().toLowerCase()] = decl.slice(idx + 1).trim();
+  }
+  for (const [key, val] of Object.entries(patch)) {
+    current[key.toLowerCase()] = val;
+  }
+  const next = serializeInlineStyle(current);
+  if (next) el.setAttribute("style", next);
+  else el.removeAttribute("style");
 }
 
 const BLOCK_TAGS = new Set(["P", "DIV", "LI", "H1", "H2", "H3", "H4", "TD", "TH"]);

@@ -3,6 +3,8 @@
 import {
   BRAND_FONT_OPTIONS,
   getBrandFont,
+  fontFamilyForInlineStyle,
+  brandFontIdsInHtml,
   type BrandFontId,
 } from "@/lib/branding/fonts";
 
@@ -122,5 +124,5 @@ export function brandingToCssVars(b: BrandingSettings): Record<string, string> {
   };
 }
 
-export { BRAND_FONT_OPTIONS, getBrandFont };
+export { BRAND_FONT_OPTIONS, getBrandFont, fontFamilyForInlineStyle, brandFontIdsInHtml };
 export type { BrandFontId };
