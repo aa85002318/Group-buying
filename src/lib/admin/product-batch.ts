@@ -44,9 +44,10 @@ export type ProductBatchPatch = {
     costValue?: number;
   };
   info?: { enabled: boolean; mode: InfoMode; value: string; find?: string; templateKey?: string };
-  /** Batch overwrite for intro / usage / specs rich HTML */
+  /** Batch overwrite for name / intro / usage / specs */
   content?: {
     enabled: boolean;
+    name?: { enabled: boolean; value: string };
     rich_description?: { enabled: boolean; html: string };
     product_info?: { enabled: boolean; html: string };
     specifications?: { enabled: boolean; html: string };
@@ -327,6 +328,12 @@ export function computeProductPatch(
   }
 
   if (patch.content?.enabled) {
+    if (patch.content.name?.enabled) {
+      const next = String(patch.content.name.value ?? "").trim();
+      if (!next) errors.push("商品名稱不可空白");
+      after.name = next;
+      db.name = next;
+    }
     if (patch.content.rich_description?.enabled) {
       const next = cleanRichTextHtml(patch.content.rich_description.html) || null;
       after.rich_description = next;
@@ -372,7 +379,12 @@ export function computeProductPatch(
 export function hasEnabledPatch(patch: ProductBatchPatch): boolean {
   if (patch.content?.enabled) {
     const c = patch.content;
-    if (c.rich_description?.enabled || c.product_info?.enabled || c.specifications?.enabled) {
+    if (
+      c.name?.enabled ||
+      c.rich_description?.enabled ||
+      c.product_info?.enabled ||
+      c.specifications?.enabled
+    ) {
       return true;
     }
   }
@@ -384,17 +396,20 @@ export function hasEnabledPatch(patch: ProductBatchPatch): boolean {
 
 /** Build a content-only patch for one product (per-item batch edits). */
 export function contentPatchForItem(item: {
+  name?: string | null;
   rich_description?: string | null;
   product_info?: string | null;
   specifications?: string | null;
 }): ProductBatchPatch | null {
+  const hasName = item.name !== undefined;
   const rich = item.rich_description !== undefined;
   const info = item.product_info !== undefined;
   const specs = item.specifications !== undefined;
-  if (!rich && !info && !specs) return null;
+  if (!hasName && !rich && !info && !specs) return null;
   return {
     content: {
       enabled: true,
+      name: hasName ? { enabled: true, value: String(item.name ?? "") } : undefined,
       rich_description: rich
         ? { enabled: true, html: String(item.rich_description ?? "") }
         : undefined,

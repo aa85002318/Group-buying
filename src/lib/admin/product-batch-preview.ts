@@ -69,6 +69,7 @@ export const productBatchPatchSchema = z.object({
   content: z
     .object({
       enabled: z.boolean(),
+      name: z.object({ enabled: z.boolean(), value: z.string() }).optional(),
       rich_description: z
         .object({ enabled: z.boolean(), html: z.string() })
         .optional(),
