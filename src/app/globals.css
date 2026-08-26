@@ -76,6 +76,13 @@
     font-family: var(--font-heading, var(--font-sans));
   }
 
+  /* Rich-text CMS blocks: match admin editor — inherit body font unless inline style set */
+  .rich-html h1,
+  .rich-html h2,
+  .rich-html h3 {
+    font-family: inherit;
+  }
+
   img,
   video,
   canvas,

@@ -5,24 +5,13 @@ import {
   BRAND_FONT_OPTIONS,
   type BrandFontId,
 } from "@/lib/branding";
-import { brandGoogleFontsHref } from "@/lib/branding/fonts";
+import { loadAllBrandGoogleFonts } from "@/components/branding/loadBrandFonts";
 import { cn } from "@/lib/utils";
-
-const PREVIEW_LINK_ID = "admin-brand-font-preview";
 
 /** Ensure Google Fonts CSS is loaded once for admin font pickers / editors. */
 export function useBrandFontPreviewCss() {
   useEffect(() => {
-    const href = brandGoogleFontsHref(BRAND_FONT_OPTIONS.map((f) => f.id));
-    if (!href) return;
-    let link = document.getElementById(PREVIEW_LINK_ID) as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement("link");
-      link.id = PREVIEW_LINK_ID;
-      link.rel = "stylesheet";
-      document.head.appendChild(link);
-    }
-    if (link.href !== href) link.href = href;
+    loadAllBrandGoogleFonts();
   }, []);
 }
 
