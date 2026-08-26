@@ -66,6 +66,16 @@ export const productBatchPatchSchema = z.object({
     find: z.string().optional(),
     templateKey: z.string().optional(),
   }).optional(),
+  content: z
+    .object({
+      enabled: z.boolean(),
+      rich_description: z
+        .object({ enabled: z.boolean(), html: z.string() })
+        .optional(),
+      product_info: z.object({ enabled: z.boolean(), html: z.string() }).optional(),
+      specifications: z.object({ enabled: z.boolean(), html: z.string() }).optional(),
+    })
+    .optional(),
 });
 
 export const productBatchBodySchema = z.object({
@@ -136,6 +146,9 @@ export async function previewBatch(productIds: string[], patch: ProductBatchPatc
         status: product.status,
         price: product.price,
         category_ids: product.category_ids,
+        rich_description: product.rich_description ?? product.description ?? null,
+        product_info: product.product_info ?? null,
+        specifications: product.specifications ?? null,
       },
       after: result.after,
       db: result.db,
@@ -178,6 +191,9 @@ export async function previewBatch(productIds: string[], patch: ProductBatchPatc
         status: null,
         price: 0,
         category_ids: [],
+        rich_description: null,
+        product_info: null,
+        specifications: null,
       },
       after: {
         name: "",
@@ -186,6 +202,9 @@ export async function previewBatch(productIds: string[], patch: ProductBatchPatc
         status: null,
         price: 0,
         category_ids: [],
+        rich_description: null,
+        product_info: null,
+        specifications: null,
       },
       db: {},
       categoryIds: undefined,

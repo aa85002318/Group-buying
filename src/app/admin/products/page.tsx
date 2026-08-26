@@ -289,6 +289,9 @@ export default function AdminProductsPage() {
         <div className="sticky top-2 z-30 flex flex-wrap items-center gap-2 rounded-2xl border border-[#FFD454] bg-[#FFF5CC] p-3 shadow-sm max-md:fixed max-md:inset-x-3 max-md:bottom-16 max-md:top-auto">
           <span className="text-sm font-bold text-[#153E73]">已選取 {selected.size} 件商品</span>
           <Button size="sm" onClick={() => setDrawerOpen(true)}>批次編輯</Button>
+          <Link href={`/admin/products/content-batch?ids=${Array.from(selected).join(",")}`}>
+            <Button size="sm" variant="secondary">批次編輯內容</Button>
+          </Link>
           <Button size="sm" variant="secondary" onClick={() => void quickStatus("active")}>上架</Button>
           <Button size="sm" variant="secondary" onClick={() => void quickStatus("inactive")}>下架</Button>
           <Button size="sm" variant="secondary" onClick={() => void quickStatus("draft")}>改為草稿</Button>

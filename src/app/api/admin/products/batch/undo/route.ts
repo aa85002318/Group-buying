@@ -23,6 +23,7 @@ const RESTORE_KEYS = [
   "rich_description",
   "description",
   "product_info",
+  "specifications",
   ...PRODUCT_BATCH_SHIP_KEYS,
 ] as const;
 

@@ -44,6 +44,13 @@ export type ProductBatchPatch = {
     costValue?: number;
   };
   info?: { enabled: boolean; mode: InfoMode; value: string; find?: string; templateKey?: string };
+  /** Batch overwrite for intro / usage / specs rich HTML */
+  content?: {
+    enabled: boolean;
+    rich_description?: { enabled: boolean; html: string };
+    product_info?: { enabled: boolean; html: string };
+    specifications?: { enabled: boolean; html: string };
+  };
 };
 
 export type ProductBatchRow = {
@@ -63,6 +70,7 @@ export type ProductBatchRow = {
   rich_description?: string | null;
   description?: string | null;
   product_info?: string | null;
+  specifications?: string | null;
   temp_ambient?: boolean | null;
   temp_chilled?: boolean | null;
   temp_frozen?: boolean | null;
@@ -204,6 +212,7 @@ function snapshot(p: ProductBatchRow): Record<string, unknown> {
     image_url: p.image_url ?? null,
     rich_description: p.rich_description ?? p.description ?? null,
     product_info: p.product_info ?? null,
+    specifications: p.specifications ?? null,
     shipping: shipSnapshot(p),
   };
 }
@@ -317,6 +326,25 @@ export function computeProductPatch(
     db.description = next || null;
   }
 
+  if (patch.content?.enabled) {
+    if (patch.content.rich_description?.enabled) {
+      const next = cleanRichTextHtml(patch.content.rich_description.html) || null;
+      after.rich_description = next;
+      db.rich_description = next;
+      db.description = next;
+    }
+    if (patch.content.product_info?.enabled) {
+      const next = cleanRichTextHtml(patch.content.product_info.html) || null;
+      after.product_info = next;
+      db.product_info = next;
+    }
+    if (patch.content.specifications?.enabled) {
+      const next = cleanRichTextHtml(patch.content.specifications.html) || null;
+      after.specifications = next;
+      db.specifications = next;
+    }
+  }
+
   if (patch.status?.enabled) {
     const mapped = mapUiStatus(patch.status.value);
     after.status = mapped.status;
@@ -342,5 +370,38 @@ export function computeProductPatch(
 }
 
 export function hasEnabledPatch(patch: ProductBatchPatch): boolean {
-  return Object.values(patch).some((field) => field && typeof field === "object" && "enabled" in field && field.enabled);
+  if (patch.content?.enabled) {
+    const c = patch.content;
+    if (c.rich_description?.enabled || c.product_info?.enabled || c.specifications?.enabled) {
+      return true;
+    }
+  }
+  return Object.entries(patch).some(([key, field]) => {
+    if (key === "content") return false;
+    return Boolean(field && typeof field === "object" && "enabled" in field && field.enabled);
+  });
+}
+
+/** Build a content-only patch for one product (per-item batch edits). */
+export function contentPatchForItem(item: {
+  rich_description?: string | null;
+  product_info?: string | null;
+  specifications?: string | null;
+}): ProductBatchPatch | null {
+  const rich = item.rich_description !== undefined;
+  const info = item.product_info !== undefined;
+  const specs = item.specifications !== undefined;
+  if (!rich && !info && !specs) return null;
+  return {
+    content: {
+      enabled: true,
+      rich_description: rich
+        ? { enabled: true, html: String(item.rich_description ?? "") }
+        : undefined,
+      product_info: info ? { enabled: true, html: String(item.product_info ?? "") } : undefined,
+      specifications: specs
+        ? { enabled: true, html: String(item.specifications ?? "") }
+        : undefined,
+    },
+  };
 }
