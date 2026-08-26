@@ -623,6 +623,9 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin", "store_staff", "store_manager"],
     items: [
       { href: "/admin/products", label: "商品總覽", roles: ["admin", "store_staff", "store_manager"] },
+      { href: "/admin/products/content-templates", label: "商品內容公版", roles: ["admin"] },
+      { href: "/admin/products/images/batch", label: "商品圖片批次上傳", roles: ["admin"] },
+      { href: "/admin/products/batch-history", label: "批次操作紀錄", roles: ["admin"] },
       { href: "/admin/baking-materials", label: "烘焙材料", roles: ["admin"] },
       { href: "/admin/products/analysis", label: "商品分析", roles: ["admin"] },
       { href: "/admin/categories", label: "商品分類", roles: ["admin"] },

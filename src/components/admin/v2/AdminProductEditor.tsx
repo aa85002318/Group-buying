@@ -472,8 +472,19 @@ export function AdminProductEditor({
           placeholder="輸入商品詳細介紹…"
         />
         <div className="mt-4">
-          <AdminField label="產品資訊 / 注意事項">
-            <AdminTextarea value={form.product_info} onChange={(e) => patch({ product_info: e.target.value })} />
+          <AdminField label="產品資訊">
+            <AdminTextarea
+              value={form.product_info}
+              onChange={(e) => patch({ product_info: e.target.value })}
+              placeholder="成分、保存方式、產地…"
+            />
+            <p className="mt-1 text-xs text-[#8A94A6]">
+              商品頁「配送注意事項」為全站公版，請到{" "}
+              <a href="/admin/site-pages/shipping" className="underline">
+                說明與法務 → 配送說明
+              </a>{" "}
+              一次修改，所有商品都會套用。
+            </p>
           </AdminField>
         </div>
       </AdminCard>

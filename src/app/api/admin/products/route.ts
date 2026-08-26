@@ -98,7 +98,8 @@ function mapProductRow(body: Record<string, unknown>) {
     rich_description: cleanRichTextHtml(
       String(body.rich_description ?? body.description ?? "")
     ) || null,
-    specifications: body.specifications ?? null,
+    specifications:
+      cleanRichTextHtml(String(body.specifications ?? "")) || null,
     price: body.price,
     sale_price: body.sale_price ?? body.price ?? null,
     original_price: body.original_price ?? null,
@@ -149,9 +150,8 @@ function mapProductRow(body: Record<string, unknown>) {
     group_buy_category_id: body.group_buy_category_id || null,
     max_quantity_per_user: body.max_quantity_per_user ?? null,
     supplier_name: body.supplier_name ?? null,
-    product_info: body.product_info ?? null,
+    product_info: cleanRichTextHtml(String(body.product_info ?? "")) || null,
     disclaimer: resolveProductDisclaimer(
-      typeof body.product_info === "string" ? body.product_info : undefined,
       typeof body.disclaimer === "string" ? body.disclaimer : undefined
     ),
     expected_arrival_date: body.expected_arrival_date ?? null,

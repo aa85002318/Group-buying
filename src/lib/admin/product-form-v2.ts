@@ -103,6 +103,7 @@ export type AdminProductFormV2 = {
   group_buy_category_id: string;
   max_quantity_per_user: string;
   product_info: string;
+  specifications: string;
 };
 
 function newId(prefix: string) {
@@ -212,6 +213,7 @@ export const emptyProductFormV2 = (): AdminProductFormV2 => ({
   group_buy_category_id: "",
   max_quantity_per_user: "",
   product_info: "",
+  specifications: "",
 });
 
 export function calcGrossMarginRate(price: string, cost: string): number | null {
@@ -371,6 +373,7 @@ export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
     max_quantity_per_user:
       p.max_quantity_per_user != null ? String(p.max_quantity_per_user) : "",
     product_info: p.product_info ?? p.disclaimer ?? "",
+    specifications: p.specifications ?? p.package_spec ?? "",
   };
 }
 
@@ -461,8 +464,10 @@ export function formV2ToPayload(form: AdminProductFormV2) {
     max_quantity_per_user: form.max_quantity_per_user
       ? Number(form.max_quantity_per_user)
       : null,
-    product_info: form.product_info.trim() || null,
-    disclaimer: resolveProductDisclaimer(form.product_info),
+    product_info: cleanRichTextHtml(form.product_info) || null,
+    // product_info is「適合用途」rich text — do not map it into disclaimer
+    disclaimer: resolveProductDisclaimer(),
+    specifications: cleanRichTextHtml(form.specifications) || null,
     supplier_name: null,
   };
 }
