@@ -60,7 +60,6 @@ export function ProductDescription({
         </div>
       </div>
       <AdminRichTextEditor
-        compact
         value={form.rich_description}
         onChange={(rich_description) => patch({ rich_description })}
         placeholder="輸入商品詳細介紹…"

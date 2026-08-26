@@ -29,6 +29,13 @@ const LINE_HEIGHTS = [
   { label: "超寬", value: "2.2" },
 ];
 
+const LETTER_SPACINGS = [
+  { label: "標準", value: "normal" },
+  { label: "稍寬", value: "0.05em" },
+  { label: "寬", value: "0.12em" },
+  { label: "更寬", value: "0.2em" },
+];
+
 const FONT_OPTIONS = BRAND_FONT_OPTIONS.filter((f) => f.id !== "system");
 
 const EDITOR_CLASS =
@@ -60,7 +67,7 @@ export function AdminRichTextEditor({
   const savedRange = useRef<Range | null>(null);
   const [htmlMode, setHtmlMode] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [openMenu, setOpenMenu] = useState<"font" | "size" | "color" | "line" | null>(null);
+  const [openMenu, setOpenMenu] = useState<"font" | "size" | "color" | "line" | "spacing" | null>(null);
   useBrandFontPreviewCss();
 
   useEffect(() => {
@@ -369,11 +376,9 @@ export function AdminRichTextEditor({
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("italic")}>
           斜體
         </Button>
-        {!compact ? (
-          <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("underline")}>
-            底線
-          </Button>
-        ) : null}
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("underline")}>
+          底線
+        </Button>
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => applyHeading("p")}>
           段落
         </Button>
@@ -383,24 +388,6 @@ export function AdminRichTextEditor({
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => applyHeading("h3")}>
           H3
         </Button>
-        {compact ? (
-          <>
-            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={applyList}>
-              項目符號
-            </Button>
-            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("insertOrderedList")}>
-              編號
-            </Button>
-            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("justifyLeft")}>
-              左對齊
-            </Button>
-            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("justifyCenter")}>
-              置中
-            </Button>
-          </>
-        ) : null}
-        {!compact ? (
-          <>
         <span className="mx-1 h-5 w-px bg-border" />
 
         <ToolbarMenu
@@ -489,23 +476,43 @@ export function AdminRichTextEditor({
             </button>
           ))}
         </ToolbarMenu>
-          </>
-        ) : null}
 
-        {!compact ? (
+        <ToolbarMenu
+          label="字距"
+          open={openMenu === "spacing"}
+          onToggle={toggleMenu("spacing")}
+        >
+          {LETTER_SPACINGS.map((ls) => (
+            <button
+              key={ls.value}
+              type="button"
+              className="block w-full px-3 py-2 text-left text-xs hover:bg-[#FFF5C7]"
+              onMouseDown={keepFocus}
+              onClick={(e) => {
+                e.stopPropagation();
+                applyInline({ "letter-spacing": ls.value });
+              }}
+            >
+              {ls.label}
+            </button>
+          ))}
+        </ToolbarMenu>
+
         <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={applyList}>
           項目符號
         </Button>
-        ) : null}
-        {!compact ? (
-          <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertLink}>
-            連結
-          </Button>
-        ) : (
-          <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertLink}>
-            插入連結
-          </Button>
-        )}
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("insertOrderedList")}>
+          編號
+        </Button>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("justifyLeft")}>
+          左對齊
+        </Button>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("justifyCenter")}>
+          置中
+        </Button>
+        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertLink}>
+          連結
+        </Button>
         <input
           ref={imageInputRef}
           type="file"
@@ -531,20 +538,20 @@ export function AdminRichTextEditor({
         </Button>
         {!compact ? (
           <>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertTable}>
-          表格
-        </Button>
-        <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("removeFormat")}>
-          清除格式
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          variant={htmlMode ? "default" : "secondary"}
-          onClick={() => setHtmlMode((current) => !current)}
-        >
-          HTML
-        </Button>
+            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={insertTable}>
+              表格
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onMouseDown={keepFocus} onClick={() => run("removeFormat")}>
+              清除格式
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={htmlMode ? "default" : "secondary"}
+              onClick={() => setHtmlMode((current) => !current)}
+            >
+              HTML
+            </Button>
           </>
         ) : null}
       </div>

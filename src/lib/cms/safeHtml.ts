@@ -33,7 +33,7 @@ export function sanitizeCmsHtml(html: string | null | undefined): string {
 }
 
 const ALLOWED_INLINE_STYLE =
-  /^(font-family|font-size|font-weight|font-style|color|background-color|line-height|text-align|text-decoration|margin|margin-top|margin-bottom|margin-left|margin-right|padding|padding-top|padding-bottom|padding-left|padding-right|width|max-width|height|border|border-collapse|border-radius|border-color|border-width|border-style)$/i;
+  /^(font-family|font-size|font-weight|font-style|color|background-color|line-height|letter-spacing|text-align|text-decoration|margin|margin-top|margin-bottom|margin-left|margin-right|padding|padding-top|padding-bottom|padding-left|padding-right|width|max-width|height|border|border-collapse|border-radius|border-color|border-width|border-style)$/i;
 
 export function looksLikeHtml(value: string | null | undefined): boolean {
   if (!value) return false;
