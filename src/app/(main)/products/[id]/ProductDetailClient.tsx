@@ -640,12 +640,24 @@ export default function ProductDetailClient({ id }: { id: string }) {
                     ["規格", product.specifications || product.package_spec],
                   ]
                     .filter(([, v]) => v)
-                    .map(([k, v]) => (
-                      <div key={String(k)} className="flex gap-3 border-b border-[#E8E1D7]/80 py-2">
-                        <dt className="w-20 shrink-0 text-[#667085]">{k}</dt>
-                        <dd className="font-medium">{String(v)}</dd>
-                      </div>
-                    ))}
+                    .map(([k, v]) => {
+                      const text = String(v);
+                      const htmlSpec = k === "規格" && looksLikeHtml(text);
+                      return (
+                        <div
+                          key={String(k)}
+                          className={cn(
+                            "gap-3 border-b border-[#E8E1D7]/80 py-2",
+                            htmlSpec ? "block space-y-2" : "flex"
+                          )}
+                        >
+                          <dt className="w-20 shrink-0 text-[#667085]">{k}</dt>
+                          <dd className={cn("min-w-0 font-medium", htmlSpec && "font-normal")}>
+                            {htmlSpec ? <RichTextHtml html={text} /> : text}
+                          </dd>
+                        </div>
+                      );
+                    })}
                 </dl>
               ) : null}
               {tab === "shipping" ? (
