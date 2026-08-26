@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "re
 import { Button } from "@/components/ui/button";
 import { useBrandFontPreviewCss } from "@/components/admin/AdminBrandFontPicker";
 import { BRAND_FONT_OPTIONS, getBrandFont, type BrandFontId } from "@/lib/branding";
-import { brandGoogleFontsHref, fontFamilyForInlineStyle } from "@/lib/branding/fonts";
+import { fontFamilyForInlineStyle } from "@/lib/branding/fonts";
+import { loadBrandFonts } from "@/components/branding/loadBrandFonts";
 import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
 const SIZES = [
@@ -153,7 +154,10 @@ export function AdminRichTextEditor({
   };
 
   /** Wrap each text node in the selection so font/size/color survive across <br>/blocks. */
-  const applyInline = (styles: Record<string, string>) => {
+  const applyInline = (
+    styles: Record<string, string>,
+    attrs?: Record<string, string>
+  ) => {
     const editor = ref.current;
     const range = getWorkingRange();
     if (!editor || !range || range.collapsed) {
@@ -181,6 +185,11 @@ export function AdminRichTextEditor({
       const span = document.createElement("span");
       // Single quotes inside font-family so style="..." is valid HTML.
       span.setAttribute("style", serializeInlineStyle(styles));
+      if (attrs) {
+        for (const [key, val] of Object.entries(attrs)) {
+          span.setAttribute(key, val);
+        }
+      }
       span.textContent = mid;
 
       const parent = node.parentNode;
@@ -267,9 +276,12 @@ export function AdminRichTextEditor({
   };
 
   const applyFont = (id: BrandFontId) => {
-    ensureFontStylesheet(id);
+    loadBrandFonts([id]);
     const opt = getBrandFont(id);
-    applyInline({ "font-family": fontFamilyForInlineStyle(opt.family) });
+    applyInline(
+      { "font-family": fontFamilyForInlineStyle(opt.family) },
+      { "data-brand-font": id }
+    );
   };
 
   const applyLineHeight = (value: string) => {
@@ -587,6 +599,7 @@ export function AdminRichTextEditor({
         <div
           ref={ref}
           className={compact ? EDITOR_CLASS.replace("min-h-[220px]", "min-h-[280px]") : EDITOR_CLASS}
+          style={{ fontFamily: "var(--font-sans)" }}
           contentEditable
           suppressContentEditableWarning
           data-placeholder={placeholder}
@@ -597,7 +610,7 @@ export function AdminRichTextEditor({
         />
       )}
       <p className="border-t border-border bg-muted/30 px-3 py-1.5 text-[11px] text-foreground-muted">
-        變更字型／大小／顏色／行距前，請先反白文字再點選。字型與行距會寫入 HTML，前台需載入對應字體後才會正確顯示。
+        字型／大小／顏色／行距請先反白再套用。編輯區與前台使用同一套品牌字型來源，儲存後前台會一致顯示。
       </p>
     </div>
   );
@@ -718,16 +731,4 @@ function collectTextNodesInRange(
     node = walker.nextNode() as Text | null;
   }
   return out;
-}
-
-function ensureFontStylesheet(id: BrandFontId) {
-  const href = brandGoogleFontsHref([id]);
-  if (!href) return;
-  const linkId = `admin-font-${id}`;
-  if (document.getElementById(linkId)) return;
-  const link = document.createElement("link");
-  link.id = linkId;
-  link.rel = "stylesheet";
-  link.href = href;
-  document.head.appendChild(link);
 }

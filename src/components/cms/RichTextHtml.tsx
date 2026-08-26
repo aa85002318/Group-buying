@@ -3,9 +3,14 @@
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { brandFontIdsInHtml } from "@/lib/branding/fonts";
-import { brandGoogleFontsHref } from "@/lib/branding/fonts";
+import { loadBrandFonts } from "@/components/branding/loadBrandFonts";
 import { cleanRichTextHtml, looksLikeHtml } from "@/lib/cms/safeHtml";
 
+/**
+ * Do not force Tailwind leading / heading font-family here.
+ * globals.css sets h1–h3 to --font-heading; rich content must inherit body
+ * unless the author set an inline font-family (same as admin editor).
+ */
 const RICH_HTML_CLASS =
   "rich-html text-sm text-[#475467] " +
   "[&_h2]:mb-2 [&_h2]:mt-3 [&_h2]:text-base [&_h2]:font-extrabold " +
@@ -19,32 +24,9 @@ const RICH_HTML_CLASS =
   "[&_th]:border [&_th]:border-[#E8E1D7] [&_th]:p-1.5 " +
   "[&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5";
 
-function ensureContentFonts(html: string) {
-  const ids = brandFontIdsInHtml(html);
-  const href = brandGoogleFontsHref(ids);
-  if (!href || typeof document === "undefined") return;
-  const linkId = "rich-html-content-fonts";
-  let link = document.getElementById(linkId) as HTMLLinkElement | null;
-  if (!link) {
-    link = document.createElement("link");
-    link.id = linkId;
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-  }
-  const prev = (link.getAttribute("data-ids") ?? "").split(",").filter(Boolean);
-  const merged = Array.from(new Set([...prev, ...ids]));
-  const mergedHref = brandGoogleFontsHref(merged) ?? href;
-  if (link.getAttribute("data-href") !== mergedHref) {
-    link.href = mergedHref;
-    link.setAttribute("data-href", mergedHref);
-    link.setAttribute("data-ids", merged.join(","));
-  }
-}
-
 /**
  * Storefront renderer for admin rich-text HTML.
- * Loads brand fonts referenced in content and avoids Tailwind leading-*
- * overriding author line-height / font-size on descendants.
+ * Loads the same brand fonts as the admin editor (Google-first).
  */
 export function RichTextHtml({
   html,
@@ -61,7 +43,8 @@ export function RichTextHtml({
   const cleaned = isHtml ? cleanRichTextHtml(raw) : "";
 
   useEffect(() => {
-    if (cleaned) ensureContentFonts(cleaned);
+    if (!cleaned) return;
+    loadBrandFonts(brandFontIdsInHtml(cleaned));
   }, [cleaned]);
 
   if (!raw.trim()) return null;
@@ -69,7 +52,10 @@ export function RichTextHtml({
   if (!isHtml) {
     if (!asPlainFallback) return null;
     return (
-      <div className={cn("whitespace-pre-wrap text-sm text-[#475467]", className)} style={{ lineHeight: 1.7 }}>
+      <div
+        className={cn("whitespace-pre-wrap text-sm text-[#475467]", className)}
+        style={{ lineHeight: 1.7, fontFamily: "inherit" }}
+      >
         {raw}
       </div>
     );
@@ -78,7 +64,7 @@ export function RichTextHtml({
   return (
     <div
       className={cn(RICH_HTML_CLASS, className)}
-      style={{ lineHeight: 1.7 }}
+      style={{ lineHeight: 1.7, fontFamily: "inherit" }}
       dangerouslySetInnerHTML={{ __html: cleaned }}
     />
   );

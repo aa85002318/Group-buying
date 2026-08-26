@@ -156,17 +156,23 @@ export function fontFamilyForInlineStyle(family: string): string {
   return family.replace(/"/g, "'");
 }
 
-/** Detect brand font ids referenced by inline font-family in HTML. */
+/** Detect brand font ids referenced by inline font-family / data-brand-font in HTML. */
 export function brandFontIdsInHtml(html: string | null | undefined): BrandFontId[] {
   if (!html) return [];
-  const found: BrandFontId[] = [];
+  const found = new Set<BrandFontId>();
+  const dataRe = /data-brand-font\s*=\s*["']([^"']+)["']/gi;
+  let dataMatch: RegExpExecArray | null;
+  while ((dataMatch = dataRe.exec(html)) !== null) {
+    const id = dataMatch[1] as BrandFontId;
+    if (BRAND_FONT_OPTIONS.some((f) => f.id === id)) found.add(id);
+  }
   for (const opt of BRAND_FONT_OPTIONS) {
-    if (opt.id === "system" || !opt.googleFamily) continue;
+    if (opt.id === "system") continue;
     const name = brandFontPrimaryName(opt);
     if (!name) continue;
-    if (html.includes(name)) found.push(opt.id);
+    if (html.includes(name)) found.add(opt.id);
   }
-  return found;
+  return Array.from(found);
 }
 
 export function brandFontFaceCss(

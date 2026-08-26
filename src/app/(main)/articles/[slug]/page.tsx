@@ -6,28 +6,10 @@ import Image from "next/image";
 import type { Article } from "@/lib/types/database";
 import { mockArticles } from "@/lib/mock-data";
 import { getBrandFont } from "@/lib/branding";
-import { brandFontIdsInHtml, brandGoogleFontsHref } from "@/lib/branding/fonts";
+import { brandFontIdsInHtml } from "@/lib/branding/fonts";
+import { loadBrandFonts } from "@/components/branding/loadBrandFonts";
 import { RichTextHtml } from "@/components/cms/RichTextHtml";
 import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
-
-function ensureArticleFonts(
-  titleFont?: string | null,
-  bodyFont?: string | null,
-  contentHtml?: string | null
-) {
-  const fromContent = brandFontIdsInHtml(contentHtml ?? "");
-  const href = brandGoogleFontsHref([titleFont, bodyFont, ...fromContent]);
-  if (!href) return;
-  const id = "article-google-fonts";
-  let link = document.getElementById(id) as HTMLLinkElement | null;
-  if (!link) {
-    link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-  }
-  if (link.href !== href) link.href = href;
-}
 
 export default function ArticleDetailPage({ params }: { params: { slug: string } }) {
   const [article, setArticle] = useState<Article | null>(
@@ -43,7 +25,11 @@ export default function ArticleDetailPage({ params }: { params: { slug: string }
 
   useEffect(() => {
     if (!article) return;
-    ensureArticleFonts(article.title_font, article.body_font, article.content);
+    loadBrandFonts([
+      article.title_font,
+      article.body_font,
+      ...brandFontIdsInHtml(article.content),
+    ]);
   }, [article]);
 
   if (!article) return <p>載入中…</p>;
@@ -69,7 +55,7 @@ export default function ArticleDetailPage({ params }: { params: { slug: string }
       <p className="text-xs text-muted-foreground">
         {new Date(article.created_at).toLocaleDateString("zh-TW")}
       </p>
-      <div style={bodyFamily ? { fontFamily: bodyFamily } : undefined}>
+      <div style={bodyFamily ? { fontFamily: bodyFamily } : { fontFamily: "var(--font-sans)" }}>
         <RichTextHtml html={content} className="max-w-none text-coffee" />
       </div>
     </article>
