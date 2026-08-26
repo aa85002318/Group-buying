@@ -40,10 +40,50 @@ export function looksLikeHtml(value: string | null | undefined): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(value);
 }
 
+function decodeCssEntities(raw: string): string {
+  return raw
+    .replace(/&quot;/gi, '"')
+    .replace(/&#34;/g, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&");
+}
+
+function isBrokenFontFamilyValue(val: string): boolean {
+  const bare = val.replace(/['"]/g, "").replace(/\s+/g, " ").trim();
+  if (!bare) return true;
+  // leftover from quote corruption: empty, only punctuation, or "font-weight: normal"
+  if (/^(;|,|\.|font-weight.*)$/i.test(bare)) return true;
+  if (!/[A-Za-z\u4e00-\u9fff]/.test(bare)) return true;
+  return false;
+}
+
+/**
+ * Pre-pass: recover font-family values that used double quotes / &quot;
+ * inside style="..." (historically corrupted by contenteditable + cleaners).
+ */
+export function repairBrokenFontFamilyHtml(html: string): string {
+  let out = html;
+  // font-family: &quot;Noto Sans TC&quot;
+  out = out.replace(
+    /font-family\s*:\s*&quot;([^&<>]+?)&quot;/gi,
+    (_m, name: string) => `font-family: '${String(name).trim()}'`
+  );
+  // font-family: "Noto Sans TC" (raw double quotes in CSS text)
+  out = out.replace(
+    /font-family\s*:\s*"([^"]+)"/gi,
+    (_m, name: string) => `font-family: '${String(name).trim()}'`
+  );
+  // empty leftovers: font-family: &quot;  or font-family: &quot
+  out = out.replace(/font-family\s*:\s*&quot;?\s*(?=;|"|'|>|$)/gi, "");
+  return out;
+}
+
 /** Normalize a CSS declarations string; drop Tailwind vars; quote-safe font-family. */
 export function sanitizeInlineStyleDeclarations(raw: string): string {
   const kept: string[] = [];
-  for (const part of raw.split(";")) {
+  for (const part of decodeCssEntities(raw).split(";")) {
     const decl = part.trim();
     if (!decl) continue;
     const idx = decl.indexOf(":");
@@ -51,9 +91,9 @@ export function sanitizeInlineStyleDeclarations(raw: string): string {
     const prop = decl.slice(0, idx).trim();
     let val = decl.slice(idx + 1).trim();
     if (!val || prop.startsWith("--") || !ALLOWED_INLINE_STYLE.test(prop)) continue;
-    // Keep font-family safe inside style="..." (double-quoted attribute).
     if (prop.toLowerCase() === "font-family") {
       val = val.replace(/"/g, "'");
+      if (isBrokenFontFamilyValue(val)) continue;
     }
     kept.push(`${prop}: ${val}`);
   }
@@ -62,7 +102,7 @@ export function sanitizeInlineStyleDeclarations(raw: string): string {
 
 /**
  * Rewrite every style="..." / style='...' so values never use raw " inside
- * double-quoted attributes (breaks HTML + our previous regex cleaner).
+ * double-quoted attributes (breaks HTML + contenteditable round-trips).
  */
 function rewriteStyleAttributes(
   html: string,
@@ -89,11 +129,9 @@ function rewriteStyleAttributes(
         j += 1;
       }
       const cleaned = rewrite(css);
-      // Always re-emit as double-quoted attr with single quotes inside CSS.
       out += cleaned ? ` style="${cleaned}"` : "";
       i = j < html.length ? j + 1 : j;
     } else {
-      // Unquoted attribute value — read until whitespace or tag end.
       let j = valueStart;
       let css = "";
       while (j < html.length && !/[\s>]/.test(html[j]!)) {
@@ -111,10 +149,12 @@ function rewriteStyleAttributes(
 /**
  * Strip inherited Tailwind CSS variables that Chrome copies onto
  * contenteditable spans (can bloat a product intro to 200KB+ of “亂碼”).
+ * Also repairs historically corrupted font-family quoting.
  */
 export function cleanRichTextHtml(html: string | null | undefined): string {
   if (!html) return "";
-  return rewriteStyleAttributes(sanitizeCmsHtml(html), sanitizeInlineStyleDeclarations);
+  const repaired = repairBrokenFontFamilyHtml(sanitizeCmsHtml(html));
+  return rewriteStyleAttributes(repaired, sanitizeInlineStyleDeclarations);
 }
 
 export function externalLinkProps(href: string): { target?: string; rel?: string } {
