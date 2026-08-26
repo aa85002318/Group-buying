@@ -19,15 +19,28 @@ type ContentProduct = {
   specifications: string;
 };
 
-type FieldKey = "rich_description" | "product_info" | "specifications";
+type FieldKey = "name" | "rich_description" | "product_info" | "specifications";
 
-const FIELDS: Array<{ key: FieldKey; section: ProductContentSection; label: string }> = [
+const FIELDS: Array<{
+  key: FieldKey;
+  label: string;
+  section?: ProductContentSection;
+  plain?: boolean;
+}> = [
+  { key: "name", label: "名稱", plain: true },
   { key: "rich_description", section: "rich_description", label: "特色" },
   { key: "product_info", section: "product_info", label: "用途" },
   { key: "specifications", section: "specifications", label: "規格" },
 ];
 
-type DraftMap = Record<string, { rich_description: string; product_info: string; specifications: string }>;
+type DraftRow = {
+  name: string;
+  rich_description: string;
+  product_info: string;
+  specifications: string;
+};
+
+type DraftMap = Record<string, DraftRow>;
 
 type TemplateOpt = { id: string; name: string; body_html: string };
 
@@ -57,7 +70,7 @@ function AdminProductContentBatchInner() {
   const [drafts, setDrafts] = useState<DraftMap>({});
   const [dirty, setDirty] = useState<Record<string, Partial<Record<FieldKey, boolean>>>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [field, setField] = useState<FieldKey>("rich_description");
+  const [field, setField] = useState<FieldKey>("name");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewing, setPreviewing] = useState(false);
@@ -95,6 +108,7 @@ function AdminProductContentBatchInner() {
       const nextDrafts: DraftMap = {};
       for (const p of list) {
         nextDrafts[p.id] = {
+          name: p.name ?? "",
           rich_description: p.rich_description ?? "",
           product_info: p.product_info ?? "",
           specifications: p.specifications ?? "",
@@ -115,9 +129,15 @@ function AdminProductContentBatchInner() {
     void load(initialIds);
   }, [initialIds, load]);
 
-  const section = FIELDS.find((f) => f.key === field)?.section ?? "rich_description";
+  const activeFieldMeta = FIELDS.find((f) => f.key === field);
+  const section = activeFieldMeta?.section ?? "rich_description";
+  const isPlainName = field === "name";
 
   useEffect(() => {
+    if (isPlainName) {
+      setTemplates([]);
+      return;
+    }
     let cancelled = false;
     fetch(`/api/admin/products/content-templates?section=${section}`)
       .then((r) => r.json())
@@ -137,7 +157,7 @@ function AdminProductContentBatchInner() {
     return () => {
       cancelled = true;
     };
-  }, [section]);
+  }, [section, isPlainName]);
 
   const active = products.find((p) => p.id === activeId) ?? null;
   const activeDraft = activeId ? drafts[activeId] : null;
@@ -145,29 +165,42 @@ function AdminProductContentBatchInner() {
   const filteredProducts = useMemo(() => {
     const q = listQuery.trim().toLowerCase();
     if (!q) return products;
-    return products.filter(
-      (p) => p.name.toLowerCase().includes(q) || (p.sku ?? "").toLowerCase().includes(q)
-    );
-  }, [products, listQuery]);
+    return products.filter((p) => {
+      const draftName = drafts[p.id]?.name ?? p.name;
+      return (
+        draftName.toLowerCase().includes(q) ||
+        p.name.toLowerCase().includes(q) ||
+        (p.sku ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [products, listQuery, drafts]);
 
   const dirtyCount = useMemo(() => {
     let n = 0;
     for (const id of Object.keys(dirty)) {
       const flags = dirty[id];
-      if (flags?.rich_description || flags?.product_info || flags?.specifications) n += 1;
+      if (flags?.name || flags?.rich_description || flags?.product_info || flags?.specifications) {
+        n += 1;
+      }
     }
     return n;
   }, [dirty]);
 
-  const setFieldValue = (html: string) => {
+  const emptyDraft = (): DraftRow => ({
+    name: "",
+    rich_description: "",
+    product_info: "",
+    specifications: "",
+  });
+
+  const setFieldValue = (value: string) => {
     if (!activeId) return;
     setDrafts((prev) => ({
       ...prev,
       [activeId]: {
-        rich_description: prev[activeId]?.rich_description ?? "",
-        product_info: prev[activeId]?.product_info ?? "",
-        specifications: prev[activeId]?.specifications ?? "",
-        [field]: html,
+        ...emptyDraft(),
+        ...prev[activeId],
+        [field]: value,
       },
     }));
     setDirty((prev) => ({
@@ -179,7 +212,7 @@ function AdminProductContentBatchInner() {
   };
 
   const applyTemplate = (html: string) => {
-    if (!activeId) return;
+    if (!activeId || isPlainName) return;
     const current = activeDraft?.[field] ?? "";
     if (current.trim() && !confirm("目前欄位已有內容，套用公版將取代現有內容。")) return;
     setFieldValue(html);
@@ -188,7 +221,7 @@ function AdminProductContentBatchInner() {
 
   const applyFieldToAll = () => {
     if (!activeId || !activeDraft) return;
-    const html = activeDraft[field];
+    const value = activeDraft[field];
     const label = FIELDS.find((f) => f.key === field)?.label ?? field;
     if (
       !confirm(
@@ -201,10 +234,9 @@ function AdminProductContentBatchInner() {
       const next = { ...prev };
       for (const p of products) {
         next[p.id] = {
-          rich_description: next[p.id]?.rich_description ?? "",
-          product_info: next[p.id]?.product_info ?? "",
-          specifications: next[p.id]?.specifications ?? "",
-          [field]: html,
+          ...emptyDraft(),
+          ...next[p.id],
+          [field]: value,
         };
       }
       return next;
@@ -229,6 +261,7 @@ function AdminProductContentBatchInner() {
   const buildItems = () => {
     const items: Array<{
       productId: string;
+      name?: string;
       rich_description?: string | null;
       product_info?: string | null;
       specifications?: string | null;
@@ -240,6 +273,10 @@ function AdminProductContentBatchInner() {
       if (!d) continue;
       const item: (typeof items)[number] = { productId: p.id };
       let has = false;
+      if (flags.name) {
+        item.name = d.name;
+        has = true;
+      }
       if (flags.rich_description) {
         item.rich_description = d.rich_description;
         has = true;
@@ -321,7 +358,7 @@ function AdminProductContentBatchInner() {
     <div className="space-y-5">
       <AdminPageHeader
         title="內容批次編輯"
-        description="一次整理多個商品的特色、適合用途、商品規格；支援富文字樣式與內容公版。"
+        description="一次整理多個商品的名稱、特色、適合用途、商品規格；富文字欄位支援樣式與內容公版。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/admin/products">
@@ -367,10 +404,12 @@ function AdminProductContentBatchInner() {
             <div className="max-h-[60vh] space-y-1 overflow-y-auto">
               {filteredProducts.map((p) => {
                 const isDirty = Boolean(
-                  dirty[p.id]?.rich_description ||
+                  dirty[p.id]?.name ||
+                    dirty[p.id]?.rich_description ||
                     dirty[p.id]?.product_info ||
                     dirty[p.id]?.specifications
                 );
+                const displayName = drafts[p.id]?.name || p.name;
                 return (
                   <div
                     key={p.id}
@@ -385,7 +424,7 @@ function AdminProductContentBatchInner() {
                       onClick={() => setActiveId(p.id)}
                     >
                       <span className="block truncate text-sm font-medium text-[#153E73]">
-                        {p.name}
+                        {displayName}
                         {isDirty ? <span className="ml-1 text-[#F16458]">•</span> : null}
                       </span>
                       <span className="block truncate text-[10px] text-[#8A94A6]">
@@ -410,7 +449,9 @@ function AdminProductContentBatchInner() {
             {active && activeDraft ? (
               <>
                 <div>
-                  <h2 className="text-base font-semibold text-[#153E73]">{active.name}</h2>
+                  <h2 className="text-base font-semibold text-[#153E73]">
+                    {activeDraft.name || active.name}
+                  </h2>
                   <p className="text-xs text-[#8A94A6]">
                     {active.sku || "無 SKU"} · {active.status}
                   </p>
@@ -439,44 +480,56 @@ function AdminProductContentBatchInner() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative">
-                    <Button type="button" size="sm" variant="outline" onClick={() => setTplOpen((v) => !v)}>
-                      套用內容公版
-                    </Button>
-                    {tplOpen ? (
-                      <div className="absolute left-0 z-20 mt-1 w-56 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
-                        {templates.length === 0 ? (
-                          <p className="px-3 py-2 text-xs text-[#8A94A6]">
-                            尚無公版，請至內容公版新增。
-                          </p>
-                        ) : (
-                          templates.map((t) => (
-                            <button
-                              key={t.id}
-                              type="button"
-                              className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-[#FFF5CC]"
-                              onClick={() => applyTemplate(t.body_html)}
-                            >
-                              {t.name}
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
+                  {!isPlainName ? (
+                    <div className="relative">
+                      <Button type="button" size="sm" variant="outline" onClick={() => setTplOpen((v) => !v)}>
+                        套用內容公版
+                      </Button>
+                      {tplOpen ? (
+                        <div className="absolute left-0 z-20 mt-1 w-56 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+                          {templates.length === 0 ? (
+                            <p className="px-3 py-2 text-xs text-[#8A94A6]">
+                              尚無公版，請至內容公版新增。
+                            </p>
+                          ) : (
+                            templates.map((t) => (
+                              <button
+                                key={t.id}
+                                type="button"
+                                className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-[#FFF5CC]"
+                                onClick={() => applyTemplate(t.body_html)}
+                              >
+                                {t.name}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <Button type="button" size="sm" variant="secondary" onClick={applyFieldToAll}>
                     將此欄位套用到全部勾選
                   </Button>
                   <span className="text-xs text-[#8A94A6]">
-                    編輯中：{PRODUCT_CONTENT_SECTION_LABELS[section]}
+                    編輯中：
+                    {isPlainName ? "名稱" : PRODUCT_CONTENT_SECTION_LABELS[section]}
                   </span>
                 </div>
 
-                <AdminRichTextEditor
-                  value={activeDraft[field]}
-                  onChange={setFieldValue}
-                  placeholder={`輸入${FIELDS.find((f) => f.key === field)?.label}…`}
-                />
+                {isPlainName ? (
+                  <input
+                    className="input-field w-full text-base"
+                    value={activeDraft.name}
+                    onChange={(e) => setFieldValue(e.target.value)}
+                    placeholder="輸入商品名稱…"
+                  />
+                ) : (
+                  <AdminRichTextEditor
+                    value={activeDraft[field]}
+                    onChange={setFieldValue}
+                    placeholder={`輸入${FIELDS.find((f) => f.key === field)?.label}…`}
+                  />
+                )}
 
                 <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-4">
                   <Button type="button" variant="outline" onClick={() => void runPreview()} disabled={previewing || dirtyCount === 0}>

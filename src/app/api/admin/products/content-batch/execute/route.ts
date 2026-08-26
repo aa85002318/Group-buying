@@ -13,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 const itemSchema = z.object({
   productId: z.string().uuid(),
+  name: z.string().optional(),
   rich_description: z.string().nullable().optional(),
   product_info: z.string().nullable().optional(),
   specifications: z.string().nullable().optional(),
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
           ok: false,
           errors: ["沒有可寫入的內容欄位"],
           before: {
+            name: product.name ?? null,
             rich_description: product.rich_description ?? product.description ?? null,
             product_info: product.product_info ?? null,
             specifications: product.specifications ?? null,
@@ -86,11 +88,13 @@ export async function POST(request: Request) {
         ok: result.errors.length === 0,
         errors: result.errors,
         before: {
+          name: product.name ?? null,
           rich_description: product.rich_description ?? product.description ?? null,
           product_info: product.product_info ?? null,
           specifications: product.specifications ?? null,
         },
         after: {
+          name: result.after.name,
           rich_description: result.after.rich_description,
           product_info: result.after.product_info,
           specifications: result.after.specifications,
