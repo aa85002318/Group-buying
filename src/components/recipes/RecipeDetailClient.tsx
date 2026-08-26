@@ -3,20 +3,22 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { SmartRecipeReader } from "@/components/recipes/SmartRecipeReader";
 import { RecipeStorybookReader } from "@/components/recipes/storybook/RecipeStorybookReader";
 import { StoryFullRecipeView } from "@/components/recipes/storybook/StoryFullRecipeView";
+import {
+  ArticleRecipeTemplate,
+  VideoRecipeTemplate,
+} from "@/components/recipes/simple/RecipeTemplates";
 import { recordBrowse } from "@/lib/home/browse-history";
 import type { SmartRecipePayload } from "@/lib/recipes/flip-pages";
-import {
-  parseReaderSettings,
-} from "@/lib/recipes/reader-settings";
+import { parseReaderSettings } from "@/lib/recipes/reader-settings";
+import { resolveRecipeType } from "@/lib/recipes/recipe-type";
 import {
   flattenStoryPages,
   hasActiveStorybook,
   type StorybookPayload,
 } from "@/lib/recipes/storybook";
-import type { Recipe } from "@/lib/types/database";
+import type { Recipe, RecipeProductRecommendation } from "@/lib/types/database";
 
 type Props = {
   slug: string;
@@ -29,6 +31,7 @@ export function RecipeDetailClient({ slug, immersive = false }: Props) {
   const viewParam = searchParams.get("view");
   const [payload, setPayload] = useState<SmartRecipePayload | null>(null);
   const [stories, setStories] = useState<StorybookPayload | null>(null);
+  const [recommendations, setRecommendations] = useState<RecipeProductRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +56,7 @@ export function RecipeDetailClient({ slug, immersive = false }: Props) {
           discussionCount: d.discussionSummary?.count ?? 0,
           submissionCount: d.submissionSummary?.count ?? 0,
         });
+        setRecommendations(d.recommendations ?? []);
 
         const chapters = d.stories?.chapters ?? d.chapters ?? [];
         if (Array.isArray(chapters) && chapters.length) {
@@ -83,26 +87,20 @@ export function RecipeDetailClient({ slug, immersive = false }: Props) {
       <div
         className={
           immersive
-            ? "flex min-h-[100dvh] items-center justify-center bg-[#1a100c]"
-            : "space-y-4"
+            ? "flex min-h-[100dvh] items-center justify-center bg-[#FFFEFA]"
+            : "space-y-4 bg-[#FFFEFA] p-5"
         }
       >
-        <div
-          className={
-            immersive
-              ? "h-10 w-10 animate-pulse rounded-full bg-white/20"
-              : "aspect-[16/9] animate-pulse rounded-[22px] bg-muted"
-          }
-        />
+        <div className="aspect-[16/9] w-full max-w-3xl animate-pulse rounded-2xl bg-[#FFF5CC]" />
       </div>
     );
   }
 
   if (error || !payload) {
     return (
-      <div className="space-y-3 py-10 text-center text-white">
-        <p className="text-white/70">{error ?? "找不到食譜"}</p>
-        <Link href="/recipes" className="text-sm text-[#FF5A5F] hover:underline">
+      <div className="space-y-3 bg-[#FFFEFA] py-10 text-center text-[#153E73]">
+        <p className="text-[#8A94A6]">{error ?? "找不到食譜"}</p>
+        <Link href="/recipes" className="text-sm text-[#F16458] hover:underline">
           返回食譜列表
         </Link>
       </div>
@@ -110,12 +108,25 @@ export function RecipeDetailClient({ slug, immersive = false }: Props) {
   }
 
   const hasStories = stories && hasActiveStorybook(stories.chapters);
+  const explicitType =
+    payload.recipe.recipe_type === "video" || payload.recipe.recipe_type === "article"
+      ? payload.recipe.recipe_type
+      : null;
+
+  // New simplified templates when recipe_type is set, or when there is no storybook tree.
+  if (explicitType || !hasStories) {
+    const mode = resolveRecipeType(payload.recipe);
+    if (mode === "video") {
+      return <VideoRecipeTemplate data={payload} recommendations={recommendations} />;
+    }
+    return <ArticleRecipeTemplate data={payload} recommendations={recommendations} />;
+  }
+
+  // Legacy Story Book path (unchanged for recipes that still rely on chapters)
   const settings = parseReaderSettings(payload.recipe.reader_settings);
   const fullEnabled = payload.recipe.full_reading_enabled !== false;
   const flipEnabled = payload.recipe.flip_mode_enabled !== false;
 
-  // Resolve view: query > reader_settings.listPrimaryFull > recipe default
-  // "full" and "flip" both open the immersive page-turner; "scroll" keeps the long-form outline.
   let view: "full" | "flip" | "scroll" =
     viewParam === "scroll"
       ? "scroll"
@@ -139,22 +150,8 @@ export function RecipeDetailClient({ slug, immersive = false }: Props) {
   if ((view === "full" || view === "scroll") && !fullEnabled && flipEnabled) view = "flip";
   if (view === "flip" && !flipEnabled && fullEnabled) view = "full";
 
-  if (hasStories) {
-    // Long-form scroll outline (optional)
-    if (view === "scroll") {
-      return <StoryFullRecipeView data={payload} stories={stories!} />;
-    }
-    // Default / full / flip → immersive one-page-at-a-time storybook
-    return (
-      <RecipeStorybookReader data={payload} stories={stories!} immersive />
-    );
+  if (view === "scroll") {
+    return <StoryFullRecipeView data={payload} stories={stories!} />;
   }
-
-  return (
-    <SmartRecipeReader
-      data={payload}
-      immersive={immersive}
-      initialMode={view === "scroll" ? "full" : view === "flip" ? "flip" : "full"}
-    />
-  );
+  return <RecipeStorybookReader data={payload} stories={stories!} immersive />;
 }

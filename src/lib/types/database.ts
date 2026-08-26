@@ -803,6 +803,9 @@ export interface Video {
 
 export type RecipeDifficulty = "easy" | "medium" | "hard";
 
+/** Simplified content mode for detail page templates */
+export type RecipeContentType = "video" | "article";
+
 export interface RecipeCategory {
   id: string;
   name: string;
@@ -831,6 +834,11 @@ export interface Recipe {
   status: ContentPublishStatus;
   access_permission?: RecipeAccessPermission;
   bake_time?: number | null;
+  /** Simplified templates: video | article. null = legacy / inferred */
+  recipe_type?: RecipeContentType | null;
+  youtube_url?: string | null;
+  video_url?: string | null;
+  seo_image?: string | null;
   /** auto = content-driven flipbook; manual = advanced story editor */
   story_layout_mode?: "auto" | "manual";
   allergens?: string[];

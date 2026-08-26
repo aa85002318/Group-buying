@@ -100,6 +100,11 @@ export async function POST(request: Request) {
       status === "published" ? body.published_at ?? new Date().toISOString() : body.published_at ?? null,
     seo_title: body.seo_title ?? null,
     seo_description: body.seo_description ?? null,
+    seo_image: body.seo_image ?? null,
+    recipe_type:
+      body.recipe_type === "video" || body.recipe_type === "article" ? body.recipe_type : null,
+    youtube_url: body.youtube_url ?? null,
+    video_url: body.video_url ?? null,
     related_video_id: body.related_video_id || null,
     sort_order: Number(body.sort_order ?? 0),
     is_featured: Boolean(body.is_featured),
