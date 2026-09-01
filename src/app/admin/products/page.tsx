@@ -1,27 +1,40 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BarChart3, Download, Images, PackagePlus, Printer, Upload } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useAdminShell } from "@/components/admin/AdminShell";
-import { useAdminList } from "@/hooks/useAdminList";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ProductBatchDrawer } from "@/components/admin/products/ProductBatchDrawer";
 import { calcGrossMarginAmount } from "@/lib/admin/product-form-v2";
 import { formatCurrency } from "@/lib/utils";
 import type { Product, ProductCategory } from "@/lib/types/database";
 
 export default function AdminProductsPage() {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-[#8A94A6]">載入中…</p>}>
+      <AdminProductsPageInner />
+    </Suspense>
+  );
+}
+
+function AdminProductsPageInner() {
   const { profile } = useAdminShell();
   const isAdmin = profile?.role === "admin";
-  const { filtered, search, setSearch, page, setPage, loading, error, refresh } = useAdminList<Product>(
-    "/api/admin/products",
-    "products",
-    ["name", "sku"]
-  );
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("q") ?? searchParams.get("search") ?? "";
+
+  const [items, setItems] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState(initialSearch);
+  const [page, setPage] = useState(1);
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0 });
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -35,6 +48,36 @@ export default function AdminProductsPage() {
   const [shipFilter, setShipFilter] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      const q = debouncedSearch.trim();
+      if (q) params.set("search", q);
+      const res = await fetch(`/api/admin/products${params.size ? `?${params}` : ""}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "載入失敗");
+      setItems((data.products ?? []) as Product[]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "載入失敗");
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, statusFilter, categoryFilter, missingImage, missingSubtitle, shipFilter, priceMin, priceMax]);
+
+  useEffect(() => {
+    if (initialSearch) setSearch(initialSearch);
+  }, [initialSearch]);
 
   useEffect(() => {
     fetch("/api/admin/categories")
@@ -73,7 +116,7 @@ export default function AdminProductsPage() {
   };
 
   const extraFiltered = useMemo(() => {
-    return filtered.filter((p) => {
+    return items.filter((p) => {
       if (statusFilter) {
         const status = p.status ?? (p.is_active ? "active" : "inactive");
         if (status !== statusFilter) return false;
@@ -94,7 +137,7 @@ export default function AdminProductsPage() {
       if (max != null && !Number.isNaN(max) && p.price > max) return false;
       return true;
     });
-  }, [filtered, statusFilter, categoryFilter, missingImage, missingSubtitle, shipFilter, priceMin, priceMax]);
+  }, [items, statusFilter, categoryFilter, missingImage, missingSubtitle, shipFilter, priceMin, priceMax]);
 
   const pageSize = 10;
   const totalPages = Math.max(1, Math.ceil(extraFiltered.length / pageSize));
@@ -292,6 +335,9 @@ export default function AdminProductsPage() {
           <Link href={`/admin/products/content-batch?ids=${Array.from(selected).join(",")}`}>
             <Button size="sm" variant="secondary">批次編輯內容</Button>
           </Link>
+          <Link href={`/admin/products/price-batch?ids=${Array.from(selected).join(",")}`}>
+            <Button size="sm" variant="secondary">價格批次更改</Button>
+          </Link>
           <Button size="sm" variant="secondary" onClick={() => void quickStatus("active")}>上架</Button>
           <Button size="sm" variant="secondary" onClick={() => void quickStatus("inactive")}>下架</Button>
           <Button size="sm" variant="secondary" onClick={() => void quickStatus("draft")}>改為草稿</Button>
@@ -412,7 +458,7 @@ export default function AdminProductsPage() {
         rows={paginated}
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="搜尋商品名稱、SKU…"
+        searchPlaceholder="搜尋名稱、SKU、條碼、副標、供應商…"
         loading={loading}
         page={page}
         totalPages={totalPages}
