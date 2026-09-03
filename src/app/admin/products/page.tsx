@@ -34,6 +34,7 @@ function AdminProductsPageInner() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState(initialSearch);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const debouncedSearch = useDebouncedValue(search, 300);
   const [stats, setStats] = useState({ total: 0, active: 0, lowStock: 0 });
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -73,7 +74,17 @@ function AdminProductsPageInner() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, statusFilter, categoryFilter, missingImage, missingSubtitle, shipFilter, priceMin, priceMax]);
+  }, [
+    debouncedSearch,
+    statusFilter,
+    categoryFilter,
+    missingImage,
+    missingSubtitle,
+    shipFilter,
+    priceMin,
+    priceMax,
+    pageSize,
+  ]);
 
   useEffect(() => {
     if (initialSearch) setSearch(initialSearch);
@@ -139,9 +150,13 @@ function AdminProductsPageInner() {
     });
   }, [items, statusFilter, categoryFilter, missingImage, missingSubtitle, shipFilter, priceMin, priceMax]);
 
-  const pageSize = 10;
   const totalPages = Math.max(1, Math.ceil(extraFiltered.length / pageSize));
-  const paginated = extraFiltered.slice((page - 1) * pageSize, page * pageSize);
+  const safePage = Math.min(page, totalPages);
+  const paginated = extraFiltered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  useEffect(() => {
+    if (page !== safePage) setPage(safePage);
+  }, [page, safePage]);
 
   const toggleOne = (id: string) => {
     setSelected((prev) => {
@@ -466,9 +481,13 @@ function AdminProductsPageInner() {
         onSearchChange={setSearch}
         searchPlaceholder="搜尋名稱、SKU、條碼、副標、供應商…"
         loading={loading}
-        page={page}
+        page={safePage}
         totalPages={totalPages}
         onPageChange={setPage}
+        pageSize={pageSize}
+        pageSizeOptions={[10, 20, 50, 100]}
+        onPageSizeChange={setPageSize}
+        totalCount={extraFiltered.length}
         getRowClassName={(p) => (selected.has(p.id) ? "bg-[#FFF5CC]" : "")}
       />
 
