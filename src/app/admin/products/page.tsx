@@ -290,7 +290,13 @@ function AdminProductsPageInner() {
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="w-full text-sm text-[#667085] sm:w-auto sm:mr-2">
+          目前篩選結果 <span className="font-semibold text-[#153E73]">{extraFiltered.length}</span> 筆
+          {items.length !== extraFiltered.length ? (
+            <span className="text-[#8A94A6]">（已載入 {items.length}）</span>
+          ) : null}
+        </p>
         <select className="input-field h-10 w-auto" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="">全部狀態</option>
           <option value="active">上架</option>

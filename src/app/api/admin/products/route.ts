@@ -24,6 +24,7 @@ import {
   buildProductSearchOrFilter,
   matchesProductSearch,
 } from "@/lib/admin/product-search";
+import { fetchAllSupabaseRows } from "@/lib/supabase/fetch-all";
 
 async function softPatchExtendedProductFields(
   admin: ReturnType<typeof createAdminClient>,
@@ -214,17 +215,38 @@ export async function GET(request: Request) {
   let data: Record<string, unknown>[] = [];
   let fetchError: { message: string } | null = null;
   for (const columns of selectAttempts) {
-    let query = admin
-      .from("products")
-      .select(columns)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
     const orFilter = buildProductSearchOrFilter(search);
-    if (orFilter) query = query.or(orFilter);
-    if (limit) query = query.limit(limit);
-    const result = await query;
+    const buildBase = () => {
+      let query = admin
+        .from("products")
+        .select(columns)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      if (orFilter) query = query.or(orFilter);
+      return query;
+    };
+
+    if (limit) {
+      const result = await buildBase().limit(limit);
+      if (!result.error) {
+        data = (result.data as unknown as Record<string, unknown>[]) ?? [];
+        fetchError = null;
+        break;
+      }
+      fetchError = result.error;
+      continue;
+    }
+
+    // No limit: page past PostgREST's default ~1000-row cap so admin sees every product.
+    const result = await fetchAllSupabaseRows<Record<string, unknown>>(async (from, to) => {
+      const page = await buildBase().range(from, to);
+      return {
+        data: (page.data as unknown as Record<string, unknown>[] | null) ?? null,
+        error: page.error,
+      };
+    });
     if (!result.error) {
-      data = (result.data as unknown as Record<string, unknown>[]) ?? [];
+      data = result.data;
       fetchError = null;
       break;
     }
