@@ -1,8 +1,8 @@
 "use client";
 
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export type AdminColumn<T> = {
@@ -11,6 +11,8 @@ export type AdminColumn<T> = {
   render: (row: T) => ReactNode;
   className?: string;
 };
+
+const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export function AdminTable<T extends { id: string }>({
   columns,
@@ -23,6 +25,10 @@ export function AdminTable<T extends { id: string }>({
   page,
   totalPages,
   onPageChange,
+  pageSize,
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
+  onPageSizeChange,
+  totalCount,
   toolbar,
   getRowClassName,
 }: {
@@ -36,9 +42,43 @@ export function AdminTable<T extends { id: string }>({
   page?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (size: number) => void;
+  /** Total filtered rows (for “顯示 x–y／共 z”) */
+  totalCount?: number;
   toolbar?: ReactNode;
   getRowClassName?: (row: T) => string;
 }) {
+  const showPager = Boolean(page && totalPages && onPageChange);
+  const showPageSize = Boolean(onPageSizeChange && pageSize);
+  const showBar = showPager || showPageSize;
+  const [jumpValue, setJumpValue] = useState(String(page ?? 1));
+
+  useEffect(() => {
+    setJumpValue(String(page ?? 1));
+  }, [page]);
+
+  const goToPage = (raw: string | number) => {
+    if (!onPageChange || !totalPages) return;
+    const n = typeof raw === "number" ? raw : Number(raw);
+    if (!Number.isFinite(n)) {
+      setJumpValue(String(page ?? 1));
+      return;
+    }
+    const next = Math.min(totalPages, Math.max(1, Math.floor(n)));
+    onPageChange(next);
+    setJumpValue(String(next));
+  };
+
+  const rangeLabel = (() => {
+    if (!page || !pageSize || totalCount == null) return null;
+    if (totalCount <= 0) return "共 0 筆";
+    const from = (page - 1) * pageSize + 1;
+    const to = Math.min(page * pageSize, totalCount);
+    return `顯示 ${from}–${to}／共 ${totalCount} 筆`;
+  })();
+
   return (
     <div className="space-y-4">
       {(onSearchChange || toolbar) && (
@@ -68,13 +108,17 @@ export function AdminTable<T extends { id: string }>({
         ) : (
           <div className="divide-y divide-[var(--admin-border)]">
             {rows.map((row) => (
-              <div key={row.id} className={cn("space-y-2.5 p-4 transition hover:bg-[var(--admin-hover)]", getRowClassName?.(row))}>
+              <div
+                key={row.id}
+                className={cn(
+                  "space-y-2.5 p-4 transition hover:bg-[var(--admin-hover)]",
+                  getRowClassName?.(row)
+                )}
+              >
                 {columns.map((col) => (
                   <div key={col.key} className="flex items-start justify-between gap-3 text-sm">
                     <span className="shrink-0 text-[var(--admin-muted)]">{col.header}</span>
-                    <div className="min-w-0 text-right text-[var(--admin-title)]">
-                      {col.render(row)}
-                    </div>
+                    <div className="min-w-0 text-right text-[var(--admin-title)]">{col.render(row)}</div>
                   </div>
                 ))}
               </div>
@@ -140,22 +184,90 @@ export function AdminTable<T extends { id: string }>({
         </div>
       </div>
 
-      {totalPages && totalPages > 1 && page && onPageChange ? (
-        <div className="flex items-center justify-center gap-3">
-          <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
-            上一頁
-          </Button>
-          <span className="text-sm text-[var(--admin-muted)]">
-            {page} / {totalPages}
-          </span>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-          >
-            下一頁
-          </Button>
+      {showBar ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--admin-muted)]">
+            {rangeLabel ? <span>{rangeLabel}</span> : null}
+            {showPageSize ? (
+              <label className="flex items-center gap-1.5">
+                <span>每頁</span>
+                <select
+                  className="input-field h-9 w-auto min-w-[4.5rem]"
+                  value={pageSize}
+                  onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
+                  aria-label="每頁顯示筆數"
+                >
+                  {pageSizeOptions.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+                <span>筆</span>
+              </label>
+            ) : null}
+          </div>
+
+          {showPager ? (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={(page ?? 1) <= 1}
+                onClick={() => onPageChange?.(1)}
+              >
+                第一頁
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={(page ?? 1) <= 1}
+                onClick={() => onPageChange?.((page ?? 1) - 1)}
+              >
+                上一頁
+              </Button>
+              <span className="text-sm text-[var(--admin-muted)]">
+                {page} / {totalPages}
+              </span>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={(page ?? 1) >= (totalPages ?? 1)}
+                onClick={() => onPageChange?.((page ?? 1) + 1)}
+              >
+                下一頁
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={(page ?? 1) >= (totalPages ?? 1)}
+                onClick={() => onPageChange?.(totalPages ?? 1)}
+              >
+                最後一頁
+              </Button>
+              <label className="ml-1 flex items-center gap-1.5 text-sm text-[var(--admin-muted)]">
+                <span>跳至</span>
+                <input
+                  className="input-field h-9 w-16 text-center"
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  value={jumpValue}
+                  onChange={(e) => setJumpValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      goToPage(jumpValue);
+                    }
+                  }}
+                  aria-label="跳至指定頁"
+                />
+                <Button size="sm" variant="outline" type="button" onClick={() => goToPage(jumpValue)}>
+                  前往
+                </Button>
+              </label>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
