@@ -20,6 +20,11 @@ import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 import { syncProductImagesTable } from "@/lib/products/sync-product-images";
 import type { ProductImageItem } from "@/lib/products/product-images";
 import { revalidatePath } from "next/cache";
+import {
+  buildProductSearchOrFilter,
+  matchesProductSearch,
+} from "@/lib/admin/product-search";
+import { fetchAllSupabaseRows } from "@/lib/supabase/fetch-all";
 
 async function softPatchExtendedProductFields(
   admin: ReturnType<typeof createAdminClient>,
@@ -183,11 +188,18 @@ export async function GET(request: Request) {
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
-  const search = searchParams.get("search");
+  const search = (searchParams.get("search") ?? searchParams.get("q") ?? "").trim();
+  const limitParam = searchParams.get("limit");
+  const limit = limitParam ? Math.min(200, Math.max(1, Number(limitParam) || 50)) : null;
 
   if (!isSupabaseConfigured()) {
     let products = [...mockProducts];
-    if (search) products = products.filter((p) => p.name.includes(search));
+    if (search) {
+      products = products.filter((p) =>
+        matchesProductSearch(p as unknown as Record<string, unknown>, search)
+      );
+    }
+    if (limit) products = products.slice(0, limit);
     return NextResponse.json({ products });
   }
 
@@ -203,15 +215,38 @@ export async function GET(request: Request) {
   let data: Record<string, unknown>[] = [];
   let fetchError: { message: string } | null = null;
   for (const columns of selectAttempts) {
-    let query = admin
-      .from("products")
-      .select(columns)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
-    if (search) query = query.ilike("name", `%${search}%`);
-    const result = await query;
+    const orFilter = buildProductSearchOrFilter(search);
+    const buildBase = () => {
+      let query = admin
+        .from("products")
+        .select(columns)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      if (orFilter) query = query.or(orFilter);
+      return query;
+    };
+
+    if (limit) {
+      const result = await buildBase().limit(limit);
+      if (!result.error) {
+        data = (result.data as unknown as Record<string, unknown>[]) ?? [];
+        fetchError = null;
+        break;
+      }
+      fetchError = result.error;
+      continue;
+    }
+
+    // No limit: page past PostgREST's default ~1000-row cap so admin sees every product.
+    const result = await fetchAllSupabaseRows<Record<string, unknown>>(async (from, to) => {
+      const page = await buildBase().range(from, to);
+      return {
+        data: (page.data as unknown as Record<string, unknown>[] | null) ?? null,
+        error: page.error,
+      };
+    });
     if (!result.error) {
-      data = (result.data as unknown as Record<string, unknown>[]) ?? [];
+      data = result.data;
       fetchError = null;
       break;
     }
@@ -234,12 +269,16 @@ export async function GET(request: Request) {
     };
   });
 
+  const filtered = search
+    ? normalized.filter((p) => matchesProductSearch(p, search))
+    : normalized;
+
   try {
-    const withPickup = await attachPickupStoresToProducts(admin, normalized);
+    const withPickup = await attachPickupStoresToProducts(admin, filtered);
     const products = await attachProductRelations(admin, withPickup);
     return NextResponse.json({ products });
   } catch {
-    return NextResponse.json({ products: normalized });
+    return NextResponse.json({ products: filtered });
   }
 }
 

@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronRight,
   LogOut,
-  Search,
   Store,
   UserRound,
 } from "lucide-react";
@@ -14,6 +13,7 @@ import { APP_ROUTES } from "@/lib/site-links";
 import { useAdminShell } from "@/components/admin/AdminShell";
 import { AdminMobileMenuButton } from "@/components/layout/AdminSidebar";
 import { StoreUnreadBell } from "@/components/admin/StoreUnreadBell";
+import { AdminQuickProductSearch } from "@/components/admin/AdminQuickProductSearch";
 import {
   ADMIN_NAV_GROUPS,
   isAdminNavLinkItem,
@@ -105,14 +105,7 @@ export function AdminTopBar() {
 
         <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
           <StoreUnreadBell />
-          <Link
-            href="/admin/products"
-            className="admin-icon-btn"
-            aria-label="快速搜尋商品"
-            title="商品主檔搜尋"
-          >
-            <Search className="h-4 w-4" aria-hidden />
-          </Link>
+          <AdminQuickProductSearch />
           <Link
             href="/admin/stores"
             className="hidden h-10 items-center gap-1.5 rounded-[14px] border border-[var(--admin-border)] bg-white px-3 text-xs font-semibold text-[var(--admin-title)] hover:bg-[var(--admin-hover)] sm:inline-flex"
