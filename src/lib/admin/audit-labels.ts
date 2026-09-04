@@ -98,6 +98,7 @@ const SYSTEM_TYPES = new Set([
   "seasonal_themes",
   "baking_challenges",
   "corporate_inquiry",
+  "quotation",
 ]);
 
 export function auditModuleForEntity(entityType: string): AuditModuleId {

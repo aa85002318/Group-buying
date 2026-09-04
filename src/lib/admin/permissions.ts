@@ -334,6 +334,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/payment-records", label: "金流紀錄", roles: ["admin"] },
       { href: "/admin/integrations/ecpay", label: "綠界串接", roles: ["admin"] },
       { href: "/admin/corporate", label: "企業詢價", roles: ["admin"] },
+      {
+        href: "/admin/quotations",
+        label: "報價單",
+        roles: ["admin", "customer_service", "store_manager"],
+      },
     ],
   },
   {
