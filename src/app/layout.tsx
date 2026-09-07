@@ -22,7 +22,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
+  /** Allow pinch / browser zoom on phone, tablet, and desktop. */
+  minimumScale: 0.5,
+  maximumScale: 10,
   userScalable: true,
   viewportFit: "cover",
   themeColor: [
@@ -33,8 +35,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW" className="h-full overflow-x-hidden">
-      <body className="min-h-dvh w-full max-w-[100vw] overflow-x-hidden bg-background font-sans text-foreground antialiased">
+    <html lang="zh-TW" className="h-full">
+      <body className="min-h-dvh w-full bg-background font-sans text-foreground antialiased">
         <CapacitorShell />
         {children}
       </body>
