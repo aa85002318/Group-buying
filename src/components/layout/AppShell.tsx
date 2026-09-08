@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils";
  */
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const desktopV2 = isDesktopV2EnabledClient() && useIsDesktopLg();
+  const isDesktopLg = useIsDesktopLg();
+  const desktopV2 = isDesktopV2EnabledClient() && isDesktopLg;
   const isHome = pathname === "/";
   const isShopHub =
     pathname === "/shop" || pathname === "/shop/" || pathname.startsWith("/shop?");
