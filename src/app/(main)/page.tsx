@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
+import { DesktopHome } from "@/components/desktop/DesktopHome";
+import { DesktopV2Gate } from "@/components/desktop/DesktopV2Gate";
 import { HomeHeroSection } from "@/components/home/HomeHeroSection";
 import { HomeQuickMenuCarousel } from "@/components/home/HomeQuickMenuCarousel";
 import { HorizontalProductRail } from "@/components/home/HorizontalProductRail";
@@ -541,6 +543,12 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
 }
 
 export default function HomePage() {
+  return (
+    <DesktopV2Gate mobile={<HomePageMobile />} desktop={<DesktopHome />} />
+  );
+}
+
+function HomePageMobile() {
   const [draftPreview, setDraftPreview] = useState(false);
 
   const cmsLoad = useIndependentLoad<HomepageBlock[]>([], async () => {

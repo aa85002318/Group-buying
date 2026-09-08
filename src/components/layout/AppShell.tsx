@@ -4,19 +4,21 @@ import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { HomeFooter } from "@/components/home/HomeFooter";
 import { AppBottomNavigation } from "@/components/layout/AppBottomNavigation";
+import { DesktopFooter } from "@/components/desktop/DesktopFooter";
+import { DesktopHeader } from "@/components/desktop/DesktopHeader";
+import { useIsDesktopLg } from "@/hooks/useIsDesktopLg";
+import { isDesktopV2EnabledClient } from "@/lib/features/desktop-v2";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 /**
  * App-first shell: phone full-bleed, tablet/desktop centered container.
- * Homepage hides AppHeader so HomeHero yellow can start at the viewport top.
- * Main has no horizontal padding so color sections can go edge-to-edge.
- * Content inset (--page-padding-x) lives on .site-container inside each section.
- * Non-home pages wrap children once in .site-container; homepage manages its own.
- * HomeFooter is shown on all consumer pages (hidden on admin/staff/auth).
+ * When Desktop V2 is enabled (≥1024 + staging flag), swap chrome to DesktopHeader/Footer.
+ * Mobile Bottom Navigation markup/classes are untouched (still md:hidden).
  */
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const desktopV2 = isDesktopV2EnabledClient() && useIsDesktopLg();
   const isHome = pathname === "/";
   const isShopHub =
     pathname === "/shop" || pathname === "/shop/" || pathname.startsWith("/shop?");
@@ -34,6 +36,21 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const showChrome = !isMinimalChromePath(pathname);
   const showSiteFooter =
     showChrome && !isGroupBuyHub && !isRecipesHub && !isMemberHub;
+
+  if (desktopV2) {
+    return (
+      <div
+        className="desktop-v2-shell min-h-dvh w-full overflow-x-clip bg-[var(--cream,#FFFDF9)]"
+        data-desktop-v2="true"
+      >
+        <div className="relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip">
+          {showChrome ? <DesktopHeader /> : null}
+          <main className="page-enter min-w-0 flex-1 overflow-x-clip">{children}</main>
+          {showChrome ? <DesktopFooter /> : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

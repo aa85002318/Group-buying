@@ -28,6 +28,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/videos",
   "/admin/news",
   "/admin/banners",
+  "/admin/layout-settings",
   "/admin/frontend-cms",
   "/admin/home",
   "/admin/shop",
@@ -468,6 +469,17 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/banners", label: "共用 Banner", roles: ["admin", "content_editor"] },
       { href: "/admin/content/popups", label: "彈跳公告", roles: ["admin", "content_editor"] },
       { href: "/admin/settings/branding", label: "品牌設定", roles: ["admin", "content_editor"] },
+      {
+        href: "/admin/layout-settings/desktop",
+        label: "🖥 網頁版設定",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/layout-settings/desktop/home",
+        label: "網頁版首頁設定",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
       /* Legacy studios — keep routes, hide from primary sidebar */
       {
         href: "/admin/home",

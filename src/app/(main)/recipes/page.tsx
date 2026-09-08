@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { RecipesClient } from "@/components/recipes/RecipesClient";
+import { RecipesPageClient } from "./RecipesPageClient";
 
 export const metadata: Metadata = {
   title: "CHIMEIDIY 食譜影音｜烘焙食譜與教學影片",
@@ -8,9 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function RecipesPage() {
-  return (
-    <Suspense fallback={<p className="py-12 text-center text-muted-foreground">載入中...</p>}>
-      <RecipesClient />
-    </Suspense>
-  );
+  return <RecipesPageClient />;
 }

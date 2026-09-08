@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ShopHubClient } from "./ShopHubClient";
+import { ShopPageClient } from "./ShopPageClient";
 
 export const metadata: Metadata = {
   title: "烘焙好物商城｜CHIMEIDIY",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ShopPage() {
-  return <ShopHubClient />;
+  return <ShopPageClient />;
 }

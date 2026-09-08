@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MemberCenterClient } from "@/components/member/MemberCenterClient";
+import { MemberPageClient } from "./MemberPageClient";
 
 export const metadata: Metadata = {
   title: "CHIMEIDIY 我的",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function MemberPage() {
-  return <MemberCenterClient />;
+  return <MemberPageClient />;
 }
