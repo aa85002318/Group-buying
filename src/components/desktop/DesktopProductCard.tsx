@@ -43,7 +43,7 @@ export function DesktopProductCard({
         className
       )}
     >
-      <Link href={path} className="relative aspect-square overflow-hidden bg-[#F7F2EA]">
+      <Link href={path} className="relative aspect-square overflow-hidden bg-[#EEF8FC]">
         {image_url ? (
           <Image
             src={image_url}
@@ -53,7 +53,7 @@ export function DesktopProductCard({
             sizes="(min-width:1440px) 20vw, (min-width:1024px) 25vw, 40vw"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-[#9A7B6C]">
+          <div className="flex h-full items-center justify-center text-sm text-[#687386]">
             無圖片
           </div>
         )}
@@ -62,7 +62,12 @@ export function DesktopProductCard({
             className="absolute right-2 top-2 z-10"
             onClick={(e) => e.preventDefault()}
           >
-            <FavoriteButton targetType="product" targetId={id} size="sm" />
+            <FavoriteButton
+              targetType="product"
+              targetId={id}
+              size="sm"
+              className="text-[#F16458]"
+            />
           </span>
         ) : null}
       </Link>
@@ -71,10 +76,10 @@ export function DesktopProductCard({
           {name}
         </Link>
         {showSpec && spec ? (
-          <p className="line-clamp-1 text-xs text-[#9A7B6C]">{spec}</p>
+          <p className="line-clamp-1 text-xs text-[#687386]">{spec}</p>
         ) : null}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <p className="text-base font-bold text-[#E85A4F]">{formatCurrency(price)}</p>
+          <p className="text-base font-bold text-[#F16458]">{formatCurrency(price)}</p>
           {showAddToCart ? (
             <button
               type="button"
@@ -87,7 +92,7 @@ export function DesktopProductCard({
                   imageUrl: image_url,
                 })
               }
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#FEE169] text-[#153E73] transition hover:brightness-95"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#FFD454] text-[#153E73] transition hover:brightness-95"
             >
               <Plus className="h-5 w-5" strokeWidth={2.2} />
             </button>

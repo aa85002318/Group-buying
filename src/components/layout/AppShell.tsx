@@ -40,7 +40,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   if (desktopV2) {
     return (
       <div
-        className="desktop-v2-shell min-h-dvh w-full overflow-x-clip bg-[var(--cream,#FFFDF9)]"
+        className="desktop-v2-shell min-h-dvh w-full overflow-x-clip bg-[#FFFEFA]"
         data-desktop-v2="true"
       >
         <div className="relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip">

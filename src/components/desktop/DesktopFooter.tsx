@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { DesktopBrandLogo } from "@/components/desktop/DesktopBrandLogo";
 import { DesktopContainer } from "@/components/desktop/DesktopContainer";
+import { DESKTOP_COLORS } from "@/lib/desktop/brand-assets";
 import { APP_ROUTES } from "@/lib/site-links";
 
 const COLUMNS = [
@@ -34,18 +36,20 @@ const COLUMNS = [
 
 export function DesktopFooter() {
   return (
-    <footer className="mt-16 border-t border-[#EDE6DC] bg-[#FFF8F0] text-[#5E4035]">
+    <footer
+      className="mt-12 border-t border-[#E9EDF2] text-[#153E73]"
+      style={{
+        background: `linear-gradient(to bottom, ${DESKTOP_COLORS.warmWhite}, ${DESKTOP_COLORS.cream})`,
+      }}
+    >
       <DesktopContainer className="grid gap-10 py-12 md:grid-cols-4">
         <div className="space-y-3">
-          <p className="text-xl font-bold tracking-wide text-[#153E73]">CHIMEIDIY</p>
-          <p className="max-w-xs text-sm leading-relaxed text-[#7A5C4E]">
-            烘焙生活平台 — 材料、食譜與門市服務，一次滿足。
+          <DesktopBrandLogo height={40} />
+          <p className="text-sm font-semibold tracking-wide text-[#153E73]">
+            Bake a Better Life
           </p>
-          <p className="text-sm text-[#7A5C4E]">
-            客服：
-            <Link href={APP_ROUTES.support} className="underline-offset-2 hover:underline">
-              聯絡我們
-            </Link>
+          <p className="max-w-xs text-sm leading-relaxed text-[#687386]">
+            烘焙生活平台 — 材料、食譜與門市服務，一次滿足。
           </p>
         </div>
         {COLUMNS.map((col) => (
@@ -56,7 +60,7 @@ export function DesktopFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-[#7A5C4E] transition-colors hover:text-[#153E73]"
+                    className="text-sm text-[#687386] transition-colors hover:text-[#153E73]"
                   >
                     {link.label}
                   </Link>
@@ -66,8 +70,15 @@ export function DesktopFooter() {
           </div>
         ))}
       </DesktopContainer>
-      <div className="border-t border-[#EDE6DC] py-4 text-center text-xs text-[#9A7B6C]">
-        © {new Date().getFullYear()} CHIMEIDIY. All rights reserved.
+      <div className="border-t border-[#E9EDF2] py-4 text-center text-xs text-[#687386]">
+        © {new Date().getFullYear()} CHIMEIDIY. All rights reserved. ·{" "}
+        <Link href={APP_ROUTES.terms} className="hover:underline">
+          服務條款
+        </Link>
+        {" · "}
+        <Link href={APP_ROUTES.privacy} className="hover:underline">
+          隱私權政策
+        </Link>
       </div>
     </footer>
   );
