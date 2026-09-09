@@ -7,6 +7,10 @@ export const DESKTOP_LOGO_PNG = "/branding/chimeidiy-desktop-logo.png";
 export const DESKTOP_IP_WAVE_SRC = "/branding/chimeidiy-ip-wave.webp";
 export const DESKTOP_IP_WAVE_PNG = "/branding/chimeidiy-ip-wave.png";
 
+/** Angel IP (shopping bag) — not for Desktop Header; use in promo / member cards only. */
+export const DESKTOP_IP_ANGEL_SRC = "/branding/chimeidiy-ip-angel.webp";
+export const DESKTOP_IP_ANGEL_PNG = "/branding/chimeidiy-ip-angel.png";
+
 export const DESKTOP_COLORS = {
   yellow: "#FFD454",
   warmWhite: "#FFFEFA",
