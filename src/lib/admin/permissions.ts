@@ -450,6 +450,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         roles: ["admin", "content_editor"],
       },
       {
+        href: "/admin/page-builder/desktop/home",
+        label: "網頁版首頁",
+        roles: ["admin", "content_editor"],
+      },
+      {
         href: "/admin/page-builder/mobile",
         label: "📱 手機 App 設定",
         roles: ["admin", "content_editor"],
@@ -462,6 +467,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       {
         href: "/admin/settings/branding",
         label: "Logo / 品牌素材",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/layout-settings/desktop/footer",
+        label: "網頁版頁尾",
         roles: ["admin", "content_editor"],
       },
       {
@@ -479,13 +489,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         label: "AI 助手",
         roles: ["admin"],
       },
-      /* Hidden legacy routes — keep accessible by URL */
-      {
-        href: "/admin/page-builder/desktop/home",
-        label: "網頁版首頁",
-        roles: ["admin", "content_editor"],
-        hiddenFromSidebar: true,
-      },
+      /* Hidden legacy / deep links */
       {
         href: "/admin/page-builder/mobile/home",
         label: "手機版首頁",
@@ -512,19 +516,13 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       },
       {
         href: "/admin/layout-settings/desktop",
-        label: "網頁版設定（經典）",
+        label: "網頁版設定（舊路徑）",
         roles: ["admin", "content_editor"],
         hiddenFromSidebar: true,
       },
       {
         href: "/admin/layout-settings/desktop/home",
-        label: "網頁版首頁設定",
-        roles: ["admin", "content_editor"],
-        hiddenFromSidebar: true,
-      },
-      {
-        href: "/admin/layout-settings/desktop/footer",
-        label: "網頁版頁尾設定",
+        label: "網頁版首頁設定（舊路徑）",
         roles: ["admin", "content_editor"],
         hiddenFromSidebar: true,
       },

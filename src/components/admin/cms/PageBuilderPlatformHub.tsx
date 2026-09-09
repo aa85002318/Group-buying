@@ -13,6 +13,29 @@ import {
 } from "@/lib/cms/page-builder";
 import { getPageRegistryEntry } from "@/lib/cms/page-registry";
 
+const DESKTOP_CHROME_LINKS = [
+  {
+    href: "/admin/settings/branding",
+    title: "Header／Logo",
+    desc: "網頁版 Logo（文字在右側）· 不含 Header IP",
+  },
+  {
+    href: "/admin/layout-settings/desktop/footer",
+    title: "Footer",
+    desc: "網頁版頁尾文案、連結、社群",
+  },
+  {
+    href: "/admin/banners?placement=desktop_home_hero",
+    title: "首頁 Banner 16:9",
+    desc: "Desktop 首頁純圖 Banner",
+  },
+  {
+    href: "/admin/content/popups",
+    title: "全站公告",
+    desc: "Announcement（內容共用）",
+  },
+] as const;
+
 export function PageBuilderPlatformHub({
   platform,
 }: {
@@ -67,7 +90,26 @@ export function PageBuilderPlatformHub({
         {isDesktop ? "發布只影響 Desktop" : "發布只影響 Mobile"}
       </div>
 
+      {isDesktop ? (
+        <section className="space-y-2">
+          <h2 className="text-sm font-bold text-[#153E73]">全站（網頁版）</h2>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {DESKTOP_CHROME_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-[14px] border border-[#E9EDF2] bg-white p-4 transition hover:border-[#153E73]/25 hover:bg-[#FFFDF6]"
+              >
+                <p className="font-semibold text-[#153E73]">{item.title}</p>
+                <p className="mt-1 text-xs text-[#687386]">{item.desc}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {PAGE_BUILDER_GROUPS.map((group) => {
+        if (group.id === "global" && isDesktop) return null;
         const pages = group.pageIds
           .map((id) => getPageRegistryEntry(id))
           .filter(Boolean);
