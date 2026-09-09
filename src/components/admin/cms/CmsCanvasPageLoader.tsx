@@ -17,7 +17,6 @@ import {
   PAGE_BUILDER_DESKTOP_WIRABLE,
   PAGE_BUILDER_GROUPS,
   PAGE_BUILDER_LAYOUT_KEY,
-  PAGE_BUILDER_MOBILE_WIRABLE,
   isPageWirable,
   pageBuilderPlatformHref,
   type PageBuilderPlatform,
@@ -52,7 +51,6 @@ export function CmsCanvasPageLoader({
   pageId: string;
   platform: PageBuilderPlatform;
 }) {
-  const entry = getPageRegistryEntry(pageId);
   const [page, setPage] = useState<CmsPage | null>(null);
   const [versions, setVersions] = useState<CmsVersionLite[]>([]);
   const [shopBase, setShopBase] = useState<ShopLayoutSettings | null>(null);
