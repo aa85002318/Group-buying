@@ -18,8 +18,9 @@ function navActive(pathname: string, href: string) {
 }
 
 /**
- * Desktop header (≥1024): 3-column grid so primary nav is truly viewport-centered
- * regardless of logo / utility widths. Mobile header is untouched.
+ * Desktop header (≥1024): primary nav is truly centered on the header bar
+ * (absolute center layer). Logo left / utilities right stay above via z-index.
+ * Mobile header is untouched.
  */
 export function DesktopHeader() {
   const pathname = usePathname();
@@ -31,23 +32,19 @@ export function DesktopHeader() {
       className="sticky top-0 z-40"
       style={{ background: DESKTOP_COLORS.yellow }}
     >
-      <DesktopContainer
-        className={cn(
-          "grid h-[80px] items-center",
-          "grid-cols-[1fr_auto_1fr]"
-        )}
-      >
-        <div className="justify-self-start">
+      <DesktopContainer className="relative flex h-[80px] items-center justify-between">
+        <div className="relative z-20 shrink-0">
           <DesktopBrandLogo height={48} priority />
         </div>
 
+        {/* True center: relative to full header container, not logo↔utils mid-gap */}
         <nav
           aria-label="桌機主選單"
-          className="justify-self-center px-2 max-[1199px]:px-1"
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
         >
           <ul
             className={cn(
-              "flex items-center whitespace-nowrap",
+              "pointer-events-auto flex items-center whitespace-nowrap",
               "gap-7 max-[1199px]:gap-4 xl:gap-8 2xl:gap-9"
             )}
           >
@@ -58,7 +55,7 @@ export function DesktopHeader() {
                   <Link
                     href={link.href}
                     className={cn(
-                      "relative inline-flex pb-1 text-[15px] font-semibold tracking-wide text-[#153E73] transition-colors",
+                      "relative inline-flex rounded-sm px-0.5 pb-1 text-[15px] font-semibold tracking-wide text-[#153E73] transition-colors",
                       "max-[1199px]:text-[14px]",
                       !active && "text-[#153E73]/85 hover:text-[#153E73]"
                     )}
@@ -77,16 +74,18 @@ export function DesktopHeader() {
           </ul>
         </nav>
 
-        <div className="justify-self-end">
+        <div className="relative z-20 shrink-0">
           <div className="flex items-center justify-end gap-3 xl:gap-4">
             <Link
               href={APP_ROUTES.search}
               aria-label="搜尋"
               className={cn(
-                "inline-flex h-10 items-center gap-2 rounded-full bg-white/55 px-3 text-[#153E73] hover:bg-white/75",
-                "w-[180px] max-w-[180px] xl:w-[240px] xl:max-w-[240px] 2xl:w-[280px] 2xl:max-w-[280px]",
-                "max-[1199px]:w-10 max-[1199px]:max-w-10 max-[1199px]:justify-center max-[1199px]:px-0"
+                "inline-flex h-10 items-center gap-2 rounded-full bg-[#FFD454] px-3 text-[#153E73] hover:bg-white/55",
+                "w-[180px] max-w-[180px] xl:w-[220px] xl:max-w-[220px] 2xl:w-[260px] 2xl:max-w-[260px]",
+                "max-[1199px]:w-10 max-[1199px]:max-w-10 max-[1199px]:justify-center max-[1199px]:px-0",
+                "ring-1 ring-[#153E73]/10"
               )}
+              style={{ background: "rgba(255,254,250,0.72)" }}
             >
               <Search className="h-4 w-4 shrink-0" strokeWidth={1.9} />
               <span className="truncate text-sm text-[#153E73]/70 max-[1199px]:hidden">
