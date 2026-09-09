@@ -30,6 +30,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/banners",
   "/admin/layout-settings",
   "/admin/frontend-cms",
+  "/admin/page-builder",
   "/admin/home",
   "/admin/shop",
   "/admin/shop/categories",
@@ -439,18 +440,23 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     roles: ["admin", "content_editor"],
     items: [
       {
+        href: "/admin/page-builder",
+        label: "雙版型 Page Builder",
+        roles: ["admin", "content_editor"],
+      },
+      {
         href: "/admin/frontend-cms",
-        label: "CMS 管理中心",
+        label: "CMS 管理中心（舊）",
         roles: ["admin", "content_editor"],
       },
       {
-        href: "/admin/frontend-cms/home",
-        label: "首頁畫布",
+        href: "/admin/page-builder/home",
+        label: "首頁編輯器",
         roles: ["admin", "content_editor"],
       },
       {
-        href: "/admin/frontend-cms/shop",
-        label: "商城畫布",
+        href: "/admin/page-builder/shop",
+        label: "商城編輯器",
         roles: ["admin", "content_editor"],
       },
       {
@@ -459,8 +465,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         roles: ["admin", "content_editor"],
       },
       {
-        href: "/admin/frontend-cms/group_buy",
-        label: "團購畫布",
+        href: "/admin/page-builder/group_buy",
+        label: "團購編輯器",
         roles: ["admin"],
       },
       { href: "/admin/ai", label: "AI 助手", roles: ["admin"] },

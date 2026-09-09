@@ -109,9 +109,19 @@ export const CMS_DEVICE_SIZE: Record<
   CmsDevice,
   { width: number; height: number; label: string }
 > = {
-  mobile: { width: 390, height: 844, label: "手機" },
-  tablet: { width: 768, height: 1024, label: "平板" },
-  desktop: { width: 1440, height: 900, label: "桌機" },
+  mobile: { width: 390, height: 844, label: "手機 390" },
+  tablet: { width: 768, height: 1024, label: "平板 768" },
+  desktop: { width: 1440, height: 900, label: "桌機 1440" },
+};
+
+/** Extra preview width presets for Page Builder toolbar. */
+export const CMS_PREVIEW_WIDTH_PRESETS: Record<
+  CmsDevice,
+  number[]
+> = {
+  mobile: [375, 390, 430, 768],
+  tablet: [768, 834],
+  desktop: [1024, 1280, 1440, 1920],
 };
 
 export const CMS_SAVE_STATUS_LABEL: Record<CmsSaveStatus, string> = {

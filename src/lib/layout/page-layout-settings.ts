@@ -174,3 +174,135 @@ export const DESKTOP_HOME_SECTION_DEFAULTS: Array<{
     settings_json: { title: "商城特色", showTitle: true },
   },
 ];
+
+export const DESKTOP_SHOP_SECTION_DEFAULTS: typeof DESKTOP_HOME_SECTION_DEFAULTS = [
+  {
+    section_key: "hero",
+    title: "商城 Hero",
+    sort_order: 1,
+    layout_type: "full_width",
+    columns: 1,
+    display_limit: 1,
+    settings_json: { title: "商城 Hero", showTitle: false, heroRatio: "5:2" },
+  },
+  {
+    section_key: "search",
+    title: "搜尋",
+    sort_order: 2,
+    layout_type: "search",
+    columns: 1,
+    display_limit: 1,
+    settings_json: { title: "搜尋", showTitle: false },
+  },
+  {
+    section_key: "categories",
+    title: "分類",
+    sort_order: 3,
+    layout_type: "chip_row",
+    columns: 1,
+    display_limit: 12,
+    settings_json: { title: "分類", showTitle: true },
+  },
+  {
+    section_key: "filter",
+    title: "篩選",
+    sort_order: 4,
+    layout_type: "sidebar",
+    columns: 1,
+    display_limit: 1,
+    settings_json: { title: "篩選", filterPlacement: "left" },
+  },
+  {
+    section_key: "product_grid",
+    title: "商品列表",
+    sort_order: 5,
+    layout_type: "grid",
+    columns: 4,
+    display_limit: 24,
+    settings_json: {
+      title: "商品列表",
+      showTitle: false,
+      showPrice: true,
+      showFavorite: true,
+      showAddToCart: true,
+    },
+  },
+  {
+    section_key: "recommended",
+    title: "推薦商品",
+    sort_order: 6,
+    layout_type: "grid",
+    columns: 5,
+    display_limit: 10,
+    settings_json: { title: "推薦商品", showTitle: true, showViewAll: true },
+  },
+];
+
+export const DESKTOP_RECIPES_SECTION_DEFAULTS: typeof DESKTOP_HOME_SECTION_DEFAULTS = [
+  {
+    section_key: "inner_hero",
+    title: "Inner Hero",
+    sort_order: 1,
+    layout_type: "full_width",
+    columns: 1,
+    display_limit: 1,
+    settings_json: { title: "食譜", showTitle: true },
+  },
+  {
+    section_key: "search",
+    title: "搜尋",
+    sort_order: 2,
+    layout_type: "search",
+    columns: 1,
+    display_limit: 1,
+    settings_json: { title: "搜尋", showTitle: false },
+  },
+  {
+    section_key: "tabs",
+    title: "Tabs",
+    sort_order: 3,
+    layout_type: "tabs",
+    columns: 1,
+    display_limit: 1,
+    settings_json: { title: "分類 Tabs", showTitle: false },
+  },
+  {
+    section_key: "sidebar",
+    title: "Sidebar",
+    sort_order: 4,
+    layout_type: "sidebar",
+    columns: 1,
+    display_limit: 1,
+    settings_json: { title: "側欄", width: 240 },
+  },
+  {
+    section_key: "recipe_grid",
+    title: "食譜列表",
+    sort_order: 5,
+    layout_type: "grid",
+    columns: 4,
+    display_limit: 16,
+    settings_json: {
+      title: "食譜列表",
+      showTitle: false,
+      showPrepTime: true,
+      showDifficulty: true,
+      showFavorite: true,
+    },
+  },
+  {
+    section_key: "recommended",
+    title: "推薦食譜",
+    sort_order: 6,
+    layout_type: "grid",
+    columns: 4,
+    display_limit: 8,
+    settings_json: { title: "推薦食譜", showTitle: true },
+  },
+];
+
+export function getDesktopSectionDefaults(pageKey: string) {
+  if (pageKey === "shop") return DESKTOP_SHOP_SECTION_DEFAULTS;
+  if (pageKey === "recipes") return DESKTOP_RECIPES_SECTION_DEFAULTS;
+  return DESKTOP_HOME_SECTION_DEFAULTS;
+}

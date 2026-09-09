@@ -27,12 +27,16 @@ type Props = {
   onPublish?: () => void;
   previewPath?: string;
   backHref?: string;
+  backLabel?: string;
   legacyHref?: string;
   legacyLabel?: string;
   readOnly?: boolean;
   publishDisabled?: boolean;
   saveDisabled?: boolean;
   extraActions?: React.ReactNode;
+  previewWidth?: number | null;
+  previewWidthPresets?: number[];
+  onPreviewWidthChange?: (width: number) => void;
 };
 
 export function CmsEditorToolbar({
@@ -50,13 +54,17 @@ export function CmsEditorToolbar({
   onSaveDraft,
   onPublish,
   previewPath,
-  backHref = "/admin/frontend-cms",
+  backHref = "/admin/page-builder",
+  backLabel = "Page Builder",
   legacyHref,
   legacyLabel = "經典編輯器",
   readOnly,
   publishDisabled = true,
   saveDisabled = true,
   extraActions,
+  previewWidth,
+  previewWidthPresets,
+  onPreviewWidthChange,
 }: Props) {
   return (
     <div className="space-y-3 border-b border-[var(--admin-border,#ECECEC)] bg-white/90 pb-3 backdrop-blur">
@@ -64,7 +72,7 @@ export function CmsEditorToolbar({
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-[var(--admin-muted,#8A94A6)]">
             <Link href={backHref} className="hover:text-[#153E73] hover:underline">
-              前台 CMS
+              {backLabel}
             </Link>
             <span>/</span>
             <span className="text-[#153E73]">{title}</span>
@@ -153,6 +161,27 @@ export function CmsEditorToolbar({
           區塊邊界
         </Button>
         <CmsCanvasDeviceSwitcher value={activeDevice} onChange={onDeviceChange} />
+        {previewWidthPresets && onPreviewWidthChange ? (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-[11px] text-[#8A94A6]">預覽寬</span>
+            {previewWidthPresets.map((w) => (
+              <Button
+                key={w}
+                type="button"
+                size="sm"
+                variant={previewWidth === w ? "default" : "outline"}
+                className={cn(
+                  "h-8 px-2 text-xs",
+                  previewWidth === w &&
+                    "border-[#FFE149] bg-[#FFE149] text-[#153E73] hover:bg-[#FFE149]/90"
+                )}
+                onClick={() => onPreviewWidthChange(w)}
+              >
+                {w}
+              </Button>
+            ))}
+          </div>
+        ) : null}
         <div className="ml-auto flex flex-wrap gap-2">
           <Button
             type="button"

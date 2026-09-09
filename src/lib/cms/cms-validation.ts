@@ -31,12 +31,25 @@ export function validateCmsPageForPublish(page: CmsPage): CmsValidationIssue[] {
   for (const block of page.blocks) {
     const allow = isBlockAllowedOnPage(block.type, page.id);
     if (!allow.ok) {
-      issues.push({
-        level: "error",
-        code: "block_not_allowed",
-        message: `區塊「${block.name}」：${allow.reason}`,
-        blockId: block.id,
-      });
+      const fromLegacy =
+        Boolean(block.sourceKey) ||
+        Boolean(block.settings?.legacyKey) ||
+        Boolean(block.settings?.db_id);
+      if (fromLegacy) {
+        issues.push({
+          level: "warning",
+          code: "legacy_block_type",
+          message: `區塊「${block.name}」為既有版型區段（${block.type}），可排序／顯示設定`,
+          blockId: block.id,
+        });
+      } else {
+        issues.push({
+          level: "error",
+          code: "block_not_allowed",
+          message: `區塊「${block.name}」：${allow.reason}`,
+          blockId: block.id,
+        });
+      }
     }
     if (block.type === "hero_banner" || block.type === "promo_banner") {
       const img =

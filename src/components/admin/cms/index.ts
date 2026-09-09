@@ -5,6 +5,7 @@ export { CmsCanvas } from "./CmsCanvas";
 export { CmsPropertyPanel } from "./CmsPropertyPanel";
 export { CmsManager, CmsManagerWithLiveStatus } from "./CmsManager";
 export { CmsCanvasPageLoader } from "./CmsCanvasPageLoader";
+export { PageBuilderHub } from "./PageBuilderHub";
 export { CmsPublishValidation } from "./CmsPublishValidation";
 export { CmsVersionHistoryPanel } from "./CmsVersionHistoryPanel";
 export { ImageUploader } from "./ImageUploader";
