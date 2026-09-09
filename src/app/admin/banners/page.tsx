@@ -16,6 +16,7 @@ import {
 import type { CmsBanner } from "@/lib/types/database";
 
 const PLACEMENTS = [
+  { value: "desktop_home_hero", label: "網頁版首頁 16:9 Banner" },
   { value: "shop_hero", label: "商城 Hero Banner" },
   { value: "shop_promo", label: "商城 16:9 活動 Banner" },
   { value: "home_weekly_promo", label: "首頁本週優惠" },

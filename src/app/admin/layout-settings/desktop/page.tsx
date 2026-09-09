@@ -15,7 +15,25 @@ export default function AdminDesktopLayoutIndexPage() {
         >
           <p className="font-bold text-[#153E73]">網頁版首頁設定</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Hero、常用服務、活動、食譜、商品欄數與顯示開關
+            區塊排序、欄數與顯示開關
+          </p>
+        </Link>
+        <Link
+          href="/admin/banners?placement=desktop_home_hero"
+          className="rounded-xl border bg-white px-5 py-4 transition hover:bg-[#FFF8F0]"
+        >
+          <p className="font-bold text-[#153E73]">網頁版首頁 Banner（16:9）</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            純圖上傳與連結（placement: desktop_home_hero）
+          </p>
+        </Link>
+        <Link
+          href="/admin/layout-settings/desktop/footer"
+          className="rounded-xl border bg-white px-5 py-4 transition hover:bg-[#FFF8F0]"
+        >
+          <p className="font-bold text-[#153E73]">網頁版頁尾設定</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Footer 文案、欄位連結、電子報與社群
           </p>
         </Link>
         <div className="rounded-xl border border-dashed bg-[#FFFEFA] px-5 py-4 opacity-80">

@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { DesktopContainer } from "@/components/desktop/DesktopContainer";
 import { DesktopProductCard } from "@/components/desktop/DesktopProductCard";
-import { DesktopSidebarFilter } from "@/components/desktop/DesktopSidebarFilter";
-import { productPath } from "@/lib/site-links";
+import { DesktopInnerPageLayout } from "@/components/desktop/layout/DesktopInnerPageLayout";
+import { DesktopPagination } from "@/components/desktop/layout/DesktopPagination";
+import {
+  INNER_PAGE_HEROES,
+  SHOP_FILTERS,
+  SHOP_SIDEBAR_ITEMS,
+} from "@/lib/desktop/inner-page-config";
+import { APP_ROUTES, productPath } from "@/lib/site-links";
 
 type Product = {
   id: string;
@@ -24,19 +28,18 @@ type Product = {
   tags?: string[] | null;
 };
 
+const PAGE_SIZE = 20;
+
 export function DesktopShop() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [category, setCategory] = useState("all");
+  const [filters, setFilters] = useState<Record<string, string[]>>({ tag: ["all"] });
+  const [sort, setSort] = useState("default");
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState<string>("all");
-  const [brand, setBrand] = useState<string>("all");
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [sort, setSort] = useState<"default" | "hot" | "new">("default");
-  const [priceMin, setPriceMin] = useState("");
-  const [priceMax, setPriceMax] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     fetch("/api/products")
       .then((r) => r.json())
       .then((d) => {
@@ -53,94 +56,97 @@ export function DesktopShop() {
     };
   }, []);
 
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    for (const p of products) {
-      if (p.category) set.add(p.category);
-    }
-    return Array.from(set).sort();
-  }, [products]);
-
-  const brands = useMemo(() => {
-    const set = new Set<string>();
-    for (const p of products) {
-      if (p.brand) set.add(p.brand);
-    }
-    return Array.from(set).sort();
-  }, [products]);
-
   const filtered = useMemo(() => {
     let list = [...products];
-    if (category !== "all") list = list.filter((p) => p.category === category);
-    if (brand !== "all") list = list.filter((p) => p.brand === brand);
-    if (inStockOnly) list = list.filter((p) => Number(p.stock ?? 0) > 0);
-    const min = priceMin ? Number(priceMin) : null;
-    const max = priceMax ? Number(priceMax) : null;
-    if (min != null && !Number.isNaN(min)) {
-      list = list.filter((p) => Number(p.sale_price ?? p.price ?? 0) >= min);
+    if (category !== "all") {
+      list = list.filter(
+        (p) => p.category === category || (p.name || "").includes(category)
+      );
     }
-    if (max != null && !Number.isNaN(max)) {
-      list = list.filter((p) => Number(p.sale_price ?? p.price ?? 0) <= max);
+    if ((filters.stock ?? []).includes("in_stock")) {
+      list = list.filter((p) => Number(p.stock ?? 0) > 0);
     }
-    if (sort === "new") {
-      list = list.filter((p) => p.is_new || p.tags?.includes("new"));
-    } else if (sort === "hot") {
-      list = list.filter((p) => p.is_hot || p.tags?.includes("hot"));
+    const tag = (filters.tag ?? ["all"])[0];
+    if (tag === "new") list = list.filter((p) => p.is_new || p.tags?.includes("new"));
+    if (tag === "hot") list = list.filter((p) => p.is_hot || p.tags?.includes("hot"));
+    if (sort === "price_asc") {
+      list.sort(
+        (a, b) => Number(a.sale_price ?? a.price ?? 0) - Number(b.sale_price ?? b.price ?? 0)
+      );
+    } else if (sort === "price_desc") {
+      list.sort(
+        (a, b) => Number(b.sale_price ?? b.price ?? 0) - Number(a.sale_price ?? a.price ?? 0)
+      );
     }
     return list;
-  }, [products, category, brand, inStockOnly, priceMin, priceMax, sort]);
+  }, [products, category, filters, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => setPage(1), [category, filters, sort]);
+
+  const dynamicNav = useMemo(() => {
+    const cats = Array.from(
+      new Set(products.map((p) => p.category).filter(Boolean) as string[])
+    ).slice(0, 8);
+    if (!cats.length) return SHOP_SIDEBAR_ITEMS;
+    return [
+      { key: "all", label: "全部商品" },
+      ...cats.map((c) => ({ key: c, label: c })),
+    ];
+  }, [products]);
 
   return (
-    <div className="bg-[var(--cream,#FFFDF9)] py-8">
-      <DesktopContainer>
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-[#153E73]">烘焙好物商城</h1>
-            <p className="mt-1 text-sm text-[#7A5C4E]">
-              {loading ? "載入中…" : `共 ${filtered.length} 件商品`}
-            </p>
-          </div>
-          <Link href="/shop/search" className="text-sm font-semibold text-[#B56A45] hover:underline">
-            進階搜尋
-          </Link>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
-          <DesktopSidebarFilter
-            categories={categories}
-            brands={brands}
-            category={category}
-            brand={brand}
-            inStockOnly={inStockOnly}
-            sort={sort}
-            priceMin={priceMin}
-            priceMax={priceMax}
-            onCategoryChange={setCategory}
-            onBrandChange={setBrand}
-            onInStockOnlyChange={setInStockOnly}
-            onSortChange={setSort}
-            onPriceMinChange={setPriceMin}
-            onPriceMaxChange={setPriceMax}
+    <DesktopInnerPageLayout
+      hero={INNER_PAGE_HEROES.shop}
+      breadcrumb={[
+        { label: "首頁", href: APP_ROUTES.home },
+        { label: "商城" },
+      ]}
+      sidebar={{
+        title: "商品分類",
+        items: dynamicNav,
+        activeKey: category,
+        onItemSelect: setCategory,
+        filters: SHOP_FILTERS,
+        selectedFilters: filters,
+        onFilterChange: (key, values) =>
+          setFilters((prev) => ({ ...prev, [key]: values })),
+        onClearFilters: () => setFilters({ tag: ["all"] }),
+      }}
+      toolbar={{
+        title: "全部商品",
+        description: "精選烘焙材料、器具與包裝，一次購足。",
+        totalLabel: loading ? "載入中…" : `共 ${filtered.length} 件商品`,
+        sortValue: sort,
+        sortOptions: [
+          { value: "default", label: "預設排序" },
+          { value: "price_asc", label: "價格由低到高" },
+          { value: "price_desc", label: "價格由高到低" },
+        ],
+        onSortChange: setSort,
+      }}
+      footerSlot={
+        <DesktopPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      }
+    >
+      <div className="grid grid-cols-3 gap-4 xl:grid-cols-4">
+        {pageItems.map((p) => (
+          <DesktopProductCard
+            key={p.id}
+            id={p.id}
+            name={p.name}
+            price={Number(p.sale_price ?? p.price ?? 0)}
+            image_url={p.image_url}
+            spec={p.spec || p.specification || p.unit}
+            href={productPath(p.id)}
           />
-
-          <div className="grid grid-cols-3 gap-4 xl:grid-cols-4 2xl:grid-cols-5">
-            {filtered.map((p) => (
-              <DesktopProductCard
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                price={Number(p.sale_price ?? p.price ?? 0)}
-                image_url={p.image_url}
-                spec={p.spec || p.specification || p.unit}
-                href={productPath(p.id)}
-              />
-            ))}
-            {!loading && filtered.length === 0 ? (
-              <p className="col-span-full py-16 text-center text-[#9A7B6C]">沒有符合條件的商品</p>
-            ) : null}
-          </div>
-        </div>
-      </DesktopContainer>
-    </div>
+        ))}
+      </div>
+      {!loading && pageItems.length === 0 ? (
+        <p className="py-16 text-center text-[#687386]">沒有符合條件的商品</p>
+      ) : null}
+    </DesktopInnerPageLayout>
   );
 }

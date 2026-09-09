@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ThemesHubClient } from "@/components/themes/ThemesHubClient";
+import { ThemesPageClient } from "./ThemesPageClient";
 
 export const metadata: Metadata = {
   title: "季節主題企劃｜CHIMEIDIY",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function ThemesPage() {
-  return <ThemesHubClient />;
+  return <ThemesPageClient />;
 }

@@ -480,6 +480,12 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         roles: ["admin", "content_editor"],
         hiddenFromSidebar: true,
       },
+      {
+        href: "/admin/layout-settings/desktop/footer",
+        label: "網頁版頁尾設定",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
       /* Legacy studios — keep routes, hide from primary sidebar */
       {
         href: "/admin/home",

@@ -116,16 +116,18 @@ function ArticlesPageInner() {
 
 export default function ArticlesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="page-enter space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 w-full rounded-[20px]" />
-          ))}
-        </div>
-      }
-    >
-      <ArticlesPageInner />
-    </Suspense>
+    <div className="p-[15px]">
+      <Suspense
+        fallback={
+          <div className="page-enter space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-28 w-full rounded-[20px]" />
+            ))}
+          </div>
+        }
+      >
+        <ArticlesPageInner />
+      </Suspense>
+    </div>
   );
 }

@@ -49,7 +49,7 @@ export const DESKTOP_NAV_LINKS = [
   { href: "/", label: "首頁" },
   { href: "/shop", label: "商城" },
   { href: "/recipes", label: "食譜" },
-  { href: "/articles?category=%E5%84%AA%E6%83%A0%E6%B4%BB%E5%8B%95", label: "最新活動" },
+  { href: "/activities", label: "最新活動" },
   { href: "/themes", label: "品牌專區" },
   { href: "/ai", label: "AI助手" },
   { href: "/stores", label: "門市資訊" },

@@ -23,7 +23,6 @@ import {
   DESKTOP_COLORS,
   DESKTOP_HERO_FALLBACK,
   DESKTOP_IP_WAVE_SRC,
-  DESKTOP_PROMO_CARD_A,
   DESKTOP_PROMO_CARD_B,
 } from "@/lib/desktop/brand-assets";
 import {
@@ -343,16 +342,35 @@ export function DesktopHome() {
     [settings]
   );
 
-  const activeBanners = useMemo(
-    () =>
-      banners
-        .filter((b) => b.is_active !== false && bannerImage(b))
-        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-    [banners]
-  );
+  const activeBanners = useMemo(() => {
+    const preferred = banners
+      .filter(
+        (b) =>
+          b.is_active !== false &&
+          bannerImage(b) &&
+          (String((b as Banner & { placement?: string }).placement ?? "") ===
+            "desktop_home_hero" ||
+            String((b as Banner & { banner_type?: string }).banner_type ?? "") ===
+              "desktop_home_hero")
+      )
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    if (preferred.length) return preferred;
+    return banners
+      .filter((b) => b.is_active !== false && bannerImage(b))
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  }, [banners]);
 
-  const heroBanner = activeBanners[0];
+  const [heroIndex, setHeroIndex] = useState(0);
+  const heroBanner = activeBanners[heroIndex] ?? activeBanners[0] ?? null;
   const heroSrc = (heroBanner && bannerImage(heroBanner)) || DESKTOP_HERO_FALLBACK;
+
+  useEffect(() => {
+    if (activeBanners.length <= 1) return;
+    const t = window.setInterval(() => {
+      setHeroIndex((i) => (i + 1) % activeBanners.length);
+    }, 6000);
+    return () => window.clearInterval(t);
+  }, [activeBanners.length]);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -421,77 +439,37 @@ export function DesktopHome() {
       <DesktopContainer className="py-6 lg:py-8">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0 space-y-8">
-            {/* Hero — 無 IP */}
-            <section aria-label="主視覺">
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-                <Link
-                  href={heroBanner?.link_url || APP_ROUTES.shop}
-                  className="relative min-h-[280px] overflow-hidden rounded-3xl bg-[#EEF8FC] lg:min-h-[340px]"
-                >
-                  <Image
-                    src={heroSrc}
-                    alt={heroBanner?.title || "用烘焙創造生活的幸福時光"}
-                    fill
-                    priority
-                    className="object-cover"
-                    sizes="(min-width:1280px) 55vw, 90vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent" />
-                  <div className="relative z-10 flex h-full max-w-md flex-col justify-center p-8 text-[#153E73]">
-                    <h1 className="text-3xl font-bold leading-tight xl:text-4xl">
-                      用烘焙，
-                      <br />
-                      創造生活的幸福時光
-                    </h1>
-                    <p className="mt-3 text-sm leading-relaxed text-[#687386] xl:text-base">
-                      嚴選食材・豐富食譜・一站式購齊
-                    </p>
-                    <span
-                      className="mt-5 inline-flex w-fit rounded-full px-5 py-2.5 text-sm font-bold text-white"
-                      style={{ background: DESKTOP_COLORS.coral }}
-                    >
-                      探索更多美味
-                    </span>
-                  </div>
-                </Link>
-
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                  <Link
-                    href={APP_ROUTES.shop}
-                    className="relative min-h-[160px] overflow-hidden rounded-2xl bg-white"
-                  >
-                    <Image
-                      src={DESKTOP_PROMO_CARD_A}
-                      alt="精選進口食材"
-                      fill
-                      className="object-cover"
-                      sizes="280px"
+            {/* Hero — 純 16:9 圖檔 + 連結，無文字覆蓋、無側欄導購卡 */}
+            <section aria-label="主視覺 Banner" className="-mx-0">
+              <Link
+                href={heroBanner?.link_url || APP_ROUTES.shop}
+                className="relative block aspect-video w-full overflow-hidden rounded-2xl bg-[#EEF8FC]"
+              >
+                <Image
+                  src={heroSrc}
+                  alt=""
+                  fill
+                  priority
+                  className="object-cover object-center"
+                  sizes="(min-width:1440px) 1100px, 90vw"
+                />
+              </Link>
+              {activeBanners.length > 1 ? (
+                <div className="mt-3 flex justify-center gap-2">
+                  {activeBanners.map((b, i) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      aria-label={`Banner ${i + 1}`}
+                      onClick={() => setHeroIndex(i)}
+                      className={cn(
+                        "h-2 w-2 rounded-full",
+                        i === heroIndex ? "bg-[#153E73]" : "bg-[#E9EDF2]"
+                      )}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#153E73]/75 to-transparent" />
-                    <div className="absolute bottom-0 p-4 text-white">
-                      <p className="text-base font-bold">精選進口食材</p>
-                      <p className="text-sm opacity-90">專業烘焙首選</p>
-                    </div>
-                  </Link>
-                  <Link
-                    href={`${APP_ROUTES.shop}?tag=beginner`}
-                    className="relative min-h-[160px] overflow-hidden rounded-2xl bg-white"
-                  >
-                    <Image
-                      src={DESKTOP_PROMO_CARD_B}
-                      alt="新手烘焙專區"
-                      fill
-                      className="object-cover"
-                      sizes="280px"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#153E73]/75 to-transparent" />
-                    <div className="absolute bottom-0 p-4 text-white">
-                      <p className="text-base font-bold">新手烘焙專區</p>
-                      <p className="text-sm opacity-90">從這裡開始</p>
-                    </div>
-                  </Link>
+                  ))}
                 </div>
-              </div>
+              ) : null}
             </section>
 
             {/* 搜尋 */}
