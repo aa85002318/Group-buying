@@ -7,21 +7,37 @@ import {
   ImagePlus,
   LayoutTemplate,
   Megaphone,
+  Monitor,
   Newspaper,
-  ShoppingBag,
+  Smartphone,
   type LucideIcon,
 } from "lucide-react";
 
 const WORKSPACE: Array<{ title: string; href: string; Icon: LucideIcon; tone: string }> = [
-  { title: "首頁 CMS", href: "/admin/home", Icon: LayoutTemplate, tone: "#FFF5CC" },
-  { title: "商城 CMS", href: "/admin/shop", Icon: ShoppingBag, tone: "#EEF8FC" },
-  { title: "文章新增", href: "/admin/articles/new", Icon: FileText, tone: "#EFF9EE" },
-  { title: "食譜新增", href: "/admin/recipes/new", Icon: BookOpen, tone: "#F3EEFF" },
-  { title: "素材庫", href: "/admin/media", Icon: ImagePlus, tone: "#FFF0EE" },
+  {
+    title: "前台內容編輯器",
+    href: "/admin/page-builder",
+    Icon: LayoutTemplate,
+    tone: "#FFF5CC",
+  },
+  {
+    title: "網頁版設定",
+    href: "/admin/page-builder/desktop",
+    Icon: Monitor,
+    tone: "#EEF8FC",
+  },
+  {
+    title: "手機 App 設定",
+    href: "/admin/page-builder/mobile",
+    Icon: Smartphone,
+    tone: "#EFF9EE",
+  },
+  { title: "文章新增", href: "/admin/articles/new", Icon: FileText, tone: "#F3EEFF" },
+  { title: "食譜新增", href: "/admin/recipes/new", Icon: BookOpen, tone: "#FFF0EE" },
+  { title: "素材庫", href: "/admin/media", Icon: ImagePlus, tone: "#FFF8E1" },
   { title: "共用 Banner", href: "/admin/banners", Icon: Megaphone, tone: "#EEF8FC" },
   { title: "彈跳公告", href: "/admin/content/popups", Icon: Newspaper, tone: "#FFF5CC" },
-  { title: "最新資訊", href: "/admin/news", Icon: Newspaper, tone: "#EFF9EE" },
-  { title: "說明與法務", href: "/admin/site-pages", Icon: FileText, tone: "#FFF8E1" },
+  { title: "說明與法務", href: "/admin/site-pages", Icon: FileText, tone: "#EFF9EE" },
 ];
 
 function greeting(name?: string | null) {
@@ -39,13 +55,13 @@ export function ContentEditorHome({ fullName }: { fullName?: string | null }) {
           {greeting(fullName)}
         </h1>
         <p className="mt-1 text-sm text-[var(--admin-muted)]">
-          依「我要改什麼頁面／內容」進入。版面請用草稿 → 預覽 → 發布；不含營運報表。
+          網頁版與手機 App 分開設定；商品／食譜等內容共用。流程：草稿 → 預覽 → 發布。
         </p>
       </div>
 
       <section>
-        <h2 className="mb-4 text-lg font-bold text-[var(--admin-title)]">APP 版型與內容</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <h2 className="mb-4 text-lg font-bold text-[var(--admin-title)]">前台 CMS</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           {WORKSPACE.map((item) => (
             <Link
               key={item.href}
@@ -65,7 +81,7 @@ export function ContentEditorHome({ fullName }: { fullName?: string | null }) {
       <section className="rounded-[24px] border border-[#FFE149]/60 bg-[#FFFBEA] px-5 py-4 text-sm text-[#153E73]">
         <p className="font-semibold">發布提醒</p>
         <p className="mt-1 text-[#153E73]/80">
-          首頁／團購頁／商城版面：先儲存草稿再發布。商城 Banner 等細項素材仍可能儲存即上線，請留意提示。
+          Desktop 與 Mobile 可分開發布。內容資料共用，不會建立兩套商品／食譜表。
         </p>
       </section>
     </div>

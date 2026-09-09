@@ -86,7 +86,8 @@ const WORKSPACE: Array<{
   Icon: LucideIcon;
   tone: string;
 }> = [
-  { title: "APP 版型設定", href: "/admin/home", Icon: LayoutTemplate, tone: "#FFF5CC" },
+  { title: "前台內容編輯器", href: "/admin/page-builder", Icon: LayoutTemplate, tone: "#FFF5CC" },
+  { title: "網頁版設定", href: "/admin/page-builder/desktop", Icon: LayoutTemplate, tone: "#EEF8FC" },
   { title: "文章新增", href: "/admin/articles/new", Icon: FileText, tone: "#EEF8FC" },
   { title: "門市協作中心", href: "/admin/store", Icon: Store, tone: "#FFF7CC" },
   { title: "團購新增", href: "/admin/products/new?mode=group-buy", Icon: ShoppingBag, tone: "#FFF0EE" },

@@ -374,12 +374,20 @@ export function HomeCmsStudio() {
             description="拖拉排序核心區塊，右側預覽草稿。AI 頁（/ai）Hero 為靜態素材，搜尋與頁首部分沿用首頁 Hero 設定。"
             status={dirtyHint ? (saveStatus === "saving" ? "saving" : "dirty") : saveStatus}
             actions={
-              <Link
-                href="/admin/frontend-cms/home"
-                className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-              >
-                開啟畫布編輯器
-              </Link>
+              <>
+                <Link
+                  href="/admin/page-builder/desktop/home"
+                  className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+                >
+                  網頁版 CMS
+                </Link>
+                <Link
+                  href="/admin/page-builder/mobile/home"
+                  className={cn(buttonVariants({ size: "sm" }))}
+                >
+                  手機 App CMS
+                </Link>
+              </>
             }
             notice={
               <div className="space-y-2">
