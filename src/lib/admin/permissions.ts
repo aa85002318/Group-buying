@@ -435,50 +435,86 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     id: "frontend-cms",
-    label: "前台內容管理",
+    label: "前台內容編輯器",
     icon: "LayoutTemplate",
     roles: ["admin", "content_editor"],
     items: [
       {
         href: "/admin/page-builder",
-        label: "雙版型 Page Builder",
+        label: "前台內容編輯器",
         roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/page-builder/desktop",
+        label: "🖥 網頁版設定",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/page-builder/mobile",
+        label: "📱 手機 App 設定",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/banners",
+        label: "共用 Banner",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/settings/branding",
+        label: "Logo / 品牌素材",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/content/popups",
+        label: "全站公告",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/media",
+        label: "素材庫",
+        roles: ["admin", "content_editor"],
+      },
+      {
+        href: "/admin/ai",
+        label: "AI 助手",
+        roles: ["admin"],
+      },
+      /* Hidden legacy routes — keep accessible by URL */
+      {
+        href: "/admin/page-builder/desktop/home",
+        label: "網頁版首頁",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
+      },
+      {
+        href: "/admin/page-builder/mobile/home",
+        label: "手機版首頁",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
       },
       {
         href: "/admin/frontend-cms",
-        label: "CMS 管理中心（舊）",
+        label: "舊 CMS 中心",
         roles: ["admin", "content_editor"],
-      },
-      {
-        href: "/admin/page-builder/home",
-        label: "首頁編輯器",
-        roles: ["admin", "content_editor"],
-      },
-      {
-        href: "/admin/page-builder/shop",
-        label: "商城編輯器",
-        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
       },
       {
         href: "/admin/shop/home",
-        label: "商城首頁設定",
+        label: "商城首頁設定（經典）",
         roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
       },
       {
-        href: "/admin/page-builder/group_buy",
-        label: "團購編輯器",
-        roles: ["admin"],
+        href: "/admin/side-menu",
+        label: "全站側選單",
+        roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
       },
-      { href: "/admin/ai", label: "AI 助手", roles: ["admin"] },
-      { href: "/admin/media", label: "素材庫", roles: ["admin", "content_editor"] },
-      { href: "/admin/side-menu", label: "全站側選單", roles: ["admin", "content_editor"] },
-      { href: "/admin/banners", label: "共用 Banner", roles: ["admin", "content_editor"] },
-      { href: "/admin/content/popups", label: "彈跳公告", roles: ["admin", "content_editor"] },
-      { href: "/admin/settings/branding", label: "品牌設定", roles: ["admin", "content_editor"] },
       {
         href: "/admin/layout-settings/desktop",
-        label: "🖥 網頁版設定",
+        label: "網頁版設定（經典）",
         roles: ["admin", "content_editor"],
+        hiddenFromSidebar: true,
       },
       {
         href: "/admin/layout-settings/desktop/home",
@@ -492,7 +528,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
         roles: ["admin", "content_editor"],
         hiddenFromSidebar: true,
       },
-      /* Legacy studios — keep routes, hide from primary sidebar */
       {
         href: "/admin/home",
         label: "首頁 CMS（經典）",

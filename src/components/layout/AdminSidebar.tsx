@@ -415,12 +415,18 @@ export function AdminDesktopSidebar() {
 
   useEffect(() => {
     try {
-      setCollapsed(window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === "1");
+      const onBuilderEditor =
+        /^\/admin\/page-builder\/(desktop|mobile)\/[^/]+/.test(pathname);
+      if (onBuilderEditor) {
+        setCollapsed(true);
+      } else {
+        setCollapsed(window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === "1");
+      }
     } catch {
       /* ignore */
     }
     setHydrated(true);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (!hydrated) return;

@@ -1,79 +1,78 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Eye, History, Redo2, Save, Undo2, Upload } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { CmsDevice, CmsPage } from "@/types/cms";
-import { CMS_PREVIEW_WIDTH_PRESETS } from "@/types/cms";
+import type { CmsPage, CmsSaveStatus } from "@/types/cms";
+import { CMS_SAVE_STATUS_LABEL } from "@/types/cms";
 import { useCmsEditor } from "@/hooks/useCmsEditor";
-import { CmsEditorToolbar } from "@/components/admin/cms/CmsEditorToolbar";
-import { CmsBlockLibrary } from "@/components/admin/cms/CmsBlockLibrary";
-import { CmsCanvas } from "@/components/admin/cms/CmsCanvas";
+import { CmsBlockRail } from "@/components/admin/cms/CmsBlockRail";
 import { CmsPropertyPanel } from "@/components/admin/cms/CmsPropertyPanel";
-import { CmsPublishValidation } from "@/components/admin/cms/CmsPublishValidation";
+import { CmsPublishModal } from "@/components/admin/cms/CmsPublishModal";
 import {
   CmsVersionHistoryPanel,
   type CmsVersionLite,
 } from "@/components/admin/cms/CmsVersionHistoryPanel";
 import { summarizeValidation, validateCmsPageForPublish } from "@/lib/cms/cms-validation";
-import { PAGE_BUILDER_BASE } from "@/lib/cms/page-builder";
+import {
+  PAGE_BUILDER_DEFAULT_WIDTH,
+  PAGE_BUILDER_PREVIEW_WIDTHS,
+  pageBuilderPlatformHref,
+  platformLabel,
+  type PageBuilderPlatform,
+} from "@/lib/cms/page-builder";
 
 type Props = {
   initialPage: CmsPage;
+  platform: PageBuilderPlatform;
   legacyHref?: string;
   legacyLabel?: string;
-  /** Local canvas edits only — do not write live contracts */
   readOnly?: boolean;
   allowLocalEdit?: boolean;
   versions?: CmsVersionLite[];
   onSaveDraft?: (page: CmsPage) => Promise<void> | void;
   onPublish?: (page: CmsPage) => Promise<void> | void;
   onRestoreVersion?: (versionId: string) => Promise<void> | void;
-  description?: string;
-  layoutVariant?: "classic" | "split-preview";
-  backHref?: string;
-  initialDevice?: CmsDevice;
+  pageOptions?: Array<{ id: string; name: string }>;
 };
 
 export function CmsEditorShell({
   initialPage,
+  platform,
   legacyHref,
-  legacyLabel,
+  legacyLabel = "經典編輯器",
   readOnly = true,
   allowLocalEdit = true,
   versions = [],
   onSaveDraft,
   onPublish,
   onRestoreVersion,
-  description,
-  layoutVariant = "classic",
-  backHref = PAGE_BUILDER_BASE,
-  initialDevice,
+  pageOptions = [],
 }: Props) {
   const editor = useCmsEditor(initialPage);
-  const [mobileTab, setMobileTab] = useState<"library" | "canvas" | "props">(
-    "canvas"
-  );
   const [notice, setNotice] = useState<string | null>(null);
-  const [previewWidth, setPreviewWidth] = useState<number | null>(null);
-  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [previewWidth, setPreviewWidth] = useState(
+    PAGE_BUILDER_DEFAULT_WIDTH[platform]
+  );
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishBusy, setPublishBusy] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
+  const [mobilePane, setMobilePane] = useState<"blocks" | "preview" | "props">(
+    "preview"
+  );
 
   useEffect(() => {
     editor.loadPage(initialPage);
-    if (initialDevice) editor.setDevice(initialDevice);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when page id / blocks source changes
-  }, [initialPage.id, initialPage.updatedAt, initialPage.blockCount, initialDevice]);
-
-  useEffect(() => {
-    const presets = CMS_PREVIEW_WIDTH_PRESETS[editor.activeDevice];
-    setPreviewWidth((prev) =>
-      prev != null && presets.includes(prev) ? prev : presets[1] ?? presets[0]
-    );
-  }, [editor.activeDevice]);
+    editor.setDevice(platform === "desktop" ? "desktop" : "mobile");
+    setPreviewWidth(PAGE_BUILDER_DEFAULT_WIDTH[platform]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPage.id, initialPage.updatedAt, initialPage.blockCount, platform]);
 
   const interactive = allowLocalEdit && !readOnly;
   const canMutateLocal = allowLocalEdit;
   const page = editor.page;
-  const split = layoutVariant === "split-preview";
 
   const validation = page
     ? summarizeValidation(validateCmsPageForPublish(page))
@@ -81,8 +80,11 @@ export function CmsEditorShell({
 
   const iframeSrc = useMemo(() => {
     const path = page?.previewPath || initialPage.previewPath || "/";
-    return path.startsWith("http") ? path : path;
+    return path;
   }, [initialPage.previewPath, page?.previewPath]);
+
+  const widths = PAGE_BUILDER_PREVIEW_WIDTHS[platform];
+  const hubHref = pageBuilderPlatformHref(platform);
 
   const handleSave = async () => {
     if (!page || !onSaveDraft) return;
@@ -90,258 +92,268 @@ export function CmsEditorShell({
     try {
       await onSaveDraft(page);
       editor.markClean();
-      setNotice("草稿已儲存（尚未發佈）");
+      setNotice("草稿已儲存（尚未發布）");
     } catch (e) {
       editor.setSaveStatus("error");
       setNotice(e instanceof Error ? e.message : "儲存失敗");
     }
   };
 
-  const handlePublish = async () => {
+  const handlePublishConfirm = async () => {
     if (!page || !onPublish || !validation.canPublish) return;
+    setPublishBusy(true);
     editor.setSaveStatus("saving");
     try {
       await onPublish(page);
       editor.setSaveStatus("published");
-      setNotice("已發佈至目前環境（staging）");
+      setNotice(`已發布 ${platform === "desktop" ? "Desktop" : "Mobile"} 版型`);
+      setPublishOpen(false);
     } catch (e) {
       editor.setSaveStatus("error");
       setNotice(e instanceof Error ? e.message : "發布失敗");
+    } finally {
+      setPublishBusy(false);
     }
   };
 
-  const widthPresets = CMS_PREVIEW_WIDTH_PRESETS[editor.activeDevice];
-
-  const tabs = [
-    { id: "library" as const, label: "區塊庫" },
-    { id: "canvas" as const, label: "區塊" },
-    { id: "props" as const, label: "設定" },
-  ];
-
-  const blockPanel = (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      {libraryOpen || !split ? (
-        <div
-          className={cn(
-            "overflow-hidden rounded-[16px] border border-[#E9EDF2] bg-white",
-            split ? "max-h-56" : "min-h-[280px] flex-1"
-          )}
-        >
-          <CmsBlockLibrary
-            pageId={page?.id ?? initialPage.id}
-            onAddBlock={(type) => {
-              if (!canMutateLocal) return;
-              editor.addBlock(type);
-              setMobileTab("canvas");
-              setLibraryOpen(false);
-            }}
-            disabled={!canMutateLocal}
-          />
-        </div>
-      ) : (
-        <button
-          type="button"
-          className="rounded-[12px] border border-dashed border-[#153E73]/30 bg-white px-3 py-2 text-left text-sm font-semibold text-[#153E73] hover:bg-[#FFFDF6]"
-          onClick={() => setLibraryOpen(true)}
-          disabled={!canMutateLocal}
-        >
-          + 新增區塊
-        </button>
-      )}
-
-      <div className="min-h-0 flex-1 overflow-hidden rounded-[16px] border border-[#E9EDF2] bg-white">
-        <CmsCanvas
-          blocks={page?.blocks ?? []}
-          selectedBlockId={editor.selectedBlockId}
-          onSelect={editor.selectBlock}
-          onReorder={editor.moveBlock}
-          onDuplicate={editor.duplicateBlock}
-          onRemove={editor.removeBlock}
-          onToggleEnabled={(id, enabled) => {
-            if (!page) return;
-            editor.updateBlocks(
-              page.blocks.map((b) => (b.id === id ? { ...b, enabled } : b))
-            );
-            editor.selectBlock(id);
-          }}
-          device={editor.activeDevice}
-          showBounds={editor.showBlockBounds}
-          readOnly={!canMutateLocal}
-        />
-      </div>
-
-      <div className="h-[min(40vh,320px)] overflow-hidden rounded-[16px] border border-[#E9EDF2] bg-white xl:h-[280px]">
-        <CmsPropertyPanel
-          block={editor.selectedBlock}
-          pageId={page?.id ?? initialPage.id}
-          readOnly={!canMutateLocal}
-          onChange={editor.updateSelectedBlock}
-        />
-      </div>
-      <CmsPublishValidation page={page} />
-      <CmsVersionHistoryPanel
-        versions={versions}
-        disabled={!onRestoreVersion}
-        onRestoreAsDraft={
-          onRestoreVersion
-            ? (id) => {
-                void onRestoreVersion(id);
-              }
-            : undefined
-        }
-      />
-    </div>
-  );
+  const statusLabel = (status: CmsSaveStatus) => {
+    if (status === "dirty") return "● 尚未儲存";
+    if (status === "saved") return `✓ ${CMS_SAVE_STATUS_LABEL.saved}`;
+    return CMS_SAVE_STATUS_LABEL[status];
+  };
 
   return (
-    <div className="flex min-h-[calc(100dvh-5.5rem)] flex-col gap-3">
-      <CmsEditorToolbar
-        title={page?.name ?? initialPage.name}
-        description={description}
-        saveStatus={editor.saveStatus}
-        activeDevice={editor.activeDevice}
-        onDeviceChange={editor.setDevice}
-        showBlockBounds={editor.showBlockBounds}
-        onToggleBounds={() => editor.setShowBounds(!editor.showBlockBounds)}
-        canUndo={editor.canUndo}
-        canRedo={editor.canRedo}
-        onUndo={editor.undo}
-        onRedo={editor.redo}
-        previewPath={page?.previewPath}
-        backHref={backHref}
-        backLabel="Page Builder"
-        legacyHref={legacyHref}
-        legacyLabel={legacyLabel}
-        readOnly={!canMutateLocal}
-        saveDisabled={!onSaveDraft || !interactive}
-        publishDisabled={!onPublish || !interactive || !validation.canPublish}
-        onSaveDraft={onSaveDraft ? handleSave : undefined}
-        onPublish={onPublish ? handlePublish : undefined}
-        previewWidth={previewWidth}
-        previewWidthPresets={widthPresets}
-        onPreviewWidthChange={setPreviewWidth}
-      />
+    <div className="flex min-h-[calc(100dvh-4.5rem)] flex-col gap-2">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#E9EDF2] bg-white px-2 py-2">
+        <Link
+          href={hubHref}
+          className="text-xs font-medium text-[#687386] hover:text-[#153E73] hover:underline"
+        >
+          ← {platformLabel(platform)}
+        </Link>
+
+        {pageOptions.length > 0 ? (
+          <select
+            className="h-9 max-w-[180px] rounded-md border border-[#E9EDF2] bg-white px-2 text-sm font-semibold text-[#153E73]"
+            value={page?.id ?? initialPage.id}
+            onChange={(e) => {
+              window.location.href = `${hubHref}/${e.target.value}`;
+            }}
+          >
+            {pageOptions.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <h1 className="text-base font-bold text-[#153E73]">
+            {page?.name ?? initialPage.name}
+          </h1>
+        )}
+
+        <span
+          className={cn(
+            "rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+            editor.saveStatus === "dirty" && "bg-[#FFF5CC] text-[#153E73]",
+            editor.saveStatus === "saved" && "bg-[#E8F8EF] text-[#1B6B3A]",
+            editor.saveStatus === "published" && "bg-[#EEF8FC] text-[#153E73]",
+            editor.saveStatus === "error" && "bg-[#FDE8E6] text-[#B42318]",
+            (editor.saveStatus === "idle" || editor.saveStatus === "saving") &&
+              "bg-[#F3F4F6] text-[#6B7280]"
+          )}
+        >
+          {statusLabel(editor.saveStatus)}
+        </span>
+
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <select
+            className="h-8 rounded-md border border-[#E9EDF2] bg-white px-2 text-xs text-[#153E73]"
+            value={previewWidth}
+            onChange={(e) => setPreviewWidth(Number(e.target.value))}
+            title="預覽尺寸"
+          >
+            {widths.map((w) => (
+              <option key={w} value={w}>
+                {w}
+              </option>
+            ))}
+          </select>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={!editor.canUndo || !canMutateLocal}
+            onClick={editor.undo}
+          >
+            <Undo2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={!editor.canRedo || !canMutateLocal}
+            onClick={editor.redo}
+          >
+            <Redo2 className="h-3.5 w-3.5" />
+          </Button>
+
+          {iframeSrc ? (
+            <a
+              href={iframeSrc}
+              target="_blank"
+              rel="noreferrer"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              <Eye className="mr-1 h-3.5 w-3.5" />
+              預覽
+            </a>
+          ) : null}
+
+          {legacyHref ? (
+            <Link
+              href={legacyHref}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              {legacyLabel}
+            </Link>
+          ) : null}
+
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setShowVersions((v) => !v)}
+          >
+            <History className="mr-1 h-3.5 w-3.5" />
+            版本
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={!onSaveDraft || !interactive}
+            onClick={() => void handleSave()}
+          >
+            <Save className="mr-1 h-3.5 w-3.5" />
+            儲存草稿
+          </Button>
+
+          <Button
+            type="button"
+            size="sm"
+            disabled={!onPublish || !interactive}
+            className="bg-[#153E73] text-white hover:bg-[#153E73]/90"
+            onClick={() => setPublishOpen(true)}
+          >
+            <Upload className="mr-1 h-3.5 w-3.5" />
+            發布
+          </Button>
+        </div>
+      </div>
 
       {notice ? (
-        <p className="rounded-[12px] bg-[#EEF8FC] px-3 py-2 text-sm text-[#153E73]">
+        <p className="rounded-[10px] bg-[#EEF8FC] px-3 py-2 text-sm text-[#153E73]">
           {notice}
         </p>
       ) : null}
 
-      <div className="flex gap-1 rounded-[18px] border border-[#ECECEC] bg-white p-1 lg:hidden">
-        {tabs.map((t) => (
+      <div className="flex gap-1 rounded-[12px] border border-[#E9EDF2] bg-white p-1 xl:hidden">
+        {(
+          [
+            ["blocks", "區塊"],
+            ["preview", "預覽"],
+            ["props", "設定"],
+          ] as const
+        ).map(([id, label]) => (
           <button
-            key={t.id}
+            key={id}
             type="button"
             className={cn(
-              "flex-1 rounded-[14px] px-3 py-2.5 text-sm font-semibold transition",
-              mobileTab === t.id
-                ? "bg-[#FFE149] text-[#153E73]"
-                : "text-[#153E73]/70 hover:bg-[#FFF7CC]"
+              "flex-1 rounded-[10px] px-2 py-2 text-sm font-semibold",
+              mobilePane === id
+                ? "bg-[#FFD454] text-[#153E73]"
+                : "text-[#687386]"
             )}
-            onClick={() => setMobileTab(t.id)}
+            onClick={() => setMobilePane(id)}
           >
-            {t.label}
+            {label}
           </button>
         ))}
       </div>
 
-      {split ? (
-        <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
-          <div
-            className={cn(
-              "min-h-[420px] overflow-auto rounded-[20px] border border-[#E9EDF2] bg-[#F3F4F6] p-4 xl:min-h-0",
-              mobileTab === "canvas" ? "block" : "hidden xl:block"
-            )}
-          >
-            <div className="mx-auto overflow-hidden rounded-[12px] border border-[#E9EDF2] bg-white shadow-sm"
-              style={{
-                width: previewWidth ?? undefined,
-                maxWidth: "100%",
-                minHeight: 520,
-              }}
-            >
-              <iframe
-                title="CMS Preview"
-                src={iframeSrc}
-                className="h-[70vh] w-full border-0 bg-white"
-              />
-            </div>
-            <p className="mt-2 text-center text-[11px] text-[#8A94A6]">
-              即時預覽（iframe）。修改先存在編輯器，儲存草稿後才寫入 DB；發佈後前台才更新。
-            </p>
-          </div>
-          <div
-            className={cn(
-              "sticky top-2 max-h-[calc(100dvh-6rem)] overflow-y-auto xl:block",
-              mobileTab === "props" || mobileTab === "library"
-                ? "block"
-                : "hidden xl:block"
-            )}
-          >
-            {blockPanel}
-          </div>
+      {/* 3 columns: blocks | preview | settings */}
+      <div className="grid min-h-0 flex-1 gap-2 xl:grid-cols-[220px_minmax(0,1fr)_340px]">
+        <div
+          className={cn(
+            "min-h-[360px] overflow-hidden rounded-[14px] border border-[#E9EDF2] xl:min-h-0",
+            mobilePane === "blocks" ? "block" : "hidden xl:block"
+          )}
+        >
+          <CmsBlockRail
+            pageId={page?.id ?? initialPage.id}
+            blocks={page?.blocks ?? []}
+            selectedBlockId={editor.selectedBlockId}
+            onSelect={editor.selectBlock}
+            onReorder={editor.moveBlock}
+            onDuplicate={editor.duplicateBlock}
+            onRemove={editor.removeBlock}
+            onToggleEnabled={(id, enabled) => {
+              if (!page) return;
+              editor.updateBlocks(
+                page.blocks.map((b) => (b.id === id ? { ...b, enabled } : b))
+              );
+              editor.selectBlock(id);
+            }}
+            onAddBlock={(type) => {
+              if (!canMutateLocal) return;
+              editor.addBlock(type);
+            }}
+            readOnly={!canMutateLocal}
+          />
         </div>
-      ) : (
-        <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(240px,280px)_minmax(0,1fr)_minmax(300px,360px)]">
+
+        <div
+          className={cn(
+            "min-h-[420px] overflow-auto rounded-[14px] border border-[#E9EDF2] bg-[#F3F4F6] p-3 xl:min-h-0",
+            mobilePane === "preview" ? "block" : "hidden xl:block"
+          )}
+        >
           <div
-            className={cn(
-              "min-h-[320px] overflow-hidden rounded-[20px] border border-[#ECECEC] bg-white shadow-[0_10px_35px_rgba(0,0,0,.05)] xl:min-h-0",
-              mobileTab === "library" ? "block" : "hidden xl:block"
-            )}
+            className="mx-auto overflow-hidden rounded-[10px] border border-[#E9EDF2] bg-white"
+            style={{ width: previewWidth, maxWidth: "100%", minHeight: 480 }}
           >
-            <CmsBlockLibrary
+            <iframe
+              title="CMS Preview"
+              src={iframeSrc}
+              className="h-[min(72vh,820px)] w-full border-0 bg-white"
+            />
+          </div>
+          <p className="mt-2 text-center text-[11px] text-[#8A94A6]">
+            {platform === "desktop" ? "Desktop" : "Mobile"} 預覽 · {previewWidth}px
+            · 儲存草稿後才寫入 DB · 發布才上線
+          </p>
+        </div>
+
+        <div
+          className={cn(
+            "flex min-h-[360px] flex-col gap-2 overflow-hidden xl:min-h-0",
+            mobilePane === "props" ? "block" : "hidden xl:flex"
+          )}
+        >
+          <div className="min-h-0 flex-1 overflow-hidden rounded-[14px] border border-[#E9EDF2]">
+            <CmsPropertyPanel
+              block={editor.selectedBlock}
               pageId={page?.id ?? initialPage.id}
-              onAddBlock={(type) => {
-                if (!canMutateLocal) return;
-                editor.addBlock(type);
-                setMobileTab("canvas");
-              }}
-              disabled={!canMutateLocal}
-            />
-          </div>
-
-          <div
-            className={cn(
-              "min-h-[420px] overflow-hidden rounded-[20px] border border-[#ECECEC] bg-white shadow-[0_10px_35px_rgba(0,0,0,.05)] xl:min-h-0",
-              mobileTab === "canvas" ? "block" : "hidden xl:block"
-            )}
-          >
-            <CmsCanvas
-              blocks={page?.blocks ?? []}
-              selectedBlockId={editor.selectedBlockId}
-              onSelect={editor.selectBlock}
-              onReorder={editor.moveBlock}
-              onDuplicate={editor.duplicateBlock}
-              onRemove={editor.removeBlock}
-              onToggleEnabled={(id, enabled) => {
-                if (!page) return;
-                editor.updateBlocks(
-                  page.blocks.map((b) => (b.id === id ? { ...b, enabled } : b))
-                );
-                editor.selectBlock(id);
-              }}
-              device={editor.activeDevice}
-              showBounds={editor.showBlockBounds}
+              platform={platform}
               readOnly={!canMutateLocal}
+              onChange={editor.updateSelectedBlock}
             />
           </div>
-
-          <div
-            className={cn(
-              "min-h-[320px] space-y-3 overflow-hidden xl:min-h-0",
-              mobileTab === "props" ? "block" : "hidden xl:block"
-            )}
-          >
-            <div className="h-[min(52vh,420px)] overflow-hidden rounded-[20px] border border-[#ECECEC] bg-white shadow-[0_10px_35px_rgba(0,0,0,.05)] xl:h-[calc(100%-11rem)]">
-              <CmsPropertyPanel
-                block={editor.selectedBlock}
-                pageId={page?.id ?? initialPage.id}
-                readOnly={!canMutateLocal}
-                onChange={editor.updateSelectedBlock}
-              />
-            </div>
-            <CmsPublishValidation page={page} />
+          {showVersions ? (
             <CmsVersionHistoryPanel
               versions={versions}
               disabled={!onRestoreVersion}
@@ -353,9 +365,18 @@ export function CmsEditorShell({
                   : undefined
               }
             />
-          </div>
+          ) : null}
         </div>
-      )}
+      </div>
+
+      <CmsPublishModal
+        open={publishOpen}
+        platform={platform}
+        page={page}
+        busy={publishBusy}
+        onClose={() => setPublishOpen(false)}
+        onConfirm={() => void handlePublishConfirm()}
+      />
     </div>
   );
 }

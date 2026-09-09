@@ -1,33 +1,15 @@
 /**
- * Dual Mobile/Desktop Page Builder — reuse map (PHASE 0 scan).
+ * Dual Mobile/Desktop Page Builder.
  *
- * KEEP
- * - homepage_blocks + site_settings draft/publish (layout-versions)
- * - shop_layout_* / group_buy_page_* version stores
- * - cms_banners, products, recipes, members (shared content)
- * - CmsEditorShell / useCmsEditor / dnd-kit / CmsCanvas
- * - page_layout_settings table (desktop UI only)
- * - requireContentAdmin RBAC
- *
- * REUSE
- * - /admin/frontend-cms canvas → becomes /admin/page-builder
- * - cms-adapters, block-registry, page-registry
- * - CMS_DEVICE_SIZE preview frames
- *
- * ADD
- * - Unified Page Builder hub (6 groups)
- * - Wire draft/publish handlers on canvas (home/shop)
- * - Desktop layout draft/publish for page_layout_settings
- * - Platform switch Desktop | Mobile in builder
- * - Preview width presets 1024/1280/1440/1920 & 375/390/430
- *
- * MIGRATE LATER (do not break Mobile)
- * - Expand all page types into full block CMS
- * - Bidirectional click-to-select preview
- * - Brand assets / IP rules UI
+ * Architecture:
+ * - Two independent pipelines: /admin/page-builder/desktop | /mobile
+ * - Shared content (products, recipes, …) — never duplicated
+ * - Separate layout settings, sort, visibility, hero, image overrides
  */
 
 export const PAGE_BUILDER_BASE = "/admin/page-builder";
+
+export type PageBuilderPlatform = "desktop" | "mobile";
 
 export type PageBuilderGroupId =
   | "home"
@@ -65,13 +47,13 @@ export const PAGE_BUILDER_GROUPS: Array<{
   },
   {
     id: "global",
-    label: "全站設定",
+    label: "全站",
     pageIds: ["global_header", "global_footer", "global_announcement", "brand_assets"],
   },
 ];
 
-/** Maps CMS page id → page_layout_settings.page_key (desktop). */
-export const PAGE_BUILDER_DESKTOP_KEY: Record<string, string> = {
+/** Maps CMS page id → page_layout_settings.page_key */
+export const PAGE_BUILDER_LAYOUT_KEY: Record<string, string> = {
   home: "home",
   shop: "shop",
   product_template: "product_detail",
@@ -93,16 +75,51 @@ export const PAGE_BUILDER_DESKTOP_KEY: Record<string, string> = {
   contact: "contact",
 };
 
-/** Pages with wired Mobile (App) draft/publish today. */
+/** @deprecated use PAGE_BUILDER_LAYOUT_KEY */
+export const PAGE_BUILDER_DESKTOP_KEY = PAGE_BUILDER_LAYOUT_KEY;
+
 export const PAGE_BUILDER_MOBILE_WIRABLE = new Set([
   "home",
   "shop",
   "group_buy",
 ]);
 
-/** Pages that can load Desktop layout draft from page_layout_settings. */
-export const PAGE_BUILDER_DESKTOP_WIRABLE = new Set(["home", "shop", "recipes"]);
+export const PAGE_BUILDER_DESKTOP_WIRABLE = new Set([
+  "home",
+  "shop",
+  "recipes",
+]);
 
-export function pageBuilderHref(pageId: string) {
-  return `${PAGE_BUILDER_BASE}/${pageId}`;
+export const PAGE_BUILDER_PREVIEW_WIDTHS: Record<PageBuilderPlatform, number[]> = {
+  desktop: [1024, 1280, 1440, 1920],
+  mobile: [375, 390, 430, 768],
+};
+
+export const PAGE_BUILDER_DEFAULT_WIDTH: Record<PageBuilderPlatform, number> = {
+  desktop: 1440,
+  mobile: 390,
+};
+
+export function isPageWirable(
+  pageId: string,
+  platform: PageBuilderPlatform
+): boolean {
+  return platform === "desktop"
+    ? PAGE_BUILDER_DESKTOP_WIRABLE.has(pageId)
+    : PAGE_BUILDER_MOBILE_WIRABLE.has(pageId);
+}
+
+export function pageBuilderPlatformHref(platform: PageBuilderPlatform) {
+  return `${PAGE_BUILDER_BASE}/${platform}`;
+}
+
+export function pageBuilderHref(
+  pageId: string,
+  platform: PageBuilderPlatform = "desktop"
+) {
+  return `${PAGE_BUILDER_BASE}/${platform}/${pageId}`;
+}
+
+export function platformLabel(platform: PageBuilderPlatform) {
+  return platform === "desktop" ? "網頁版 Desktop" : "手機 App / Mobile";
 }
