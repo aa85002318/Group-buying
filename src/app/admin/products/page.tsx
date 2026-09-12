@@ -49,6 +49,11 @@ function AdminProductsPageInner() {
   const [shipFilter, setShipFilter] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  const [sortKey, setSortKey] = useState<
+    "default" | "updated_desc" | "updated_asc" | "supplier_asc" | "supplier_desc"
+  >("default");
+  const [suppliers, setSuppliers] = useState<Array<{ id: string; name: string }>>([]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -83,6 +88,8 @@ function AdminProductsPageInner() {
     shipFilter,
     priceMin,
     priceMax,
+    supplierFilter,
+    sortKey,
     pageSize,
   ]);
 
@@ -95,6 +102,21 @@ function AdminProductsPageInner() {
       .then((r) => r.json())
       .then((d) => setCategories(d.categories ?? []))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/suppliers")
+      .then((r) => r.json())
+      .then((d) => {
+        const list = (d.suppliers ?? []) as Array<{ id: string; name: string; is_active?: boolean }>;
+        setSuppliers(
+          list
+            .filter((s) => s.is_active !== false)
+            .map((s) => ({ id: s.id, name: s.name }))
+            .sort((a, b) => a.name.localeCompare(b.name, "zh-TW"))
+        );
+      })
+      .catch(() => setSuppliers([]));
   }, []);
 
   useEffect(() => {
@@ -126,14 +148,46 @@ function AdminProductsPageInner() {
     }
   };
 
+  const productSupplierLabel = (p: Product) => {
+    const row = p as Product & {
+      supplier_id?: string | null;
+      supplier_name?: string | null;
+      suppliers?: { name?: string | null } | null;
+    };
+    if (row.supplier_name?.trim()) return row.supplier_name.trim();
+    if (row.suppliers?.name?.trim()) return row.suppliers.name.trim();
+    const fromList = row.supplier_id
+      ? suppliers.find((s) => s.id === row.supplier_id)?.name
+      : undefined;
+    return fromList?.trim() || "";
+  };
+
+  const supplierOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const s of suppliers) map.set(s.id, s.name);
+    for (const p of items) {
+      const row = p as Product & { supplier_id?: string | null };
+      const label = productSupplierLabel(p);
+      if (row.supplier_id && label) map.set(row.supplier_id, label);
+      else if (label) map.set(`name:${label}`, label);
+    }
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, "zh-TW"));
+    // productSupplierLabel depends on suppliers; items drive name: fallbacks
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, suppliers]);
+
   const extraFiltered = useMemo(() => {
-    return items.filter((p) => {
+    const filtered = items.filter((p) => {
       if (statusFilter) {
         const status = p.status ?? (p.is_active ? "active" : "inactive");
         if (status !== statusFilter) return false;
       }
       if (categoryFilter) {
-        const ids = ((p as { category_ids?: string[] }).category_ids ?? []).concat(p.category_id ? [p.category_id] : []);
+        const ids = ((p as { category_ids?: string[] }).category_ids ?? []).concat(
+          p.category_id ? [p.category_id] : []
+        );
         if (!ids.includes(categoryFilter)) return false;
       }
       if (missingImage && p.image_url) return false;
@@ -142,13 +196,51 @@ function AdminProductsPageInner() {
         const flags = p as unknown as Record<string, unknown>;
         if (!flags[shipFilter]) return false;
       }
+      if (supplierFilter) {
+        const row = p as Product & { supplier_id?: string | null };
+        if (supplierFilter.startsWith("name:")) {
+          const want = supplierFilter.slice("name:".length);
+          if (productSupplierLabel(p) !== want) return false;
+        } else if (row.supplier_id !== supplierFilter) {
+          return false;
+        }
+      }
       const min = priceMin ? Number(priceMin) : null;
       const max = priceMax ? Number(priceMax) : null;
       if (min != null && !Number.isNaN(min) && p.price < min) return false;
       if (max != null && !Number.isNaN(max) && p.price > max) return false;
       return true;
     });
-  }, [items, statusFilter, categoryFilter, missingImage, missingSubtitle, shipFilter, priceMin, priceMax]);
+
+    if (sortKey === "default") return filtered;
+
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      if (sortKey === "updated_desc" || sortKey === "updated_asc") {
+        const ta = new Date(a.updated_at || a.created_at || 0).getTime();
+        const tb = new Date(b.updated_at || b.created_at || 0).getTime();
+        return sortKey === "updated_desc" ? tb - ta : ta - tb;
+      }
+      const sa = productSupplierLabel(a) || "\uffff";
+      const sb = productSupplierLabel(b) || "\uffff";
+      const cmp = sa.localeCompare(sb, "zh-TW");
+      return sortKey === "supplier_desc" ? -cmp : cmp;
+    });
+    return sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    items,
+    statusFilter,
+    categoryFilter,
+    missingImage,
+    missingSubtitle,
+    shipFilter,
+    priceMin,
+    priceMax,
+    supplierFilter,
+    sortKey,
+    suppliers,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(extraFiltered.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -407,11 +499,28 @@ function AdminProductsPageInner() {
             render: (p) => (p.product_categories as { name?: string } | undefined)?.name ?? "—",
           },
           {
+            key: "supplier",
+            header: "廠商",
+            render: (p) => productSupplierLabel(p) || "—",
+          },
+          {
             key: "price",
             header: "售價",
             render: (p) => formatCurrency(p.price),
           },
           { key: "stock", header: "庫存", render: (p) => p.stock },
+          {
+            key: "updated_at",
+            header: "更新時間",
+            render: (p) => {
+              const raw = p.updated_at || p.created_at;
+              if (!raw) return "—";
+              const d = new Date(raw);
+              if (Number.isNaN(d.getTime())) return "—";
+              const pad = (n: number) => String(n).padStart(2, "0");
+              return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            },
+          },
           {
             key: "status",
             header: "狀態",
@@ -480,6 +589,44 @@ function AdminProductsPageInner() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="搜尋名稱、SKU、條碼、副標、供應商…"
+        toolbar={
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              className="input-field h-12 w-auto max-w-[200px] rounded-[16px]"
+              value={supplierFilter}
+              onChange={(e) => setSupplierFilter(e.target.value)}
+              aria-label="依廠商"
+            >
+              <option value="">依廠商：全部</option>
+              {supplierOptions.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="input-field h-12 w-auto rounded-[16px]"
+              value={sortKey}
+              onChange={(e) =>
+                setSortKey(
+                  e.target.value as
+                    | "default"
+                    | "updated_desc"
+                    | "updated_asc"
+                    | "supplier_asc"
+                    | "supplier_desc"
+                )
+              }
+              aria-label="依更新時間排序"
+            >
+              <option value="default">排序：預設</option>
+              <option value="updated_desc">依更新時間（新→舊）</option>
+              <option value="updated_asc">依更新時間（舊→新）</option>
+              <option value="supplier_asc">依廠商（A→Z）</option>
+              <option value="supplier_desc">依廠商（Z→A）</option>
+            </select>
+          </div>
+        }
         loading={loading}
         page={safePage}
         totalPages={totalPages}
