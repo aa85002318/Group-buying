@@ -26,6 +26,31 @@ export type ProductVariant = {
   price_adjustment: string;
   stock: string;
   sort_order: number;
+  /** Multi-spec matrix fields (optional for legacy rows) */
+  combination_key?: string;
+  option_values?: Record<string, string>;
+  sku?: string;
+  barcode?: string;
+  price?: string;
+  sale_price?: string;
+  cost_price?: string;
+  weight_grams?: string;
+  image_url?: string;
+  is_active?: boolean;
+  is_default?: boolean;
+};
+
+export type ProductOptionValueForm = {
+  id: string;
+  label: string;
+  sort_order: number;
+};
+
+export type ProductOptionGroupForm = {
+  id: string;
+  name: string;
+  sort_order: number;
+  values: ProductOptionValueForm[];
 };
 
 export type ProductBatch = {
@@ -94,6 +119,8 @@ export type AdminProductFormV2 = {
   vip_price: string;
   cost_price: string;
   variants: ProductVariant[];
+  /** Option groups for SKU matrix UI (persisted on products.variant_option_groups) */
+  option_groups: ProductOptionGroupForm[];
   batches: ProductBatch[];
   is_group_buy: boolean;
   group_buy_start_at: string;
@@ -204,6 +231,7 @@ export const emptyProductFormV2 = (): AdminProductFormV2 => ({
   vip_price: "",
   cost_price: "",
   variants: [],
+  option_groups: [],
   batches: [],
   is_group_buy: false,
   group_buy_start_at: "",
@@ -240,6 +268,10 @@ type ExtendedProduct = Product & {
   live_price?: number | null;
   vip_price?: number | null;
   tags?: string[];
+  variant_option_groups?: ProductOptionGroupForm[] | null;
+  variants?: ProductVariant[];
+  batches?: ProductBatch[];
+  videos?: ProductVideo[];
   is_featured?: boolean;
   is_hot?: boolean;
   is_new?: boolean;
@@ -268,9 +300,6 @@ type ExtendedProduct = Product & {
   seo_description?: string | null;
   seo_keywords?: string | null;
   product_scope?: ProductScope;
-  videos?: ProductVideo[];
-  variants?: ProductVariant[];
-  batches?: ProductBatch[];
   content_images?: unknown;
   related_recipe_ids?: string[] | null;
   related_product_ids?: string[] | null;
@@ -358,7 +387,28 @@ export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
     live_price: p.live_price != null ? String(p.live_price) : "",
     vip_price: p.vip_price != null ? String(p.vip_price) : "",
     cost_price: p.cost_price != null ? String(p.cost_price) : "",
-    variants: p.variants ?? [],
+    variants: (p.variants ?? []).map((v, i) => ({
+      id: v.id,
+      name: v.name,
+      value: v.value,
+      price_adjustment: v.price_adjustment ?? "0",
+      stock: v.stock ?? "",
+      sort_order: v.sort_order ?? i,
+      combination_key: v.combination_key,
+      option_values: v.option_values ?? {},
+      sku: v.sku ?? "",
+      barcode: v.barcode ?? "",
+      price: v.price ?? "",
+      sale_price: v.sale_price ?? "",
+      cost_price: v.cost_price ?? "",
+      weight_grams: v.weight_grams ?? "",
+      image_url: v.image_url ?? "",
+      is_active: v.is_active !== false,
+      is_default: Boolean(v.is_default),
+    })),
+    option_groups: Array.isArray(p.variant_option_groups) && p.variant_option_groups.length > 0
+      ? p.variant_option_groups
+      : [],
     batches: p.batches ?? [],
     is_group_buy: p.is_group_buy ?? false,
     group_buy_start_at: p.group_buy_start_at
@@ -446,6 +496,7 @@ export function formV2ToPayload(form: AdminProductFormV2) {
     cost_price: form.cost_price ? Number(form.cost_price) : null,
     gross_margin: margin,
     variants: form.variants,
+    variant_option_groups: form.option_groups,
     batches: form.batches,
     is_active: isActive,
     is_group_buy: form.is_group_buy,
@@ -511,11 +562,22 @@ export function createEmptyVideo(): ProductVideo {
 export function createEmptyVariant(): ProductVariant {
   return {
     id: newId("variant"),
-    name: "",
+    name: "規格",
     value: "",
     price_adjustment: "0",
     stock: "",
     sort_order: 0,
+    combination_key: "",
+    option_values: {},
+    sku: "",
+    barcode: "",
+    price: "",
+    sale_price: "",
+    cost_price: "",
+    weight_grams: "",
+    image_url: "",
+    is_active: true,
+    is_default: false,
   };
 }
 

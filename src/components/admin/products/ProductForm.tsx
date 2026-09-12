@@ -9,6 +9,7 @@ import { ProductDescription } from "@/components/admin/products/ProductDescripti
 import { DuplicateProductModal, type DuplicateOptions } from "@/components/admin/products/DuplicateProductModal";
 import { ProductFormHeader } from "@/components/admin/products/ProductFormHeader";
 import { ProductQuickSettings } from "@/components/admin/products/ProductQuickSettings";
+import { ProductSpecBuilder } from "@/components/admin/products/ProductSpecBuilder";
 import { ProductImageManager } from "@/components/admin/v2/ProductImageManager";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,8 +22,21 @@ import {
   type AdminProductFormV2,
   type ProductFormFieldErrors,
 } from "@/lib/admin/product-form-v2";
+import { inferGroupsFromLegacyVariants } from "@/lib/admin/product-variant-matrix";
 import { mergeMainGalleryToImages } from "@/lib/products/product-images";
 import type { GroupBuyCategory, ProductCategory, Store } from "@/lib/types/database";
+import { cn } from "@/lib/utils";
+
+const WIZARD_STEPS = [
+  { id: "basic", label: "基本資訊" },
+  { id: "specs", label: "商品規格" },
+  { id: "media", label: "圖片與內容" },
+  { id: "other", label: "其他設定" },
+  { id: "done", label: "完成" },
+] as const;
+
+const BRAND = "#FFE149";
+const NAVY = "#153E73";
 
 type Brand = { id: string; name: string };
 type Supplier = { id: string; name: string };
@@ -53,7 +67,8 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [errors, setErrors] = useState<ProductFormFieldErrors>({});
-  const [layoutMode, setLayoutMode] = useState<"quick" | "full">("quick");
+  const [layoutMode, setLayoutMode] = useState<"quick" | "full" | "wizard">("wizard");
+  const [wizardStep, setWizardStep] = useState(0);
   const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [autoSaveLabel, setAutoSaveLabel] = useState<string | undefined>();
   const [meta, setMeta] = useState<{ created_at?: string; updated_at?: string }>({});
@@ -94,6 +109,9 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
             return;
           }
           const next = productToFormV2(product);
+          if (!next.option_groups.length && next.variants.length) {
+            next.option_groups = inferGroupsFromLegacyVariants(next.variants);
+          }
           setForm(next);
           baseline.current = snapshot(next);
           setMeta({ created_at: product.created_at, updated_at: product.updated_at });
@@ -245,6 +263,13 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
       seo_keywords: opts.seo ? form.seo_keywords : "",
       slug: "",
       variants: opts.variants ? form.variants.map((v) => ({ ...v, id: `${v.id}-copy` })) : [],
+      option_groups: opts.variants
+        ? form.option_groups.map((g) => ({
+            ...g,
+            id: `${g.id}-copy`,
+            values: g.values.map((v) => ({ ...v, id: `${v.id}-copy` })),
+          }))
+        : [],
       mainImage: opts.images ? form.mainImage : null,
       galleryImages: opts.images ? form.galleryImages : [],
       contentImages: opts.images ? form.contentImages : [],
@@ -302,6 +327,13 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
           <div className="mb-4 inline-flex rounded-xl border border-gray-200 bg-white p-1 text-sm">
             <button
               type="button"
+              className={`rounded-lg px-3 py-1.5 ${layoutMode === "wizard" ? "bg-[#153E73] text-white" : ""}`}
+              onClick={() => setLayoutMode("wizard")}
+            >
+              分步上架
+            </button>
+            <button
+              type="button"
               className={`rounded-lg px-3 py-1.5 ${layoutMode === "quick" ? "bg-[#153E73] text-white" : ""}`}
               onClick={() => setLayoutMode("quick")}
             >
@@ -322,43 +354,216 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
           <p className="mb-3 text-sm text-[#F16458]">{errors.form || errors.image}</p>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="min-w-0 space-y-4">
-            <ProductBasicInfo form={form} patch={patch} errors={errors} />
-            <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <h2 className="mb-3 text-base font-semibold text-[#153E73]">② 商品圖片</h2>
-              <ProductImageManager
-                productId={productId}
-                main={form.mainImage}
-                gallery={form.galleryImages}
-                content={form.contentImages}
-                onMainChange={(mainImage) =>
-                  patch({ mainImage, images: mergeMainGalleryToImages(mainImage, form.galleryImages) })
-                }
-                onGalleryChange={(galleryImages) =>
-                  patch({ galleryImages, images: mergeMainGalleryToImages(form.mainImage, galleryImages) })
-                }
-                onContentChange={(contentImages) => patch({ contentImages })}
-              />
-            </section>
-            <ProductDescription form={form} patch={patch} />
-            {mode === "edit" || layoutMode === "full" ? (
-              <ProductAdvancedSettings
-                form={form}
-                patch={patch}
-                stores={stores}
-                brands={brands}
-                suppliers={suppliers}
-                groupBuyCategories={groupBuyCategories}
-                lockGroupBuy={groupBuy}
-                productId={productId}
-                createdAt={meta.created_at}
-                updatedAt={meta.updated_at}
-              />
-            ) : null}
+        {mode === "create" && layoutMode === "wizard" ? (
+          <div className="space-y-5">
+            <nav className="overflow-x-auto rounded-[14px] border border-[#E7EAF0] bg-white p-3">
+              <ol className="flex min-w-max items-center gap-2">
+                {WIZARD_STEPS.map((step, index) => {
+                  const active = index === wizardStep;
+                  const done = index < wizardStep;
+                  return (
+                    <li key={step.id} className="flex items-center gap-2">
+                      {index > 0 ? <span className="text-slate-300">→</span> : null}
+                      <button
+                        type="button"
+                        onClick={() => setWizardStep(index)}
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition",
+                          active && "shadow-sm",
+                          !active && !done && "text-slate-500"
+                        )}
+                        style={
+                          active
+                            ? { backgroundColor: BRAND, color: NAVY }
+                            : done
+                              ? { color: NAVY }
+                              : undefined
+                        }
+                      >
+                        <span
+                          className={cn(
+                            "flex h-6 w-6 items-center justify-center rounded-full text-xs",
+                            active ? "bg-white/70" : "bg-slate-100"
+                          )}
+                        >
+                          {done ? "✓" : index + 1}
+                        </span>
+                        {step.label}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </nav>
+
+            <div className="rounded-[14px] border border-[#E7EAF0] bg-white p-4 sm:p-5">
+              {WIZARD_STEPS[wizardStep]?.id === "basic" ? (
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+                  <ProductBasicInfo form={form} patch={patch} errors={errors} />
+                  <ProductQuickSettings form={form} patch={patch} categories={categories} errors={errors} />
+                </div>
+              ) : null}
+              {WIZARD_STEPS[wizardStep]?.id === "specs" ? (
+                <ProductSpecBuilder form={form} onChange={patch} />
+              ) : null}
+              {WIZARD_STEPS[wizardStep]?.id === "media" ? (
+                <div className="space-y-4">
+                  <section>
+                    <h2 className="mb-3 text-base font-semibold" style={{ color: NAVY }}>
+                      商品圖片
+                    </h2>
+                    <ProductImageManager
+                      productId={productId}
+                      main={form.mainImage}
+                      gallery={form.galleryImages}
+                      content={form.contentImages}
+                      onMainChange={(mainImage) =>
+                        patch({
+                          mainImage,
+                          images: mergeMainGalleryToImages(mainImage, form.galleryImages),
+                        })
+                      }
+                      onGalleryChange={(galleryImages) =>
+                        patch({
+                          galleryImages,
+                          images: mergeMainGalleryToImages(form.mainImage, galleryImages),
+                        })
+                      }
+                      onContentChange={(contentImages) => patch({ contentImages })}
+                    />
+                  </section>
+                  <ProductDescription form={form} patch={patch} />
+                </div>
+              ) : null}
+              {WIZARD_STEPS[wizardStep]?.id === "other" ? (
+                <ProductAdvancedSettings
+                  form={form}
+                  patch={patch}
+                  stores={stores}
+                  brands={brands}
+                  suppliers={suppliers}
+                  groupBuyCategories={groupBuyCategories}
+                  lockGroupBuy={groupBuy}
+                  productId={productId}
+                  createdAt={meta.created_at}
+                  updatedAt={meta.updated_at}
+                />
+              ) : null}
+              {WIZARD_STEPS[wizardStep]?.id === "done" ? (
+                <div className="space-y-4 py-6 text-center">
+                  <h2 className="text-xl font-semibold" style={{ color: NAVY }}>
+                    準備完成
+                  </h2>
+                  <p className="text-sm text-slate-600">
+                    商品「{form.name || "未命名"}」共 {form.variants.length} 個 SKU 組合。
+                    可儲存草稿或立即上架。
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10"
+                      disabled={saving}
+                      onClick={() => void saveManual()}
+                    >
+                      儲存草稿
+                    </Button>
+                    <Button
+                      type="button"
+                      className="h-10"
+                      style={{ backgroundColor: BRAND, color: NAVY }}
+                      disabled={saving}
+                      onClick={() => void publish()}
+                    >
+                      立即上架
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10"
+                disabled={wizardStep <= 0}
+                onClick={() => setWizardStep((s) => Math.max(0, s - 1))}
+              >
+                上一步
+              </Button>
+              {wizardStep < WIZARD_STEPS.length - 1 ? (
+                <Button
+                  type="button"
+                  className="h-10"
+                  style={{ backgroundColor: BRAND, color: NAVY }}
+                  onClick={() => setWizardStep((s) => Math.min(WIZARD_STEPS.length - 1, s + 1))}
+                >
+                  下一步
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10"
+                    disabled={saving}
+                    onClick={() => void saveManual()}
+                  >
+                    儲存草稿
+                  </Button>
+                  <Button
+                    type="button"
+                    className="h-10"
+                    style={{ backgroundColor: BRAND, color: NAVY }}
+                    disabled={saving}
+                    onClick={() => void publish()}
+                  >
+                    立即上架
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-          <ProductQuickSettings form={form} patch={patch} categories={categories} errors={errors} />
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="min-w-0 space-y-4">
+              <ProductBasicInfo form={form} patch={patch} errors={errors} />
+              <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h2 className="mb-3 text-base font-semibold text-[#153E73]">② 商品圖片</h2>
+                <ProductImageManager
+                  productId={productId}
+                  main={form.mainImage}
+                  gallery={form.galleryImages}
+                  content={form.contentImages}
+                  onMainChange={(mainImage) =>
+                    patch({ mainImage, images: mergeMainGalleryToImages(mainImage, form.galleryImages) })
+                  }
+                  onGalleryChange={(galleryImages) =>
+                    patch({ galleryImages, images: mergeMainGalleryToImages(form.mainImage, galleryImages) })
+                  }
+                  onContentChange={(contentImages) => patch({ contentImages })}
+                />
+              </section>
+              <ProductDescription form={form} patch={patch} />
+              {mode === "edit" || layoutMode === "full" ? (
+                <ProductAdvancedSettings
+                  form={form}
+                  patch={patch}
+                  stores={stores}
+                  brands={brands}
+                  suppliers={suppliers}
+                  groupBuyCategories={groupBuyCategories}
+                  lockGroupBuy={groupBuy}
+                  productId={productId}
+                  createdAt={meta.created_at}
+                  updatedAt={meta.updated_at}
+                />
+              ) : null}
+            </div>
+            <ProductQuickSettings form={form} patch={patch} categories={categories} errors={errors} />
+          </div>
+        )}
       </div>
       <DuplicateProductModal open={duplicateOpen} onClose={() => setDuplicateOpen(false)} onConfirm={(opts) => void clone(opts)} />
     </div>

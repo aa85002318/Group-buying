@@ -62,7 +62,38 @@ export async function attachProductRelations(
         price_adjustment: String((v as { price_adjustment?: number }).price_adjustment ?? 0),
         stock: (v as { stock?: number | null }).stock != null ? String((v as { stock: number }).stock) : "",
         sort_order: (v as { sort_order?: number }).sort_order ?? 0,
+        sku: (v as { sku?: string | null }).sku ?? "",
+        barcode: (v as { barcode?: string | null }).barcode ?? "",
+        option_values:
+          ((v as { option_values?: Record<string, string> }).option_values as Record<
+            string,
+            string
+          >) ?? {},
+        price:
+          (v as { price?: number | null }).price != null
+            ? String((v as { price: number }).price)
+            : "",
+        sale_price:
+          (v as { sale_price?: number | null }).sale_price != null
+            ? String((v as { sale_price: number }).sale_price)
+            : "",
+        cost_price:
+          (v as { cost_price?: number | null }).cost_price != null
+            ? String((v as { cost_price: number }).cost_price)
+            : "",
+        weight_grams:
+          (v as { weight_grams?: number | null }).weight_grams != null
+            ? String((v as { weight_grams: number }).weight_grams)
+            : "",
+        image_url: (v as { image_url?: string | null }).image_url ?? "",
+        is_active: (v as { is_active?: boolean }).is_active !== false,
+        is_default: Boolean((v as { is_default?: boolean }).is_default),
       })),
+      variant_option_groups: Array.isArray(
+        (product as { variant_option_groups?: unknown }).variant_option_groups
+      )
+        ? (product as { variant_option_groups: unknown[] }).variant_option_groups
+        : [],
       batches: (batchesBy.get(product.id as string) ?? []).map((b) => ({
         id: b.id as string,
         batch_number: (b as { batch_number: string }).batch_number,
@@ -131,16 +162,37 @@ export async function syncProductVariants(
   const rows = variants.filter((v) => v.name.trim() && v.value.trim());
   if (rows.length === 0) return;
 
-  await admin.from("product_variants").insert(
-    rows.map((variant, index) => ({
-      product_id: productId,
-      name: variant.name.trim(),
-      value: variant.value.trim(),
-      price_adjustment: Number(variant.price_adjustment) || 0,
-      stock: variant.stock ? Number(variant.stock) : null,
-      sort_order: index,
-    }))
-  );
+  const mapped = rows.map((variant, index) => ({
+    product_id: productId,
+    name: variant.name.trim(),
+    value: variant.value.trim(),
+    price_adjustment: Number(variant.price_adjustment) || 0,
+    stock: variant.stock ? Number(variant.stock) : null,
+    sort_order: index,
+    sku: variant.sku?.trim() || null,
+    barcode: variant.barcode?.trim() || null,
+    option_values: variant.option_values ?? {},
+    price: variant.price ? Number(variant.price) : null,
+    sale_price: variant.sale_price
+      ? Number(variant.sale_price)
+      : variant.price
+        ? Number(variant.price)
+        : null,
+    cost_price: variant.cost_price ? Number(variant.cost_price) : null,
+    weight_grams: variant.weight_grams ? Number(variant.weight_grams) : null,
+    image_url: variant.image_url?.trim() || null,
+    is_active: variant.is_active !== false,
+    is_default: Boolean(variant.is_default) || index === 0,
+  }));
+
+  const { error } = await admin.from("product_variants").insert(mapped);
+  if (error && /image_url|column/i.test(error.message)) {
+    const withoutImage = mapped.map(({ image_url: _img, ...rest }) => rest);
+    const retry = await admin.from("product_variants").insert(withoutImage);
+    if (retry.error) throw retry.error;
+    return;
+  }
+  if (error) throw error;
 }
 
 export async function syncProductBatches(

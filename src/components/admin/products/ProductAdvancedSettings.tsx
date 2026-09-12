@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Plus, Trash2 } from "lucide-react";
 import {
   AdminCheckbox,
   AdminField,
@@ -10,13 +9,13 @@ import {
   AdminSelect,
   AdminTextarea,
 } from "@/components/admin/v2/AdminCard";
+import { ProductSpecBuilder } from "@/components/admin/products/ProductSpecBuilder";
 import { Button } from "@/components/ui/button";
 import { sortNamedOptions } from "@/lib/admin/category-tree";
 import {
   calcGrossMarginAmount,
   calcGrossMarginRate,
   createEmptyBatch,
-  createEmptyVariant,
   createEmptyVideo,
   type AdminProductFormV2,
 } from "@/lib/admin/product-form-v2";
@@ -73,50 +72,8 @@ export function ProductAdvancedSettings({
 
   return (
     <div className="space-y-3">
-      <Accordion title="規格 / 變體">
-        {form.variants.map((variant, index) => (
-          <div key={variant.id} className="grid gap-3 rounded-xl border border-gray-200 p-3 md:grid-cols-4">
-            <AdminField label="規格名稱">
-              <AdminInput
-                value={variant.name}
-                onChange={(e) => {
-                  const variants = [...form.variants];
-                  variants[index] = { ...variant, name: e.target.value };
-                  patch({ variants });
-                }}
-              />
-            </AdminField>
-            <AdminField label="規格值">
-              <AdminInput
-                value={variant.value}
-                onChange={(e) => {
-                  const variants = [...form.variants];
-                  variants[index] = { ...variant, value: e.target.value };
-                  patch({ variants });
-                }}
-              />
-            </AdminField>
-            <AdminField label="加價">
-              <AdminInput
-                type="number"
-                value={variant.price_adjustment}
-                onChange={(e) => {
-                  const variants = [...form.variants];
-                  variants[index] = { ...variant, price_adjustment: e.target.value };
-                  patch({ variants });
-                }}
-              />
-            </AdminField>
-            <div className="flex items-end">
-              <Button type="button" size="sm" variant="outline" onClick={() => patch({ variants: form.variants.filter((v) => v.id !== variant.id) })}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
-        <Button type="button" variant="secondary" onClick={() => patch({ variants: [...form.variants, createEmptyVariant()] })}>
-          <Plus className="mr-1 h-4 w-4" />新增規格
-        </Button>
+      <Accordion title="規格 / 變體（多規格 SKU）">
+        <ProductSpecBuilder form={form} onChange={patch} />
       </Accordion>
 
       <Accordion title="SEO 設定">

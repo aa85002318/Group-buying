@@ -39,6 +39,9 @@ async function softPatchExtendedProductFields(
   if (Array.isArray(body.related_product_ids)) {
     patch.related_product_ids = (body.related_product_ids as string[]).filter(Boolean);
   }
+  if (Array.isArray(body.variant_option_groups)) {
+    patch.variant_option_groups = body.variant_option_groups;
+  }
   if (Object.keys(patch).length === 0) return;
   const { error } = await admin.from("products").update(patch).eq("id", productId);
   if (error && !/column|does not exist/i.test(error.message)) {
