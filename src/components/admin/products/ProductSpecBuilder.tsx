@@ -153,8 +153,8 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function ProductSpecBuilder({ form, onChange }: Props) {
-  const groups = form.option_groups ?? [];
-  const variants = form.variants ?? [];
+  const groups = useMemo(() => form.option_groups ?? [], [form.option_groups]);
+  const variants = useMemo(() => form.variants ?? [], [form.variants]);
   const comboCount = countCombinations(groups);
 
   const [notice, setNotice] = useState<string | null>(null);

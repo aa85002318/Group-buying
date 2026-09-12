@@ -187,7 +187,23 @@ export async function syncProductVariants(
 
   const { error } = await admin.from("product_variants").insert(mapped);
   if (error && /image_url|column/i.test(error.message)) {
-    const withoutImage = mapped.map(({ image_url: _img, ...rest }) => rest);
+    const withoutImage = mapped.map((row) => ({
+      product_id: row.product_id,
+      name: row.name,
+      value: row.value,
+      price_adjustment: row.price_adjustment,
+      stock: row.stock,
+      sort_order: row.sort_order,
+      sku: row.sku,
+      barcode: row.barcode,
+      option_values: row.option_values,
+      price: row.price,
+      sale_price: row.sale_price,
+      cost_price: row.cost_price,
+      weight_grams: row.weight_grams,
+      is_active: row.is_active,
+      is_default: row.is_default,
+    }));
     const retry = await admin.from("product_variants").insert(withoutImage);
     if (retry.error) throw retry.error;
     return;
