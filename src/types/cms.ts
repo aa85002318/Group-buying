@@ -125,11 +125,11 @@ export const CMS_PREVIEW_WIDTH_PRESETS: Record<
 };
 
 export const CMS_SAVE_STATUS_LABEL: Record<CmsSaveStatus, string> = {
-  idle: "已同步",
-  dirty: "有未儲存變更",
+  idle: "沒有未儲存的變更",
+  dirty: "有變更尚未儲存",
   saving: "儲存中…",
-  saved: "草稿已儲存",
-  published: "已發布",
+  saved: "草稿已儲存・尚未發布",
+  published: "已發布到網站",
   error: "儲存失敗",
 };
 

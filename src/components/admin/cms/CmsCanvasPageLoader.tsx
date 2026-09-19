@@ -18,7 +18,9 @@ import {
   PAGE_BUILDER_GROUPS,
   PAGE_BUILDER_LAYOUT_KEY,
   isPageWirable,
-  pageBuilderPlatformHref,
+  PAGE_BUILDER_BASE,
+  isPageLive,
+  platformLabel,
   type PageBuilderPlatform,
 } from "@/lib/cms/page-builder";
 import { getPageRegistryEntry } from "@/lib/cms/page-registry";
@@ -63,7 +65,6 @@ export function CmsCanvasPageLoader({
 
   const layoutKey = PAGE_BUILDER_LAYOUT_KEY[pageId] ?? pageId;
   const canSave = isPageWirable(pageId, platform);
-  const hubHref = pageBuilderPlatformHref(platform);
 
   const pageOptions = useMemo(
     () =>
@@ -103,7 +104,7 @@ export function CmsCanvasPageLoader({
             id: v.id,
             version_number: v.version_number,
             status: "published",
-            label: `Desktop v${v.version_number}`,
+            label: `網頁版 第 ${v.version_number} 版`,
             published_at: v.updated_at,
             updated_at: v.updated_at,
           }))
@@ -386,13 +387,13 @@ export function CmsCanvasPageLoader({
           {error}
         </p>
       ) : null}
-      {!canSave ? (
+      {!isPageLive(pageId, platform) ? (
         <p className="rounded-[10px] bg-[#FFF5CC] px-3 py-2 text-sm text-[#153E73]">
-          {platform === "desktop"
-            ? "Desktop 此頁尚為預留。目前可編輯：首頁／商城／食譜。"
-            : "Mobile 此頁尚為預留（legacy_mobile）。目前可編輯：首頁／商城／團購。現有手機 UI 不受影響。"}
-          {" · "}
-          <a href={hubHref} className="underline">
+          {canSave
+            ? `這個頁面的${platformLabel(platform)}還沒連動網站：可以編排和儲存，但發布後前台不會改變。`
+            : `這個頁面的${platformLabel(platform)}目前由程式固定排版，這裡只能檢視，無法儲存。`}
+          {" "}
+          <a href={PAGE_BUILDER_BASE} className="underline">
             返回頁面清單
           </a>
         </p>

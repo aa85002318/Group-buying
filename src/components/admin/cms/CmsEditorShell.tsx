@@ -17,12 +17,16 @@ import {
 } from "@/components/admin/cms/CmsVersionHistoryPanel";
 import { summarizeValidation, validateCmsPageForPublish } from "@/lib/cms/cms-validation";
 import {
+  PAGE_BUILDER_BASE,
   PAGE_BUILDER_DEFAULT_WIDTH,
   PAGE_BUILDER_PREVIEW_WIDTHS,
+  isPageLive,
   pageBuilderPlatformHref,
+  pageBuilderPreviewSrc,
   platformLabel,
   type PageBuilderPlatform,
 } from "@/lib/cms/page-builder";
+import { CmsScaledPreview } from "@/components/admin/cms/CmsScaledPreview";
 
 type Props = {
   initialPage: CmsPage;
@@ -59,6 +63,7 @@ export function CmsEditorShell({
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishBusy, setPublishBusy] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
+  const [previewReload, setPreviewReload] = useState(0);
   const [mobilePane, setMobilePane] = useState<"blocks" | "preview" | "props">(
     "preview"
   );
@@ -78,10 +83,12 @@ export function CmsEditorShell({
     ? summarizeValidation(validateCmsPageForPublish(page))
     : { canPublish: false, errors: [], warnings: [] };
 
+  const pageId = page?.id ?? initialPage.id;
+  const live = isPageLive(pageId, platform);
   const iframeSrc = useMemo(() => {
     const path = page?.previewPath || initialPage.previewPath || "/";
-    return path;
-  }, [initialPage.previewPath, page?.previewPath]);
+    return pageBuilderPreviewSrc(pageId, platform, path);
+  }, [initialPage.previewPath, page?.previewPath, pageId, platform]);
 
   const widths = PAGE_BUILDER_PREVIEW_WIDTHS[platform];
   const hubHref = pageBuilderPlatformHref(platform);
@@ -92,7 +99,12 @@ export function CmsEditorShell({
     try {
       await onSaveDraft(page);
       editor.markClean();
-      setNotice("草稿已儲存（尚未發布）");
+      setPreviewReload((n) => n + 1);
+      setNotice(
+        live
+          ? "草稿已儲存。右側預覽已更新為草稿內容；按「發布」後網站才會改變。"
+          : "草稿已儲存。此頁尚未連動網站，發布後前台也不會改變。"
+      );
     } catch (e) {
       editor.setSaveStatus("error");
       setNotice(e instanceof Error ? e.message : "儲存失敗");
@@ -106,7 +118,8 @@ export function CmsEditorShell({
     try {
       await onPublish(page);
       editor.setSaveStatus("published");
-      setNotice(`已發布 ${platform === "desktop" ? "Desktop" : "Mobile"} 版型`);
+      setPreviewReload((n) => n + 1);
+      setNotice(`已發布${platformLabel(platform)}，網站重新整理後即可看到。`);
       setPublishOpen(false);
     } catch (e) {
       editor.setSaveStatus("error");
@@ -127,11 +140,14 @@ export function CmsEditorShell({
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 border-b border-[#E9EDF2] bg-white px-2 py-2">
         <Link
-          href={hubHref}
+          href={PAGE_BUILDER_BASE}
           className="text-xs font-medium text-[#687386] hover:text-[#153E73] hover:underline"
         >
-          ← {platformLabel(platform)}
+          ← 頁面清單
         </Link>
+        <span className="rounded-full bg-[#EEF8FC] px-2 py-0.5 text-[11px] font-semibold text-[#153E73]">
+          {platformLabel(platform)}
+        </span>
 
         {pageOptions.length > 0 ? (
           <select
@@ -322,19 +338,12 @@ export function CmsEditorShell({
             mobilePane === "preview" ? "block" : "hidden xl:block"
           )}
         >
-          <div
-            className="mx-auto overflow-hidden rounded-[10px] border border-[#E9EDF2] bg-white"
-            style={{ width: previewWidth, maxWidth: "100%", minHeight: 480 }}
-          >
-            <iframe
-              title="CMS Preview"
-              src={iframeSrc}
-              className="h-[min(72vh,820px)] w-full border-0 bg-white"
-            />
-          </div>
+          <CmsScaledPreview src={iframeSrc} width={previewWidth} reloadKey={previewReload} />
           <p className="mt-2 text-center text-[11px] text-[#8A94A6]">
-            {platform === "desktop" ? "Desktop" : "Mobile"} 預覽 · {previewWidth}px
-            · 儲存草稿後才寫入 DB · 發布才上線
+            {platformLabel(platform)}預覽 · 寬 {previewWidth}px ·{" "}
+            {live
+              ? "顯示已儲存的草稿（未儲存的變更不會出現）"
+              : "此頁尚未連動網站，預覽顯示的是目前前台畫面"}
           </p>
         </div>
 

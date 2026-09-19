@@ -1,9 +1,6 @@
-import { PageBuilderPlatformHub } from "@/components/admin/cms/PageBuilderPlatformHub";
+import { redirect } from "next/navigation";
 
-export default function AdminPageBuilderDesktopHubPage() {
-  return (
-    <div className="mx-auto max-w-6xl px-1 py-2 md:px-0">
-      <PageBuilderPlatformHub platform="desktop" />
-    </div>
-  );
+/** Platform hubs were merged into the single page list at /admin/page-builder. */
+export default function PageBuilderPlatformHubRedirect() {
+  redirect("/admin/page-builder");
 }

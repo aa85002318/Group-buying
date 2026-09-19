@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LAYOUT_TYPE_LABELS } from "@/lib/cms/plain-labels";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import type { CmsBlock } from "@/types/cms";
@@ -95,11 +96,8 @@ export function CmsPropertyPanel({
       <div className="border-b border-[#E9EDF2] p-3">
         <p className="truncate text-sm font-bold text-[#153E73]">{block.name}</p>
         <p className="mt-1 text-[11px] text-[#687386]">
-          <span className="font-semibold text-[#153E73]">內容共用</span>
-          {" · "}
-          <span className="font-semibold text-[#153E73]">
-            版型{isDesktop ? " Desktop" : " Mobile"}專用
-          </span>
+          文字與圖片網頁版、手機版共用；排列方式只影響
+          <span className="font-semibold text-[#153E73]">{isDesktop ? "網頁版" : "手機版"}</span>
         </p>
       </div>
 
@@ -168,7 +166,7 @@ export function CmsPropertyPanel({
 
             {isDesktop ? (
               <ImageUploader
-                label="Desktop 專用圖片（選填）"
+                label="網頁版專用圖片（選填）"
                 value={desktopImage}
                 disabled={readOnly}
                 spec={CMS_IMAGE_SPECS.campaignWide}
@@ -181,7 +179,7 @@ export function CmsPropertyPanel({
               />
             ) : (
               <ImageUploader
-                label="Mobile 專用圖片（選填）"
+                label="手機版專用圖片（選填）"
                 value={mobileImage}
                 disabled={readOnly}
                 spec={CMS_IMAGE_SPECS.campaignWide}
@@ -229,7 +227,7 @@ export function CmsPropertyPanel({
           <>
             <label className="block space-y-1">
               <span className="text-xs font-medium text-[#153E73]">
-                {isDesktop ? "Desktop 版型" : "Mobile 版型"}
+                {isDesktop ? "網頁版排列方式" : "手機版排列方式"}
               </span>
               <select
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
@@ -244,20 +242,20 @@ export function CmsPropertyPanel({
                 <option value="">預設</option>
                 {isDesktop ? (
                   <>
-                    <option value="grid">Grid</option>
-                    <option value="carousel">Carousel</option>
-                    <option value="list">List</option>
-                    <option value="1+2">1+2</option>
-                    <option value="sidebar">Sidebar</option>
-                    <option value="full_width">Full width</option>
+                    <option value="grid">{LAYOUT_TYPE_LABELS.grid}</option>
+                    <option value="carousel">{LAYOUT_TYPE_LABELS.carousel}</option>
+                    <option value="list">{LAYOUT_TYPE_LABELS.list}</option>
+                    <option value="1+2">{LAYOUT_TYPE_LABELS["1+2"]}</option>
+                    <option value="sidebar">{LAYOUT_TYPE_LABELS.sidebar}</option>
+                    <option value="full_width">{LAYOUT_TYPE_LABELS.full_width}</option>
                   </>
                 ) : (
                   <>
-                    <option value="carousel">Carousel</option>
-                    <option value="1col">1 欄</option>
-                    <option value="2col">2 欄</option>
-                    <option value="peek">Peek</option>
-                    <option value="bottom_sheet">Bottom Sheet</option>
+                    <option value="carousel">{LAYOUT_TYPE_LABELS.carousel}</option>
+                    <option value="1col">{LAYOUT_TYPE_LABELS["1col"]}</option>
+                    <option value="2col">{LAYOUT_TYPE_LABELS["2col"]}</option>
+                    <option value="peek">{LAYOUT_TYPE_LABELS.peek}</option>
+                    <option value="bottom_sheet">{LAYOUT_TYPE_LABELS.bottom_sheet}</option>
                   </>
                 )}
               </select>
@@ -265,7 +263,7 @@ export function CmsPropertyPanel({
 
             {isDesktop ? (
               <label className="block space-y-1">
-                <span className="text-xs font-medium text-[#153E73]">欄數</span>
+                <span className="text-xs font-medium text-[#153E73]">每列幾個</span>
                 <Input
                   type="number"
                   min={1}
@@ -319,10 +317,10 @@ export function CmsPropertyPanel({
                 disabled={readOnly}
                 onChange={(e) => onChange({ enabled: e.target.checked })}
               />
-              顯示此區塊（僅 {isDesktop ? "Desktop" : "Mobile"}）
+              顯示此區塊（只影響{isDesktop ? "網頁版" : "手機版"}）
             </label>
             <label className="block space-y-1">
-              <span className="text-xs font-medium text-[#153E73]">顯示數量</span>
+              <span className="text-xs font-medium text-[#153E73]">最多顯示幾筆</span>
               <Input
                 type="number"
                 min={1}

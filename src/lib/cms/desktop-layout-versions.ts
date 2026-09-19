@@ -75,6 +75,13 @@ export async function loadLiveDesktopLayout(pageKey: string): Promise<PageLayout
   return rows.length ? rows : defaultsAsRows(pageKey);
 }
 
+/** Read-only: saved draft rows if any, else the live layout (never writes). */
+export async function peekDesktopLayoutDraftRows(pageKey: string): Promise<PageLayoutSetting[]> {
+  const existing = await readSetting<DesktopLayoutDraft>(draftKey(pageKey));
+  if (existing?.rows?.length) return existing.rows;
+  return loadLiveDesktopLayout(pageKey);
+}
+
 export async function getDesktopLayoutDraft(
   pageKey: string,
   updatedBy?: string | null

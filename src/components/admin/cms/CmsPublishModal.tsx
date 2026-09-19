@@ -41,7 +41,7 @@ export function CmsPublishModal({
 
   if (!open) return null;
 
-  const label = platform === "desktop" ? "Desktop" : "Mobile";
+  const label = platform === "desktop" ? "網頁版" : "手機版";
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4">
@@ -52,14 +52,14 @@ export function CmsPublishModal({
       >
         <h2 className="text-lg font-bold text-[#153E73]">準備發布</h2>
         <p className="mt-1 text-sm text-[#687386]">
-          發布版型：
-          <span className="ml-1 font-semibold text-[#153E73]">● {label}</span>
-          （不會同時發布另一管道）
+          這次只會發布
+          <span className="mx-1 font-semibold text-[#153E73]">{label}</span>
+          的排列，{platform === "desktop" ? "手機版" : "網頁版"}不受影響。
         </p>
 
         <ul className="mt-4 space-y-2 text-sm">
           <li className="flex items-center gap-2 text-[#1B6B3A]">
-            <span>✓</span> 內容共用 · 版型獨立
+            <span>✓</span> 發布後網站重新整理即可看到
           </li>
           <li
             className={cn(
@@ -70,7 +70,7 @@ export function CmsPublishModal({
             <span>{validation.errors.length ? "!" : "✓"}</span>
             {validation.errors.length
               ? `尚有 ${validation.errors.length} 項錯誤`
-              : "Required Settings 通過"}
+              : "必填設定都已完成"}
           </li>
           {validation.warnings.slice(0, 3).map((w) => (
             <li
@@ -101,7 +101,7 @@ export function CmsPublishModal({
             className="bg-[#153E73] text-white hover:bg-[#153E73]/90"
             onClick={onConfirm}
           >
-            {busy ? "發布中…" : `確認發布 ${label}`}
+            {busy ? "發布中…" : `確認發布${label}`}
           </Button>
         </div>
       </div>

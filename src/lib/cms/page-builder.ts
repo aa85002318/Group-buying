@@ -121,5 +121,31 @@ export function pageBuilderHref(
 }
 
 export function platformLabel(platform: PageBuilderPlatform) {
-  return platform === "desktop" ? "網頁版 Desktop" : "手機 App / Mobile";
+  return platform === "desktop" ? "網頁版" : "手機版";
+}
+
+/**
+ * Pages whose layout the storefront actually reads today: publishing them
+ * changes the live site. Everything else in the builder can be arranged and
+ * saved, but the storefront ignores it (yet).
+ * Keep in sync with: DesktopHome (layout-settings home), mobile home
+ * (/api/cms blocks), ShopHubClient (/api/shop/layout), GroupBuyPageClient.
+ */
+export const PAGE_BUILDER_LIVE: Record<PageBuilderPlatform, ReadonlySet<string>> = {
+  desktop: new Set(["home"]),
+  mobile: new Set(["home", "shop", "group_buy"]),
+};
+
+export function isPageLive(pageId: string, platform: PageBuilderPlatform): boolean {
+  return PAGE_BUILDER_LIVE[platform].has(pageId);
+}
+
+/** Storefront preview URL: live pages honour ?preview=draft to show the saved draft. */
+export function pageBuilderPreviewSrc(
+  pageId: string,
+  platform: PageBuilderPlatform,
+  previewPath: string
+): string {
+  if (!isPageLive(pageId, platform)) return previewPath;
+  return `${previewPath}${previewPath.includes("?") ? "&" : "?"}preview=draft`;
 }

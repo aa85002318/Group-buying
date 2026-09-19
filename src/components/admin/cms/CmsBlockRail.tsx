@@ -14,17 +14,12 @@ import { useCmsDragDrop } from "@/hooks/useCmsDragDrop";
 import { getBlockDefinition } from "@/lib/cms/block-registry";
 import { CmsBlockLibrary } from "@/components/admin/cms/CmsBlockLibrary";
 import { cn } from "@/lib/utils";
+import { describeBlockLayout } from "@/lib/cms/plain-labels";
 
 function layoutSummary(block: CmsBlock): string {
-  const cols = block.settings?.columns;
-  const limit = block.settings?.display_limit ?? block.settings?.display_count;
-  const layout = block.settings?.layout_type;
-  const parts: string[] = [];
-  if (typeof layout === "string" && layout) parts.push(layout);
-  if (typeof cols === "number") parts.push(`${cols}欄`);
-  if (typeof limit === "number") parts.push(`${limit}筆`);
-  if (!parts.length) return block.enabled ? "顯示中" : "已隱藏";
-  return parts.join(" · ");
+  const summary = describeBlockLayout(block.settings as Record<string, unknown> | undefined);
+  if (!block.enabled) return summary ? `已隱藏・${summary}` : "已隱藏";
+  return summary ?? "顯示中";
 }
 
 type Props = {

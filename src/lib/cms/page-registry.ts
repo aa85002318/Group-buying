@@ -29,7 +29,7 @@ export type CmsPageRegistryEntry = {
 export const CMS_PAGE_REGISTRY: CmsPageRegistryEntry[] = [
   {
     id: "home",
-    name: "App 首頁",
+    name: "首頁",
     slug: "/",
     pageType: "home",
     previewPath: "/",

@@ -285,9 +285,15 @@ export function DesktopHome() {
 
   useEffect(() => {
     let cancelled = false;
+    // Admin Page Builder loads the storefront with ?preview=draft.
+    const previewDraft =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("preview") === "draft";
     Promise.all([
-      fetch("/api/layout-settings?page_key=home&platform=desktop").then((r) => r.json()),
-      fetch("/api/cms").then((r) => r.json()),
+      fetch(
+        `/api/layout-settings?page_key=home&platform=desktop${previewDraft ? "&preview=draft" : ""}`
+      ).then((r) => r.json()),
+      fetch(previewDraft ? "/api/cms?preview=draft" : "/api/cms").then((r) => r.json()),
       fetch("/api/products").then((r) => r.json()),
       fetch("/api/recipes").then((r) => r.json()),
       fetch("/api/articles").then((r) => r.json()),
