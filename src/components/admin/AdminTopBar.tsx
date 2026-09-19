@@ -28,19 +28,26 @@ function useAdminBreadcrumbs(pathname: string) {
     return crumbs;
   }
 
+  // Longest matching route wins, so /admin/products/tools is 批次工具 rather
+  // than the /admin/products prefix (商品總覽).
+  let best: { group: string; label: string; href: string; length: number } | null = null;
   for (const group of ADMIN_NAV_GROUPS) {
     for (const item of group.items) {
       if (!isAdminNavLinkItem(item)) continue;
       const pathOnly = (item.href.split("?")[0] || item.href).split("#")[0] || item.href;
       if (
-        pathname === pathOnly ||
-        (pathOnly !== "/admin" && pathname.startsWith(`${pathOnly}/`))
+        (pathname === pathOnly ||
+          (pathOnly !== "/admin" && pathname.startsWith(`${pathOnly}/`))) &&
+        (!best || pathOnly.length > best.length)
       ) {
-        crumbs.push({ label: group.label });
-        crumbs.push({ label: item.label, href: item.href });
-        return crumbs;
+        best = { group: group.label, label: item.label, href: item.href, length: pathOnly.length };
       }
     }
+  }
+  if (best) {
+    crumbs.push({ label: best.group });
+    crumbs.push({ label: best.label, href: best.href });
+    return crumbs;
   }
 
   crumbs.push({ label: "目前頁面" });
