@@ -1,13 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { HomeFooter } from "@/components/home/HomeFooter";
 import { AppBottomNavigation } from "@/components/layout/AppBottomNavigation";
 import { DesktopFooter } from "@/components/desktop/DesktopFooter";
 import { DesktopHeader } from "@/components/desktop/DesktopHeader";
-import { useIsDesktopLg } from "@/hooks/useIsDesktopLg";
-import { isDesktopV2EnabledClient } from "@/lib/features/desktop-v2";
+import { useDesktopV2Active } from "@/hooks/useDesktopV2Active";
+import { DESKTOP_V2_BOOT_ATTR, isDesktopV2NativePath } from "@/lib/features/desktop-v2";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +19,23 @@ import { cn } from "@/lib/utils";
  */
 function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isDesktopLg = useIsDesktopLg();
-  const desktopV2 = isDesktopV2EnabledClient() && isDesktopLg;
+  const desktopV2 = useDesktopV2Active();
+
+  // Boot flag (set by the inline head script) only needs to cover the
+  // pre-hydration paint; clear it once the correct tree has committed so
+  // shrinking the window later can still reveal the mobile shell.
+  useEffect(() => {
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => {
+        document.documentElement.removeAttribute(DESKTOP_V2_BOOT_ATTR);
+      });
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, []);
   const isHome = pathname === "/";
   const isShopHub =
     pathname === "/shop" || pathname === "/shop/" || pathname.startsWith("/shop?");
@@ -46,7 +62,20 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       >
         <div className="relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip">
           {showChrome ? <DesktopHeader /> : null}
-          <main className="page-enter min-w-0 flex-1 overflow-x-clip">{children}</main>
+          <main className="page-enter min-w-0 flex-1 overflow-x-clip">
+            {isDesktopV2NativePath(pathname) || !showChrome ? (
+              children
+            ) : (
+              // Pages without a dedicated desktop design yet: keep the mobile
+              // UI, centered at a readable width under the desktop chrome.
+              <div
+                className="desktop-v2-fallback site-main mx-auto w-full min-w-0 max-w-[1200px] px-6 pb-12 xl:px-8"
+                data-desktop-v2-fallback="true"
+              >
+                {children}
+              </div>
+            )}
+          </main>
           {showChrome ? <DesktopFooter /> : null}
         </div>
       </div>
@@ -55,6 +84,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div
+      data-app-shell="mobile"
       className={cn(
         "min-h-dvh w-full overflow-x-clip",
         yellowPlane ? "bg-[#FDE045]" : isMemberHub ? "bg-[#FFFEFA]" : "bg-background"

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ShopHeader } from "@/components/shop/ShopHeader";
+import { useDesktopV2Active } from "@/hooks/useDesktopV2Active";
 import { GroupBuyHeroBanner } from "@/components/group-buy/GroupBuyHeroBanner";
 import {
   GroupBuyFilterSheet,
@@ -77,6 +78,7 @@ export function GroupBuyPageClient() {
   });
 
   const isDesktop = useIsDesktop();
+  const desktopV2 = useDesktopV2Active();
 
   const pageSize = useMemo(() => {
     if (typeof window === "undefined") return settings.pageSizeDesktop;
@@ -282,11 +284,13 @@ export function GroupBuyPageClient() {
         className="shop-hub-hero-plane w-full max-w-none"
         style={{ backgroundColor: GROUP_BUY_BRAND_YELLOW }}
       >
-        <ShopHeader
-          settings={headerSettings}
-          title="團購"
-          searchHref="#group-buy-search-input"
-        />
+        {desktopV2 ? null : (
+          <ShopHeader
+            settings={headerSettings}
+            title="團購"
+            searchHref="#group-buy-search-input"
+          />
+        )}
         <GroupBuyHeroBanner
           backgroundColor={GROUP_BUY_BRAND_YELLOW}
           searchPlaceholder={
@@ -450,7 +454,7 @@ export function GroupBuyPageClient() {
         ) : null}
       </div>
 
-      <GroupBuyFooter />
+      {desktopV2 ? null : <GroupBuyFooter />}
     </div>
   );
 }

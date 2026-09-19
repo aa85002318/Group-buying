@@ -2306,3 +2306,18 @@
     gap: 12px;
   }
 }
+
+/* Desktop V2 boot: hide the prerendered mobile shell on desktop until the
+   desktop tree mounts. Force-reveal after 3s in case hydration fails. */
+html[data-desktop-v2-boot] [data-app-shell="mobile"] {
+  visibility: hidden;
+  animation: desktop-v2-boot-reveal 0s linear 3s forwards;
+}
+html[data-desktop-v2-boot] body {
+  background-color: #fffefa;
+}
+@keyframes desktop-v2-boot-reveal {
+  to {
+    visibility: visible;
+  }
+}

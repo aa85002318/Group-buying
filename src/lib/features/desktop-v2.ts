@@ -47,6 +47,7 @@ export const DESKTOP_BREAKPOINT_PX = 1024;
 
 export const DESKTOP_NAV_LINKS = [
   { href: "/", label: "首頁" },
+  { href: "/group-buy", label: "團購" },
   { href: "/shop", label: "商城" },
   { href: "/recipes", label: "食譜" },
   { href: "/activities", label: "最新活動" },
@@ -54,3 +55,48 @@ export const DESKTOP_NAV_LINKS = [
   { href: "/ai", label: "AI助手" },
   { href: "/stores", label: "門市資訊" },
 ] as const;
+
+/**
+ * Hub pages that render their own full-bleed Desktop V2 layout.
+ * Every other storefront page falls back to the centered desktop frame
+ * in AppShell until it gets a dedicated desktop design.
+ */
+export const DESKTOP_V2_NATIVE_PATHS = [
+  "/",
+  "/group-buy",
+  "/shop",
+  "/recipes",
+  "/activities",
+  "/themes",
+  "/ai",
+  "/stores",
+  "/member",
+] as const;
+
+export function isDesktopV2NativePath(pathname: string): boolean {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  return (DESKTOP_V2_NATIVE_PATHS as readonly string[]).includes(path);
+}
+
+/** Attribute set on <html> before hydration when Desktop V2 will render. */
+export const DESKTOP_V2_BOOT_ATTR = "data-desktop-v2-boot";
+
+/**
+ * Inline <head> script: pages are statically prerendered as Mobile, so a
+ * desktop visitor would briefly see the mobile tree before hydration swaps
+ * in Desktop V2. This flags <html> early so CSS can hide the mobile shell
+ * until the desktop tree mounts (CSS also force-reveals after 3s as a
+ * safety net). Mirrors isDesktopV2EnabledClient().
+ */
+export function getDesktopV2BootScript(): string {
+  const cfg = JSON.stringify({
+    prod: PRODUCTION_HOST,
+    staging: STAGING_HOST,
+    flag: process.env.NEXT_PUBLIC_ENABLE_DESKTOP_V2 ?? "",
+    dev: process.env.NODE_ENV === "development",
+    env: isDesktopV2EnvEnabled(),
+    bp: DESKTOP_BREAKPOINT_PX,
+    attr: DESKTOP_V2_BOOT_ATTR,
+  });
+  return `(function(c){try{var h=location.hostname,on;if(h===c.prod)on=false;else if(h===c.staging)on=c.flag!=="false";else if(h==="localhost"||h==="127.0.0.1")on=c.flag==="true"||c.dev;else on=c.env;if(on&&window.matchMedia("(min-width: "+c.bp+"px)").matches)document.documentElement.setAttribute(c.attr,"")}catch(e){}})(${cfg});`;
+}

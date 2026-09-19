@@ -1,8 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useIsDesktopLg } from "@/hooks/useIsDesktopLg";
-import { isDesktopV2EnabledClient } from "@/lib/features/desktop-v2";
+import { useDesktopV2Active } from "@/hooks/useDesktopV2Active";
 
 type DesktopV2GateProps = {
   mobile: ReactNode;
@@ -14,9 +13,8 @@ type DesktopV2GateProps = {
  * When the flag is off, always render mobile — production stays unchanged.
  */
 export function DesktopV2Gate({ mobile, desktop }: DesktopV2GateProps) {
-  const enabled = isDesktopV2EnabledClient();
-  const isDesktop = useIsDesktopLg();
+  const desktopV2 = useDesktopV2Active();
 
-  if (!enabled || !isDesktop) return <>{mobile}</>;
+  if (!desktopV2) return <>{mobile}</>;
   return <>{desktop}</>;
 }

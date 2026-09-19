@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { CapacitorShell } from "@/components/capacitor/CapacitorShell";
+import { getDesktopV2BootScript } from "@/lib/features/desktop-v2";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -35,7 +36,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW" className="h-full">
+    <html lang="zh-TW" className="h-full" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: getDesktopV2BootScript() }} />
+      </head>
       <body className="min-h-dvh w-full bg-background font-sans text-foreground antialiased">
         <CapacitorShell />
         {children}
