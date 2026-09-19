@@ -263,6 +263,12 @@ function gridCols(columns: number | null, fallback: number) {
   return GRID_COLS[columns ?? fallback] ?? GRID_COLS[fallback];
 }
 
+/** Avoid a lone orphan row: trim to full rows once there is at least one. */
+function fillRows(count: number, perRow: number) {
+  if (count <= perRow) return count;
+  return Math.floor(count / perRow) * perRow;
+}
+
 type DesktopSection = ReturnType<typeof listOrderedDesktopHomeSections>[number];
 
 /**
@@ -464,7 +470,7 @@ export function DesktopHome() {
               href={qs.allServicesHref}
               showViewAll={Boolean(qs.allServicesHref)}
             />
-            <ul className={cn("grid gap-3", gridCols(cols, 8))}>
+            <ul className={cn("grid gap-3", gridCols(cols, Math.min(8, Math.max(4, items.length))))}>
               {items.slice(0, 16).map((item) => (
                 <li key={item.id}>
                   <Link
@@ -490,8 +496,8 @@ export function DesktopHome() {
       }
 
       case "latest_campaigns": {
-        const limit = Math.max(1, section.displayCount || 3);
-        const cards = campaignCards(limit);
+        const perRow = cols ?? 3;
+        const cards = campaignCards(fillRows(Math.max(1, section.displayCount || 3), perRow));
         if (!cards.length) return null;
         return (
           <section key={section.id}>
@@ -522,7 +528,8 @@ export function DesktopHome() {
       }
 
       case "latest_recipes": {
-        const list = pickRecipes(section);
+        const picked = pickRecipes(section);
+        const list = picked.slice(0, fillRows(picked.length, cols ?? 4));
         return (
           <section key={section.id}>
             <SectionHeading title={section.title || "精選食譜"} href={section.viewAllUrl || APP_ROUTES.recipes} />
