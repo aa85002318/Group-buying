@@ -33,7 +33,7 @@ export function MemberDesktopFrame({ children }: { children: ReactNode }) {
           />
         </div>
       </div>
-      <div className="min-w-0 rounded-2xl bg-white p-6 xl:p-8">{children}</div>
+      <div className="member-desktop-content min-w-0 rounded-2xl bg-white p-6 xl:p-8">{children}</div>
     </div>
   );
 }

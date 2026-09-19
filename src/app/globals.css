@@ -2331,3 +2331,37 @@ html[data-desktop-v2-boot] body {
   max-height: min(440px, 52vh);
   margin-inline: auto;
 }
+
+/* Desktop V2 auth panel: every /auth page renders
+   <div min-h-screen flex-col center> <BrandHeading|Logo/> <div card/> </div>.
+   Beside the brand panel, drop the page's own min-height, the duplicate logo
+   and the inner card chrome so the form sits flat on the white panel. */
+.auth-desktop-form > * {
+  width: 100%;
+  min-height: 0 !important;
+  padding: 0;
+  background: transparent;
+}
+.auth-desktop-form > * > :first-child:not(.shadow-card) {
+  display: none;
+}
+.auth-desktop-form > * > .shadow-card {
+  max-width: 400px;
+  margin-inline: auto;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Desktop V2 member sub-pages: pages were built for phone width
+   (mx-auto max-w-lg / max-w-2xl). Inside the sidebar layout, widen them,
+   left-align, drop bottom-nav padding and the redundant "back to member"
+   arrow (the sidebar already covers it). */
+.member-desktop-content > .mx-auto {
+  max-width: 820px;
+  margin-inline: 0;
+  padding-bottom: 0;
+}
+.member-desktop-content a[aria-label="返回會員中心"] {
+  display: none;
+}

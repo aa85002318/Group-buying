@@ -66,8 +66,9 @@ export function AuthShell({ children }: { children: ReactNode }) {
                 </div>
                 <p className="text-xs text-[#153E73]/60">© CHIMEIDIY 烘焙生活平台</p>
               </aside>
-              {/* Auth pages carry their own mobile min-height; neutralise it here. */}
-              <div className="flex min-w-0 items-center justify-center p-8 xl:p-10 [&>*]:!min-h-0 [&>*]:w-full [&>*]:!bg-transparent">
+              {/* Auth pages keep their mobile markup; .auth-desktop-form (globals.css)
+                  flattens their inner card and hides the duplicate logo. */}
+              <div className="auth-desktop-form flex min-w-0 items-center justify-center p-8 xl:p-12">
                 {children}
               </div>
             </div>
