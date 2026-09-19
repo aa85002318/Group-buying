@@ -8,7 +8,11 @@ import { MemberOrderStatus, type MemberOrderCounts } from "@/components/member/M
 import { MemberQrCodeDialog } from "@/components/member/MemberQrCodeDialog";
 import { DesktopInnerPageLayout } from "@/components/desktop/layout/DesktopInnerPageLayout";
 import { Button } from "@/components/ui/button";
-import { INNER_PAGE_HEROES, MEMBER_SIDEBAR_ITEMS } from "@/lib/desktop/inner-page-config";
+import {
+  INNER_PAGE_HEROES,
+  MEMBER_SIDEBAR_ITEMS,
+  memberSidebarActiveKey,
+} from "@/lib/desktop/inner-page-config";
 import { isSupabaseConfigured } from "@/lib/config";
 import { APP_ROUTES } from "@/lib/site-links";
 
@@ -20,18 +24,6 @@ type ProfileSummary = {
   member_level?: string | null;
   avatar_url?: string | null;
 };
-
-function activeMemberKey(pathname: string) {
-  if (pathname.startsWith(APP_ROUTES.memberOrders)) return "orders";
-  if (pathname.startsWith(APP_ROUTES.memberBenefits)) return "benefits";
-  if (pathname.startsWith(APP_ROUTES.favorites)) return "favorites";
-  if (pathname.startsWith(APP_ROUTES.memberStores)) return "stores";
-  if (pathname.startsWith(APP_ROUTES.memberCarrier)) return "carrier";
-  if (pathname.startsWith(APP_ROUTES.memberAddresses)) return "addresses";
-  if (pathname.startsWith(APP_ROUTES.support)) return "support";
-  if (pathname.startsWith(APP_ROUTES.memberProfile)) return "profile";
-  return "profile";
-}
 
 export function DesktopMember() {
   const pathname = usePathname();
@@ -105,7 +97,7 @@ export function DesktopMember() {
         sidebar={{
           title: "會員選單",
           items: MEMBER_SIDEBAR_ITEMS,
-          activeKey: activeMemberKey(pathname),
+          activeKey: memberSidebarActiveKey(pathname),
         }}
       >
         <div className="rounded-2xl bg-white p-8 text-center">
@@ -134,7 +126,7 @@ export function DesktopMember() {
         sidebar={{
           title: "會員選單",
           items: MEMBER_SIDEBAR_ITEMS,
-          activeKey: activeMemberKey(pathname),
+          activeKey: memberSidebarActiveKey(pathname),
         }}
         toolbar={{
           title: "會員總覽",
@@ -154,7 +146,7 @@ export function DesktopMember() {
             />
             {orderCounts ? <MemberOrderStatus counts={orderCounts} /> : null}
             <div className="grid gap-3 sm:grid-cols-2">
-              {MEMBER_SIDEBAR_ITEMS.map((item) => (
+              {MEMBER_SIDEBAR_ITEMS.filter((item) => item.key !== "overview").map((item) => (
                 <Link
                   key={item.key}
                   href={item.href || APP_ROUTES.member}

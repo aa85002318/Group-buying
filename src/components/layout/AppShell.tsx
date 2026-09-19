@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { HomeFooter } from "@/components/home/HomeFooter";
@@ -8,7 +7,8 @@ import { AppBottomNavigation } from "@/components/layout/AppBottomNavigation";
 import { DesktopFooter } from "@/components/desktop/DesktopFooter";
 import { DesktopHeader } from "@/components/desktop/DesktopHeader";
 import { useDesktopV2Active } from "@/hooks/useDesktopV2Active";
-import { DESKTOP_V2_BOOT_ATTR, isDesktopV2NativePath } from "@/lib/features/desktop-v2";
+import { useClearDesktopBootFlag } from "@/hooks/useClearDesktopBootFlag";
+import { isDesktopV2NativePath } from "@/lib/features/desktop-v2";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
@@ -21,21 +21,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const desktopV2 = useDesktopV2Active();
 
-  // Boot flag (set by the inline head script) only needs to cover the
-  // pre-hydration paint; clear it once the correct tree has committed so
-  // shrinking the window later can still reveal the mobile shell.
-  useEffect(() => {
-    let inner = 0;
-    const outer = requestAnimationFrame(() => {
-      inner = requestAnimationFrame(() => {
-        document.documentElement.removeAttribute(DESKTOP_V2_BOOT_ATTR);
-      });
-    });
-    return () => {
-      cancelAnimationFrame(outer);
-      cancelAnimationFrame(inner);
-    };
-  }, []);
+  useClearDesktopBootFlag();
   const isHome = pathname === "/";
   const isShopHub =
     pathname === "/shop" || pathname === "/shop/" || pathname.startsWith("/shop?");

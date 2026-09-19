@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MemberDesktopFrame } from "@/components/member/MemberDesktopFrame";
 
 export const metadata: Metadata = {
   title: "CHIMEIDIY 我的",
@@ -6,5 +7,9 @@ export const metadata: Metadata = {
 };
 
 export default function MemberLayout({ children }: { children: React.ReactNode }) {
-  return <div className="bg-[#FFFEFA]">{children}</div>;
+  return (
+    <div className="bg-[#FFFEFA]">
+      <MemberDesktopFrame>{children}</MemberDesktopFrame>
+    </div>
+  );
 }

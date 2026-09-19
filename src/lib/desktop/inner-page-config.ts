@@ -79,15 +79,38 @@ export const BRAND_SIDEBAR_ITEMS: DesktopNavItem[] = [
 ];
 
 export const MEMBER_SIDEBAR_ITEMS: DesktopNavItem[] = [
+  { key: "overview", label: "會員總覽", href: APP_ROUTES.member },
   { key: "profile", label: "會員資料", href: APP_ROUTES.memberProfile },
+  { key: "barcode", label: "會員條碼", href: APP_ROUTES.memberBarcode },
   { key: "orders", label: "我的訂單", href: APP_ROUTES.memberOrders },
   { key: "benefits", label: "會員禮", href: APP_ROUTES.memberBenefits },
   { key: "favorites", label: "收藏", href: APP_ROUTES.favorites },
   { key: "stores", label: "門市會員", href: APP_ROUTES.memberStores },
   { key: "carrier", label: "發票載具", href: APP_ROUTES.memberCarrier },
   { key: "addresses", label: "地址管理", href: APP_ROUTES.memberAddresses },
+  { key: "notifications", label: "通知中心", href: APP_ROUTES.memberNotifications },
+  { key: "settings", label: "帳號設定", href: APP_ROUTES.memberSettings },
   { key: "support", label: "客服", href: APP_ROUTES.support },
 ];
+
+/** Which member sidebar item a path belongs to (Desktop V2). */
+export function memberSidebarActiveKey(pathname: string): string {
+  const path = pathname.replace(/\/+$/, "") || "/";
+  const match = (base: string) => path === base || path.startsWith(`${base}/`);
+  if (path === APP_ROUTES.member) return "overview";
+  if (match(APP_ROUTES.memberOrders)) return "orders";
+  if (match(APP_ROUTES.memberBenefits) || match(APP_ROUTES.memberGifts)) return "benefits";
+  if (match(APP_ROUTES.favorites) || match("/member/favorites")) return "favorites";
+  if (match(APP_ROUTES.memberStores)) return "stores";
+  if (match(APP_ROUTES.memberCarrier)) return "carrier";
+  if (match(APP_ROUTES.memberAddresses)) return "addresses";
+  if (match(APP_ROUTES.memberNotifications)) return "notifications";
+  if (match(APP_ROUTES.memberSettings)) return "settings";
+  if (match(APP_ROUTES.memberBarcode)) return "barcode";
+  if (match(APP_ROUTES.support)) return "support";
+  if (match(APP_ROUTES.memberProfile)) return "profile";
+  return "overview";
+}
 
 export const AI_SIDEBAR_ITEMS: DesktopNavItem[] = [
   { key: "chat", label: "開始對話", href: "/ai" },
