@@ -16,6 +16,10 @@ import {
   DESKTOP_PROMO_CARD_B,
 } from "@/lib/desktop/brand-assets";
 import { listOrderedDesktopHomeSections } from "@/lib/home/blocks";
+import {
+  GROUP_BUY_CONSUMER_VISIBLE,
+  HIDDEN_HOME_GROUP_BUY_KEYS,
+} from "@/lib/features/group-buy-visibility";
 import type { HomepageBlock } from "@/lib/types/database";
 import { parseQuickServicesSettings } from "@/types/home-quick-service";
 import { HomeGroupBuyBannerSection } from "@/components/home/group-buy-banner/HomeGroupBuyBannerSection";
@@ -396,6 +400,9 @@ export function DesktopHome() {
   };
 
   const renderSection = (section: DesktopSection): ReactNode => {
+    // Same feature gate as the app home: group-buy sections stay hidden
+    // while FEATURES.groupBuying is off.
+    if (!GROUP_BUY_CONSUMER_VISIBLE && HIDDEN_HOME_GROUP_BUY_KEYS.has(section.key)) return null;
     const cols = section.desktop.columns;
     switch (section.key) {
       case "hero":
