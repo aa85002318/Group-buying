@@ -434,3 +434,58 @@ export function createBlockInstance(
     updated_at: now,
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Unified home (CMS step 3): the website (Desktop V2) reads the same  */
+/* homepage_blocks list as the app, in the same order. Per-block       */
+/* website overrides live in block.config so no schema change:        */
+/*   config.desktop_visible  boolean  (default: follows is_visible)    */
+/*   config.desktop_columns  number   (cards per row on the website)   */
+/* ------------------------------------------------------------------ */
+
+export type HomeBlockDesktopConfig = {
+  visible: boolean;
+  columns: number | null;
+};
+
+export function homeBlockDesktopConfig(
+  row: Pick<HomepageBlock, "is_visible" | "config"> | null | undefined,
+  fallbackVisible = true
+): HomeBlockDesktopConfig {
+  const config = (row?.config ?? {}) as Record<string, unknown>;
+  const mobileVisible = row ? row.is_visible !== false : fallbackVisible;
+  const visible =
+    typeof config.desktop_visible === "boolean" ? config.desktop_visible : mobileVisible;
+  const cols = Number(config.desktop_columns);
+  return {
+    visible,
+    columns: Number.isFinite(cols) && cols >= 1 ? Math.min(8, Math.round(cols)) : null,
+  };
+}
+
+/** Website home sections: same keys + order as the app, website visibility. */
+export function listOrderedDesktopHomeSections(
+  blocks: HomepageBlock[] | null | undefined
+): Array<ResolvedHomeBlock & { desktop: HomeBlockDesktopConfig }> {
+  const byKey = new Map<HomeSectionKey, HomepageBlock>();
+  for (const row of blocks ?? []) {
+    if (!isHomeSectionKey(row.block_key)) continue;
+    if (!PRIMARY_HOME_SECTION_KEYS.includes(row.block_key)) continue;
+    if (!byKey.has(row.block_key)) byKey.set(row.block_key, row);
+  }
+
+  return PRIMARY_HOME_SECTION_KEYS.map((key) => {
+    const row = byKey.get(key);
+    const resolved = row ? resolveHomeBlockRow(row) : resolveHomeBlock([], key);
+    if (!resolved) return null;
+    const desktop = homeBlockDesktopConfig(row ?? null, resolved.visible);
+    if (!desktop.visible) return null;
+    return {
+      ...resolved,
+      sortOrder: row ? Number(row.sort_order ?? HOME_SECTION_SORT_DEFAULT[key]) : HOME_SECTION_SORT_DEFAULT[key],
+      desktop,
+    };
+  })
+    .filter((b): b is ResolvedHomeBlock & { desktop: HomeBlockDesktopConfig } => Boolean(b))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+}

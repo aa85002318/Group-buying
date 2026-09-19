@@ -1,20 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  BookOpen,
-  Gift,
-  MapPin,
-  Package,
-  Search,
-  Sparkles,
-  Store,
-  Tag,
-  type LucideIcon,
-} from "lucide-react";
+import { Search } from "lucide-react";
 import { DesktopContainer } from "@/components/desktop/DesktopContainer";
 import { DesktopProductCard } from "@/components/desktop/DesktopProductCard";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
@@ -25,11 +15,17 @@ import {
   DESKTOP_IP_WAVE_SRC,
   DESKTOP_PROMO_CARD_B,
 } from "@/lib/desktop/brand-assets";
+import { listOrderedDesktopHomeSections } from "@/lib/home/blocks";
+import type { HomepageBlock } from "@/lib/types/database";
+import { parseQuickServicesSettings } from "@/types/home-quick-service";
+import { HomeGroupBuyBannerSection } from "@/components/home/group-buy-banner/HomeGroupBuyBannerSection";
+import { HomeServiceShortcutsSection } from "@/components/home/HomeServiceShortcutsSection";
 import {
-  DESKTOP_HOME_SECTION_DEFAULTS,
-  type PageLayoutSetting,
-  type PageLayoutSettingsJson,
-} from "@/lib/layout/page-layout-settings";
+  ChimeSelectGroupBuySection,
+  ClosingGroupBuysSection,
+  WeeklyGroupBuysSection,
+  WeeklyLiveStreamsSection,
+} from "@/components/home/group-buy-hub/HomeGroupBuySections";
 import { APP_ROUTES, productPath } from "@/lib/site-links";
 import { cn } from "@/lib/utils";
 
@@ -85,23 +81,6 @@ type StoreRow = {
   image_url?: string | null;
 };
 
-const QUICK_SERVICES: Array<{
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  bg: string;
-  color: string;
-}> = [
-  { href: APP_ROUTES.shop, label: "烘焙材料", icon: Package, bg: "#FFF5CC", color: "#153E73" },
-  { href: APP_ROUTES.recipes, label: "食譜影音", icon: BookOpen, bg: "#EEF8FC", color: "#79C7E8" },
-  { href: APP_ROUTES.ai, label: "AI助手", icon: Sparkles, bg: "#FFFFFF", color: "#F16458" },
-  { href: APP_ROUTES.promotions, label: "優惠活動", icon: Tag, bg: "#FFF5CC", color: "#F16458" },
-  { href: APP_ROUTES.stores, label: "門市資訊", icon: MapPin, bg: "#EEF8FC", color: "#153E73" },
-  { href: APP_ROUTES.memberBenefits, label: "會員禮遇", icon: Gift, bg: "#FFFFFF", color: "#FFD454" },
-  { href: APP_ROUTES.articles, label: "食材知識", icon: BookOpen, bg: "#EEF8FC", color: "#79C7E8" },
-  { href: "/help/order-guide", label: "新手入門", icon: Store, bg: "#FFF5CC", color: "#153E73" },
-];
-
 const DIFFICULTY: Record<string, string> = {
   easy: "初階",
   medium: "進階",
@@ -109,10 +88,6 @@ const DIFFICULTY: Record<string, string> = {
 };
 
 const CAMPAIGN_TITLES = ["歡慶週年慶", "精選巧克力系列", "烘焙新手包"];
-
-function asSettings(raw: unknown): PageLayoutSettingsJson {
-  return raw && typeof raw === "object" ? (raw as PageLayoutSettingsJson) : {};
-}
 
 function bannerImage(b: Banner) {
   return b.desktop_image_url || b.image_url || b.mobile_image_url || null;
@@ -272,9 +247,35 @@ function DesktopHomeSidebar({ store }: { store: StoreRow | null }) {
   );
 }
 
+/** Grid template for "cards per row" on the website (Tailwind-safe list). */
+const GRID_COLS: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-2 xl:grid-cols-3",
+  4: "grid-cols-2 xl:grid-cols-4",
+  5: "grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5",
+  6: "grid-cols-3 xl:grid-cols-6",
+  7: "grid-cols-4 xl:grid-cols-7",
+  8: "grid-cols-4 xl:grid-cols-8",
+};
+
+function gridCols(columns: number | null, fallback: number) {
+  return GRID_COLS[columns ?? fallback] ?? GRID_COLS[fallback];
+}
+
+type DesktopSection = ReturnType<typeof listOrderedDesktopHomeSections>[number];
+
+/**
+ * Website home (Desktop V2).
+ *
+ * CMS step 3: renders the SAME homepage_blocks list as the app, in the same
+ * order — editors change a section once. Each block can be hidden on the
+ * website or given a different "cards per row" via block.config
+ * (desktop_visible / desktop_columns), see listOrderedDesktopHomeSections.
+ */
 export function DesktopHome() {
   const router = useRouter();
-  const [settings, setSettings] = useState<PageLayoutSetting[]>([]);
+  const [sections, setSections] = useState<DesktopSection[] | null>(null);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -282,6 +283,7 @@ export function DesktopHome() {
   const [store, setStore] = useState<StoreRow | null>(null);
   const [query, setQuery] = useState("");
   const [productCategory, setProductCategory] = useState<string>("all");
+  const [draftPreview, setDraftPreview] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -289,64 +291,28 @@ export function DesktopHome() {
     const previewDraft =
       typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).get("preview") === "draft";
+    setDraftPreview(previewDraft);
+    const safe = (p: Promise<Response>) => p.then((r) => r.json()).catch(() => ({}));
     Promise.all([
-      fetch(
-        `/api/layout-settings?page_key=home&platform=desktop${previewDraft ? "&preview=draft" : ""}`
-      ).then((r) => r.json()),
-      fetch(previewDraft ? "/api/cms?preview=draft" : "/api/cms").then((r) => r.json()),
-      fetch("/api/products").then((r) => r.json()),
-      fetch("/api/recipes").then((r) => r.json()),
-      fetch("/api/articles").then((r) => r.json()),
-      fetch("/api/stores?channel=website").then((r) => r.json()),
-    ])
-      .then(([layout, cms, prod, rec, art, stores]) => {
-        if (cancelled) return;
-        const rows = (layout.settings as PageLayoutSetting[]) ?? [];
-        setSettings(
-          rows.length
-            ? rows
-            : DESKTOP_HOME_SECTION_DEFAULTS.map((s, i) => ({
-                id: `fallback-${i}`,
-                page_key: "home",
-                platform: "desktop",
-                enabled: true,
-                ...s,
-              }))
-        );
-        setBanners((cms.banners as Banner[]) ?? []);
-        setProducts((prod.products as Product[]) ?? []);
-        setRecipes((rec.recipes as Recipe[]) ?? []);
-        setArticles((art.articles as Article[]) ?? []);
-        const list = (stores.stores as StoreRow[]) ?? [];
-        setStore(
-          list.find((s) => (s.name || "").includes("大安")) ?? list[0] ?? null
-        );
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSettings(
-            DESKTOP_HOME_SECTION_DEFAULTS.map((s, i) => ({
-              id: `fallback-${i}`,
-              page_key: "home",
-              platform: "desktop",
-              enabled: true,
-              ...s,
-            }))
-          );
-        }
-      });
+      safe(fetch(previewDraft ? "/api/cms?preview=draft" : "/api/cms", { credentials: "include" })),
+      safe(fetch("/api/products")),
+      safe(fetch("/api/recipes")),
+      safe(fetch("/api/articles")),
+      safe(fetch("/api/stores?channel=website")),
+    ]).then(([cms, prod, rec, art, stores]) => {
+      if (cancelled) return;
+      setSections(listOrderedDesktopHomeSections((cms.blocks as HomepageBlock[]) ?? []));
+      setBanners((cms.banners as Banner[]) ?? []);
+      setProducts((prod.products as Product[]) ?? []);
+      setRecipes((rec.recipes as Recipe[]) ?? []);
+      setArticles((art.articles as Article[]) ?? []);
+      const list = (stores.stores as StoreRow[]) ?? [];
+      setStore(list.find((s) => (s.name || "").includes("大安")) ?? list[0] ?? null);
+    });
     return () => {
       cancelled = true;
     };
   }, []);
-
-  const ordered = useMemo(
-    () =>
-      [...settings]
-        .filter((s) => s.enabled)
-        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-    [settings]
-  );
 
   const activeBanners = useMemo(() => {
     const preferred = banners
@@ -386,67 +352,50 @@ export function DesktopHome() {
     return Array.from(set).slice(0, 6);
   }, [products]);
 
-  const campaignCards = useMemo(() => {
-    const fromArticles = articles.slice(0, 3).map((a, i) => ({
-      id: a.id,
-      title: a.title || CAMPAIGN_TITLES[i],
-      href: a.slug ? `/articles/${a.slug}` : `/articles/${a.id}`,
-      image: a.cover_image || DESKTOP_CAMPAIGN_FALLBACKS[i],
-    }));
-    if (fromArticles.length >= 3) return fromArticles;
-    const fromBanners = activeBanners.slice(1, 4).map((b, i) => ({
-      id: b.id,
-      title: b.title || CAMPAIGN_TITLES[i],
-      href: b.link_url || APP_ROUTES.promotions,
-      image: bannerImage(b) || DESKTOP_CAMPAIGN_FALLBACKS[i],
-    }));
-    const merged = [...fromArticles, ...fromBanners].slice(0, 3);
-    while (merged.length < 3) {
-      const i = merged.length;
-      merged.push({
-        id: `fallback-campaign-${i}`,
-        title: CAMPAIGN_TITLES[i],
-        href: APP_ROUTES.promotions,
-        image: DESKTOP_CAMPAIGN_FALLBACKS[i],
-      });
-    }
-    return merged;
-  }, [articles, activeBanners]);
+  const campaignCards = useCallback(
+    (limit: number) => {
+      const fromArticles = articles.slice(0, limit).map((a, i) => ({
+        id: a.id,
+        title: a.title || CAMPAIGN_TITLES[i % CAMPAIGN_TITLES.length],
+        href: a.slug ? `/articles/${a.slug}` : `/articles/${a.id}`,
+        image: a.cover_image || DESKTOP_CAMPAIGN_FALLBACKS[i % DESKTOP_CAMPAIGN_FALLBACKS.length],
+      }));
+      if (fromArticles.length >= limit) return fromArticles;
+      const fromBanners = activeBanners.slice(1, 1 + limit).map((b, i) => ({
+        id: b.id,
+        title: b.title || CAMPAIGN_TITLES[i % CAMPAIGN_TITLES.length],
+        href: b.link_url || APP_ROUTES.promotions,
+        image: bannerImage(b) || DESKTOP_CAMPAIGN_FALLBACKS[i % DESKTOP_CAMPAIGN_FALLBACKS.length],
+      }));
+      return [...fromArticles, ...fromBanners].slice(0, limit);
+    },
+    [articles, activeBanners]
+  );
 
   const filteredProducts = useMemo(() => {
     if (productCategory === "all") return products;
     return products.filter((p) => p.category === productCategory);
   }, [products, productCategory]);
 
-  const enabled = (key: string) =>
-    ordered.find((s) => s.section_key === key) ??
-    ({
-      id: key,
-      page_key: "home",
-      platform: "desktop",
-      section_key: key,
-      enabled: true,
-      sort_order: 0,
-      layout_type: null,
-      columns: null,
-      display_limit: null,
-      settings_json: {},
-    } satisfies PageLayoutSetting);
+  const pickRecipes = (section: DesktopSection) => {
+    const limit = section.displayCount || 8;
+    if (section.sourceMode === "manual" && section.manualIds.length) {
+      const byId = new Map(recipes.map((r) => [r.id, r]));
+      const picked = section.manualIds
+        .map((id) => byId.get(id))
+        .filter((r): r is Recipe => Boolean(r));
+      if (picked.length) return picked.slice(0, limit);
+    }
+    return recipes.slice(0, limit);
+  };
 
-  const searchSection = enabled("search");
-  const quickSection = enabled("quick_services");
-  const campaignSection = enabled("latest_campaigns");
-  const recipeSection = enabled("featured_recipes");
-  const shopSection = enabled("ingredient_shop");
-  const popularSection = enabled("popular_products");
-
-  return (
-    <div className="desktop-home w-full" style={{ background: DESKTOP_COLORS.warmWhite }}>
-      <DesktopContainer className="py-6 lg:py-8">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="min-w-0 space-y-8">
-            {/* Hero — 純 16:9 圖檔 + 連結，無文字覆蓋、無側欄導購卡 */}
-            <section aria-label="主視覺 Banner" className="-mx-0">
+  const renderSection = (section: DesktopSection): ReactNode => {
+    const cols = section.desktop.columns;
+    switch (section.key) {
+      case "hero":
+        return (
+          <section key={section.id} aria-label={section.title || "主視覺 Banner"} className="space-y-4">
+            <div>
               <Link
                 href={heroBanner?.link_url || APP_ROUTES.shop}
                 className="relative block aspect-video w-full overflow-hidden rounded-2xl bg-[#EEF8FC]"
@@ -476,213 +425,238 @@ export function DesktopHome() {
                   ))}
                 </div>
               ) : null}
-            </section>
+            </div>
+            <form
+              className="flex overflow-hidden rounded-full border border-[#E9EDF2] bg-white shadow-sm"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = query.trim();
+                router.push(
+                  q ? `${APP_ROUTES.shopSearch}?q=${encodeURIComponent(q)}` : APP_ROUTES.shop
+                );
+              }}
+            >
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="搜尋商品、食譜、品牌…"
+                className="min-w-0 flex-1 bg-transparent px-5 py-3.5 text-[15px] text-[#153E73] outline-none placeholder:text-[#687386]"
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 bg-[#153E73] px-6 text-sm font-semibold text-white"
+              >
+                <Search className="h-4 w-4" />
+                搜尋
+              </button>
+            </form>
+          </section>
+        );
 
-            {/* 搜尋 */}
-            {searchSection.enabled !== false ? (
-              <section>
-                <form
-                  className="flex overflow-hidden rounded-full border border-[#E9EDF2] bg-white shadow-sm"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const q = query.trim();
-                    router.push(
-                      q
-                        ? `${APP_ROUTES.shopSearch}?q=${encodeURIComponent(q)}`
-                        : APP_ROUTES.shop
-                    );
-                  }}
-                >
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="搜尋商品、食譜、品牌…"
-                    className="min-w-0 flex-1 bg-transparent px-5 py-3.5 text-[15px] text-[#153E73] outline-none placeholder:text-[#687386]"
-                  />
-                  <button
-                    type="submit"
-                    className="inline-flex items-center gap-2 bg-[#153E73] px-6 text-sm font-semibold text-white"
+      case "quick_entry": {
+        const qs = parseQuickServicesSettings(section.config);
+        const items = qs.items.filter((i) => i.enabled !== false).sort((a, b) => a.sortOrder - b.sortOrder);
+        if (!items.length) return null;
+        return (
+          <section key={section.id}>
+            <SectionHeading
+              title={section.title || qs.title || "常用服務"}
+              href={qs.allServicesHref}
+              showViewAll={Boolean(qs.allServicesHref)}
+            />
+            <ul className={cn("grid gap-3", gridCols(cols, 8))}>
+              {items.slice(0, 16).map((item) => (
+                <li key={item.id}>
+                  <Link
+                    href={item.href || "#"}
+                    className="flex flex-col items-center gap-2 rounded-2xl bg-white px-2 py-4 text-center transition hover:shadow-sm"
                   >
-                    <Search className="h-4 w-4" />
-                    搜尋
-                  </button>
-                </form>
-              </section>
-            ) : null}
-
-            {/* 常用服務 — icon only */}
-            {quickSection.enabled !== false ? (
-              <section>
-                <SectionHeading title={String(asSettings(quickSection.settings_json).title ?? "常用服務")} showViewAll={false} />
-                <ul className="grid grid-cols-4 gap-3 xl:grid-cols-8">
-                  {QUICK_SERVICES.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.label}>
-                        <Link
-                          href={item.href}
-                          className="flex flex-col items-center gap-2 rounded-2xl bg-white px-2 py-4 text-center transition hover:shadow-sm"
-                        >
-                          <span
-                            className="inline-flex h-12 w-12 items-center justify-center rounded-full"
-                            style={{ background: item.bg, color: item.color }}
-                          >
-                            <Icon className="h-5 w-5" strokeWidth={1.9} />
-                          </span>
-                          <span className="text-sm font-semibold text-[#153E73]">{item.label}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ) : null}
-
-            {/* 最新活動 — 無 IP */}
-            {campaignSection.enabled !== false ? (
-              <section>
-                <SectionHeading
-                  title={String(asSettings(campaignSection.settings_json).title ?? "最新活動")}
-                  href={APP_ROUTES.promotions}
-                />
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {campaignCards.map((card) => (
-                    <Link
-                      key={card.id}
-                      href={card.href}
-                      className="group overflow-hidden rounded-2xl bg-white"
+                    <span
+                      className="relative inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full"
+                      style={{ background: item.backgroundColor || "#FFF5CC" }}
                     >
-                      <div className="relative aspect-[16/10] bg-[#EEF8FC]">
-                        <Image
-                          src={card.image}
-                          alt={card.title}
-                          fill
-                          className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                          sizes="(min-width:1280px) 22vw, 40vw"
-                        />
-                      </div>
-                      <div className="p-4">
-                        <h3 className="line-clamp-2 text-base font-bold text-[#153E73]">
-                          {card.title}
-                        </h3>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            ) : null}
+                      {item.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.imageUrl} alt="" className="h-9 w-9 object-contain" />
+                      ) : null}
+                    </span>
+                    <span className="text-sm font-semibold text-[#153E73]">{item.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      }
 
-            {/* 精選食譜 — 食物照 only */}
-            {recipeSection.enabled !== false ? (
-              <section>
-                <SectionHeading
-                  title={String(asSettings(recipeSection.settings_json).title ?? "精選食譜")}
-                  href={APP_ROUTES.recipes}
-                />
-                <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-                  {recipes.slice(0, recipeSection.display_limit ?? 8).map((r) => {
-                    const cover = recipeCover(r);
-                    const mins = r.total_time ?? r.prep_time ?? r.cook_time;
-                    return (
-                      <article key={r.id} className="overflow-hidden rounded-2xl bg-white">
-                        <Link
-                          href={recipeHref(r)}
-                          className="relative block aspect-[4/3] bg-[#EEF8FC]"
-                        >
-                          {cover ? (
-                            <Image
-                              src={cover}
-                              alt={r.title}
-                              fill
-                              className="object-cover"
-                              sizes="(min-width:1280px) 18vw, 40vw"
-                            />
-                          ) : null}
-                          <span
-                            className="absolute right-2 top-2"
-                            onClick={(e) => e.preventDefault()}
-                          >
-                            <FavoriteButton targetType="recipe" targetId={r.id} size="sm" />
-                          </span>
-                        </Link>
-                        <div className="space-y-1 p-3">
-                          <Link
-                            href={recipeHref(r)}
-                            className="line-clamp-2 text-sm font-bold text-[#153E73]"
-                          >
-                            {r.title}
-                          </Link>
-                          <p className="text-xs text-[#687386]">
-                            {mins != null ? `${mins} 分` : null}
-                            {mins != null && r.difficulty ? " · " : null}
-                            {r.difficulty ? DIFFICULTY[r.difficulty] ?? r.difficulty : null}
-                          </p>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            ) : null}
-
-            {/* 一鍵買齊 / 熱門商品 — 商品照 only */}
-            {(shopSection.enabled !== false || popularSection.enabled !== false) && (
-              <section>
-                <SectionHeading
-                  title={String(
-                    asSettings(shopSection.settings_json).title ??
-                      asSettings(popularSection.settings_json).title ??
-                      "一鍵買齊材料"
-                  )}
-                  href={APP_ROUTES.shop}
-                />
-                {categories.length > 0 ? (
-                  <div className="mb-4 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setProductCategory("all")}
-                      className={cn(
-                        "rounded-full px-4 py-1.5 text-sm font-semibold",
-                        productCategory === "all"
-                          ? "bg-[#FFF5CC] text-[#153E73]"
-                          : "bg-white text-[#687386]"
-                      )}
-                    >
-                      全部
-                    </button>
-                    {categories.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setProductCategory(c)}
-                        className={cn(
-                          "rounded-full px-4 py-1.5 text-sm font-semibold",
-                          productCategory === c
-                            ? "bg-[#FFF5CC] text-[#153E73]"
-                            : "bg-white text-[#687386]"
-                        )}
-                      >
-                        {c}
-                      </button>
-                    ))}
+      case "latest_campaigns": {
+        const limit = Math.max(1, section.displayCount || 3);
+        const cards = campaignCards(limit);
+        if (!cards.length) return null;
+        return (
+          <section key={section.id}>
+            <SectionHeading
+              title={section.title || "最新活動"}
+              href={section.viewAllUrl || APP_ROUTES.promotions}
+            />
+            <div className={cn("grid gap-4", gridCols(cols, 3))}>
+              {cards.map((card) => (
+                <Link key={card.id} href={card.href} className="group overflow-hidden rounded-2xl bg-white">
+                  <div className="relative aspect-[16/10] bg-[#EEF8FC]">
+                    <Image
+                      src={card.image}
+                      alt={card.title}
+                      fill
+                      className="object-cover transition duration-300 group-hover:scale-[1.03]"
+                      sizes="(min-width:1280px) 22vw, 40vw"
+                    />
                   </div>
-                ) : null}
-                <div className="grid grid-cols-3 gap-4 xl:grid-cols-4 2xl:grid-cols-5">
-                  {filteredProducts
-                    .slice(0, shopSection.display_limit ?? popularSection.display_limit ?? 10)
-                    .map((p) => (
-                      <DesktopProductCard
-                        key={p.id}
-                        id={p.id}
-                        name={p.name}
-                        price={productPrice(p)}
-                        image_url={p.image_url}
-                        spec={p.spec || p.specification || p.unit}
-                        href={productPath(p.id)}
-                      />
-                    ))}
-                </div>
-              </section>
+                  <div className="p-4">
+                    <h3 className="line-clamp-2 text-base font-bold text-[#153E73]">{card.title}</h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      }
+
+      case "latest_recipes": {
+        const list = pickRecipes(section);
+        return (
+          <section key={section.id}>
+            <SectionHeading title={section.title || "精選食譜"} href={section.viewAllUrl || APP_ROUTES.recipes} />
+            <div className={cn("grid gap-4", gridCols(cols, 4))}>
+              {list.map((r) => {
+                const cover = recipeCover(r);
+                const mins = r.total_time ?? r.prep_time ?? r.cook_time;
+                return (
+                  <article key={r.id} className="overflow-hidden rounded-2xl bg-white">
+                    <Link href={recipeHref(r)} className="relative block aspect-[4/3] bg-[#EEF8FC]">
+                      {cover ? (
+                        <Image src={cover} alt={r.title} fill className="object-cover" sizes="(min-width:1280px) 18vw, 40vw" />
+                      ) : null}
+                      <span className="absolute right-2 top-2" onClick={(e) => e.preventDefault()}>
+                        <FavoriteButton targetType="recipe" targetId={r.id} size="sm" />
+                      </span>
+                    </Link>
+                    <div className="space-y-1 p-3">
+                      <Link href={recipeHref(r)} className="line-clamp-2 text-sm font-bold text-[#153E73]">
+                        {r.title}
+                      </Link>
+                      <p className="text-xs text-[#687386]">
+                        {mins != null ? `${mins} 分` : null}
+                        {mins != null && r.difficulty ? " · " : null}
+                        {r.difficulty ? DIFFICULTY[r.difficulty] ?? r.difficulty : null}
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        );
+      }
+
+      case "ingredient_shop":
+        return (
+          <section key={section.id}>
+            <SectionHeading title={section.title || "一鍵買齊材料"} href={section.viewAllUrl || APP_ROUTES.shop} />
+            {categories.length > 0 ? (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {["all", ...categories].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setProductCategory(c)}
+                    className={cn(
+                      "rounded-full px-4 py-1.5 text-sm font-semibold",
+                      productCategory === c ? "bg-[#FFF5CC] text-[#153E73]" : "bg-white text-[#687386]"
+                    )}
+                  >
+                    {c === "all" ? "全部" : c}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <div className={cn("grid gap-4", gridCols(cols, 5))}>
+              {filteredProducts.slice(0, section.displayCount || 10).map((p) => (
+                <DesktopProductCard
+                  key={p.id}
+                  id={p.id}
+                  name={p.name}
+                  price={productPrice(p)}
+                  image_url={p.image_url}
+                  spec={p.spec || p.specification || p.unit}
+                  href={productPath(p.id)}
+                />
+              ))}
+            </div>
+          </section>
+        );
+
+      // Group-buy / live / shortcut sections: the app components are already
+      // responsive (md/xl card sizes); the .desktop-home-band wrapper strips
+      // their full-bleed band padding so they align with the column.
+      case "group_buy_banner":
+        return (
+          <div key={section.id} className="desktop-home-band">
+            <HomeGroupBuyBannerSection block={section} />
+          </div>
+        );
+      case "weekly_group_buys":
+        return (
+          <div key={section.id} className="desktop-home-band">
+            <WeeklyGroupBuysSection block={section} />
+          </div>
+        );
+      case "closing_group_buys":
+        return (
+          <div key={section.id} className="desktop-home-band">
+            <ClosingGroupBuysSection block={section} />
+          </div>
+        );
+      case "weekly_live_streams":
+        return (
+          <div key={section.id} className="desktop-home-band">
+            <WeeklyLiveStreamsSection block={section} />
+          </div>
+        );
+      case "chime_select":
+        return (
+          <div key={section.id} className="desktop-home-band">
+            <ChimeSelectGroupBuySection block={section} />
+          </div>
+        );
+      case "service_shortcuts":
+        return (
+          <div key={section.id} className="desktop-home-band">
+            <HomeServiceShortcutsSection block={section} />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="desktop-home w-full" style={{ background: DESKTOP_COLORS.warmWhite }}>
+      {draftPreview ? (
+        <div className="border-b border-amber-300 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-900">
+          草稿預覽模式 — 尚未發布，訪客看不到此版面
+        </div>
+      ) : null}
+      <DesktopContainer className="py-6 lg:py-8">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="min-w-0 space-y-8">
+            {sections === null ? (
+              <div className="space-y-6" aria-hidden>
+                <div className="aspect-video w-full animate-pulse rounded-2xl bg-[#EEF3F7]" />
+                <div className="h-14 w-full animate-pulse rounded-full bg-[#EEF3F7]" />
+                <div className="h-48 w-full animate-pulse rounded-2xl bg-[#EEF3F7]" />
+              </div>
+            ) : (
+              sections.map((section) => renderSection(section))
             )}
           </div>
 

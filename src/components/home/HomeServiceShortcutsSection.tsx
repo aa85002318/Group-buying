@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Headphones, ShieldCheck, Store, Truck } from "lucide-react";
 import type { HomepageBlock } from "@/lib/types/database";
-import { resolveHomeBlock } from "@/lib/home/blocks";
+import { resolveHomeBlock, type ResolvedHomeBlock } from "@/lib/home/blocks";
 import {
   DEFAULT_SERVICE_SHORTCUTS,
   parseServiceShortcuts,
@@ -22,12 +22,25 @@ const ICON_MAP = {
  * Homepage bottom — fixed 1:1 shortcut buttons with illustration safe area.
  * Button size never changes when CMS swaps images (always object-fit: contain).
  */
-export function HomeServiceShortcutsSection() {
-  const [items, setItems] = useState<ServiceShortcutItem[]>(DEFAULT_SERVICE_SHORTCUTS);
-  const [title, setTitle] = useState("快捷服務入口");
+export function HomeServiceShortcutsSection({
+  block,
+}: {
+  /** When the caller already resolved the block (website home), skip the fetch. */
+  block?: ResolvedHomeBlock;
+} = {}) {
+  const [items, setItems] = useState<ServiceShortcutItem[]>(() =>
+    block ? parseServiceShortcuts(block.config) : DEFAULT_SERVICE_SHORTCUTS
+  );
+  const [title, setTitle] = useState(block?.title || "快捷服務入口");
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    if (block) {
+      setItems(parseServiceShortcuts(block.config));
+      setTitle(block.title || "服務快捷入口");
+      setVisible(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -47,7 +60,7 @@ export function HomeServiceShortcutsSection() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [block]);
 
   if (!visible || items.length === 0) return null;
 

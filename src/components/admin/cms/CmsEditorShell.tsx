@@ -21,6 +21,8 @@ import {
   PAGE_BUILDER_DEFAULT_WIDTH,
   PAGE_BUILDER_PREVIEW_WIDTHS,
   isPageLive,
+  isPageUnified,
+  PAGE_BUILDER_UNIFIED_WIDTHS,
   pageBuilderPlatformHref,
   pageBuilderPreviewSrc,
   platformLabel,
@@ -90,7 +92,12 @@ export function CmsEditorShell({
     return pageBuilderPreviewSrc(pageId, platform, path);
   }, [initialPage.previewPath, page?.previewPath, pageId, platform]);
 
-  const widths = PAGE_BUILDER_PREVIEW_WIDTHS[platform];
+  const unified = isPageUnified(pageId) && platform === "mobile";
+  const widths: number[] = unified
+    ? [...PAGE_BUILDER_UNIFIED_WIDTHS]
+    : PAGE_BUILDER_PREVIEW_WIDTHS[platform];
+  const scopeLabel = unified ? "手機＋網頁" : platformLabel(platform);
+  const previewLabel = unified ? (previewWidth >= 1024 ? "網頁版" : "手機版") : platformLabel(platform);
   const hubHref = pageBuilderPlatformHref(platform);
 
   const handleSave = async () => {
@@ -119,7 +126,7 @@ export function CmsEditorShell({
       await onPublish(page);
       editor.setSaveStatus("published");
       setPreviewReload((n) => n + 1);
-      setNotice(`已發布${platformLabel(platform)}，網站重新整理後即可看到。`);
+      setNotice(`已發布（${scopeLabel}），網站重新整理後即可看到。`);
       setPublishOpen(false);
     } catch (e) {
       editor.setSaveStatus("error");
@@ -146,7 +153,7 @@ export function CmsEditorShell({
           ← 頁面清單
         </Link>
         <span className="rounded-full bg-[#EEF8FC] px-2 py-0.5 text-[11px] font-semibold text-[#153E73]">
-          {platformLabel(platform)}
+          {scopeLabel}
         </span>
 
         {pageOptions.length > 0 ? (
@@ -184,18 +191,36 @@ export function CmsEditorShell({
         </span>
 
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
-          <select
-            className="h-8 rounded-md border border-[#E9EDF2] bg-white px-2 text-xs text-[#153E73]"
-            value={previewWidth}
-            onChange={(e) => setPreviewWidth(Number(e.target.value))}
-            title="預覽尺寸"
-          >
-            {widths.map((w) => (
-              <option key={w} value={w}>
-                {w}
-              </option>
-            ))}
-          </select>
+          {unified ? (
+            <div className="flex rounded-md border border-[#E9EDF2] bg-white p-0.5" role="group" aria-label="預覽裝置">
+              {widths.map((w) => (
+                <button
+                  key={w}
+                  type="button"
+                  onClick={() => setPreviewWidth(w)}
+                  className={cn(
+                    "h-7 rounded px-2.5 text-xs font-semibold",
+                    previewWidth === w ? "bg-[#FFE149] text-[#153E73]" : "text-[#687386]"
+                  )}
+                >
+                  {w >= 1024 ? "網頁版預覽" : "手機版預覽"}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <select
+              className="h-8 rounded-md border border-[#E9EDF2] bg-white px-2 text-xs text-[#153E73]"
+              value={previewWidth}
+              onChange={(e) => setPreviewWidth(Number(e.target.value))}
+              title="預覽尺寸"
+            >
+              {widths.map((w) => (
+                <option key={w} value={w}>
+                  {w}
+                </option>
+              ))}
+            </select>
+          )}
 
           <Button
             type="button"
@@ -340,7 +365,7 @@ export function CmsEditorShell({
         >
           <CmsScaledPreview src={iframeSrc} width={previewWidth} reloadKey={previewReload} />
           <p className="mt-2 text-center text-[11px] text-[#8A94A6]">
-            {platformLabel(platform)}預覽 · 寬 {previewWidth}px ·{" "}
+            {previewLabel}預覽 · 寬 {previewWidth}px ·{" "}
             {live
               ? "顯示已儲存的草稿（未儲存的變更不會出現）"
               : "此頁尚未連動網站，預覽顯示的是目前前台畫面"}

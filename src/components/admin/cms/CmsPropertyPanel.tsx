@@ -13,7 +13,7 @@ import {
   type CmsLinkValue,
 } from "@/components/admin/home/CmsLinkPicker";
 import { CMS_IMAGE_SPECS } from "@/components/admin/home/CmsImageField";
-import type { PageBuilderPlatform } from "@/lib/cms/page-builder";
+import { isPageUnified, type PageBuilderPlatform } from "@/lib/cms/page-builder";
 import { cn } from "@/lib/utils";
 
 const SHOP_HOME_CONTENT_HREF: Record<string, string> = {
@@ -48,6 +48,28 @@ function patchSettings(
   onChange({ settings: { ...block.settings, ...patch } });
 }
 
+/** homepage_blocks.config lives at settings.config (persisted by cmsPageToHomeBlocks). */
+function blockConfig(block: CmsBlock): Record<string, unknown> {
+  const cfg = block.settings.config;
+  return cfg && typeof cfg === "object" ? (cfg as Record<string, unknown>) : {};
+}
+
+function patchConfig(
+  block: CmsBlock,
+  onChange: Props["onChange"],
+  patch: Record<string, unknown>
+) {
+  onChange({ settings: { ...block.settings, config: { ...blockConfig(block), ...patch } } });
+}
+
+/** Unified home sections whose website layout is a card grid. */
+const WEBSITE_COLUMN_KEYS = new Set([
+  "quick_entry",
+  "latest_campaigns",
+  "latest_recipes",
+  "ingredient_shop",
+]);
+
 export function CmsPropertyPanel({
   block,
   pageId,
@@ -57,6 +79,7 @@ export function CmsPropertyPanel({
 }: Props) {
   const [tab, setTab] = useState<TabId>("content");
   const isDesktop = platform === "desktop";
+  const unified = isPageUnified(pageId) && platform === "mobile";
 
   if (!block) {
     return (
@@ -223,7 +246,11 @@ export function CmsPropertyPanel({
           </>
         ) : null}
 
-        {tab === "layout" ? (
+        {tab === "layout" && unified ? (
+          <UnifiedLayoutFields block={block} onChange={onChange} readOnly={readOnly} />
+        ) : null}
+
+        {tab === "layout" && !unified ? (
           <>
             <label className="block space-y-1">
               <span className="text-xs font-medium text-[#153E73]">
@@ -310,15 +337,19 @@ export function CmsPropertyPanel({
 
         {tab === "display" ? (
           <>
-            <label className="flex items-center gap-2 text-sm text-[#153E73]">
-              <input
-                type="checkbox"
-                checked={block.enabled}
-                disabled={readOnly}
-                onChange={(e) => onChange({ enabled: e.target.checked })}
-              />
-              顯示此區塊（只影響{isDesktop ? "網頁版" : "手機版"}）
-            </label>
+            {unified ? (
+              <UnifiedVisibilityFields block={block} onChange={onChange} readOnly={readOnly} />
+            ) : (
+              <label className="flex items-center gap-2 text-sm text-[#153E73]">
+                <input
+                  type="checkbox"
+                  checked={block.enabled}
+                  disabled={readOnly}
+                  onChange={(e) => onChange({ enabled: e.target.checked })}
+                />
+                顯示此區塊（只影響{isDesktop ? "網頁版" : "手機版"}）
+              </label>
+            )}
             <label className="block space-y-1">
               <span className="text-xs font-medium text-[#153E73]">最多顯示幾筆</span>
               <Input
@@ -342,7 +373,7 @@ export function CmsPropertyPanel({
                 }}
               />
             </label>
-            {(
+            {!unified && (
               [
                 ["showTitle", "顯示標題"],
                 ["showViewAll", "顯示查看更多"],
@@ -433,6 +464,104 @@ export function CmsPropertyPanel({
           </>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function blockKey(block: CmsBlock): string {
+  return String(block.sourceKey || block.settings.legacyKey || block.type || "");
+}
+
+/** 顯示 tab (unified home): one toggle per platform. */
+function UnifiedVisibilityFields({
+  block,
+  onChange,
+  readOnly,
+}: {
+  block: CmsBlock;
+  onChange: Props["onChange"];
+  readOnly?: boolean;
+}) {
+  const cfg = blockConfig(block);
+  const websiteVisible =
+    typeof cfg.desktop_visible === "boolean" ? cfg.desktop_visible : block.enabled;
+  return (
+    <div className="space-y-2 rounded-[10px] border border-[#E9EDF2] bg-[#FAFBFC] p-3">
+      <p className="text-xs font-semibold text-[#153E73]">在哪裡顯示</p>
+      <label className="flex items-center gap-2 text-sm text-[#153E73]">
+        <input
+          type="checkbox"
+          checked={block.enabled}
+          disabled={readOnly}
+          onChange={(e) => {
+            // Keep the website choice explicit so hiding on the app does not
+            // silently hide the website too.
+            onChange({
+              enabled: e.target.checked,
+              settings: {
+                ...block.settings,
+                config: { ...cfg, desktop_visible: websiteVisible },
+              },
+            });
+          }}
+        />
+        手機 App
+      </label>
+      <label className="flex items-center gap-2 text-sm text-[#153E73]">
+        <input
+          type="checkbox"
+          checked={websiteVisible}
+          disabled={readOnly}
+          onChange={(e) => patchConfig(block, onChange, { desktop_visible: e.target.checked })}
+        />
+        網站（電腦版）
+      </label>
+      <p className="text-[11px] leading-relaxed text-[#8A94A6]">
+        標題、連結、挑選的商品與顯示筆數兩邊共用，改一次就好。
+      </p>
+    </div>
+  );
+}
+
+/** 版型 tab (unified home): the app layout is fixed; website can change cards per row. */
+function UnifiedLayoutFields({
+  block,
+  onChange,
+  readOnly,
+}: {
+  block: CmsBlock;
+  onChange: Props["onChange"];
+  readOnly?: boolean;
+}) {
+  const cfg = blockConfig(block);
+  const key = blockKey(block);
+  const cols = typeof cfg.desktop_columns === "number" ? cfg.desktop_columns : "";
+  return (
+    <div className="space-y-3">
+      {WEBSITE_COLUMN_KEYS.has(key) ? (
+        <label className="block space-y-1">
+          <span className="text-xs font-medium text-[#153E73]">網站每列幾個</span>
+          <Input
+            type="number"
+            min={1}
+            max={8}
+            placeholder="預設"
+            disabled={readOnly}
+            value={cols}
+            onChange={(e) =>
+              patchConfig(block, onChange, {
+                desktop_columns: e.target.value ? Number(e.target.value) : null,
+              })
+            }
+          />
+          <span className="block text-[11px] text-[#8A94A6]">留空 = 使用預設排列。</span>
+        </label>
+      ) : (
+        <p className="text-sm text-[#687386]">這個區塊的網站版排列是固定的，沒有可調整的選項。</p>
+      )}
+      <p className="rounded-[10px] bg-[#F7F8FA] px-2.5 py-2 text-[11px] leading-relaxed text-[#687386]">
+        手機 App 的排列方式由 App 版型決定；要改順序請在左側拖曳，兩邊會一起變。
+      </p>
     </div>
   );
 }

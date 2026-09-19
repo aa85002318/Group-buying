@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { HomepageBlock } from "@/lib/types/database";
-import { resolveHomeBlock } from "@/lib/home/blocks";
+import { resolveHomeBlock, type ResolvedHomeBlock } from "@/lib/home/blocks";
 import {
   DEFAULT_GROUP_BUY_BANNER_SETTINGS,
   parseGroupBuyBannerSettings,
@@ -12,12 +12,24 @@ import { GroupBuyBannerCarousel } from "./GroupBuyBannerCarousel";
 import { GroupBuyBannerBenefits } from "./GroupBuyBannerBenefits";
 
 /** 團購 Banner 輪播 — under「一鍵買齊材料」; keeps benefit strip below. */
-export function HomeGroupBuyBannerSection() {
-  const [settings, setSettings] = useState<HomeGroupBuyBannerSettings>(
-    DEFAULT_GROUP_BUY_BANNER_SETTINGS
+export function HomeGroupBuyBannerSection({
+  block,
+}: {
+  /** When the caller already resolved the block (website home), skip the fetch. */
+  block?: ResolvedHomeBlock;
+} = {}) {
+  const [settings, setSettings] = useState<HomeGroupBuyBannerSettings>(() =>
+    block
+      ? { ...parseGroupBuyBannerSettings(block.config), enabled: true }
+      : DEFAULT_GROUP_BUY_BANNER_SETTINGS
   );
 
   useEffect(() => {
+    if (block) {
+      const cfg = parseGroupBuyBannerSettings(block.config);
+      setSettings({ ...cfg, enabled: cfg.enabled !== false });
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -37,7 +49,7 @@ export function HomeGroupBuyBannerSection() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [block]);
 
   if (!settings.enabled) return null;
 

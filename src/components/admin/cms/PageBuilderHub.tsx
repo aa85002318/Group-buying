@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import {
   PAGE_BUILDER_GROUPS,
   isPageLive,
+  isPageUnified,
   isPageWirable,
   pageBuilderHref,
   type PageBuilderPlatform,
@@ -153,8 +154,21 @@ export function PageBuilderHub() {
                 </a>
               </div>
               <div className="flex flex-wrap gap-2">
-                <PlatformAction pageId={page.id} platform="desktop" />
-                <PlatformAction pageId={page.id} platform="mobile" />
+                {isPageUnified(page.id) ? (
+                  <Link
+                    href={pageBuilderHref(page.id, "mobile")}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#153E73] px-3 text-sm font-semibold text-white transition hover:bg-[#153E73]/90"
+                  >
+                    <Smartphone className="h-3.5 w-3.5" />
+                    <Monitor className="h-3.5 w-3.5" />
+                    編輯（手機＋網頁一次改）
+                  </Link>
+                ) : (
+                  <>
+                    <PlatformAction pageId={page.id} platform="desktop" />
+                    <PlatformAction pageId={page.id} platform="mobile" />
+                  </>
+                )}
               </div>
             </div>
           ))}

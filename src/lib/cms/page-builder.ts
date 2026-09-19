@@ -117,7 +117,9 @@ export function pageBuilderHref(
   pageId: string,
   platform: PageBuilderPlatform = "desktop"
 ) {
-  return `${PAGE_BUILDER_BASE}/${platform}/${pageId}`;
+  // Unified pages have one editor (mobile pipeline) for both platforms.
+  const target = PAGE_BUILDER_UNIFIED.has(pageId) ? "mobile" : platform;
+  return `${PAGE_BUILDER_BASE}/${target}/${pageId}`;
 }
 
 export function platformLabel(platform: PageBuilderPlatform) {
@@ -132,9 +134,22 @@ export function platformLabel(platform: PageBuilderPlatform) {
  * (/api/cms blocks), ShopHubClient (/api/shop/layout), GroupBuyPageClient.
  */
 export const PAGE_BUILDER_LIVE: Record<PageBuilderPlatform, ReadonlySet<string>> = {
-  desktop: new Set(["home"]),
+  desktop: new Set<string>(),
   mobile: new Set(["home", "shop", "group_buy"]),
 };
+
+/**
+ * Pages edited once for both app and website (CMS step 3). They are edited
+ * through the mobile pipeline; the website reads the same blocks.
+ */
+export const PAGE_BUILDER_UNIFIED: ReadonlySet<string> = new Set(["home"]);
+
+export function isPageUnified(pageId: string): boolean {
+  return PAGE_BUILDER_UNIFIED.has(pageId);
+}
+
+/** Preview widths offered in the unified editor: phone + website. */
+export const PAGE_BUILDER_UNIFIED_WIDTHS = [390, 1440] as const;
 
 export function isPageLive(pageId: string, platform: PageBuilderPlatform): boolean {
   return PAGE_BUILDER_LIVE[platform].has(pageId);

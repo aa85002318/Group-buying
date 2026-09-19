@@ -15,6 +15,21 @@ import { getBlockDefinition } from "@/lib/cms/block-registry";
 import { CmsBlockLibrary } from "@/components/admin/cms/CmsBlockLibrary";
 import { cn } from "@/lib/utils";
 import { describeBlockLayout } from "@/lib/cms/plain-labels";
+import { isPageUnified } from "@/lib/cms/page-builder";
+
+function websiteVisible(block: CmsBlock): boolean {
+  const cfg = block.settings?.config as Record<string, unknown> | undefined;
+  return typeof cfg?.desktop_visible === "boolean" ? cfg.desktop_visible : block.enabled;
+}
+
+/** Unified home: where the block shows + shared count. */
+function unifiedSummary(block: CmsBlock): string {
+  const app = block.enabled;
+  const web = websiteVisible(block);
+  const where = app && web ? "手機＋網站" : app ? "只在手機" : web ? "只在網站" : "都已隱藏";
+  const n = block.settings?.display_count ?? block.settings?.display_limit;
+  return typeof n === "number" ? `${where}・顯示 ${n} 筆` : where;
+}
 
 function layoutSummary(block: CmsBlock): string {
   const summary = describeBlockLayout(block.settings as Record<string, unknown> | undefined);
@@ -50,12 +65,15 @@ export function CmsBlockRail({
 }: Props) {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const drag = useCmsDragDrop(onReorder);
+  const unified = isPageUnified(pageId);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
       <div className="border-b border-[#E9EDF2] px-3 py-2.5">
         <p className="text-sm font-bold text-[#153E73]">頁面區塊</p>
-        <p className="text-[11px] text-[#8A94A6]">拖曳排序 · 顯示／隱藏</p>
+        <p className="text-[11px] text-[#8A94A6]">
+          {unified ? "拖曳排序（手機、網站一起變）" : "拖曳排序 · 顯示／隱藏"}
+        </p>
       </div>
 
       <div className="border-b border-[#E9EDF2] p-2">
@@ -106,7 +124,8 @@ export function CmsBlockRail({
                   selected
                     ? "border-[#FFD454] bg-[#FFF9E0]"
                     : "border-transparent hover:bg-[#F7F8FA]",
-                  !block.enabled && "opacity-55",
+                  (unified ? !block.enabled && !websiteVisible(block) : !block.enabled) &&
+                    "opacity-55",
                   drag.overIndex === index &&
                     drag.draggingFrom !== index &&
                     "border-t-2 border-[#FFD454]"
@@ -123,7 +142,7 @@ export function CmsBlockRail({
                       {block.name || defn?.name || block.type}
                     </p>
                     <p className="truncate text-[10px] text-[#8A94A6]">
-                      {layoutSummary(block)}
+                      {unified ? unifiedSummary(block) : layoutSummary(block)}
                     </p>
                   </div>
                   {!readOnly ? (
@@ -131,7 +150,15 @@ export function CmsBlockRail({
                       <button
                         type="button"
                         className="rounded p-1 text-[#687386] hover:bg-white"
-                        title={block.enabled ? "隱藏" : "顯示"}
+                        title={
+                          unified
+                            ? block.enabled
+                              ? "在手機隱藏"
+                              : "在手機顯示"
+                            : block.enabled
+                              ? "隱藏"
+                              : "顯示"
+                        }
                         onClick={(e) => {
                           e.stopPropagation();
                           onToggleEnabled(block.id, !block.enabled);

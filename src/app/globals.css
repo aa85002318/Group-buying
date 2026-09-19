@@ -2365,3 +2365,20 @@ html[data-desktop-v2-boot] body {
 .member-desktop-content a[aria-label="返回會員中心"] {
   display: none;
 }
+
+/* Website home (Desktop V2) reuses the app's group-buy / shortcut sections.
+   Strip their full-bleed band chrome so they sit in the main column. */
+.desktop-home .desktop-home-band .gb-hub-band,
+.desktop-home .desktop-home-band .service-shortcut-section,
+.desktop-home .desktop-home-band .group-buy-banner-section,
+.desktop-home .desktop-home-band .group-buy-banner-inner {
+  padding-inline: 0;
+  padding-top: 0;
+  background: transparent;
+}
+.desktop-home .desktop-home-band .gb-hub-band-inner,
+.desktop-home .desktop-home-band .service-shortcut-section > div,
+.desktop-home .desktop-home-band .group-buy-banner-inner {
+  max-width: none;
+  padding-inline: 0;
+}
