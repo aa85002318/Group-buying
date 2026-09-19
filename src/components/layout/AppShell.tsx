@@ -8,7 +8,7 @@ import { DesktopFooter } from "@/components/desktop/DesktopFooter";
 import { DesktopHeader } from "@/components/desktop/DesktopHeader";
 import { useDesktopV2Active } from "@/hooks/useDesktopV2Active";
 import { useClearDesktopBootFlag } from "@/hooks/useClearDesktopBootFlag";
-import { isDesktopV2NativePath } from "@/lib/features/desktop-v2";
+import { isDesktopV2NativePath, isDesktopV2ReadingPath } from "@/lib/features/desktop-v2";
 import { isMinimalChromePath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +55,10 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               // Pages without a dedicated desktop design yet: keep the mobile
               // UI, centered at a readable width under the desktop chrome.
               <div
-                className="desktop-v2-fallback site-main mx-auto w-full min-w-0 max-w-[1200px] px-6 pb-12 xl:px-8"
+                className={cn(
+                  "desktop-v2-fallback site-main mx-auto w-full min-w-0 px-6 pb-12 xl:px-8",
+                  isDesktopV2ReadingPath(pathname) ? "max-w-[868px]" : "max-w-[1200px]"
+                )}
                 data-desktop-v2-fallback="true"
               >
                 {children}

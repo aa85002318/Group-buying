@@ -84,7 +84,9 @@ export default function LiveDetailPage({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="page-enter space-y-5 pb-8">
+    <div className="page-enter space-y-5 pb-8 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-x-6 lg:gap-y-8 lg:space-y-0">
+      {/* Desktop: player + info on the left, chat docked on the right. */}
+      <div className="space-y-5">
       <div className="relative aspect-video overflow-hidden rounded-[20px] bg-black shadow-lift">
         {playerSrc ? (
           <iframe src={playerSrc} className="h-full w-full" allowFullScreen title={livestream.title} />
@@ -128,8 +130,9 @@ export default function LiveDetailPage({ params }: { params: { id: string } }) {
           </a>
         )}
       </div>
+      </div>
 
-      <section className="card-surface p-4">
+      <section className="card-surface p-4 lg:sticky lg:top-24">
         <h2 className="mb-3 flex items-center gap-2 font-bold text-coffee">
           <MessageCircle className="h-4 w-4 text-primary" />
           直播聊天室
@@ -137,7 +140,7 @@ export default function LiveDetailPage({ params }: { params: { id: string } }) {
         <p className="mb-2 text-xs text-muted-foreground">
           目前為前端示範聊天室；即時同步將於後續串接。
         </p>
-        <div className="mb-3 max-h-48 space-y-2 overflow-y-auto rounded-xl bg-muted/50 p-3">
+        <div className="mb-3 max-h-48 space-y-2 overflow-y-auto rounded-xl bg-muted/50 p-3 lg:h-[360px] lg:max-h-none">
           {chat.map((m, i) => (
             <p key={i} className={`text-sm ${m.role === "user" ? "text-right text-primary" : "text-coffee"}`}>
               <span className="rounded-lg bg-surface px-2 py-1 shadow-sm">{m.text}</span>
@@ -174,9 +177,9 @@ export default function LiveDetailPage({ params }: { params: { id: string } }) {
 
         if (!products?.length) return null;
         return (
-          <section>
+          <section className="lg:col-span-2">
             <h2 className="mb-3 section-title">直播商品</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
               {products.map((p) => (
                 <ProductCard
                   key={p!.id}
@@ -193,7 +196,7 @@ export default function LiveDetailPage({ params }: { params: { id: string } }) {
         );
       })()}
 
-      <Link href="/live" className="block text-center text-sm font-bold text-primary">
+      <Link href="/live" className="block text-center text-sm font-bold text-primary lg:col-span-2">
         ← 返回直播列表
       </Link>
     </div>

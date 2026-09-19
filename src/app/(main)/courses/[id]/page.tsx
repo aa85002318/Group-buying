@@ -82,9 +82,11 @@ export default function CourseDetailPage() {
   return (
     <div className="page-enter space-y-5 pb-8">
       <Link href="/courses" className="text-sm font-bold text-primary">← 課程中心</Link>
-      <div className="card-surface space-y-3 p-5">
+      {/* Desktop: course info left, sign-up (and ticket) docked on the right. */}
+      <div className="space-y-5 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-6 lg:space-y-0">
+      <div className="card-surface space-y-3 p-5 lg:p-8">
         <span className="sticker bg-info text-white">剩餘 {course.seats_left} 名</span>
-        <h1 className="text-xl font-black text-foreground">{course.title}</h1>
+        <h1 className="text-xl font-black text-foreground lg:text-2xl">{course.title}</h1>
         <p className="text-sm text-foreground-secondary">老師：{course.teacher_name}</p>
         {course.location && <p className="text-sm text-foreground-secondary">地點：{course.location}</p>}
         {course.start_at && (
@@ -98,6 +100,7 @@ export default function CourseDetailPage() {
         {course.description && <p className="text-sm leading-relaxed text-foreground">{course.description}</p>}
       </div>
 
+      <div className="space-y-5 lg:sticky lg:top-24">
       <section className="card-surface space-y-3 p-5">
         <h2 className="font-bold text-foreground">線上報名</h2>
         <Input className="min-h-12" placeholder="學員姓名" value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} />
@@ -126,6 +129,8 @@ export default function CourseDetailPage() {
           )}
         </div>
       )}
+      </div>
+      </div>
     </div>
   );
 }

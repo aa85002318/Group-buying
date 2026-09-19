@@ -100,3 +100,16 @@ export function getDesktopV2BootScript(): string {
   });
   return `(function(c){try{var h=location.hostname,on;if(h===c.prod)on=false;else if(h===c.staging)on=c.flag!=="false";else if(h==="localhost"||h==="127.0.0.1")on=c.flag==="true"||c.dev;else on=c.env;if(on&&window.matchMedia("(min-width: "+c.bp+"px)").matches)document.documentElement.setAttribute(c.attr,"")}catch(e){}})(${cfg});`;
 }
+
+/**
+ * Long-form reading pages: on Desktop V2 the fallback frame narrows to a
+ * comfortable line length instead of stretching text across 1200px.
+ */
+const DESKTOP_V2_READING_EXACT = ["/terms", "/privacy", "/faq", "/account-deletion"];
+const DESKTOP_V2_READING_PREFIX = ["/articles/", "/news/", "/support/", "/help/"];
+
+export function isDesktopV2ReadingPath(pathname: string): boolean {
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  if (DESKTOP_V2_READING_EXACT.includes(path)) return true;
+  return DESKTOP_V2_READING_PREFIX.some((prefix) => path.startsWith(prefix));
+}
