@@ -497,7 +497,8 @@ export function DesktopHome() {
 
       case "latest_campaigns": {
         const perRow = cols ?? 3;
-        const cards = campaignCards(fillRows(Math.max(1, section.displayCount || 3), perRow));
+        const available = campaignCards(Math.max(1, section.displayCount || 3));
+        const cards = available.slice(0, fillRows(available.length, perRow));
         if (!cards.length) return null;
         return (
           <section key={section.id}>
