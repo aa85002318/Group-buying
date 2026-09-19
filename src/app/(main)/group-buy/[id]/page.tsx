@@ -142,6 +142,7 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
         ← 返回團購專區
       </Link>
 
+      <div className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-start lg:gap-8 lg:space-y-0">
       {event.banner_url && (
         <div className="relative aspect-video overflow-hidden rounded-[16px] bg-muted">
           <Image
@@ -149,16 +150,16 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
             alt={event.title}
             fill
             className="object-cover"
-            sizes="(max-width: 512px) 100vw, 512px"
+            sizes="(max-width: 1023px) 100vw, 640px"
             priority
             unoptimized
           />
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-2 lg:rounded-[20px] lg:border lg:border-[#E8E1D7] lg:bg-white lg:p-6">
         <div className="flex items-start justify-between gap-2">
-          <h1 className="text-xl font-bold text-coffee">{event.title}</h1>
+          <h1 className="text-xl font-bold text-coffee lg:text-2xl">{event.title}</h1>
           <Badge variant={canBuy ? "success" : "secondary"}>
             {STATUS_LABEL[runtime] ?? runtime}
           </Badge>
@@ -213,13 +214,14 @@ export default function GroupBuyDetailPage({ params }: { params: { id: string } 
           </p>
         )}
       </div>
+      </div>
 
-      <section>
+      <section className="lg:pt-4">
         <h2 className="mb-3 text-lg font-bold text-coffee">團購商品</h2>
         {products.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">此活動尚無商品</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
             {products.map((product) => (
               <ProductCard
                 key={product!.id}

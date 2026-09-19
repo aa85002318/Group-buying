@@ -45,7 +45,7 @@ export function DesktopHeader() {
           <ul
             className={cn(
               "pointer-events-auto flex items-center whitespace-nowrap",
-              "gap-7 max-[1199px]:gap-4 xl:gap-8 2xl:gap-9"
+              "gap-7 max-[1199px]:gap-4 xl:gap-8"
             )}
           >
             {DESKTOP_NAV_LINKS.map((link) => {
@@ -80,15 +80,17 @@ export function DesktopHeader() {
               href={APP_ROUTES.search}
               aria-label="搜尋"
               className={cn(
-                "inline-flex h-10 items-center gap-2 rounded-full bg-[#FFD454] px-3 text-[#153E73] hover:bg-white/55",
-                "w-[180px] max-w-[180px] xl:w-[220px] xl:max-w-[220px] 2xl:w-[260px] 2xl:max-w-[260px]",
-                "max-[1199px]:w-10 max-[1199px]:max-w-10 max-[1199px]:justify-center max-[1199px]:px-0",
+                "inline-flex h-10 items-center gap-2 rounded-full bg-[#FFD454] text-[#153E73] hover:bg-white/55",
+                // Icon-only below 1536px so the 8-item centered nav never
+                // collides with the search pill (e.g. 門市資訊 at 1280–1535px).
+                "w-10 max-w-10 justify-center px-0",
+                "2xl:w-[220px] 2xl:max-w-[220px] 2xl:justify-start 2xl:px-3",
                 "ring-1 ring-[#153E73]/10"
               )}
               style={{ background: "rgba(255,254,250,0.72)" }}
             >
               <Search className="h-4 w-4 shrink-0" strokeWidth={1.9} />
-              <span className="truncate text-sm text-[#153E73]/70 max-[1199px]:hidden">
+              <span className="hidden truncate text-sm text-[#153E73]/70 2xl:inline">
                 搜尋商品、食譜…
               </span>
             </Link>

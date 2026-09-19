@@ -59,9 +59,10 @@ export default function CartPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-8 lg:space-y-0">
+      <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-coffee">購物車</h1>
+        <h1 className="text-xl font-bold text-coffee lg:text-2xl">購物車</h1>
         <span className="text-sm text-muted-foreground">共 {itemCount} 件</span>
       </div>
 
@@ -96,13 +97,18 @@ export default function CartPage() {
         />
       )}
 
-      <CartSummary
-        total={total}
-        itemCount={itemCount}
-        onClear={clear}
-        canCheckout={!loggedIn || canPurchase}
-        checkoutBlockedReason="請先完成 Email 驗證"
-      />
+      </div>
+
+      {/* Desktop: summary rides alongside the item list. */}
+      <div className="lg:sticky lg:top-24">
+        <CartSummary
+          total={total}
+          itemCount={itemCount}
+          onClear={clear}
+          canCheckout={!loggedIn || canPurchase}
+          checkoutBlockedReason="請先完成 Email 驗證"
+        />
+      </div>
     </div>
   );
 }

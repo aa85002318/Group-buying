@@ -331,211 +331,241 @@ export function CheckoutForm() {
       <Link href="/cart" className="text-sm text-primary hover:underline">
         ← 返回購物車
       </Link>
-      <h1 className="text-xl font-bold text-coffee">結帳</h1>
+      <h1 className="text-xl font-bold text-coffee lg:text-2xl">結帳</h1>
 
-      <Card>
-        <CardContent className="space-y-2 p-4">
-          <h2 className="font-medium text-coffee">訂單明細</h2>
-          {items.map((item) => (
-            <div key={`${item.productId}-${item.groupBuyProductId ?? ""}`} className="flex justify-between text-sm">
-              <span className="line-clamp-1 pr-2">
-                {item.name} × {item.quantity}
-              </span>
-              <span className="shrink-0">{formatCurrency(item.price * item.quantity)}</span>
-            </div>
-          ))}
-          <div className="space-y-1 border-t border-border pt-2 text-sm">
-            <div className="flex justify-between text-muted-foreground">
-              <span>商品小計</span>
-              <span>{formatCurrency(total)}</span>
-            </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>運費</span>
-              <span>{shippingFee === 0 ? "免運" : formatCurrency(shippingFee)}</span>
-            </div>
-            <div className="flex justify-between font-bold text-base">
-              <span>應付金額</span>
-              <span className="text-promo">{formatCurrency(grandTotal)}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <section className="space-y-3">
-        <h2 className="font-medium text-coffee">配送方式</h2>
-        {temperatureNotice && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-            <p className="font-medium">溫層提醒</p>
-            <p className="mt-0.5 text-amber-900/90">{temperatureNotice}</p>
-          </div>
-        )}
-        {CHECKOUT_SHIPMENT_OPTIONS.map((opt) => (
-          <OptionCard
-            key={opt.value}
-            selected={shipmentMethod === opt.value}
-            disabled={
-              !opt.enabled ||
-              (mixedTemperature &&
-                (opt.value === "home_delivery" || opt.value === "cvs_pickup"))
-            }
-            title={opt.label}
-            description={opt.description}
-            hint={opt.feeHint}
-            onSelect={() => setShipmentMethod(opt.value)}
-          />
-        ))}
-
-        {shipmentMethod === "store_pickup" && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">取貨門市</label>
-            {storeCities.length > 0 && (
-              <select
-                className="input-field min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
-              >
-                <option value="">全部縣市</option>
-                {storeCities.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            )}
-            <select
-              className="input-field min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
-              value={storeId}
-              onChange={(e) => setStoreId(e.target.value)}
-              disabled={filteredStores.length === 0}
-            >
-              {filteredStores.length === 0 ? (
-                <option value="">尚無開放取貨門市</option>
-              ) : (
-                filteredStores.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                    {preferredStoreId === s.id ? "（預設）" : ""}
-                  </option>
-                ))
-              )}
-            </select>
-            {(() => {
-              const store = stores.find((s) => s.id === storeId);
-              if (!store) return null;
-              return (
-                <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
-                  <p className="text-muted-foreground">地址：{store.address}</p>
-                  {store.phone && <p className="text-muted-foreground">電話：{store.phone}</p>}
-                  {store.business_hours && (
-                    <p className="text-muted-foreground">營業時間：{store.business_hours}</p>
-                  )}
-                  <p className="mt-1 text-[#153E73]">預計可取貨日：{estimatedPickupDate}</p>
-                  <div className="mt-2 rounded-md bg-amber-50 px-2 py-1.5 text-amber-950">
-                    <p className="text-xs font-medium">注意事項</p>
-                    <p className="mt-0.5 whitespace-pre-wrap text-xs">
-                      {store.notes?.trim() || "請於營業時間內取貨。"}
-                    </p>
-                  </div>
+      {/*
+        Mobile: summary → form → notice + submit (original order).
+        Desktop (lg): form on the left, sticky summary + submit on the right.
+      */}
+      <div className="space-y-5 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-8 lg:space-y-0">
+        <div className="space-y-5 lg:sticky lg:top-24 lg:order-2 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto">
+          <Card>
+            <CardContent className="space-y-2 p-4">
+              <h2 className="font-medium text-coffee">訂單明細</h2>
+              {items.map((item) => (
+                <div key={`${item.productId}-${item.groupBuyProductId ?? ""}`} className="flex justify-between text-sm">
+                  <span className="line-clamp-1 pr-2">
+                    {item.name} × {item.quantity}
+                  </span>
+                  <span className="shrink-0">{formatCurrency(item.price * item.quantity)}</span>
                 </div>
-              );
-            })()}
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-medium text-coffee">付款方式</h2>
-        {CHECKOUT_PAYMENT_OPTIONS.map((opt) => (
-          <OptionCard
-            key={opt.value}
-            selected={paymentMethod === opt.value}
-            disabled={!opt.enabled}
-            title={opt.label}
-            description={opt.description}
-            onSelect={() => setPaymentMethod(opt.value)}
-          />
-        ))}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-medium text-coffee">聯絡資訊</h2>
-
-        {savedAddresses.length > 0 && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">已儲存的地址</label>
-            <div className="space-y-2">
-              {savedAddresses.map((addr) => (
-                <OptionCard
-                  key={addr.id}
-                  selected={selectedAddressId === addr.id}
-                  title={`${addr.label ? `${addr.label} · ` : ""}${addr.recipient_name}`}
-                  description={`${addr.phone} · ${formatAddressSnapshot(addr)}`}
-                  hint={addr.is_default ? "預設" : undefined}
-                  onSelect={() => {
-                    setSelectedAddressId(addr.id);
-                    setRecipientName(addr.recipient_name);
-                    setRecipientPhone(addr.phone);
-                    setShippingAddress(formatAddressSnapshot(addr));
-                  }}
-                />
               ))}
+              <div className="space-y-1 border-t border-border pt-2 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>商品小計</span>
+                  <span>{formatCurrency(total)}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>運費</span>
+                  <span>{shippingFee === 0 ? "免運" : formatCurrency(shippingFee)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-base">
+                  <span>應付金額</span>
+                  <span className="text-promo">{formatCurrency(grandTotal)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="hidden space-y-4 lg:block">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
+              <p className="font-medium">下單後尚未算正式成立</p>
+              <p className="mt-1 text-amber-900/90">
+                請於期限內完成匯款或門市繳費。匯款需回報後五碼；門市繳費由門市人員確認收款後，訂單才正式成立並可取貨。
+              </p>
             </div>
-            <Link href="/member/addresses" className="inline-block text-sm text-primary hover:underline">
-              管理收件地址
-            </Link>
+
+            <Button
+              className="w-full"
+              size="lg"
+              variant="promo"
+              onClick={submitOrder}
+              disabled={submitting || emailVerified !== true || (shipmentMethod === "store_pickup" && !storeId)}
+            >
+              {submitting ? "建立訂單中..." : `確認下單 ${formatCurrency(grandTotal)}`}
+            </Button>
           </div>
-        )}
+        </div>
 
-        {savedAddresses.length === 0 && (
-          <Link href="/member/addresses" className="inline-block text-sm text-primary hover:underline">
-            新增常用收件地址
-          </Link>
-        )}
+        <div className="space-y-5 lg:order-1">
+          <section className="space-y-3">
+            <h2 className="font-medium text-coffee">配送方式</h2>
+            {temperatureNotice && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                <p className="font-medium">溫層提醒</p>
+                <p className="mt-0.5 text-amber-900/90">{temperatureNotice}</p>
+              </div>
+            )}
+            {CHECKOUT_SHIPMENT_OPTIONS.map((opt) => (
+              <OptionCard
+                key={opt.value}
+                selected={shipmentMethod === opt.value}
+                disabled={
+                  !opt.enabled ||
+                  (mixedTemperature &&
+                    (opt.value === "home_delivery" || opt.value === "cvs_pickup"))
+                }
+                title={opt.label}
+                description={opt.description}
+                hint={opt.feeHint}
+                onSelect={() => setShipmentMethod(opt.value)}
+              />
+            ))}
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">聯絡人姓名</label>
-          <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="收件人姓名" required />
-        </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">聯絡電話</label>
-          <Input type="tel" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} placeholder="手機號碼" required />
-        </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Email</label>
-          <Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="聯絡信箱" />
-        </div>
-      </section>
+            {shipmentMethod === "store_pickup" && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">取貨門市</label>
+                {storeCities.length > 0 && (
+                  <select
+                    className="input-field min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                    value={cityFilter}
+                    onChange={(e) => setCityFilter(e.target.value)}
+                  >
+                    <option value="">全部縣市</option>
+                    {storeCities.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                )}
+                <select
+                  className="input-field min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                  value={storeId}
+                  onChange={(e) => setStoreId(e.target.value)}
+                  disabled={filteredStores.length === 0}
+                >
+                  {filteredStores.length === 0 ? (
+                    <option value="">尚無開放取貨門市</option>
+                  ) : (
+                    filteredStores.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                        {preferredStoreId === s.id ? "（預設）" : ""}
+                      </option>
+                    ))
+                  )}
+                </select>
+                {(() => {
+                  const store = stores.find((s) => s.id === storeId);
+                  if (!store) return null;
+                  return (
+                    <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm">
+                      <p className="text-muted-foreground">地址：{store.address}</p>
+                      {store.phone && <p className="text-muted-foreground">電話：{store.phone}</p>}
+                      {store.business_hours && (
+                        <p className="text-muted-foreground">營業時間：{store.business_hours}</p>
+                      )}
+                      <p className="mt-1 text-[#153E73]">預計可取貨日：{estimatedPickupDate}</p>
+                      <div className="mt-2 rounded-md bg-amber-50 px-2 py-1.5 text-amber-950">
+                        <p className="text-xs font-medium">注意事項</p>
+                        <p className="mt-0.5 whitespace-pre-wrap text-xs">
+                          {store.notes?.trim() || "請於營業時間內取貨。"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </section>
 
-      <section className="space-y-3">
-        <h2 className="font-medium text-coffee">其他（選填）</h2>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">優惠碼</label>
-          <Input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="輸入優惠碼" />
-        </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">推薦碼</label>
-          <Input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="輸入推薦碼" />
-        </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">訂單備註</label>
-          <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="特殊需求、取貨時間等" />
-        </div>
-      </section>
+          <section className="space-y-3">
+            <h2 className="font-medium text-coffee">付款方式</h2>
+            {CHECKOUT_PAYMENT_OPTIONS.map((opt) => (
+              <OptionCard
+                key={opt.value}
+                selected={paymentMethod === opt.value}
+                disabled={!opt.enabled}
+                title={opt.label}
+                description={opt.description}
+                onSelect={() => setPaymentMethod(opt.value)}
+              />
+            ))}
+          </section>
 
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
-        <p className="font-medium">下單後尚未算正式成立</p>
-        <p className="mt-1 text-amber-900/90">
-          請於期限內完成匯款或門市繳費。匯款需回報後五碼；門市繳費由門市人員確認收款後，訂單才正式成立並可取貨。
-        </p>
+          <section className="space-y-3">
+            <h2 className="font-medium text-coffee">聯絡資訊</h2>
+
+            {savedAddresses.length > 0 && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">已儲存的地址</label>
+                <div className="space-y-2">
+                  {savedAddresses.map((addr) => (
+                    <OptionCard
+                      key={addr.id}
+                      selected={selectedAddressId === addr.id}
+                      title={`${addr.label ? `${addr.label} · ` : ""}${addr.recipient_name}`}
+                      description={`${addr.phone} · ${formatAddressSnapshot(addr)}`}
+                      hint={addr.is_default ? "預設" : undefined}
+                      onSelect={() => {
+                        setSelectedAddressId(addr.id);
+                        setRecipientName(addr.recipient_name);
+                        setRecipientPhone(addr.phone);
+                        setShippingAddress(formatAddressSnapshot(addr));
+                      }}
+                    />
+                  ))}
+                </div>
+                <Link href="/member/addresses" className="inline-block text-sm text-primary hover:underline">
+                  管理收件地址
+                </Link>
+              </div>
+            )}
+
+            {savedAddresses.length === 0 && (
+              <Link href="/member/addresses" className="inline-block text-sm text-primary hover:underline">
+                新增常用收件地址
+              </Link>
+            )}
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">聯絡人姓名</label>
+              <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="收件人姓名" required />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">聯絡電話</label>
+              <Input type="tel" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} placeholder="手機號碼" required />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Email</label>
+              <Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="聯絡信箱" />
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="font-medium text-coffee">其他（選填）</h2>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">優惠碼</label>
+              <Input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="輸入優惠碼" />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">推薦碼</label>
+              <Input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="輸入推薦碼" />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">訂單備註</label>
+              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="特殊需求、取貨時間等" />
+            </div>
+          </section>
+
+          <div className="space-y-5 lg:hidden">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
+              <p className="font-medium">下單後尚未算正式成立</p>
+              <p className="mt-1 text-amber-900/90">
+                請於期限內完成匯款或門市繳費。匯款需回報後五碼；門市繳費由門市人員確認收款後，訂單才正式成立並可取貨。
+              </p>
+            </div>
+
+            <Button
+              className="w-full"
+              size="lg"
+              variant="promo"
+              onClick={submitOrder}
+              disabled={submitting || emailVerified !== true || (shipmentMethod === "store_pickup" && !storeId)}
+            >
+              {submitting ? "建立訂單中..." : `確認下單 ${formatCurrency(grandTotal)}`}
+            </Button>
+          </div>
+        </div>
       </div>
-
-      <Button
-        className="w-full"
-        size="lg"
-        variant="promo"
-        onClick={submitOrder}
-        disabled={submitting || emailVerified !== true || (shipmentMethod === "store_pickup" && !storeId)}
-      >
-        {submitting ? "建立訂單中..." : `確認下單 ${formatCurrency(grandTotal)}`}
-      </Button>
     </div>
   );
 }

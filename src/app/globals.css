@@ -2321,3 +2321,13 @@ html[data-desktop-v2-boot] body {
     visibility: visible;
   }
 }
+
+/* Desktop V2 group-buy hub: the hero art is a square mobile composition, so
+   cap it to a banner-height band centred on the brand yellow instead of
+   letting it scale to ~1.5 screens tall at 1440px. */
+.desktop-v2-shell .group-buy-hero .home-hero-fullbleed__img {
+  width: auto;
+  max-width: 100%;
+  max-height: min(440px, 52vh);
+  margin-inline: auto;
+}
