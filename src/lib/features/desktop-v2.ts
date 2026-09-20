@@ -1,3 +1,5 @@
+import { GROUP_BUY_CONSUMER_VISIBLE } from "@/lib/features/group-buy-visibility";
+
 /**
  * Desktop V2 feature gate.
  *
@@ -45,9 +47,9 @@ export function isDesktopV2EnabledClient(): boolean {
 
 export const DESKTOP_BREAKPOINT_PX = 1024;
 
-export const DESKTOP_NAV_LINKS = [
+const ALL_DESKTOP_NAV_LINKS = [
   { href: "/", label: "首頁" },
-  { href: "/group-buy", label: "團購" },
+  { href: "/group-buy", label: "團購", groupBuy: true },
   { href: "/shop", label: "商城" },
   { href: "/recipes", label: "食譜" },
   { href: "/activities", label: "最新活動" },
@@ -55,6 +57,11 @@ export const DESKTOP_NAV_LINKS = [
   { href: "/ai", label: "AI助手" },
   { href: "/stores", label: "門市資訊" },
 ] as const;
+
+/** 團購 stays out of the website nav while FEATURES.groupBuying is off (same as the app). */
+export const DESKTOP_NAV_LINKS = ALL_DESKTOP_NAV_LINKS.filter(
+  (link) => !("groupBuy" in link) || GROUP_BUY_CONSUMER_VISIBLE
+);
 
 /**
  * Hub pages that render their own full-bleed Desktop V2 layout.
