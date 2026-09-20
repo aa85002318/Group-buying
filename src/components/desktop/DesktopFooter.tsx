@@ -83,15 +83,16 @@ export function DesktopFooter() {
           </div>
         ) : null}
       </DesktopContainer>
-      <div className="border-t border-[#E9EDF2] py-3 text-center text-xs text-[#687386]">
-        © {new Date().getFullYear()} CHIMEIDIY ·{" "}
-        <Link href={APP_ROUTES.terms} className="hover:underline">
-          服務條款
-        </Link>
-        {" · "}
-        <Link href={APP_ROUTES.privacy} className="hover:underline">
-          隱私權政策
-        </Link>
+      <div className="border-t border-[#E9EDF2] px-4 py-3 text-center text-xs text-[#687386]">
+        {settings.copyright.replace("{year}", String(new Date().getFullYear()))}
+        {settings.bottom_links.map((link) => (
+          <span key={`${link.label}-${link.href}`}>
+            {" · "}
+            <Link href={link.href} className="hover:underline">
+              {link.label}
+            </Link>
+          </span>
+        ))}
       </div>
     </footer>
   );

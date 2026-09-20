@@ -12,6 +12,9 @@ export type DesktopFooterSettings = {
   columns: DesktopFooterColumn[];
   show_social: boolean;
   social_links: Array<{ label: string; href: string }>;
+  /** Bottom bar, e.g. "© 2026 CHIMEIDIY". {year} is replaced with the current year. */
+  copyright: string;
+  bottom_links: Array<{ label: string; href: string }>;
 };
 
 export const DEFAULT_DESKTOP_FOOTER_SETTINGS: DesktopFooterSettings = {
@@ -25,6 +28,11 @@ export const DEFAULT_DESKTOP_FOOTER_SETTINGS: DesktopFooterSettings = {
     { label: "LINE", href: "/support" },
     { label: "Facebook", href: "/support" },
     { label: "Instagram", href: "/support" },
+  ],
+  copyright: "© {year} CHIMEIDIY",
+  bottom_links: [
+    { label: "服務條款", href: "/terms" },
+    { label: "隱私權政策", href: "/privacy" },
   ],
   columns: [
     {
@@ -85,8 +93,14 @@ export function normalizeDesktopFooterSettings(raw: unknown): DesktopFooterSetti
       typeof row.newsletter_placeholder === "string"
         ? row.newsletter_placeholder
         : base.newsletter_placeholder,
-    columns: columns.length ? columns : base.columns,
+    columns: Array.isArray(row.columns) ? columns : base.columns,
     show_social: typeof row.show_social === "boolean" ? row.show_social : base.show_social,
-    social_links: social.length ? social : base.social_links,
+    social_links: Array.isArray(row.social_links) ? social : base.social_links,
+    copyright: typeof row.copyright === "string" ? row.copyright : base.copyright,
+    bottom_links: Array.isArray(row.bottom_links)
+      ? (row.bottom_links as DesktopFooterSettings["bottom_links"]).filter(
+          (s) => s && typeof s.label === "string" && typeof s.href === "string"
+        )
+      : base.bottom_links,
   };
 }

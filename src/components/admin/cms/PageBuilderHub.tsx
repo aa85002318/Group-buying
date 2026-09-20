@@ -10,6 +10,7 @@ import {
   Megaphone,
   Monitor,
   PanelBottom,
+  PanelTop,
   ShoppingBag,
   Smartphone,
 } from "lucide-react";
@@ -41,9 +42,15 @@ const SITE_WIDE_LINKS = [
     icon: ImagePlus,
   },
   {
+    href: "/admin/website-nav",
+    title: "頁首選單",
+    desc: "新增、排序網站上方的選單",
+    icon: PanelTop,
+  },
+  {
     href: "/admin/layout-settings/desktop/footer",
-    title: "網頁版頁尾",
-    desc: "頁尾文案、連結與社群",
+    title: "頁尾",
+    desc: "頁尾文案、連結欄、社群與版權",
     icon: PanelBottom,
   },
   {

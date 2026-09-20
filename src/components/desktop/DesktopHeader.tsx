@@ -1,13 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, Search, ShoppingCart, UserRound } from "lucide-react";
+import { ChevronDown, Heart, Search, ShoppingCart, UserRound } from "lucide-react";
 import { DesktopBrandLogo } from "@/components/desktop/DesktopBrandLogo";
 import { DesktopContainer } from "@/components/desktop/DesktopContainer";
 import { useCart } from "@/hooks/useCart";
 import { DESKTOP_COLORS } from "@/lib/desktop/brand-assets";
 import { DESKTOP_NAV_LINKS } from "@/lib/features/desktop-v2";
+import type { WebsiteNavItem } from "@/lib/site-nav";
 import { APP_ROUTES } from "@/lib/site-links";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +24,30 @@ function navActive(pathname: string, href: string) {
  * (absolute center layer). Logo left / utilities right stay above via z-index.
  * Mobile header is untouched.
  */
+type NavLink = Pick<WebsiteNavItem, "href" | "label"> &
+  Partial<Pick<WebsiteNavItem, "id" | "newTab" | "children">>;
+
+/** Header menu from 後台 › 網站外觀 › 頁首選單; built-in list until it loads. */
+function useWebsiteNav(): NavLink[] {
+  const [items, setItems] = useState<NavLink[]>(() => [...DESKTOP_NAV_LINKS]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/website-nav")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && Array.isArray(d?.items) && d.items.length) setItems(d.items);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return items;
+}
+
 export function DesktopHeader() {
   const pathname = usePathname();
+  const navLinks = useWebsiteNav();
   const { items } = useCart();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -48,19 +72,26 @@ export function DesktopHeader() {
               "gap-7 max-[1199px]:gap-4 xl:gap-8"
             )}
           >
-            {DESKTOP_NAV_LINKS.map((link) => {
-              const active = navActive(pathname, link.href);
+            {navLinks.map((link) => {
+              const children = link.children ?? [];
+              const active =
+                navActive(pathname, link.href) ||
+                children.some((c) => navActive(pathname, c.href));
+              const external = /^https?:\/\//i.test(link.href);
               return (
-                <li key={link.href}>
+                <li key={link.id ?? link.href} className="group/nav relative">
                   <Link
                     href={link.href}
+                    target={link.newTab || external ? "_blank" : undefined}
+                    rel={link.newTab || external ? "noreferrer" : undefined}
                     className={cn(
-                      "relative inline-flex rounded-sm px-0.5 pb-1 text-[15px] font-semibold tracking-wide text-[#153E73] transition-colors",
+                      "relative inline-flex items-center gap-0.5 rounded-sm px-0.5 pb-1 text-[15px] font-semibold tracking-wide text-[#153E73] transition-colors",
                       "max-[1199px]:text-[14px]",
                       !active && "text-[#153E73]/85 hover:text-[#153E73]"
                     )}
                   >
                     {link.label}
+                    {children.length ? <ChevronDown className="h-3.5 w-3.5 opacity-70" /> : null}
                     {active ? (
                       <span
                         aria-hidden
@@ -68,6 +99,25 @@ export function DesktopHeader() {
                       />
                     ) : null}
                   </Link>
+                  {children.length ? (
+                    <div className="invisible absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 opacity-0 transition group-hover/nav:visible group-hover/nav:opacity-100 group-focus-within/nav:visible group-focus-within/nav:opacity-100">
+                      <ul className="min-w-[180px] rounded-2xl border border-[#E9EDF2] bg-white p-2 shadow-lg">
+                        {children.map((c) => (
+                          <li key={c.id ?? c.href}>
+                            <Link
+                              href={c.href}
+                              className={cn(
+                                "block rounded-xl px-3 py-2 text-sm font-semibold text-[#153E73] hover:bg-[#FFF5CC]",
+                                navActive(pathname, c.href) && "bg-[#FFF5CC]"
+                              )}
+                            >
+                              {c.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </li>
               );
             })}

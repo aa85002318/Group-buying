@@ -31,6 +31,7 @@ export const CONTENT_EDITOR_ADMIN_PATHS = [
   "/admin/layout-settings",
   "/admin/frontend-cms",
   "/admin/page-builder",
+  "/admin/website-nav",
   "/admin/home",
   "/admin/shop",
   "/admin/shop/categories",
@@ -322,7 +323,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       /* Page-builder platform hubs, legacy editors and legal sub-pages: hidden, URLs kept */
       { href: "/admin/page-builder", label: "前台內容編輯器", roles: ["admin", "content_editor"] },
       { href: "/admin/group-buy/settings", label: "團購頁設定", roles: ["admin"] },
-      { href: "/admin/layout-settings/desktop/footer", label: "網頁版頁尾", roles: ["admin", "content_editor"] },
+      { href: "/admin/website-nav", label: "頁首選單", roles: ["admin", "content_editor"] },
+      { href: "/admin/layout-settings/desktop/footer", label: "頁尾", roles: ["admin", "content_editor"] },
       { href: "/admin/content/popups", label: "全站公告", roles: ["admin", "content_editor"] },
       { href: "/admin/banners", label: "共用 Banner", roles: ["admin", "content_editor"] },
       { href: "/admin/settings/branding", label: "Logo / 品牌素材", roles: ["admin", "content_editor"] },
