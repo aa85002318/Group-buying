@@ -19,7 +19,8 @@ export function ServiceShortcutsEditor({
 }: {
   items: ServiceShortcutItem[];
   onChange: (next: ServiceShortcutItem[]) => void;
-  onSave: () => void;
+  /** Omit inside the page builder (saved with 儲存草稿). */
+  onSave?: () => void;
   saving?: boolean;
 }) {
   const list = items.length ? items : DEFAULT_SERVICE_SHORTCUTS;
@@ -111,9 +112,9 @@ export function ServiceShortcutsEditor({
           <Plus className="mr-1 h-4 w-4" />
           新增快捷
         </Button>
-        <Button type="button" size="sm" disabled={saving} onClick={onSave}>
+        {onSave ? (<Button type="button" size="sm" disabled={saving} onClick={onSave}>
           儲存服務快捷入口
-        </Button>
+        </Button>) : null}
       </div>
     </div>
   );

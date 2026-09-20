@@ -198,7 +198,42 @@ export const CMS_BLOCK_REGISTRY: CmsBlockDefinition[] = [
   }),
   def("announcement_bar", "公告列", "global"),
   def("cookie_notice", "Cookie／隱私提示", "global"),
+
+  // 首頁（手機＋網站同一份）：type = homepage_blocks.block_key
+  def("custom_banner", "圖片 Banner", "basic", {
+    allowedPageIds: ["home"],
+    description: "一張圖片加連結，可放很多個",
+  }),
+  def("custom_products", "精選商品", "product", {
+    allowedPageIds: ["home"],
+    description: "自己挑選要展示的商品",
+  }),
+  def("custom_text", "圖文區塊", "basic", {
+    allowedPageIds: ["home"],
+    description: "標題、說明文字、圖片與按鈕",
+  }),
+  def("hero", "主視覺 Banner", "nav", { allowedPageIds: ["home"] }),
+  def("latest_campaigns", "最新活動", "nav", { allowedPageIds: ["home"] }),
+  def("quick_entry", "常用服務", "nav", { allowedPageIds: ["home"] }),
+  def("latest_recipes", "精選食譜", "recipe", { allowedPageIds: ["home"] }),
+  def("ingredient_shop", "一鍵買齊材料", "product", { allowedPageIds: ["home"] }),
+  def("service_shortcuts", "快捷服務入口", "service", { allowedPageIds: ["home"] }),
 ];
+
+/** Blocks the unified home editor may add (others are fixed by the app). */
+export const HOME_ADDABLE_BLOCK_TYPES = [
+  "custom_banner",
+  "custom_products",
+  "custom_text",
+  "hero",
+  "latest_campaigns",
+  "quick_entry",
+  "latest_recipes",
+  "ingredient_shop",
+  "service_shortcuts",
+] as const;
+/** Of HOME_ADDABLE_BLOCK_TYPES, these may appear more than once. */
+export const HOME_REPEATABLE_BLOCK_TYPES = new Set(["custom_banner", "custom_products", "custom_text"]);
 
 const byType = new Map(CMS_BLOCK_REGISTRY.map((b) => [b.type, b]));
 const byLegacy = new Map<string, CmsBlockDefinition>();

@@ -32,7 +32,18 @@ export type HomeSectionKey =
   | "ingredient_categories"
   | "ingredient_shop"
   | "quick_entry"
-  | "group_buy_banner";
+  | "group_buy_banner"
+  // Free-form blocks editors can add any number of times (CMS step ③).
+  | "custom_banner"
+  | "custom_products"
+  | "custom_text";
+
+/** Blocks that may appear many times and are rendered by the website home. */
+export const CUSTOM_HOME_BLOCK_KEYS = ["custom_banner", "custom_products", "custom_text"] as const;
+export type CustomHomeBlockKey = (typeof CUSTOM_HOME_BLOCK_KEYS)[number];
+export function isCustomHomeBlockKey(key: string): key is CustomHomeBlockKey {
+  return (CUSTOM_HOME_BLOCK_KEYS as readonly string[]).includes(key);
+}
 
 /**
  * Canonical live homepage stack (admin catalog order).
@@ -75,6 +86,9 @@ export const HOME_SECTION_KEYS: HomeSectionKey[] = [
   "seasonal_themes",
   "store_information",
   "latest_articles",
+  "custom_banner",
+  "custom_products",
+  "custom_text",
 ];
 
 /** At most one instance of these types on the homepage. */
@@ -138,6 +152,9 @@ export const HOME_SECTION_SORT_DEFAULT: Record<HomeSectionKey, number> = {
   monthly_challenge: 280,
   seasonal_themes: 290,
   store_information: 300,
+  custom_banner: 400,
+  custom_products: 410,
+  custom_text: 420,
   latest_articles: 310,
 };
 

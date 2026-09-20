@@ -24,7 +24,8 @@ export function RecipePickerEditor({
   sourceMode: "auto" | "manual";
   onManualIdsChange: (ids: string[]) => void;
   onSourceModeChange: (mode: "auto" | "manual") => void;
-  onSave: () => void;
+  /** Omit inside the page builder (saved with 儲存草稿). */
+  onSave?: () => void;
   saving?: boolean;
 }) {
   const [recipes, setRecipes] = useState<RecipeOption[]>([]);
@@ -129,9 +130,9 @@ export function RecipePickerEditor({
         ))}
       </ul>
 
-      <Button type="button" size="sm" disabled={saving} onClick={onSave}>
+      {onSave ? (<Button type="button" size="sm" disabled={saving} onClick={onSave}>
         儲存精選食譜
-      </Button>
+      </Button>) : null}
     </div>
   );
 }

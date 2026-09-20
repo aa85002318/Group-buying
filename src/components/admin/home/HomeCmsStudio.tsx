@@ -1021,7 +1021,7 @@ function SectionPanel({
   );
 }
 
-function GroupBuyBannerPanel({
+export function GroupBuyBannerPanel({
   value,
   onChange,
   onSave,
@@ -1029,7 +1029,8 @@ function GroupBuyBannerPanel({
 }: {
   value: HomeGroupBuyBannerSettings;
   onChange: (next: HomeGroupBuyBannerSettings) => void;
-  onSave: () => void;
+  /** Omit inside the page builder (saved with 儲存草稿). */
+  onSave?: () => void;
   saving?: boolean;
 }) {
   return (
@@ -1135,9 +1136,9 @@ function GroupBuyBannerPanel({
           <Plus className="mr-1 h-3.5 w-3.5" />
           新增輪播圖
         </Button>
-        <Button type="button" size="sm" disabled={saving} onClick={onSave}>
+        {onSave ? (<Button type="button" size="sm" disabled={saving} onClick={onSave}>
           儲存團購 Banner
-        </Button>
+        </Button>) : null}
       </div>
     </div>
   );

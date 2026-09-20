@@ -20,7 +20,8 @@ export function QuickServicesEditor({
 }: {
   value: HomeQuickServicesSettings;
   onChange: (next: HomeQuickServicesSettings) => void;
-  onSave: () => void;
+  /** Omit inside the page builder (saved with 儲存草稿). */
+  onSave?: () => void;
   saving?: boolean;
 }) {
   const settings = value ?? DEFAULT_QUICK_SERVICES_SETTINGS;
@@ -309,9 +310,9 @@ export function QuickServicesEditor({
         />
       </div>
 
-      <Button type="button" size="sm" disabled={saving} onClick={onSave}>
+      {onSave ? (<Button type="button" size="sm" disabled={saving} onClick={onSave}>
         儲存常用服務／會員中心
-      </Button>
+      </Button>) : null}
     </div>
   );
 }

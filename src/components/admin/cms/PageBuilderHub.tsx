@@ -2,27 +2,16 @@
 
 import Link from "next/link";
 import {
-  ChevronDown,
   ExternalLink,
   FileText,
   Image as ImageIcon,
   ImagePlus,
   Megaphone,
-  Monitor,
   PanelBottom,
   PanelTop,
   ShoppingBag,
-  Smartphone,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  PAGE_BUILDER_GROUPS,
-  isPageLive,
-  isPageUnified,
-  isPageWirable,
-  pageBuilderHref,
-  type PageBuilderPlatform,
-} from "@/lib/cms/page-builder";
+import { pageBuilderHref } from "@/lib/cms/page-builder";
 import { getPageRegistryEntry } from "@/lib/cms/page-registry";
 
 /** Pages that are live on at least one platform, in storefront order. */
@@ -79,45 +68,6 @@ const SITE_WIDE_LINKS = [
   },
 ] as const;
 
-function PlatformAction({
-  pageId,
-  platform,
-}: {
-  pageId: string;
-  platform: PageBuilderPlatform;
-}) {
-  const live = isPageLive(pageId, platform);
-  const editable = live || isPageWirable(pageId, platform);
-  const Icon = platform === "desktop" ? Monitor : Smartphone;
-  const label = platform === "desktop" ? "網頁版" : "手機版";
-
-  if (!editable) {
-    return (
-      <span className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-dashed border-[#E4E7EC] px-3 text-xs text-[#98A2B3]">
-        <Icon className="h-3.5 w-3.5" />
-        {label}：尚未開放
-      </span>
-    );
-  }
-
-  return (
-    <Link
-      href={pageBuilderHref(pageId, platform)}
-      className={cn(
-        "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition",
-        live
-          ? "bg-[#153E73] text-white hover:bg-[#153E73]/90"
-          : "border border-[#E4E7EC] bg-white text-[#687386] hover:bg-[#FFFDF6]"
-      )}
-      title={live ? undefined : "可以編排，但發布後網站不會改變"}
-    >
-      <Icon className="h-3.5 w-3.5" />
-      編輯{label}
-      {live ? null : <span className="text-[11px] font-normal">（未連動）</span>}
-    </Link>
-  );
-}
-
 /**
  * Single entry for storefront editing: pick the page as customers see it,
  * then the platform. Badges say plainly whether publishing reaches the site.
@@ -126,23 +76,13 @@ export function PageBuilderHub() {
   const livePages = LIVE_PAGE_ORDER.map((id) => getPageRegistryEntry(id)).filter(
     (p): p is NonNullable<typeof p> => Boolean(p)
   );
-  const liveIds = new Set<string>(LIVE_PAGE_ORDER);
-  const otherPages = PAGE_BUILDER_GROUPS.flatMap((g) => g.pageIds)
-    .filter((id) => !liveIds.has(id))
-    .map((id) => getPageRegistryEntry(id))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p))
-    .filter((p) => isPageWirable(p.id, "desktop") || isPageWirable(p.id, "mobile"));
-  const reservedCount =
-    PAGE_BUILDER_GROUPS.flatMap((g) => g.pageIds).filter((id) => !liveIds.has(id)).length -
-    otherPages.length;
-
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-1 py-4">
       <div>
         <h1 className="text-2xl font-bold text-[#153E73]">前台內容編輯器</h1>
         <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#687386]">
-          選擇要修改的頁面。深藍色按鈕的頁面已經連動網站：儲存草稿後可預覽，按「發布」就會出現在前台。
-          商品、食譜、文章等內容請到各自的管理頁修改，這裡只調整頁面的區塊與排列。
+          每一頁只有一個版本，電腦和手機會自動依螢幕大小排版。編輯時可以新增、排序、隱藏區塊，
+          儲存草稿後可以預覽，按「發布」才會出現在網站上。商品、食譜、文章等內容請到各自的管理頁修改。
         </p>
       </div>
 
@@ -167,21 +107,12 @@ export function PageBuilderHub() {
                 </a>
               </div>
               <div className="flex flex-wrap gap-2">
-                {isPageUnified(page.id) ? (
-                  <Link
-                    href={pageBuilderHref(page.id, "mobile")}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#153E73] px-3 text-sm font-semibold text-white transition hover:bg-[#153E73]/90"
-                  >
-                    <Smartphone className="h-3.5 w-3.5" />
-                    <Monitor className="h-3.5 w-3.5" />
-                    編輯（手機＋網頁一次改）
-                  </Link>
-                ) : (
-                  <>
-                    <PlatformAction pageId={page.id} platform="desktop" />
-                    <PlatformAction pageId={page.id} platform="mobile" />
-                  </>
-                )}
+                <Link
+                  href={pageBuilderHref(page.id, "mobile")}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#153E73] px-4 text-sm font-semibold text-white transition hover:bg-[#153E73]/90"
+                >
+                  編輯這一頁
+                </Link>
               </div>
             </div>
           ))}
@@ -209,38 +140,6 @@ export function PageBuilderHub() {
         </div>
       </section>
 
-      {otherPages.length ? (
-        <details className="group rounded-2xl border border-dashed border-[#E4E7EC] bg-[#FAFBFC] p-4">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold text-[#687386]">
-            <span>
-              尚未連動網站的頁面（{otherPages.length}）
-              <span className="ml-2 font-normal text-[#98A2B3]">
-                可以先編排，但發布後前台不會改變
-              </span>
-            </span>
-            <ChevronDown className="h-4 w-4 transition group-open:rotate-180" />
-          </summary>
-          <div className="mt-3 divide-y divide-[#EEF0F4] overflow-hidden rounded-xl border border-[#E9EDF2] bg-white">
-            {otherPages.map((page) => (
-              <div
-                key={page.id}
-                className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <p className="text-sm font-semibold text-[#153E73]">{page.name}</p>
-                <div className="flex flex-wrap gap-2">
-                  <PlatformAction pageId={page.id} platform="desktop" />
-                  <PlatformAction pageId={page.id} platform="mobile" />
-                </div>
-              </div>
-            ))}
-          </div>
-          {reservedCount > 0 ? (
-            <p className="mt-2 text-xs text-[#98A2B3]">
-              另有 {reservedCount} 個頁面（購物車、結帳、會員、FAQ 等）目前由程式固定排版，之後開放再顯示於此。
-            </p>
-          ) : null}
-        </details>
-      ) : null}
     </div>
   );
 }

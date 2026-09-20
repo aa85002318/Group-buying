@@ -411,7 +411,10 @@ export function DesktopHome() {
             <div>
               <Link
                 href={heroBanner?.link_url || APP_ROUTES.shop}
-                className="relative block aspect-video w-full overflow-hidden rounded-2xl bg-[#EEF8FC]"
+                className={cn(
+                  "relative block w-full overflow-hidden rounded-2xl bg-[#EEF8FC]",
+                  heroBanner?.mobile_image_url ? "aspect-[3/2] md:aspect-video" : "aspect-video"
+                )}
               >
                 <picture>
                   {heroBanner?.mobile_image_url ? (
@@ -653,6 +656,106 @@ export function DesktopHome() {
             <HomeServiceShortcutsSection block={section} />
           </div>
         );
+      case "custom_banner": {
+        const cfg = section.config ?? {};
+        const img = typeof cfg.image_url === "string" ? cfg.image_url : "";
+        if (!img) return null;
+        const mobileImg = typeof cfg.mobile_image_url === "string" ? cfg.mobile_image_url : "";
+        const href = typeof cfg.link_url === "string" ? cfg.link_url : "";
+        const pic = (
+          <picture>
+            {mobileImg ? <source media="(max-width: 767px)" srcSet={mobileImg} /> : null}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={img} alt={section.title} className="h-full w-full object-cover" loading="lazy" />
+          </picture>
+        );
+        return (
+          <section key={section.id} aria-label={section.title}>
+            <div
+              className={cn(
+                "overflow-hidden rounded-2xl bg-[#EEF8FC]",
+                mobileImg ? "aspect-[3/2] md:aspect-[3/1]" : "aspect-[3/1]"
+              )}
+            >
+              {href ? (
+                <Link href={href} className="block h-full w-full">
+                  {pic}
+                </Link>
+              ) : (
+                pic
+              )}
+            </div>
+          </section>
+        );
+      }
+
+      case "custom_products": {
+        const byId = new Map(products.map((p) => [p.id, p]));
+        const picked = section.manualIds
+          .map((id) => byId.get(id))
+          .filter((p): p is Product => Boolean(p));
+        if (!picked.length) return null;
+        const perRow = cols ?? 5;
+        const list = picked.slice(0, fillRows(Math.min(picked.length, section.displayCount || 10), perRow));
+        return (
+          <section key={section.id}>
+            <SectionHeading title={section.title || "精選商品"} href={section.viewAllUrl || undefined} showViewAll={Boolean(section.viewAllUrl)} />
+            {section.subtitle ? <p className="-mt-3 mb-4 text-sm text-[#687386]">{section.subtitle}</p> : null}
+            <div className={cn("grid gap-4", gridCols(cols, 5))}>
+              {list.map((p) => (
+                <DesktopProductCard
+                  key={p.id}
+                  id={p.id}
+                  name={p.name}
+                  price={productPrice(p)}
+                  image_url={p.image_url}
+                  spec={p.spec || p.specification || p.unit}
+                  href={productPath(p.id)}
+                />
+              ))}
+            </div>
+          </section>
+        );
+      }
+
+      case "custom_text": {
+        const cfg = section.config ?? {};
+        const body = typeof cfg.body === "string" ? cfg.body : "";
+        const img = typeof cfg.image_url === "string" ? cfg.image_url : "";
+        const btn = typeof cfg.button_text === "string" ? cfg.button_text : "";
+        const href = typeof cfg.link_url === "string" ? cfg.link_url : "";
+        if (!section.title && !body && !img) return null;
+        return (
+          <section
+            key={section.id}
+            className={cn(
+              "overflow-hidden rounded-2xl bg-white",
+              img ? "grid md:grid-cols-2" : "p-6 md:p-8"
+            )}
+          >
+            {img ? (
+              <div className="aspect-[3/2] bg-[#EEF8FC]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img} alt="" className="h-full w-full object-cover" loading="lazy" />
+              </div>
+            ) : null}
+            <div className={cn("flex flex-col justify-center gap-3", img && "p-6 md:p-8")}>
+              {section.title ? <h2 className="text-2xl font-bold text-[#153E73]">{section.title}</h2> : null}
+              {section.subtitle ? <p className="text-sm font-semibold text-[#79C7E8]">{section.subtitle}</p> : null}
+              {body ? <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#465467]">{body}</p> : null}
+              {btn && href ? (
+                <Link
+                  href={href}
+                  className="mt-1 inline-flex h-11 w-fit items-center rounded-full bg-[#153E73] px-6 text-sm font-bold text-white"
+                >
+                  {btn}
+                </Link>
+              ) : null}
+            </div>
+          </section>
+        );
+      }
+
       default:
         return null;
     }

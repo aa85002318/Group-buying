@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LAYOUT_TYPE_LABELS } from "@/lib/cms/plain-labels";
+import { HomeBlockContentEditor } from "@/components/admin/cms/HomeBlockContentEditor";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import type { CmsBlock } from "@/types/cms";
@@ -112,7 +113,7 @@ export function CmsPropertyPanel({
     { id: "layout", label: "版型" },
     { id: "display", label: "顯示" },
     { id: "advanced", label: "進階" },
-  ];
+  ].filter((t) => !(unified && t.id === "advanced")) as Array<{ id: TabId; label: string }>;
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
@@ -143,7 +144,11 @@ export function CmsPropertyPanel({
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-        {tab === "content" ? (
+        {tab === "content" && unified ? (
+          <HomeBlockContentEditor block={block} onChange={onChange} readOnly={readOnly} />
+        ) : null}
+
+        {tab === "content" && !unified ? (
           <>
             <label className="block space-y-1">
               <span className="text-xs font-medium text-[#153E73]">區塊名稱</span>
@@ -414,12 +419,12 @@ export function CmsPropertyPanel({
                   patchSettings(block, onChange, { bgPreset: e.target.value })
                 }
               >
-                <option value="default">Default</option>
-                <option value="white">White</option>
-                <option value="warm">Warm</option>
-                <option value="yellow">Yellow</option>
-                <option value="cream">Cream</option>
-                <option value="sky">Sky</option>
+                <option value="default">預設</option>
+                <option value="white">白色</option>
+                <option value="warm">暖白</option>
+                <option value="yellow">黃色</option>
+                <option value="cream">奶油色</option>
+                <option value="sky">淺藍</option>
               </select>
             </label>
             <label className="block space-y-1">
@@ -434,9 +439,9 @@ export function CmsPropertyPanel({
                   })
                 }
               >
-                <option value="small">Small</option>
-                <option value="medium">Medium</option>
-                <option value="large">Large</option>
+                <option value="small">小</option>
+                <option value="medium">中</option>
+                <option value="large">大</option>
               </select>
             </label>
             <label className="block space-y-1">
@@ -451,14 +456,14 @@ export function CmsPropertyPanel({
                   })
                 }
               >
-                <option value="center">Center</option>
-                <option value="left">Left</option>
-                <option value="right">Right</option>
+                <option value="center">置中</option>
+                <option value="left">靠左</option>
+                <option value="right">靠右</option>
               </select>
             </label>
             {block.sourceKey ? (
               <p className="rounded-[10px] bg-[#F7F8FA] px-2.5 py-2 text-[11px] text-[#687386]">
-                section key：{block.sourceKey}
+                區塊代碼：{block.sourceKey}
               </p>
             ) : null}
           </>

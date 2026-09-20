@@ -2,6 +2,7 @@ import type { HomepageBlock } from "@/lib/types/database";
 import {
   HOME_SECTION_SORT_DEFAULT,
   PRIMARY_HOME_SECTION_KEYS,
+  isCustomHomeBlockKey,
   isHomeSectionKey,
   type HomeSectionKey,
 } from "@/lib/home/section-keys";
@@ -32,6 +33,15 @@ export const SECTION_DEFAULTS: Record<
   }
 > = {
   hero: { title: "主視覺 Banner", displayCount: 5, visible: true, dataSource: "brand_heroes" },
+  custom_banner: { title: "圖片 Banner", displayCount: 1, visible: true, config: {} },
+  custom_products: {
+    title: "精選商品",
+    displayCount: 10,
+    visible: true,
+    sourceMode: "manual",
+    viewAllUrl: "/shop",
+  },
+  custom_text: { title: "圖文區塊", displayCount: 1, visible: true, config: {} },
   latest_campaigns: {
     title: "最新活動",
     displayCount: 6,
@@ -463,29 +473,46 @@ export function homeBlockDesktopConfig(
   };
 }
 
-/** Website home sections: same keys + order as the app, website visibility. */
+/**
+ * Website home sections: primary sections (one each, same order as the app)
+ * plus any number of custom blocks, all in the editor's order.
+ */
 export function listOrderedDesktopHomeSections(
   blocks: HomepageBlock[] | null | undefined
 ): Array<ResolvedHomeBlock & { desktop: HomeBlockDesktopConfig }> {
+  type Out = ResolvedHomeBlock & { desktop: HomeBlockDesktopConfig };
   const byKey = new Map<HomeSectionKey, HomepageBlock>();
+  const custom: HomepageBlock[] = [];
   for (const row of blocks ?? []) {
     if (!isHomeSectionKey(row.block_key)) continue;
+    if (isCustomHomeBlockKey(row.block_key)) {
+      custom.push(row);
+      continue;
+    }
     if (!PRIMARY_HOME_SECTION_KEYS.includes(row.block_key)) continue;
     if (!byKey.has(row.block_key)) byKey.set(row.block_key, row);
   }
 
-  return PRIMARY_HOME_SECTION_KEYS.map((key) => {
-    const row = byKey.get(key);
-    const resolved = row ? resolveHomeBlockRow(row) : resolveHomeBlock([], key);
+  const withDesktop = (row: HomepageBlock | null, resolved: ResolvedHomeBlock | null, sort: number): Out | null => {
     if (!resolved) return null;
-    const desktop = homeBlockDesktopConfig(row ?? null, resolved.visible);
+    const desktop = homeBlockDesktopConfig(row, resolved.visible);
     if (!desktop.visible) return null;
-    return {
-      ...resolved,
-      sortOrder: row ? Number(row.sort_order ?? HOME_SECTION_SORT_DEFAULT[key]) : HOME_SECTION_SORT_DEFAULT[key],
-      desktop,
-    };
-  })
-    .filter((b): b is ResolvedHomeBlock & { desktop: HomeBlockDesktopConfig } => Boolean(b))
+    return { ...resolved, sortOrder: sort, desktop };
+  };
+
+  const primary = PRIMARY_HOME_SECTION_KEYS.map((key) => {
+    const row = byKey.get(key) ?? null;
+    const resolved = row ? resolveHomeBlockRow(row) : resolveHomeBlock([], key);
+    const sort = row
+      ? Number(row.sort_order ?? HOME_SECTION_SORT_DEFAULT[key])
+      : HOME_SECTION_SORT_DEFAULT[key];
+    return withDesktop(row, resolved, sort);
+  });
+  const extras = custom.map((row) =>
+    withDesktop(row, resolveHomeBlockRow(row), Number(row.sort_order ?? 0))
+  );
+
+  return [...primary, ...extras]
+    .filter((b): b is Out => Boolean(b))
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }

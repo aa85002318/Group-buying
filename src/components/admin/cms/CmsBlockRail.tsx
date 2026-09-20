@@ -16,6 +16,11 @@ import { CmsBlockLibrary } from "@/components/admin/cms/CmsBlockLibrary";
 import { cn } from "@/lib/utils";
 import { describeBlockLayout } from "@/lib/cms/plain-labels";
 import { isPageUnified } from "@/lib/cms/page-builder";
+import {
+  HOME_ADDABLE_BLOCK_TYPES,
+  HOME_REPEATABLE_BLOCK_TYPES,
+} from "@/lib/cms/block-registry";
+import { homeBlockKey, homeBlockThumbnail } from "@/components/admin/cms/HomeBlockContentEditor";
 
 function websiteVisible(block: CmsBlock): boolean {
   const cfg = block.settings?.config as Record<string, unknown> | undefined;
@@ -81,6 +86,15 @@ export function CmsBlockRail({
           <div className="max-h-52 overflow-hidden rounded-[12px] border border-[#E9EDF2]">
             <CmsBlockLibrary
               pageId={pageId}
+              allowedTypes={
+                unified
+                  ? HOME_ADDABLE_BLOCK_TYPES.filter(
+                      (t) =>
+                        HOME_REPEATABLE_BLOCK_TYPES.has(t) ||
+                        !blocks.some((b) => homeBlockKey(b) === t)
+                    )
+                  : undefined
+              }
               onAddBlock={(type) => {
                 onAddBlock(type);
                 setLibraryOpen(false);
@@ -137,9 +151,20 @@ export function CmsBlockRail({
                       <GripVertical className="h-3.5 w-3.5" />
                     </span>
                   ) : null}
+                  {unified ? (
+                    <span className="mt-0.5 h-8 w-10 shrink-0 overflow-hidden rounded bg-[#F2F4F7]">
+                      {homeBlockThumbnail(block) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={homeBlockThumbnail(block)!} alt="" className="h-full w-full object-cover" />
+                      ) : null}
+                    </span>
+                  ) : null}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-semibold text-[#153E73]">
-                      {block.name || defn?.name || block.type}
+                      {(unified && typeof block.settings?.title === "string" && block.settings.title) ||
+                        block.name ||
+                        defn?.name ||
+                        block.type}
                     </p>
                     <p className="truncate text-[10px] text-[#8A94A6]">
                       {unified ? unifiedSummary(block) : layoutSummary(block)}

@@ -223,6 +223,8 @@ export function adaptRecipesPageSettings(
  * Preserves db_id when present so live upsert can match rows.
  */
 export function cmsPageToHomeBlocks(page: CmsPage): HomepageBlock[] {
+  // Duplicated blocks copy settings.db_id — give copies their own row id.
+  const seenIds = new Set<string>();
   return [...page.blocks]
     .sort((a, b) => a.order - b.order)
     .map((b, index) => {
@@ -230,10 +232,12 @@ export function cmsPageToHomeBlocks(page: CmsPage): HomepageBlock[] {
       const legacyKey = String(
         b.sourceKey || settings.legacyKey || b.type || `block_${index}`
       );
-      const dbId =
+      let dbId =
         typeof settings.db_id === "string" && settings.db_id
           ? settings.db_id
           : undefined;
+      if (dbId && seenIds.has(dbId)) dbId = undefined;
+      if (dbId) seenIds.add(dbId);
       return {
         id: dbId ?? crypto.randomUUID(),
         block_key: legacyKey,

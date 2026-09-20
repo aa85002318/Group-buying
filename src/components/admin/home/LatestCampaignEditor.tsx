@@ -23,7 +23,8 @@ export function LatestCampaignEditor({
 }: {
   value: HomeLatestCampaignSettings;
   onChange: (next: HomeLatestCampaignSettings) => void;
-  onSave: () => void;
+  /** Omit inside the page builder (saved with 儲存草稿). */
+  onSave?: () => void;
   saving?: boolean;
 }) {
   const settings = value ?? DEFAULT_LATEST_CAMPAIGN_SETTINGS;
@@ -154,9 +155,9 @@ export function LatestCampaignEditor({
           <Plus className="mr-1 h-4 w-4" />
           新增活動圖
         </Button>
-        <Button type="button" size="sm" disabled={saving} onClick={onSave}>
+        {onSave ? (<Button type="button" size="sm" disabled={saving} onClick={onSave}>
           儲存最新活動
-        </Button>
+        </Button>) : null}
       </div>
     </div>
   );
