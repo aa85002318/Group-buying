@@ -126,42 +126,49 @@ export const STORE_SIDEBAR_ITEMS: DesktopNavItem[] = [
 
 export const INNER_PAGE_HEROES = {
   recipes: {
+    pageKey: "recipes" as const,
     title: "美味食譜，\n讓烘焙走進生活",
     subtitle: "從新手到進階，與你一起發現烘焙的美好",
     imageUrl: DEFAULT_RECIPE_HERO_DESKTOP,
     height: 360 as const,
   },
   shop: {
+    pageKey: "shop" as const,
     title: "烘焙好物商城",
     subtitle: "嚴選材料、器具與包材，一次購足",
     imageUrl: "/images/shop/hero-desktop.jpg",
     height: 360 as const,
   },
   activities: {
+    pageKey: "activities" as const,
     title: "最新活動",
     subtitle: "會員活動、門市優惠與限時專案一次掌握",
     imageUrl: "/images/home/latest-campaigns/01-free-shipping.jpg",
     height: 360 as const,
   },
   brands: {
+    pageKey: "brands" as const,
     title: "品牌專區",
     subtitle: "探索季節主題與品牌企劃",
     imageUrl: "/images/home/group-buy-banner/slide-season.png",
     height: 360 as const,
   },
   member: {
+    pageKey: "member" as const,
     title: "會員中心",
     subtitle: "管理您的會員資料與訂單",
     imageUrl: null,
     height: 220 as const,
   },
   ai: {
+    pageKey: "ai" as const,
     title: "AI 烘焙助手",
     subtitle: "問配方、找靈感、推薦材料",
     imageUrl: "/brand/hero-ai-banner.jpg",
     height: 360 as const,
   },
   stores: {
+    pageKey: "stores" as const,
     title: "門市資訊",
     subtitle: "鄰近門市、營業時間與取貨服務",
     imageUrl: "/images/shop/categories/food.png",

@@ -413,14 +413,18 @@ export function DesktopHome() {
                 href={heroBanner?.link_url || APP_ROUTES.shop}
                 className="relative block aspect-video w-full overflow-hidden rounded-2xl bg-[#EEF8FC]"
               >
-                <Image
-                  src={heroSrc}
-                  alt=""
-                  fill
-                  priority
-                  className="object-cover object-center"
-                  sizes="(min-width:1440px) 1100px, 90vw"
-                />
+                <picture>
+                  {heroBanner?.mobile_image_url ? (
+                    <source media="(max-width: 767px)" srcSet={heroBanner.mobile_image_url} />
+                  ) : null}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={heroSrc}
+                    alt={heroBanner?.title || ""}
+                    className="absolute inset-0 h-full w-full object-cover object-center"
+                    fetchPriority="high"
+                  />
+                </picture>
               </Link>
               {activeBanners.length > 1 ? (
                 <div className="mt-3 flex justify-center gap-2">

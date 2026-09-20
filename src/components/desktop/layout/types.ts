@@ -25,6 +25,8 @@ export type DesktopFilterGroup = {
 };
 
 export type DesktopInnerHeroProps = {
+  /** Unified page hero (image + link from 後台 › 各頁 Hero Banner). */
+  pageKey?: import("@/lib/page-heroes").PageHeroKey;
   title: string;
   subtitle?: string;
   imageUrl?: string | null;

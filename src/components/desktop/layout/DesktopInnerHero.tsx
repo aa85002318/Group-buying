@@ -1,9 +1,11 @@
 import Image from "next/image";
+import { PageHeroBanner } from "@/components/page-hero/PageHeroBanner";
 import { DesktopContainer } from "@/components/desktop/DesktopContainer";
 import type { DesktopInnerHeroProps } from "@/components/desktop/layout/types";
 import { DESKTOP_COLORS } from "@/lib/desktop/brand-assets";
 
 export function DesktopInnerHero({
+  pageKey,
   title,
   subtitle,
   imageUrl,
@@ -11,6 +13,11 @@ export function DesktopInnerHero({
   enabled = true,
 }: DesktopInnerHeroProps) {
   if (!enabled) return null;
+  // Unified hero: image + link only, managed in the admin; the title stays
+  // for screen readers / SEO.
+  if (pageKey) {
+    return <PageHeroBanner pageKey={pageKey} srTitle={title.replace(/\n/g, "")} />;
+  }
 
   return (
     <section

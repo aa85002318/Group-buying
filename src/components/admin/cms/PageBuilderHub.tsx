@@ -36,6 +36,12 @@ const SITE_WIDE_LINKS = [
     icon: Megaphone,
   },
   {
+    href: "/admin/page-heroes",
+    title: "各頁 Hero Banner",
+    desc: "商城、食譜等各頁最上方大圖（圖片＋連結）",
+    icon: ImagePlus,
+  },
+  {
     href: "/admin/banners",
     title: "共用 Banner",
     desc: "各頁輪播大圖（網頁、手機共用）",
