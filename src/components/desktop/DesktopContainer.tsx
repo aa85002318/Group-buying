@@ -16,7 +16,7 @@ export function DesktopContainer({
     <Tag
       className={cn(
         "mx-auto w-full max-w-[1440px]",
-        "px-6 xl:px-8 2xl:px-10",
+        "px-4 sm:px-6 xl:px-8 2xl:px-10",
         className
       )}
     >

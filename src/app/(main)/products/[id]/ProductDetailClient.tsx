@@ -306,7 +306,7 @@ export default function ProductDetailClient({ id }: { id: string }) {
   return (
     <div className="min-h-[100dvh] bg-[#FFFEFA] text-[#153E73]">
       {/* Mobile sticky header */}
-      <header className="sticky top-0 z-40 border-b border-[#E8E1D7] bg-white md:hidden">
+      <header className="pdp-mobile-header sticky top-0 z-40 border-b border-[#E8E1D7] bg-white md:hidden">
         <div className="flex h-14 items-center justify-between px-3">
           <button
             type="button"

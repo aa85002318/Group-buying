@@ -23,9 +23,9 @@ export function MemberDesktopFrame({ children }: { children: ReactNode }) {
   if (!desktopV2 || isHub) return <>{children}</>;
 
   return (
-    <div className="grid gap-7 pt-2 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
+    <div className="grid gap-4 pt-2 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-7 xl:grid-cols-[240px_minmax(0,1fr)]">
       <div className="min-w-0">
-        <div className="sticky top-[96px]">
+        <div className="lg:sticky lg:top-[96px]">
           <DesktopSidebar
             title="會員中心"
             items={MEMBER_SIDEBAR_ITEMS}
@@ -33,7 +33,7 @@ export function MemberDesktopFrame({ children }: { children: ReactNode }) {
           />
         </div>
       </div>
-      <div className="member-desktop-content min-w-0 rounded-2xl bg-white p-6 xl:p-8">{children}</div>
+      <div className="member-desktop-content min-w-0 rounded-2xl bg-white p-4 sm:p-6 xl:p-8">{children}</div>
     </div>
   );
 }

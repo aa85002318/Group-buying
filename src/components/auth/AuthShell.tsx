@@ -34,11 +34,11 @@ export function AuthShell({ children }: { children: ReactNode }) {
         data-desktop-v2="true"
       >
         <DesktopHeader />
-        <main className="flex-1 py-10 xl:py-14">
+        <main className="flex-1 py-4 sm:py-10 xl:py-14">
           <DesktopContainer className="max-w-[1100px]">
-            <div className="grid min-h-[560px] overflow-hidden rounded-[28px] bg-white shadow-[0_12px_40px_rgba(21,62,115,0.08)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="grid overflow-hidden rounded-[28px] bg-white shadow-[0_12px_40px_rgba(21,62,115,0.08)] lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <aside
-                className="flex flex-col justify-between gap-10 p-10 xl:p-12"
+                className="hidden flex-col justify-between gap-10 p-10 lg:flex xl:p-12"
                 style={{ background: DESKTOP_COLORS.yellow }}
               >
                 <DesktopBrandLogo height={56} />
@@ -68,7 +68,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
               </aside>
               {/* Auth pages keep their mobile markup; .auth-desktop-form (globals.css)
                   flattens their inner card and hides the duplicate logo. */}
-              <div className="auth-desktop-form flex min-w-0 items-center justify-center p-8 xl:p-12">
+              <div className="auth-desktop-form flex min-w-0 items-center justify-center p-6 sm:p-8 xl:p-12">
                 {children}
               </div>
             </div>

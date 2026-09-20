@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Heart, Search, ShoppingCart, UserRound } from "lucide-react";
+import { ChevronDown, Heart, Menu, Search, ShoppingCart, UserRound, X } from "lucide-react";
 import { DesktopBrandLogo } from "@/components/desktop/DesktopBrandLogo";
 import { DesktopContainer } from "@/components/desktop/DesktopContainer";
 import { useCart } from "@/hooks/useCart";
@@ -50,21 +50,49 @@ export function DesktopHeader() {
   const navLinks = useWebsiteNav();
   const { items } = useCart();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the phone menu on navigation; lock page scroll while it is open.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
 
   return (
     <header
       className="sticky top-0 z-40"
-      style={{ background: DESKTOP_COLORS.yellow }}
+      style={{ background: DESKTOP_COLORS.yellow, paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      <DesktopContainer className="relative flex h-[80px] items-center justify-between">
-        <div className="relative z-20 shrink-0">
-          <DesktopBrandLogo height={48} priority />
+      <DesktopContainer className="relative flex h-16 items-center justify-between gap-2 lg:h-[80px]">
+        <div className="relative z-20 flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            aria-label="開啟選單"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(true)}
+            className="-ml-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-white/40 lg:hidden"
+          >
+            <Menu className="h-6 w-6" strokeWidth={2} />
+          </button>
+          <span className="lg:hidden">
+            <DesktopBrandLogo height={36} priority />
+          </span>
+          <span className="hidden lg:inline-flex">
+            <DesktopBrandLogo height={48} priority />
+          </span>
         </div>
 
         {/* True center: relative to full header container, not logo↔utils mid-gap */}
         <nav
           aria-label="桌機主選單"
-          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+          className="pointer-events-none absolute inset-0 z-10 hidden items-center justify-center lg:flex"
         >
           <ul
             className={cn(
@@ -125,7 +153,7 @@ export function DesktopHeader() {
         </nav>
 
         <div className="relative z-20 shrink-0">
-          <div className="flex items-center justify-end gap-3 xl:gap-4">
+          <div className="flex items-center justify-end gap-1 sm:gap-3 xl:gap-4">
             <Link
               href={APP_ROUTES.search}
               aria-label="搜尋"
@@ -155,7 +183,10 @@ export function DesktopHeader() {
                 key={href}
                 href={href}
                 aria-label={label}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-white/40"
+                className={cn(
+                  "h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-white/40",
+                  href === APP_ROUTES.favorites ? "hidden sm:inline-flex" : "inline-flex"
+                )}
               >
                 <Icon className="h-5 w-5" strokeWidth={1.9} />
               </Link>
@@ -179,6 +210,79 @@ export function DesktopHeader() {
           </div>
         </div>
       </DesktopContainer>
+
+      {/* Phone / tablet menu (same items as the desktop nav, from 後台 › 頁首選單) */}
+      {menuOpen ? (
+        <div className="fixed inset-0 z-[70] lg:hidden" role="dialog" aria-modal="true" aria-label="網站選單">
+          <button
+            type="button"
+            aria-label="關閉選單"
+            className="absolute inset-0 bg-[#153E73]/35"
+            onClick={() => setMenuOpen(false)}
+          />
+          <nav
+            className="absolute inset-y-0 left-0 flex w-[82vw] max-w-[340px] flex-col overflow-y-auto bg-[#FFFEFA] shadow-xl"
+            style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          >
+            <div className="flex h-16 items-center justify-between px-4" style={{ background: DESKTOP_COLORS.yellow }}>
+              <DesktopBrandLogo height={36} />
+              <button
+                type="button"
+                aria-label="關閉選單"
+                onClick={() => setMenuOpen(false)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-white/40"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <Link
+              href={APP_ROUTES.search}
+              className="mx-4 mt-4 flex h-11 items-center gap-2 rounded-full border border-[#E9EDF2] bg-white px-4 text-sm text-[#687386]"
+            >
+              <Search className="h-4 w-4" />
+              搜尋商品、食譜…
+            </Link>
+            <ul className="mt-3 flex-1 px-2 pb-6">
+              {navLinks.map((link) => {
+                const children = link.children ?? [];
+                const active = navActive(pathname, link.href);
+                return (
+                  <li key={link.id ?? link.href} className="border-b border-[#F0ECE5] last:border-0">
+                    <Link
+                      href={link.href}
+                      target={link.newTab ? "_blank" : undefined}
+                      rel={link.newTab ? "noreferrer" : undefined}
+                      className={cn(
+                        "flex min-h-12 items-center rounded-xl px-3 text-base font-semibold text-[#153E73]",
+                        active && "bg-[#FFF5CC]"
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                    {children.length ? (
+                      <ul className="pb-2 pl-4">
+                        {children.map((c) => (
+                          <li key={c.id ?? c.href}>
+                            <Link
+                              href={c.href}
+                              className={cn(
+                                "flex min-h-10 items-center rounded-lg px-3 text-sm text-[#465467]",
+                                navActive(pathname, c.href) && "bg-[#FFF5CC] font-semibold text-[#153E73]"
+                              )}
+                            >
+                              {c.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </div>
+      ) : null}
     </header>
   );
 }

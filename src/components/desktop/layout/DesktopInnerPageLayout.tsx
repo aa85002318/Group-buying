@@ -38,10 +38,10 @@ export function DesktopInnerPageLayout({
       {hero ? <DesktopInnerHero {...hero} /> : null}
       <DesktopBreadcrumb items={breadcrumb} />
       <DesktopContainer className="pb-12">
-        <div className="grid gap-7 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)]">
+        <div className="grid gap-4 sm:gap-7 lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)]">
           {sidebar ? (
             <div className="min-w-0">
-              <div className="sticky top-[96px]">
+              <div className="lg:sticky lg:top-[96px]">
                 <DesktopSidebar {...sidebar} />
               </div>
             </div>

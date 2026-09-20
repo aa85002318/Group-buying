@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { DesktopSidebarProps } from "@/components/desktop/layout/types";
 import { cn } from "@/lib/utils";
 
-export function DesktopSidebar({
+function FullSidebar({
   title = "分類",
   items,
   activeKey,
@@ -96,5 +96,54 @@ export function DesktopSidebar({
         </button>
       ) : null}
     </aside>
+  );
+}
+
+/**
+ * Phones / tablets (< lg): the category list becomes a horizontal chip row
+ * and filters fold into a collapsible panel, so content is not pushed below
+ * a long vertical menu. Computers keep the full sidebar.
+ */
+export function DesktopSidebar(props: DesktopSidebarProps) {
+  const { title = "分類", items, activeKey, onItemSelect, filters = [] } = props;
+  return (
+    <>
+      <div className="lg:hidden">
+        <nav aria-label={title} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+          {items.map((item) => {
+            const active = activeKey === item.key;
+            const cls = cn(
+              "shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition",
+              active
+                ? "border-[#FFD454] bg-[#FFF5CC] text-[#153E73]"
+                : "border-[#E9EDF2] bg-white text-[#153E73]"
+            );
+            if (item.href && !onItemSelect) {
+              return (
+                <Link key={item.key} href={item.href} className={cls}>
+                  {item.label}
+                </Link>
+              );
+            }
+            return (
+              <button key={item.key} type="button" className={cls} onClick={() => onItemSelect?.(item.key)}>
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+        {filters.length ? (
+          <details className="mt-3 rounded-2xl bg-white">
+            <summary className="cursor-pointer list-none px-4 py-3 text-sm font-bold text-[#153E73]">篩選條件</summary>
+            <div className="px-0 pb-2 [&>aside]:bg-transparent [&>aside]:pt-0">
+              <FullSidebar {...props} items={[]} />
+            </div>
+          </details>
+        ) : null}
+      </div>
+      <div className="hidden lg:block">
+        <FullSidebar {...props} />
+      </div>
+    </>
   );
 }

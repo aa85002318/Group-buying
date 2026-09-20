@@ -120,7 +120,7 @@ function SectionHeading({
 }) {
   return (
     <div className="mb-5 flex items-end justify-between gap-4">
-      <h2 className="text-2xl font-bold tracking-wide text-[#153E73]">{title}</h2>
+      <h2 className="text-xl font-bold tracking-wide text-[#153E73] sm:text-2xl">{title}</h2>
       {showViewAll && href ? (
         <Link href={href} className="text-sm font-semibold text-[#79C7E8] hover:underline">
           查看全部
@@ -254,13 +254,13 @@ function DesktopHomeSidebar({ store }: { store: StoreRow | null }) {
 /** Grid template for "cards per row" on the website (Tailwind-safe list). */
 const GRID_COLS: Record<number, string> = {
   1: "grid-cols-1",
-  2: "grid-cols-2",
-  3: "grid-cols-2 xl:grid-cols-3",
-  4: "grid-cols-2 xl:grid-cols-4",
-  5: "grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5",
-  6: "grid-cols-3 xl:grid-cols-6",
-  7: "grid-cols-4 xl:grid-cols-7",
-  8: "grid-cols-4 xl:grid-cols-8",
+  2: "grid-cols-1 sm:grid-cols-2",
+  3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+  4: "grid-cols-2 lg:grid-cols-4",
+  5: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5",
+  6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
+  7: "grid-cols-4 lg:grid-cols-7",
+  8: "grid-cols-4 lg:grid-cols-8",
 };
 
 function gridCols(columns: number | null, fallback: number) {
@@ -768,9 +768,9 @@ export function DesktopHome() {
           草稿預覽模式 — 尚未發布，訪客看不到此版面
         </div>
       ) : null}
-      <DesktopContainer className="py-6 lg:py-8">
+      <DesktopContainer className="py-4 sm:py-6 lg:py-8">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="min-w-0 space-y-8">
+          <div className="min-w-0 space-y-6 sm:space-y-8">
             {sections === null ? (
               <div className="space-y-6" aria-hidden>
                 <div className="aspect-video w-full animate-pulse rounded-2xl bg-[#EEF3F7]" />
@@ -790,7 +790,7 @@ export function DesktopHome() {
         </div>
 
         {/* Sidebar under main on 1024–1279 */}
-        <div className="mt-8 max-w-md xl:hidden">
+        <div className="mt-8 w-full max-w-md xl:hidden">
           <DesktopHomeSidebar store={store} />
         </div>
       </DesktopContainer>

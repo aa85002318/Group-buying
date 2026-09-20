@@ -48,7 +48,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
       >
         <div className="relative mx-auto flex min-h-dvh w-full flex-col overflow-x-clip">
           {showChrome ? <DesktopHeader /> : null}
-          <main className="page-enter min-w-0 flex-1 overflow-x-clip">
+          <main
+            className={cn(
+              "page-enter min-w-0 flex-1 overflow-x-clip",
+              // Room for the phone bottom navigation bar.
+              showChrome && "pb-[calc(88px+env(safe-area-inset-bottom,0px))] md:pb-0"
+            )}
+          >
             {isDesktopV2NativePath(pathname) || !showChrome ? (
               children
             ) : (
@@ -56,7 +62,7 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
               // UI, centered at a readable width under the desktop chrome.
               <div
                 className={cn(
-                  "desktop-v2-fallback site-main mx-auto w-full min-w-0 px-6 pb-12 xl:px-8",
+                  "desktop-v2-fallback site-main mx-auto w-full min-w-0 px-4 pb-12 sm:px-6 xl:px-8",
                   isDesktopV2ReadingPath(pathname) ? "max-w-[868px]" : "max-w-[1200px]"
                 )}
                 data-desktop-v2-fallback="true"
@@ -66,6 +72,8 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             )}
           </main>
           {showChrome ? <DesktopFooter /> : null}
+          {/* Phones keep the app-style bottom bar (md:hidden inside). */}
+          {showChrome ? <AppBottomNavigation /> : null}
         </div>
       </div>
     );

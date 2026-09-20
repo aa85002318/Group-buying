@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ShopHeader } from "@/components/shop/ShopHeader";
 import { useDesktopV2Active } from "@/hooks/useDesktopV2Active";
 import { GroupBuyHeroBanner } from "@/components/group-buy/GroupBuyHeroBanner";
+import { GroupBuySearchBar } from "@/components/group-buy/GroupBuySearchBar";
+import { PageHeroBanner } from "@/components/page-hero/PageHeroBanner";
 import {
   GroupBuyFilterSheet,
   hasActiveFilters,
@@ -291,15 +293,31 @@ export function GroupBuyPageClient() {
             searchHref="#group-buy-search-input"
           />
         )}
-        <GroupBuyHeroBanner
-          backgroundColor={GROUP_BUY_BRAND_YELLOW}
-          searchPlaceholder={
-            settings.searchPlaceholder || DEFAULT_GROUP_BUY_HERO.searchPlaceholder
-          }
-          onSearch={onHeroSearch}
-          onOpenFilters={openFilters}
-          filterActive={filterActive || filterOpen}
-        />
+        {desktopV2 ? (
+          <>
+            {/* Unified page hero (image + link, 後台 › 各頁 Hero Banner) */}
+            <PageHeroBanner pageKey="group_buy" srTitle="團購" />
+            <div className="mx-auto w-full max-w-[1200px] px-4 py-4 md:px-6">
+              <GroupBuySearchBar
+                seam={false}
+                placeholder={settings.searchPlaceholder || DEFAULT_GROUP_BUY_HERO.searchPlaceholder}
+                onSearch={onHeroSearch}
+                onOpenFilters={openFilters}
+                filterActive={filterActive || filterOpen}
+              />
+            </div>
+          </>
+        ) : (
+          <GroupBuyHeroBanner
+            backgroundColor={GROUP_BUY_BRAND_YELLOW}
+            searchPlaceholder={
+              settings.searchPlaceholder || DEFAULT_GROUP_BUY_HERO.searchPlaceholder
+            }
+            onSearch={onHeroSearch}
+            onOpenFilters={openFilters}
+            filterActive={filterActive || filterOpen}
+          />
+        )}
       </div>
 
       {filterOpen && isDesktop ? (
