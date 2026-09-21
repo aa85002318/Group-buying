@@ -70,6 +70,8 @@ type Product = {
   spec?: string | null;
   specification?: string | null;
   package_spec?: string | null;
+  is_hot?: boolean | null;
+  is_new?: boolean | null;
   product_categories?: { name?: string | null; slug?: string | null } | null;
 };
 
@@ -523,11 +525,17 @@ export function DesktopHome() {
       case "weekly_new_products":
       case "custom_products": {
         const manual = section.manualIds.length ? pickManual(section.manualIds) : [];
+        // Shop rails API first; if it returns nothing, fall back to the
+        // products flagged 熱門 / 新品 in 商品管理.
         const auto =
           section.key === "popular_baking_products"
-            ? popular
+            ? popular.length
+              ? popular
+              : products.filter((p) => p.is_hot)
             : section.key === "weekly_new_products"
-              ? fresh
+              ? fresh.length
+                ? fresh
+                : products.filter((p) => p.is_new)
               : [];
         const source = section.key === "custom_products" || (section.sourceMode === "manual" && manual.length) ? manual : auto;
         const perRow = cols ?? 5;
