@@ -67,8 +67,8 @@ export function DesktopHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40"
-      style={{ background: DESKTOP_COLORS.yellow, paddingTop: "env(safe-area-inset-top, 0px)" }}
+      className="sticky top-0 z-40 bg-white shadow-[0_1px_0_rgba(21,62,115,0.08)]"
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <DesktopContainer className="relative flex h-16 items-center justify-between gap-2 lg:h-[80px]">
         <div className="relative z-20 flex shrink-0 items-center gap-1">
@@ -77,16 +77,11 @@ export function DesktopHeader() {
             aria-label="開啟選單"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(true)}
-            className="-ml-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-white/40 lg:hidden"
+            className="-ml-2 inline-flex h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-[#FFF5CC] lg:hidden"
           >
             <Menu className="h-6 w-6" strokeWidth={2} />
           </button>
-          <span className="lg:hidden">
-            <DesktopBrandLogo height={36} priority />
-          </span>
-          <span className="hidden lg:inline-flex">
-            <DesktopBrandLogo height={48} priority />
-          </span>
+          <DesktopBrandLogo height={48} fluid priority />
         </div>
 
         {/* True center: relative to full header container, not logo↔utils mid-gap */}
@@ -123,7 +118,7 @@ export function DesktopHeader() {
                     {active ? (
                       <span
                         aria-hidden
-                        className="absolute inset-x-0 bottom-0 h-[2px] rounded-full bg-[#153E73]"
+                        className="absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-[#FFD454]"
                       />
                     ) : null}
                   </Link>
@@ -158,14 +153,13 @@ export function DesktopHeader() {
               href={APP_ROUTES.search}
               aria-label="搜尋"
               className={cn(
-                "inline-flex h-10 items-center gap-2 rounded-full bg-[#FFD454] text-[#153E73] hover:bg-white/55",
+                "inline-flex h-10 items-center gap-2 rounded-full bg-[#F6F7F9] text-[#153E73] hover:bg-[#FFF5CC]",
                 // Icon-only below 1536px so the 8-item centered nav never
                 // collides with the search pill (e.g. 門市資訊 at 1280–1535px).
                 "w-10 max-w-10 justify-center px-0",
                 "2xl:w-[220px] 2xl:max-w-[220px] 2xl:justify-start 2xl:px-3",
                 "ring-1 ring-[#153E73]/10"
               )}
-              style={{ background: "rgba(255,254,250,0.72)" }}
             >
               <Search className="h-4 w-4 shrink-0" strokeWidth={1.9} />
               <span className="hidden truncate text-sm text-[#153E73]/70 2xl:inline">
@@ -184,7 +178,7 @@ export function DesktopHeader() {
                 href={href}
                 aria-label={label}
                 className={cn(
-                  "h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-white/40",
+                  "h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-[#FFF5CC]",
                   href === APP_ROUTES.favorites ? "hidden sm:inline-flex" : "inline-flex"
                 )}
               >
@@ -195,7 +189,7 @@ export function DesktopHeader() {
             <Link
               href={APP_ROUTES.cart}
               aria-label={`購物車${cartCount > 0 ? `，${cartCount} 件` : ""}`}
-              className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-white/40"
+              className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-[#FFF5CC]"
             >
               <ShoppingCart className="h-5 w-5" strokeWidth={1.9} />
               {cartCount > 0 ? (
@@ -230,7 +224,7 @@ export function DesktopHeader() {
                 type="button"
                 aria-label="關閉選單"
                 onClick={() => setMenuOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-white/40"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-[#FFF5CC]"
               >
                 <X className="h-6 w-6" />
               </button>

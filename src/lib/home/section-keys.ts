@@ -165,3 +165,56 @@ export function isHomeSectionKey(value: string): value is HomeSectionKey {
 export function isSingletonHomeSection(key: HomeSectionKey): boolean {
   return HOME_SECTION_SINGLETONS.has(key);
 }
+
+/* ------------------------------------------------------------------ */
+/* Website home (one responsive layout for phone / tablet / computer). */
+/* Order follows the approved 首頁效果圖.                              */
+/* ------------------------------------------------------------------ */
+
+export const WEBSITE_HOME_SECTION_KEYS: HomeSectionKey[] = [
+  "hero",
+  "hot_searches",
+  "popular_categories",
+  "latest_campaigns",
+  "popular_baking_products",
+  "weekly_new_products",
+  "latest_recipes",
+  "ingredient_shop",
+  "ai_assistant",
+  "store_information",
+  "service_shortcuts",
+  "quick_entry",
+  "group_buy_banner",
+  "weekly_group_buys",
+  "closing_group_buys",
+  "weekly_live_streams",
+  "chime_select",
+];
+
+/**
+ * A stored home layout that contains any of these keys was saved with the
+ * new website layout (後台「套用新版首頁排版」). Older layouts are shown in
+ * the new order automatically until an editor applies it.
+ */
+export const WEBSITE_HOME_V2_MARKER_KEYS = new Set<string>([
+  "hot_searches",
+  "popular_categories",
+  "popular_baking_products",
+  "weekly_new_products",
+  "ai_assistant",
+  "store_information",
+]);
+
+/** Shown in the list but off on the website until an editor turns it on. */
+export const WEBSITE_HOME_OFF_BY_DEFAULT = new Set<string>(["quick_entry"]);
+
+/** Titles used when a website block is created for the first time. */
+export const WEBSITE_HOME_TITLES: Partial<Record<HomeSectionKey, string>> = {
+  hot_searches: "搜尋列與熱門搜尋",
+  popular_categories: "商品分類",
+  popular_baking_products: "熱門商品",
+  weekly_new_products: "新品上架",
+  ai_assistant: "AI 烘焙小幫手",
+  store_information: "大安門市與企業採購",
+  service_shortcuts: "快捷服務",
+};

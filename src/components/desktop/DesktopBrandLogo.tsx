@@ -13,6 +13,8 @@ type DesktopBrandLogoProps = {
   height?: number;
   href?: string | null;
   priority?: boolean;
+  /** Scale with the screen: 36px on phones → `height` on lg+ (one image). */
+  fluid?: boolean;
 };
 
 /** Company logo for Desktop Header / Footer only. No IP character. */
@@ -21,6 +23,7 @@ export function DesktopBrandLogo({
   height = 48,
   href = APP_ROUTES.home,
   priority = false,
+  fluid = false,
 }: DesktopBrandLogoProps) {
   const width = Math.round(height * LOGO_RATIO);
   const img = (
@@ -30,8 +33,8 @@ export function DesktopBrandLogo({
       width={width}
       height={height}
       priority={priority}
-      className={cn("object-contain", className)}
-      style={{ height, width: "auto", maxHeight: height }}
+      className={cn("object-contain", fluid && "h-9 w-auto lg:h-12", className)}
+      style={fluid ? { width: "auto" } : { height, width: "auto", maxHeight: height }}
     />
   );
 

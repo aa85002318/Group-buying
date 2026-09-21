@@ -1,29 +1,42 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  ChevronRight,
+  Clock3,
+  LayoutGrid,
+  MapPin,
+  Search,
+  Sparkles,
+  Truck,
+} from "lucide-react";
 import { DesktopContainer } from "@/components/desktop/DesktopContainer";
 import { DesktopProductCard } from "@/components/desktop/DesktopProductCard";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
-import {
-  DESKTOP_CAMPAIGN_FALLBACKS,
-  DESKTOP_COLORS,
-  DESKTOP_HERO_FALLBACK,
-  DESKTOP_IP_WAVE_SRC,
-  DESKTOP_PROMO_CARD_B,
-} from "@/lib/desktop/brand-assets";
+import { DESKTOP_HERO_FALLBACK } from "@/lib/desktop/brand-assets";
 import { listOrderedDesktopHomeSections } from "@/lib/home/blocks";
+import { hotSearchHref, resolveHotSearchKeywords } from "@/lib/home/hot-search";
+import { parseServiceShortcuts } from "@/lib/home/service-shortcuts";
+import {
+  DEFAULT_INGREDIENT_HINT,
+  parseAiSection,
+  parseStoreB2b,
+  searchPlaceholder,
+} from "@/lib/home/website-home-config";
 import {
   GROUP_BUY_CONSUMER_VISIBLE,
   HIDDEN_HOME_GROUP_BUY_KEYS,
+  isGroupBuyConsumerHref,
 } from "@/lib/features/group-buy-visibility";
 import type { HomepageBlock } from "@/lib/types/database";
 import { parseQuickServicesSettings } from "@/types/home-quick-service";
+import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
 import { HomeGroupBuyBannerSection } from "@/components/home/group-buy-banner/HomeGroupBuyBannerSection";
-import { HomeServiceShortcutsSection } from "@/components/home/HomeServiceShortcutsSection";
 import {
   ChimeSelectGroupBuySection,
   ClosingGroupBuysSection,
@@ -36,13 +49,14 @@ import { cn } from "@/lib/utils";
 type Banner = {
   id: string;
   title?: string | null;
-  subtitle?: string | null;
   image_url?: string | null;
   desktop_image_url?: string | null;
   mobile_image_url?: string | null;
   link_url?: string | null;
   is_active?: boolean;
   sort_order?: number;
+  placement?: string | null;
+  banner_type?: string | null;
 };
 
 type Product = {
@@ -50,31 +64,27 @@ type Product = {
   name: string;
   price?: number | null;
   sale_price?: number | null;
+  website_price?: number | null;
   image_url?: string | null;
   unit?: string | null;
   spec?: string | null;
   specification?: string | null;
-  category?: string | null;
+  package_spec?: string | null;
+  product_categories?: { name?: string | null; slug?: string | null } | null;
 };
 
 type Recipe = {
   id: string;
   title: string;
   slug?: string | null;
+  summary?: string | null;
+  description?: string | null;
   cover_image?: string | null;
   cover_image_url?: string | null;
   difficulty?: string | null;
   prep_time?: number | null;
   cook_time?: number | null;
   total_time?: number | null;
-};
-
-type Article = {
-  id: string;
-  title: string;
-  slug?: string | null;
-  cover_image?: string | null;
-  excerpt?: string | null;
 };
 
 type StoreRow = {
@@ -85,214 +95,166 @@ type StoreRow = {
   image_url?: string | null;
 };
 
-const DIFFICULTY: Record<string, string> = {
-  easy: "初階",
-  medium: "進階",
-  hard: "挑戰",
-};
+type HomeCategory = { id: string; name: string; href: string; image?: string; bgColor?: string };
 
-const CAMPAIGN_TITLES = ["歡慶週年慶", "精選巧克力系列", "烘焙新手包"];
+const DIFFICULTY: Record<string, string> = { easy: "初階", medium: "進階", hard: "挑戰" };
+
+const NAVY = "#153E73";
 
 function bannerImage(b: Banner) {
   return b.desktop_image_url || b.image_url || b.mobile_image_url || null;
 }
-
-function recipeHref(r: Recipe) {
-  return `/recipes/${r.slug || r.id}`;
-}
-
-function recipeCover(r: Recipe) {
-  return r.cover_image_url || r.cover_image || null;
-}
-
 function productPrice(p: Product) {
-  return Number(p.sale_price ?? p.price ?? 0);
+  return Number(p.sale_price ?? p.website_price ?? p.price ?? 0);
 }
-
-function SectionHeading({
-  title,
-  href,
-  showViewAll = true,
-}: {
-  title: string;
-  href?: string;
-  showViewAll?: boolean;
-}) {
-  return (
-    <div className="mb-5 flex items-end justify-between gap-4">
-      <h2 className="text-xl font-bold tracking-wide text-[#153E73] sm:text-2xl">{title}</h2>
-      {showViewAll && href ? (
-        <Link href={href} className="text-sm font-semibold text-[#79C7E8] hover:underline">
-          查看全部
-        </Link>
-      ) : null}
-    </div>
-  );
+function productSpec(p: Product) {
+  return p.spec || p.specification || p.package_spec || p.unit || null;
 }
-
-function DesktopHomeSidebar({ store }: { store: StoreRow | null }) {
-  const storeCover = store?.cover_image_url || store?.image_url || DESKTOP_PROMO_CARD_B;
-
-  return (
-    <aside className="flex flex-col gap-4">
-      {/* 1. 會員登入 — 無 IP */}
-      <section
-        className="rounded-2xl p-5"
-        style={{ background: DESKTOP_COLORS.skySoft }}
-        aria-label="會員登入"
-      >
-        <p className="text-sm text-[#687386]">Hi！歡迎來到</p>
-        <h2 className="mt-1 text-xl font-bold text-[#153E73]">CHIMEIDIY</h2>
-        <p className="mt-2 text-sm leading-relaxed text-[#687386]">
-          登入會員，享受更多專屬優惠
-        </p>
-        <div className="mt-4 flex flex-col gap-2">
-          <Link
-            href={APP_ROUTES.login}
-            className="inline-flex h-11 items-center justify-center rounded-full bg-[#153E73] text-sm font-bold text-white"
-          >
-            立即登入
-          </Link>
-          <Link
-            href={APP_ROUTES.register}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-[#153E73] bg-white text-sm font-bold text-[#153E73]"
-          >
-            註冊新會員
-          </Link>
-        </div>
-        <ul className="mt-4 grid grid-cols-2 gap-2 text-xs font-semibold text-[#153E73]">
-          {[
-            [APP_ROUTES.memberBenefits, "會員專屬優惠"],
-            [APP_ROUTES.memberOrders, "我的訂單"],
-            [APP_ROUTES.stores, "門市取貨"],
-            [APP_ROUTES.memberCarrier, "發票載具管理"],
-          ].map(([href, label]) => (
-            <li key={href}>
-              <Link href={href} className="block rounded-lg bg-white/80 px-2 py-2 text-center hover:bg-white">
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* 2. 門市資訊 — 無 IP */}
-      <section
-        className="overflow-hidden rounded-2xl"
-        style={{ background: DESKTOP_COLORS.skySoft }}
-        aria-label="門市資訊"
-      >
-        <div className="relative aspect-[16/10] bg-[#E9EDF2]">
-          <Image
-            src={storeCover}
-            alt={store?.name || "門市"}
-            fill
-            className="object-cover"
-            sizes="320px"
-          />
-        </div>
-        <div className="space-y-2 p-4">
-          <h3 className="text-base font-bold text-[#153E73]">
-            {store?.name || "大安門市"}
-          </h3>
-          {store?.address ? (
-            <p className="text-sm leading-relaxed text-[#687386]">{store.address}</p>
-          ) : (
-            <p className="text-sm text-[#687386]">鄰近捷運，歡迎到店選購與取貨</p>
-          )}
-          <Link
-            href={APP_ROUTES.stores}
-            className="inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-bold text-white"
-            style={{ background: DESKTOP_COLORS.sky }}
-          >
-            查看門市資訊
-          </Link>
-        </div>
-      </section>
-
-      {/* 3. 加入會員 — 全頁唯一大型 IP */}
-      <section
-        className="relative overflow-hidden rounded-2xl p-5"
-        style={{ background: DESKTOP_COLORS.cream }}
-        aria-label="加入會員"
-      >
-        <div className="relative z-10 max-w-[58%] space-y-3 pb-2">
-          <h3 className="text-xl font-bold leading-snug text-[#153E73]">
-            加入會員
-            <br />
-            享更多烘焙好康！
-          </h3>
-          <ul className="space-y-1 text-sm text-[#687386]">
-            <li>會員禮遇</li>
-            <li>生日禮</li>
-            <li>最新活動通知</li>
-          </ul>
-          <Link
-            href={APP_ROUTES.register}
-            className="inline-flex h-10 items-center justify-center rounded-full bg-[#153E73] px-5 text-sm font-bold text-white"
-          >
-            立即註冊
-          </Link>
-        </div>
-        <div
-          className="pointer-events-none absolute bottom-0 right-0 z-0 flex h-[45%] max-h-[140px] w-[48%] items-end justify-end"
-          aria-hidden
-        >
-          <Image
-            src={DESKTOP_IP_WAVE_SRC}
-            alt=""
-            width={220}
-            height={142}
-            className="h-full w-auto max-h-[140px] object-contain object-bottom"
-          />
-        </div>
-      </section>
-    </aside>
-  );
+function str(v: unknown) {
+  return typeof v === "string" ? v : "";
 }
-
-/** Grid template for "cards per row" on the website (Tailwind-safe list). */
-const GRID_COLS: Record<number, string> = {
-  1: "grid-cols-1",
-  2: "grid-cols-1 sm:grid-cols-2",
-  3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-  4: "grid-cols-2 lg:grid-cols-4",
-  5: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5",
-  6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
-  7: "grid-cols-4 lg:grid-cols-7",
-  8: "grid-cols-4 lg:grid-cols-8",
-};
-
-function gridCols(columns: number | null, fallback: number) {
-  return GRID_COLS[columns ?? fallback] ?? GRID_COLS[fallback];
-}
-
 /** Avoid a lone orphan row: trim to full rows once there is at least one. */
 function fillRows(count: number, perRow: number) {
   if (count <= perRow) return count;
   return Math.floor(count / perRow) * perRow;
 }
 
+/** lg+ column classes (Tailwind-safe list). Phones scroll sideways. */
+const LG_COLS: Record<number, string> = {
+  2: "lg:grid-cols-2",
+  3: "lg:grid-cols-3",
+  4: "lg:grid-cols-4",
+  5: "lg:grid-cols-5",
+  6: "lg:grid-cols-6",
+};
+function lgCols(n: number) {
+  return LG_COLS[Math.min(6, Math.max(2, n))] ?? LG_COLS[5];
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout primitives                                                   */
+/* ------------------------------------------------------------------ */
+
+function Band({
+  tone = "plain",
+  label,
+  className,
+  children,
+}: {
+  tone?: "plain" | "cream" | "hero";
+  label?: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      aria-label={label}
+      className={cn(
+        "py-[clamp(20px,3.2vw,40px)]",
+        tone === "cream" && "bg-[#FFF5CC]",
+        tone === "hero" && "bg-gradient-to-b from-[#FFF5CC] to-[#FFFEFA]",
+        className
+      )}
+    >
+      <DesktopContainer>{children}</DesktopContainer>
+    </section>
+  );
+}
+
+function SectionHeading({
+  title,
+  subtitle,
+  href,
+  linkLabel = "查看全部",
+}: {
+  title: string;
+  subtitle?: string | null;
+  href?: string | null;
+  linkLabel?: string;
+}) {
+  return (
+    <div className="mb-[clamp(14px,2vw,24px)] flex items-end justify-between gap-4">
+      <div className="min-w-0 space-y-1">
+        <h2 className="text-[clamp(20px,2.2vw,28px)] font-black tracking-wide text-[#153E73]">{title}</h2>
+        {subtitle ? <p className="text-[clamp(13px,1.1vw,15px)] text-[#4A5B78]">{subtitle}</p> : null}
+      </div>
+      {href ? (
+        <Link
+          href={href}
+          className="inline-flex shrink-0 items-center gap-0.5 text-sm font-bold text-[#153E73] hover:text-[#F16458]"
+        >
+          {linkLabel}
+          <ChevronRight className="h-4 w-4" />
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Cards that scroll sideways on phones/tablets and become a grid on lg+.
+ * One DOM for every screen size.
+ */
+function Rail({
+  cols,
+  itemClassName = "w-[44%] sm:w-[30%] md:w-[23%]",
+  children,
+}: {
+  cols: number;
+  itemClassName?: string;
+  children: ReactNode[];
+}) {
+  return (
+    <div
+      className={cn(
+        "scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:gap-4 sm:px-6",
+        "lg:mx-0 lg:grid lg:gap-5 lg:overflow-visible lg:px-0 lg:pb-0",
+        lgCols(cols)
+      )}
+    >
+      {children.map((child, i) => (
+        <div key={i} className={cn("shrink-0 snap-start lg:w-auto", itemClassName)}>
+          {child}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProductTile({ p }: { p: Product }) {
+  return (
+    <DesktopProductCard
+      id={p.id}
+      name={p.name}
+      price={productPrice(p)}
+      image_url={p.image_url}
+      spec={productSpec(p)}
+      href={productPath(p.id)}
+      className="h-full shadow-[0_2px_10px_rgba(21,62,115,0.07)]"
+    />
+  );
+}
+
 type DesktopSection = ReturnType<typeof listOrderedDesktopHomeSections>[number];
 
 /**
- * Website home (Desktop V2).
+ * Website home — one responsive layout for phones, tablets and computers.
  *
- * CMS step 3: renders the SAME homepage_blocks list as the app, in the same
- * order — editors change a section once. Each block can be hidden on the
- * website or given a different "cards per row" via block.config
- * (desktop_visible / desktop_columns), see listOrderedDesktopHomeSections.
+ * Renders the SAME homepage_blocks list the editor manages (後台 › 頁面編輯 ›
+ * 首頁). Section order follows the approved 首頁效果圖 until an editor saves
+ * a layout with the new blocks, after which the editor order is used.
  */
 export function DesktopHome() {
   const router = useRouter();
   const [sections, setSections] = useState<DesktopSection[] | null>(null);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [popular, setPopular] = useState<Product[]>([]);
+  const [fresh, setFresh] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<HomeCategory[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [articles, setArticles] = useState<Article[]>([]);
   const [store, setStore] = useState<StoreRow | null>(null);
   const [query, setQuery] = useState("");
-  const [productCategory, setProductCategory] = useState<string>("all");
   const [draftPreview, setDraftPreview] = useState(false);
 
   useEffect(() => {
@@ -307,15 +269,21 @@ export function DesktopHome() {
       safe(fetch(previewDraft ? "/api/cms?preview=draft" : "/api/cms", { credentials: "include" })),
       safe(fetch("/api/products")),
       safe(fetch("/api/recipes")),
-      safe(fetch("/api/articles")),
       safe(fetch("/api/stores?channel=website")),
-    ]).then(([cms, prod, rec, art, stores]) => {
+      safe(fetch("/api/shop/popular-products?limit=12")),
+      safe(fetch("/api/shop/new-products?limit=12")),
+      safe(fetch("/api/shop/home-categories")),
+    ]).then(([cms, prod, rec, stores, pop, neu, cats]) => {
       if (cancelled) return;
       setSections(listOrderedDesktopHomeSections((cms.blocks as HomepageBlock[]) ?? []));
       setBanners((cms.banners as Banner[]) ?? []);
       setProducts((prod.products as Product[]) ?? []);
       setRecipes((rec.recipes as Recipe[]) ?? []);
-      setArticles((art.articles as Article[]) ?? []);
+      setPopular((pop.products as Product[]) ?? []);
+      setFresh((neu.products as Product[]) ?? []);
+      setCategories(
+        ((cats.categories as HomeCategory[]) ?? []).filter((c) => c.name && c.name !== "全部分類")
+      );
       const list = (stores.stores as StoreRow[]) ?? [];
       setStore(list.find((s) => (s.name || "").includes("大安")) ?? list[0] ?? null);
     });
@@ -324,173 +292,538 @@ export function DesktopHome() {
     };
   }, []);
 
-  const activeBanners = useMemo(() => {
-    const preferred = banners
-      .filter(
-        (b) =>
-          b.is_active !== false &&
-          bannerImage(b) &&
-          (String((b as Banner & { placement?: string }).placement ?? "") ===
-            "desktop_home_hero" ||
-            String((b as Banner & { banner_type?: string }).banner_type ?? "") ===
-              "desktop_home_hero")
-      )
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-    if (preferred.length) return preferred;
-    return banners
-      .filter((b) => b.is_active !== false && bannerImage(b))
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const heroBanners = useMemo(() => {
+    const active = banners.filter((b) => b.is_active !== false && bannerImage(b));
+    const preferred = active.filter(
+      (b) => b.placement === "desktop_home_hero" || b.banner_type === "desktop_home_hero"
+    );
+    return (preferred.length ? preferred : active).sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    );
   }, [banners]);
 
   const [heroIndex, setHeroIndex] = useState(0);
-  const heroBanner = activeBanners[heroIndex] ?? activeBanners[0] ?? null;
+  const heroBanner = heroBanners[heroIndex] ?? heroBanners[0] ?? null;
   const heroSrc = (heroBanner && bannerImage(heroBanner)) || DESKTOP_HERO_FALLBACK;
 
   useEffect(() => {
-    if (activeBanners.length <= 1) return;
-    const t = window.setInterval(() => {
-      setHeroIndex((i) => (i + 1) % activeBanners.length);
-    }, 6000);
+    if (heroBanners.length <= 1) return;
+    const t = window.setInterval(() => setHeroIndex((i) => (i + 1) % heroBanners.length), 6000);
     return () => window.clearInterval(t);
-  }, [activeBanners.length]);
+  }, [heroBanners.length]);
 
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    for (const p of products) {
-      if (p.category) set.add(p.category);
-    }
-    return Array.from(set).slice(0, 6);
-  }, [products]);
-
-  const campaignCards = useCallback(
-    (limit: number) => {
-      const fromArticles = articles.slice(0, limit).map((a, i) => ({
-        id: a.id,
-        title: a.title || CAMPAIGN_TITLES[i % CAMPAIGN_TITLES.length],
-        href: a.slug ? `/articles/${a.slug}` : `/articles/${a.id}`,
-        image: a.cover_image || DESKTOP_CAMPAIGN_FALLBACKS[i % DESKTOP_CAMPAIGN_FALLBACKS.length],
-      }));
-      if (fromArticles.length >= limit) return fromArticles;
-      const fromBanners = activeBanners.slice(1, 1 + limit).map((b, i) => ({
-        id: b.id,
-        title: b.title || CAMPAIGN_TITLES[i % CAMPAIGN_TITLES.length],
-        href: b.link_url || APP_ROUTES.promotions,
-        image: bannerImage(b) || DESKTOP_CAMPAIGN_FALLBACKS[i % DESKTOP_CAMPAIGN_FALLBACKS.length],
-      }));
-      return [...fromArticles, ...fromBanners].slice(0, limit);
-    },
-    [articles, activeBanners]
-  );
-
-  const filteredProducts = useMemo(() => {
-    if (productCategory === "all") return products;
-    return products.filter((p) => p.category === productCategory);
-  }, [products, productCategory]);
+  const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+  const pickManual = (ids: string[]) =>
+    ids.map((id) => productById.get(id)).filter((p): p is Product => Boolean(p));
 
   const pickRecipes = (section: DesktopSection) => {
-    const limit = section.displayCount || 8;
     if (section.sourceMode === "manual" && section.manualIds.length) {
       const byId = new Map(recipes.map((r) => [r.id, r]));
-      const picked = section.manualIds
-        .map((id) => byId.get(id))
-        .filter((r): r is Recipe => Boolean(r));
-      if (picked.length) return picked.slice(0, limit);
+      const picked = section.manualIds.map((id) => byId.get(id)).filter((r): r is Recipe => Boolean(r));
+      if (picked.length) return picked;
     }
-    return recipes.slice(0, limit);
+    return recipes;
   };
 
-  const renderSection = (section: DesktopSection): ReactNode => {
-    // Same feature gate as the app home: group-buy sections stay hidden
-    // while FEATURES.groupBuying is off.
+  const renderSection = (section: DesktopSection, prevKey: string | null): ReactNode => {
+    // Group-buy sections stay hidden while FEATURES.groupBuying is off.
     if (!GROUP_BUY_CONSUMER_VISIBLE && HIDDEN_HOME_GROUP_BUY_KEYS.has(section.key)) return null;
+    const cfg = section.config ?? {};
     const cols = section.desktop.columns;
+
     switch (section.key) {
+      /* 主視覺：圖片＋連結 */
       case "hero":
         return (
-          <section key={section.id} aria-label={section.title || "主視覺 Banner"} className="space-y-4">
-            <div>
-              <Link
-                href={heroBanner?.link_url || APP_ROUTES.shop}
-                className={cn(
-                  "relative block w-full overflow-hidden rounded-2xl bg-[#EEF8FC]",
-                  heroBanner?.mobile_image_url ? "aspect-[3/2] md:aspect-video" : "aspect-video"
-                )}
-              >
-                <picture>
-                  {heroBanner?.mobile_image_url ? (
-                    <source media="(max-width: 767px)" srcSet={heroBanner.mobile_image_url} />
-                  ) : null}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={heroSrc}
-                    alt={heroBanner?.title || ""}
-                    className="absolute inset-0 h-full w-full object-cover object-center"
-                    fetchPriority="high"
+          <Band key={section.id} tone="hero" label={section.title || "主視覺"} className="pb-0 pt-3 sm:pt-5">
+            <Link
+              href={heroBanner?.link_url || APP_ROUTES.shop}
+              className={cn(
+                "relative block w-full overflow-hidden rounded-[clamp(16px,2vw,28px)] bg-[#EEF8FC]",
+                heroBanner?.mobile_image_url ? "aspect-[3/2] md:aspect-video" : "aspect-video"
+              )}
+            >
+              <picture>
+                {heroBanner?.mobile_image_url ? (
+                  <source media="(max-width: 767px)" srcSet={heroBanner.mobile_image_url} />
+                ) : null}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={heroSrc}
+                  alt={heroBanner?.title || "CHIMEIDIY"}
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                  fetchPriority="high"
+                />
+              </picture>
+            </Link>
+            {heroBanners.length > 1 ? (
+              <div className="mt-3 flex justify-center gap-2">
+                {heroBanners.map((b, i) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    aria-label={`第 ${i + 1} 張主視覺`}
+                    onClick={() => setHeroIndex(i)}
+                    className={cn(
+                      "h-2 rounded-full transition-all",
+                      i === heroIndex ? "w-6 bg-[#153E73]" : "w-2 bg-[#C9D3E3]"
+                    )}
                   />
-                </picture>
-              </Link>
-              {activeBanners.length > 1 ? (
-                <div className="mt-3 flex justify-center gap-2">
-                  {activeBanners.map((b, i) => (
-                    <button
-                      key={b.id}
-                      type="button"
-                      aria-label={`Banner ${i + 1}`}
-                      onClick={() => setHeroIndex(i)}
-                      className={cn(
-                        "h-2 w-2 rounded-full",
-                        i === heroIndex ? "bg-[#153E73]" : "bg-[#E9EDF2]"
-                      )}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
+                ))}
+              </div>
+            ) : null}
+          </Band>
+        );
+
+      /* 搜尋列＋熱門搜尋 */
+      case "hot_searches": {
+        const keywords = resolveHotSearchKeywords(cfg).slice(0, Math.max(1, section.displayCount || 8));
+        return (
+          <Band key={section.id} label="搜尋" className="pt-[clamp(16px,2.4vw,28px)]">
             <form
-              className="flex overflow-hidden rounded-full border border-[#E9EDF2] bg-white shadow-sm"
+              role="search"
+              className="mx-auto flex h-[clamp(50px,4.4vw,64px)] w-full max-w-[760px] items-center gap-2 rounded-full bg-white pl-4 pr-1.5 shadow-[0_8px_28px_rgba(21,62,115,0.12)] sm:pl-6"
               onSubmit={(e) => {
                 e.preventDefault();
                 const q = query.trim();
-                router.push(
-                  q ? `${APP_ROUTES.shopSearch}?q=${encodeURIComponent(q)}` : APP_ROUTES.shop
-                );
+                router.push(q ? `${APP_ROUTES.search}?q=${encodeURIComponent(q)}` : APP_ROUTES.shop);
               }}
             >
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="搜尋商品、食譜、品牌…"
-                className="min-w-0 flex-1 bg-transparent px-5 py-3.5 text-[15px] text-[#153E73] outline-none placeholder:text-[#687386]"
-              />
+              <Search className="h-5 w-5 shrink-0 text-[#153E73]" aria-hidden />
+              <label className="min-w-0 flex-1">
+                <span className="sr-only">搜尋</span>
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={searchPlaceholder(cfg)}
+                  className="w-full bg-transparent text-[clamp(14px,1.2vw,17px)] text-[#153E73] outline-none placeholder:text-[#7A869A]"
+                />
+              </label>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 bg-[#153E73] px-6 text-sm font-semibold text-white"
+                className="hidden h-[calc(100%-12px)] shrink-0 items-center rounded-full bg-[#153E73] px-6 text-[15px] font-bold text-white sm:inline-flex"
               >
-                <Search className="h-4 w-4" />
                 搜尋
               </button>
             </form>
-          </section>
+            {keywords.length ? (
+              <div className="mt-4 flex items-center gap-2 md:justify-center">
+                <span className="hidden shrink-0 text-sm font-bold text-[#4A5B78] md:inline">
+                  {section.title && section.title !== "搜尋列與熱門搜尋" ? section.title : "熱門搜尋"}
+                </span>
+                <ul className="scrollbar-hide -mr-4 flex gap-2 overflow-x-auto pr-4 md:mr-0 md:flex-wrap md:justify-center md:overflow-visible md:pr-0">
+                  {keywords.map((k) => (
+                    <li key={k.id} className="shrink-0">
+                      <Link
+                        href={hotSearchHref(k)}
+                        className="inline-flex h-9 items-center rounded-full border border-[#E5DDC4] bg-white px-4 text-sm text-[#153E73] hover:border-[#FFD454] hover:bg-[#FFF5CC]"
+                      >
+                        {k.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </Band>
         );
+      }
 
-      case "quick_entry": {
-        const qs = parseQuickServicesSettings(section.config);
-        const items = qs.items.filter((i) => i.enabled !== false).sort((a, b) => a.sortOrder - b.sortOrder);
+      /* 商品分類（後台 › 商城分類） */
+      case "popular_categories": {
+        const tiles: HomeCategory[] = categories.slice(0, 7);
+        if (tiles.length <= 6)
+          tiles.push({ id: "__new", name: "新品上架", href: "/shop/new-arrivals", bgColor: "#FFF5CC" });
+        tiles.push({ id: "__all", name: "全部分類", href: "/shop/categories", bgColor: "#EEF8FC" });
+        return (
+          <Band key={section.id} label={section.title}>
+            <SectionHeading
+              title={section.title || "商品分類"}
+              subtitle={section.subtitle}
+              href={section.viewAllUrl || APP_ROUTES.shop}
+              linkLabel="全部商品"
+            />
+            <ul className="grid grid-cols-4 gap-x-2 gap-y-4 sm:gap-x-4 lg:grid-cols-8 lg:gap-5">
+              {tiles.map((c) => (
+                <li key={c.id}>
+                  <Link href={c.href} className="group flex flex-col items-center gap-2 text-center">
+                    <span
+                      className="relative flex aspect-square w-full max-w-[128px] items-center justify-center overflow-hidden rounded-full shadow-[0_4px_14px_rgba(21,62,115,0.10)] transition group-hover:-translate-y-0.5"
+                      style={{ background: c.bgColor || "#FFF5CC" }}
+                    >
+                      {c.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={c.image} alt="" className="absolute inset-0 h-full w-full object-contain" loading="lazy" />
+                      ) : c.id === "__new" ? (
+                        <Sparkles className="h-[38%] w-[38%] text-[#153E73]" strokeWidth={1.7} aria-hidden />
+                      ) : (
+                        <LayoutGrid className="h-[38%] w-[38%] text-[#153E73]" strokeWidth={1.7} aria-hidden />
+                      )}
+                    </span>
+                    <span className="line-clamp-1 text-[clamp(12px,1.1vw,15px)] font-bold text-[#153E73]">{c.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Band>
+        );
+      }
+
+      /* 最新活動 Banner（5:2，圖片＋連結） */
+      case "latest_campaigns": {
+        const settings = parseLatestCampaignSettings(cfg);
+        const slides = settings.slides
+          .filter((s) => s.enabled && s.imageUrl)
+          .filter(
+            (s) =>
+              GROUP_BUY_CONSUMER_VISIBLE ||
+              !(isGroupBuyConsumerHref(s.href) || s.href === "/live" || s.href.startsWith("/live/"))
+          )
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .slice(0, Math.max(1, section.displayCount || 6));
+        if (!slides.length) return null;
+        const perRow = Math.min(3, cols ?? 2);
+        const viewAll =
+          section.viewAllUrl && (GROUP_BUY_CONSUMER_VISIBLE || !isGroupBuyConsumerHref(section.viewAllUrl))
+            ? section.viewAllUrl
+            : APP_ROUTES.promotions;
+        return (
+          <Band key={section.id} label={section.title}>
+            <SectionHeading title={section.title || "最新活動"} subtitle={section.subtitle} href={viewAll} linkLabel="所有活動" />
+            <div
+              className={cn(
+                "scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:-mx-6 sm:px-6",
+                "md:mx-0 md:grid md:gap-5 md:overflow-visible md:px-0",
+                perRow === 3 ? "md:grid-cols-2 lg:grid-cols-3" : perRow === 1 ? "md:grid-cols-1" : "md:grid-cols-2"
+              )}
+            >
+              {slides.map((s) => (
+                <Link
+                  key={s.id}
+                  href={s.href || APP_ROUTES.promotions}
+                  className="group relative block aspect-[5/2] w-[86%] shrink-0 snap-start overflow-hidden rounded-[clamp(14px,1.6vw,20px)] bg-[#EEF8FC] md:w-auto"
+                >
+                  <Image
+                    src={s.imageUrl}
+                    alt={s.title}
+                    fill
+                    className="object-cover transition duration-300 group-hover:scale-[1.02]"
+                    sizes="(min-width:768px) 50vw, 86vw"
+                  />
+                </Link>
+              ))}
+            </div>
+          </Band>
+        );
+      }
+
+      /* 熱門商品 / 新品上架 / 精選商品 */
+      case "popular_baking_products":
+      case "weekly_new_products":
+      case "custom_products": {
+        const manual = section.manualIds.length ? pickManual(section.manualIds) : [];
+        const auto =
+          section.key === "popular_baking_products"
+            ? popular
+            : section.key === "weekly_new_products"
+              ? fresh
+              : [];
+        const source = section.key === "custom_products" || (section.sourceMode === "manual" && manual.length) ? manual : auto;
+        const perRow = cols ?? 5;
+        const list = source.slice(0, fillRows(Math.min(source.length, section.displayCount || 10), perRow));
+        if (!list.length) return null;
+        const fallbackHref =
+          section.key === "popular_baking_products"
+            ? "/shop/popular"
+            : section.key === "weekly_new_products"
+              ? "/shop/new-arrivals"
+              : null;
+        return (
+          <Band key={section.id} label={section.title}>
+            <SectionHeading
+              title={section.title}
+              subtitle={section.subtitle}
+              href={section.viewAllUrl || fallbackHref}
+            />
+            <Rail cols={perRow}>
+              {list.map((p) => (
+                <ProductTile key={p.id} p={p} />
+              ))}
+            </Rail>
+          </Band>
+        );
+      }
+
+      /* 精選食譜 */
+      case "latest_recipes": {
+        const picked = pickRecipes(section);
+        const perRow = cols ?? 3;
+        const list = picked.slice(0, fillRows(Math.min(picked.length, section.displayCount || 3), perRow));
+        if (!list.length) return null;
+        return (
+          <Band key={section.id} tone="cream" label={section.title} className="pb-4 sm:pb-6">
+            <SectionHeading
+              title={section.title || "精選食譜"}
+              subtitle={section.subtitle}
+              href={section.viewAllUrl || APP_ROUTES.recipes}
+              linkLabel="更多食譜"
+            />
+            <Rail cols={perRow} itemClassName="w-[76%] sm:w-[46%] md:w-[31%]">
+              {list.map((r) => {
+                const cover = r.cover_image_url || r.cover_image;
+                const mins = r.total_time ?? r.prep_time ?? r.cook_time;
+                const href = `/recipes/${r.slug || r.id}`;
+                const intro = r.summary || r.description;
+                return (
+                  <article key={r.id} className="flex h-full flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_2px_12px_rgba(21,62,115,0.08)]">
+                    <Link href={href} className="relative block aspect-[4/3] bg-[#EEF8FC]">
+                      {cover ? (
+                        <Image src={cover} alt={r.title} fill className="object-cover" sizes="(min-width:1024px) 30vw, 76vw" />
+                      ) : null}
+                      <span className="absolute right-2 top-2" onClick={(e) => e.preventDefault()}>
+                        <FavoriteButton targetType="recipe" targetId={r.id} size="sm" />
+                      </span>
+                    </Link>
+                    <div className="flex flex-1 flex-col gap-2 p-[clamp(14px,1.6vw,20px)]">
+                      <Link href={href} className="line-clamp-2 text-[clamp(16px,1.4vw,20px)] font-black text-[#153E73]">
+                        {r.title}
+                      </Link>
+                      <p className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-[#4A5B78]">
+                        {mins != null ? (
+                          <span className="inline-flex items-center gap-1">
+                            <Clock3 className="h-4 w-4" aria-hidden />
+                            {mins} 分鐘
+                          </span>
+                        ) : null}
+                        {r.difficulty ? (
+                          <span className="inline-flex items-center gap-1">
+                            <BarChart3 className="h-4 w-4" aria-hidden />
+                            {DIFFICULTY[r.difficulty] ?? r.difficulty}
+                          </span>
+                        ) : null}
+                      </p>
+                      {intro ? <p className="line-clamp-2 text-[13px] leading-relaxed text-[#4A5B78]">{intro}</p> : null}
+                      <Link href={href} className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-bold text-[#F16458]">
+                        查看食譜
+                        <ArrowRight className="h-4 w-4" aria-hidden />
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </Rail>
+          </Band>
+        );
+      }
+
+      /* 一鍵買齊材料（緊接在食譜下方） */
+      case "ingredient_shop": {
+        const manual = section.sourceMode === "manual" ? pickManual(section.manualIds) : [];
+        const slugs = Array.isArray(cfg.category_slugs) ? (cfg.category_slugs as string[]) : [];
+        const bySlug = slugs.length
+          ? products.filter((p) => p.product_categories?.slug && slugs.includes(p.product_categories.slug))
+          : [];
+        const source = manual.length ? manual : bySlug.length >= 4 ? bySlug : products;
+        const list = source.slice(0, fillRows(Math.min(source.length, section.displayCount || 8, 8), 4));
+        const subtitle = section.subtitle || str(cfg.subtitle) || "完整食材一次購足，讓烘焙更輕鬆！";
+        const hint = cfg.hint_enabled === false ? "" : str(cfg.hint_text) || DEFAULT_INGREDIENT_HINT;
+        const afterRecipes = prevKey === "latest_recipes";
+        return (
+          <Band key={section.id} tone={afterRecipes ? "cream" : "plain"} label={section.title} className={afterRecipes ? "pt-2" : undefined}>
+            {afterRecipes && hint ? (
+              <p className="mb-4 text-center text-[clamp(14px,1.2vw,16px)] font-bold text-[#153E73]">{hint}</p>
+            ) : null}
+            <div className="flex flex-col gap-5 rounded-[clamp(18px,2vw,24px)] bg-white p-[clamp(18px,2.4vw,32px)] shadow-[0_4px_18px_rgba(21,62,115,0.08)] lg:flex-row lg:items-center lg:gap-8">
+              <div className="flex shrink-0 flex-col gap-2 lg:w-[260px]">
+                <h2 className="text-[clamp(22px,2.2vw,30px)] font-black text-[#153E73]">{section.title || "一鍵買齊材料"}</h2>
+                <p className="text-[clamp(13px,1.1vw,15px)] leading-relaxed text-[#4A5B78]">{subtitle}</p>
+                <Link
+                  href={section.viewAllUrl || APP_ROUTES.shop}
+                  className="mt-2 inline-flex h-11 w-fit items-center gap-1.5 rounded-full bg-[#F16458] px-5 text-sm font-bold text-white hover:brightness-95"
+                >
+                  全部商品
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+              </div>
+              {list.length ? (
+                <div className="min-w-0 flex-1">
+                  <Rail cols={4} itemClassName="w-[44%] sm:w-[30%] md:w-[23%]">
+                    {list.map((p) => (
+                      <ProductTile key={p.id} p={p} />
+                    ))}
+                  </Rail>
+                </div>
+              ) : null}
+            </div>
+          </Band>
+        );
+      }
+
+      /* AI 烘焙小幫手 */
+      case "ai_assistant": {
+        const ai = parseAiSection(cfg);
+        return (
+          <Band key={section.id} label={section.title}>
+            <div className="relative flex flex-col overflow-hidden rounded-[clamp(20px,2.4vw,28px)] bg-[#EEF8FC] md:flex-row md:items-center">
+              <div className="relative z-10 flex flex-1 flex-col gap-3 p-[clamp(22px,4vw,64px)] pb-0 md:pb-[clamp(22px,4vw,64px)] md:pr-0">
+                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#153E73]">
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                  {ai.badge}
+                </span>
+                <h2 className="text-[clamp(26px,3vw,40px)] font-black text-[#153E73]">{section.title || "AI 烘焙小幫手"}</h2>
+                <p className="whitespace-pre-line text-[clamp(14px,1.2vw,17px)] leading-relaxed text-[#36507A]">{ai.body}</p>
+                {ai.chips.length ? (
+                  <ul className="flex flex-wrap gap-2">
+                    {ai.chips.map((c) => (
+                      <li key={c} className="rounded-full border border-[#CFE7F3] bg-white px-3.5 py-1.5 text-sm text-[#153E73]">
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <Link
+                  href={ai.href}
+                  className="mt-1 inline-flex h-12 w-fit items-center gap-2 rounded-full bg-[#153E73] px-6 text-[15px] font-bold text-white hover:brightness-110"
+                >
+                  {ai.buttonText}
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+              </div>
+              <div className="relative ml-auto mt-2 aspect-[656/552] w-[48%] max-w-[220px] self-end md:mt-0 md:w-[40%] md:max-w-[440px]">
+                <div
+                  aria-hidden
+                  className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(121,199,232,0.45)_0%,rgba(121,199,232,0)_65%)]"
+                />
+                <Image src={ai.imageUrl} alt="" fill className="object-contain object-bottom" sizes="(min-width:768px) 40vw, 48vw" />
+              </div>
+            </div>
+          </Band>
+        );
+      }
+
+      /* 大安門市＋企業採購 */
+      case "store_information": {
+        const sb = parseStoreB2b(cfg);
+        const photo = sb.store.imageUrl || store?.cover_image_url || store?.image_url || "";
+        return (
+          <Band key={section.id} label={section.title}>
+            <div className={cn("grid gap-4 lg:gap-6", sb.b2b.enabled && "md:grid-cols-2")}>
+              <div className="flex flex-col overflow-hidden rounded-[clamp(18px,2vw,24px)] bg-white shadow-[0_4px_18px_rgba(21,62,115,0.08)] sm:flex-row">
+                {photo ? (
+                  <div className="relative aspect-[16/9] shrink-0 bg-[#EEF8FC] sm:aspect-auto sm:w-[42%]">
+                    <Image src={photo} alt={sb.store.name} fill className="object-cover" sizes="(min-width:768px) 20vw, 100vw" />
+                  </div>
+                ) : null}
+                <div className="flex flex-1 flex-col gap-3 p-[clamp(18px,2.4vw,32px)]">
+                  <span className="text-[13px] font-bold text-[#F16458]">{sb.store.eyebrow}</span>
+                  <h2 className="text-[clamp(20px,2vw,28px)] font-black text-[#153E73]">{sb.store.name}</h2>
+                  <p className="flex gap-1.5 text-[clamp(14px,1.1vw,15px)] leading-relaxed text-[#36507A]">
+                    <MapPin className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
+                    {sb.store.address}
+                  </p>
+                  {sb.store.tags.length ? (
+                    <ul className="flex flex-wrap gap-2">
+                      {sb.store.tags.map((t) => (
+                        <li key={t} className="rounded-full bg-[#FFF5CC] px-3.5 py-1 text-sm font-bold text-[#153E73]">
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <Link href={sb.store.href} className="mt-auto inline-flex items-center gap-1.5 pt-1 text-[15px] font-bold text-[#153E73] hover:text-[#F16458]">
+                    {sb.store.linkText}
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                </div>
+              </div>
+              {sb.b2b.enabled ? (
+                <div className="flex flex-col gap-3 rounded-[clamp(18px,2vw,24px)] p-[clamp(20px,2.6vw,36px)] text-white" style={{ background: NAVY }}>
+                  <span className="text-[13px] font-bold text-[#FFD454]">{sb.b2b.eyebrow}</span>
+                  <h2 className="text-[clamp(20px,2vw,28px)] font-black">{sb.b2b.title}</h2>
+                  {sb.b2b.tags.length ? (
+                    <ul className="flex flex-wrap gap-2">
+                      {sb.b2b.tags.map((t) => (
+                        <li key={t} className="rounded-full bg-white/[0.12] px-3.5 py-1 text-sm">
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {sb.b2b.note ? (
+                    <p className="flex items-center gap-2 text-[15px] text-[#DCE6F5]">
+                      <Truck className="h-5 w-5 text-[#FFD454]" aria-hidden />
+                      {sb.b2b.note}
+                    </p>
+                  ) : null}
+                  <Link
+                    href={sb.b2b.href}
+                    className="mt-auto inline-flex h-12 w-fit items-center gap-1.5 rounded-full bg-[#FFD454] px-6 text-[15px] font-bold text-[#153E73] hover:brightness-95"
+                  >
+                    {sb.b2b.buttonText}
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                </div>
+              ) : null}
+            </div>
+          </Band>
+        );
+      }
+
+      /* 快捷服務（圖片內含文字時不重複顯示） */
+      case "service_shortcuts": {
+        const items = parseServiceShortcuts(cfg)
+          .filter((i) => i.enabled !== false && (GROUP_BUY_CONSUMER_VISIBLE || !isGroupBuyConsumerHref(i.href)))
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .slice(0, 8);
         if (!items.length) return null;
         return (
-          <section key={section.id}>
-            <SectionHeading
-              title={section.title || qs.title || "常用服務"}
-              href={qs.allServicesHref}
-              showViewAll={Boolean(qs.allServicesHref)}
-            />
-            <ul className={cn("grid gap-3", gridCols(cols, Math.min(8, Math.max(4, items.length))))}>
+          <Band key={section.id} label={section.title || "快捷服務"} className="pb-[clamp(28px,4.4vw,64px)]">
+            <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:gap-5">
+              {items.map((item) => {
+                const labelled = item.labelsInImage !== false && Boolean(item.imageUrl);
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={item.href || "#"}
+                      aria-label={item.title}
+                      className="flex h-full flex-col items-center gap-2 overflow-hidden rounded-[clamp(14px,1.6vw,20px)] bg-white p-2 text-center shadow-[0_2px_10px_rgba(21,62,115,0.06)] transition hover:-translate-y-0.5"
+                      style={{ background: item.backgroundColor || "#FFFFFF" }}
+                    >
+                      {item.imageUrl ? (
+                        <span className="relative block aspect-square w-full max-w-[220px]">
+                          <Image src={item.imageUrl} alt="" fill className="object-contain" sizes="(min-width:768px) 20vw, 45vw" />
+                        </span>
+                      ) : null}
+                      {!labelled ? (
+                        <span className="pb-2">
+                          <span className="block text-[15px] font-black text-[#153E73]">{item.title}</span>
+                          {item.subtitle ? <span className="block text-xs text-[#687386]">{item.subtitle}</span> : null}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </Band>
+        );
+      }
+
+      /* 常用服務（預設不顯示在網站，可在後台開啟） */
+      case "quick_entry": {
+        const qs = parseQuickServicesSettings(cfg);
+        const items = qs.items
+          .filter((i) => i.enabled !== false && (GROUP_BUY_CONSUMER_VISIBLE || !isGroupBuyConsumerHref(i.href)))
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+        if (!items.length) return null;
+        return (
+          <Band key={section.id} label={section.title}>
+            <SectionHeading title={section.title || qs.title || "常用服務"} href={qs.allServicesHref || null} />
+            <ul className="grid grid-cols-4 gap-3 lg:grid-cols-8">
               {items.slice(0, 16).map((item) => (
                 <li key={item.id}>
-                  <Link
-                    href={item.href || "#"}
-                    className="flex flex-col items-center gap-2 rounded-2xl bg-white px-2 py-4 text-center transition hover:shadow-sm"
-                  >
+                  <Link href={item.href || "#"} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-2 py-4 text-center transition hover:shadow-sm">
                     <span
                       className="relative inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full"
                       style={{ background: item.backgroundColor || "#FFF5CC" }}
@@ -505,163 +838,39 @@ export function DesktopHome() {
                 </li>
               ))}
             </ul>
-          </section>
+          </Band>
         );
       }
 
-      case "latest_campaigns": {
-        const perRow = cols ?? 3;
-        const available = campaignCards(Math.max(1, section.displayCount || 3));
-        const cards = available.slice(0, fillRows(available.length, perRow));
-        if (!cards.length) return null;
-        return (
-          <section key={section.id}>
-            <SectionHeading
-              title={section.title || "最新活動"}
-              href={section.viewAllUrl || APP_ROUTES.promotions}
-            />
-            <div className={cn("grid gap-4", gridCols(cols, 3))}>
-              {cards.map((card) => (
-                <Link key={card.id} href={card.href} className="group overflow-hidden rounded-2xl bg-white">
-                  <div className="relative aspect-[16/10] bg-[#EEF8FC]">
-                    <Image
-                      src={card.image}
-                      alt={card.title}
-                      fill
-                      className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                      sizes="(min-width:1280px) 22vw, 40vw"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="line-clamp-2 text-base font-bold text-[#153E73]">{card.title}</h3>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        );
-      }
-
-      case "latest_recipes": {
-        const picked = pickRecipes(section);
-        const list = picked.slice(0, fillRows(picked.length, cols ?? 4));
-        return (
-          <section key={section.id}>
-            <SectionHeading title={section.title || "精選食譜"} href={section.viewAllUrl || APP_ROUTES.recipes} />
-            <div className={cn("grid gap-4", gridCols(cols, 4))}>
-              {list.map((r) => {
-                const cover = recipeCover(r);
-                const mins = r.total_time ?? r.prep_time ?? r.cook_time;
-                return (
-                  <article key={r.id} className="overflow-hidden rounded-2xl bg-white">
-                    <Link href={recipeHref(r)} className="relative block aspect-[4/3] bg-[#EEF8FC]">
-                      {cover ? (
-                        <Image src={cover} alt={r.title} fill className="object-cover" sizes="(min-width:1280px) 18vw, 40vw" />
-                      ) : null}
-                      <span className="absolute right-2 top-2" onClick={(e) => e.preventDefault()}>
-                        <FavoriteButton targetType="recipe" targetId={r.id} size="sm" />
-                      </span>
-                    </Link>
-                    <div className="space-y-1 p-3">
-                      <Link href={recipeHref(r)} className="line-clamp-2 text-sm font-bold text-[#153E73]">
-                        {r.title}
-                      </Link>
-                      <p className="text-xs text-[#687386]">
-                        {mins != null ? `${mins} 分` : null}
-                        {mins != null && r.difficulty ? " · " : null}
-                        {r.difficulty ? DIFFICULTY[r.difficulty] ?? r.difficulty : null}
-                      </p>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        );
-      }
-
-      case "ingredient_shop":
-        return (
-          <section key={section.id}>
-            <SectionHeading title={section.title || "一鍵買齊材料"} href={section.viewAllUrl || APP_ROUTES.shop} />
-            {categories.length > 0 ? (
-              <div className="mb-4 flex flex-wrap gap-2">
-                {["all", ...categories].map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setProductCategory(c)}
-                    className={cn(
-                      "rounded-full px-4 py-1.5 text-sm font-semibold",
-                      productCategory === c ? "bg-[#FFF5CC] text-[#153E73]" : "bg-white text-[#687386]"
-                    )}
-                  >
-                    {c === "all" ? "全部" : c}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            <div className={cn("grid gap-4", gridCols(cols, 5))}>
-              {filteredProducts.slice(0, section.displayCount || 10).map((p) => (
-                <DesktopProductCard
-                  key={p.id}
-                  id={p.id}
-                  name={p.name}
-                  price={productPrice(p)}
-                  image_url={p.image_url}
-                  spec={p.spec || p.specification || p.unit}
-                  href={productPath(p.id)}
-                />
-              ))}
-            </div>
-          </section>
-        );
-
-      // Group-buy / live / shortcut sections: the app components are already
-      // responsive (md/xl card sizes); the .desktop-home-band wrapper strips
-      // their full-bleed band padding so they align with the column.
+      // Group-buy / live sections (only when FEATURES.groupBuying is on).
       case "group_buy_banner":
-        return (
-          <div key={section.id} className="desktop-home-band">
-            <HomeGroupBuyBannerSection block={section} />
-          </div>
-        );
       case "weekly_group_buys":
-        return (
-          <div key={section.id} className="desktop-home-band">
-            <WeeklyGroupBuysSection block={section} />
-          </div>
-        );
       case "closing_group_buys":
-        return (
-          <div key={section.id} className="desktop-home-band">
-            <ClosingGroupBuysSection block={section} />
-          </div>
-        );
       case "weekly_live_streams":
-        return (
-          <div key={section.id} className="desktop-home-band">
-            <WeeklyLiveStreamsSection block={section} />
-          </div>
-        );
       case "chime_select":
         return (
-          <div key={section.id} className="desktop-home-band">
-            <ChimeSelectGroupBuySection block={section} />
-          </div>
+          <Band key={section.id} label={section.title}>
+            <div className="desktop-home-band">
+              {section.key === "group_buy_banner" ? (
+                <HomeGroupBuyBannerSection block={section} />
+              ) : section.key === "weekly_group_buys" ? (
+                <WeeklyGroupBuysSection block={section} />
+              ) : section.key === "closing_group_buys" ? (
+                <ClosingGroupBuysSection block={section} />
+              ) : section.key === "weekly_live_streams" ? (
+                <WeeklyLiveStreamsSection block={section} />
+              ) : (
+                <ChimeSelectGroupBuySection block={section} />
+              )}
+            </div>
+          </Band>
         );
-      case "service_shortcuts":
-        return (
-          <div key={section.id} className="desktop-home-band">
-            <HomeServiceShortcutsSection block={section} />
-          </div>
-        );
+
       case "custom_banner": {
-        const cfg = section.config ?? {};
-        const img = typeof cfg.image_url === "string" ? cfg.image_url : "";
+        const img = str(cfg.image_url);
         if (!img) return null;
-        const mobileImg = typeof cfg.mobile_image_url === "string" ? cfg.mobile_image_url : "";
-        const href = typeof cfg.link_url === "string" ? cfg.link_url : "";
+        const mobileImg = str(cfg.mobile_image_url);
+        const href = str(cfg.link_url);
         const pic = (
           <picture>
             {mobileImg ? <source media="(max-width: 767px)" srcSet={mobileImg} /> : null}
@@ -670,10 +879,10 @@ export function DesktopHome() {
           </picture>
         );
         return (
-          <section key={section.id} aria-label={section.title}>
+          <Band key={section.id} label={section.title}>
             <div
               className={cn(
-                "overflow-hidden rounded-2xl bg-[#EEF8FC]",
+                "overflow-hidden rounded-[clamp(16px,2vw,24px)] bg-[#EEF8FC]",
                 mobileImg ? "aspect-[3/2] md:aspect-[3/1]" : "aspect-[3/1]"
               )}
             >
@@ -685,74 +894,37 @@ export function DesktopHome() {
                 pic
               )}
             </div>
-          </section>
-        );
-      }
-
-      case "custom_products": {
-        const byId = new Map(products.map((p) => [p.id, p]));
-        const picked = section.manualIds
-          .map((id) => byId.get(id))
-          .filter((p): p is Product => Boolean(p));
-        if (!picked.length) return null;
-        const perRow = cols ?? 5;
-        const list = picked.slice(0, fillRows(Math.min(picked.length, section.displayCount || 10), perRow));
-        return (
-          <section key={section.id}>
-            <SectionHeading title={section.title || "精選商品"} href={section.viewAllUrl || undefined} showViewAll={Boolean(section.viewAllUrl)} />
-            {section.subtitle ? <p className="-mt-3 mb-4 text-sm text-[#687386]">{section.subtitle}</p> : null}
-            <div className={cn("grid gap-4", gridCols(cols, 5))}>
-              {list.map((p) => (
-                <DesktopProductCard
-                  key={p.id}
-                  id={p.id}
-                  name={p.name}
-                  price={productPrice(p)}
-                  image_url={p.image_url}
-                  spec={p.spec || p.specification || p.unit}
-                  href={productPath(p.id)}
-                />
-              ))}
-            </div>
-          </section>
+          </Band>
         );
       }
 
       case "custom_text": {
-        const cfg = section.config ?? {};
-        const body = typeof cfg.body === "string" ? cfg.body : "";
-        const img = typeof cfg.image_url === "string" ? cfg.image_url : "";
-        const btn = typeof cfg.button_text === "string" ? cfg.button_text : "";
-        const href = typeof cfg.link_url === "string" ? cfg.link_url : "";
+        const body = str(cfg.body);
+        const img = str(cfg.image_url);
+        const btn = str(cfg.button_text);
+        const href = str(cfg.link_url);
         if (!section.title && !body && !img) return null;
         return (
-          <section
-            key={section.id}
-            className={cn(
-              "overflow-hidden rounded-2xl bg-white",
-              img ? "grid md:grid-cols-2" : "p-6 md:p-8"
-            )}
-          >
-            {img ? (
-              <div className="aspect-[3/2] bg-[#EEF8FC]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img} alt="" className="h-full w-full object-cover" loading="lazy" />
-              </div>
-            ) : null}
-            <div className={cn("flex flex-col justify-center gap-3", img && "p-6 md:p-8")}>
-              {section.title ? <h2 className="text-2xl font-bold text-[#153E73]">{section.title}</h2> : null}
-              {section.subtitle ? <p className="text-sm font-semibold text-[#79C7E8]">{section.subtitle}</p> : null}
-              {body ? <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#465467]">{body}</p> : null}
-              {btn && href ? (
-                <Link
-                  href={href}
-                  className="mt-1 inline-flex h-11 w-fit items-center rounded-full bg-[#153E73] px-6 text-sm font-bold text-white"
-                >
-                  {btn}
-                </Link>
+          <Band key={section.id} label={section.title}>
+            <div className={cn("overflow-hidden rounded-[clamp(16px,2vw,24px)] bg-white", img ? "grid md:grid-cols-2" : "p-6 md:p-8")}>
+              {img ? (
+                <div className="aspect-[3/2] bg-[#EEF8FC]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img} alt="" className="h-full w-full object-cover" loading="lazy" />
+                </div>
               ) : null}
+              <div className={cn("flex flex-col justify-center gap-3", img && "p-6 md:p-8")}>
+                {section.title ? <h2 className="text-2xl font-black text-[#153E73]">{section.title}</h2> : null}
+                {section.subtitle ? <p className="text-sm font-semibold text-[#4A5B78]">{section.subtitle}</p> : null}
+                {body ? <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#465467]">{body}</p> : null}
+                {btn && href ? (
+                  <Link href={href} className="mt-1 inline-flex h-11 w-fit items-center rounded-full bg-[#153E73] px-6 text-sm font-bold text-white">
+                    {btn}
+                  </Link>
+                ) : null}
+              </div>
             </div>
-          </section>
+          </Band>
         );
       }
 
@@ -761,39 +933,26 @@ export function DesktopHome() {
     }
   };
 
+  const visible = (sections ?? []).filter(
+    (s) => GROUP_BUY_CONSUMER_VISIBLE || !HIDDEN_HOME_GROUP_BUY_KEYS.has(s.key)
+  );
+
   return (
-    <div className="desktop-home w-full" style={{ background: DESKTOP_COLORS.warmWhite }}>
+    <div className="desktop-home w-full overflow-x-clip bg-[#FFFEFA]">
       {draftPreview ? (
         <div className="border-b border-amber-300 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-900">
           草稿預覽模式 — 尚未發布，訪客看不到此版面
         </div>
       ) : null}
-      <DesktopContainer className="py-4 sm:py-6 lg:py-8">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="min-w-0 space-y-6 sm:space-y-8">
-            {sections === null ? (
-              <div className="space-y-6" aria-hidden>
-                <div className="aspect-video w-full animate-pulse rounded-2xl bg-[#EEF3F7]" />
-                <div className="h-14 w-full animate-pulse rounded-full bg-[#EEF3F7]" />
-                <div className="h-48 w-full animate-pulse rounded-2xl bg-[#EEF3F7]" />
-              </div>
-            ) : (
-              sections.map((section) => renderSection(section))
-            )}
-          </div>
-
-          <div className="hidden xl:block">
-            <div className="sticky top-[96px]">
-              <DesktopHomeSidebar store={store} />
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar under main on 1024–1279 */}
-        <div className="mt-8 w-full max-w-md xl:hidden">
-          <DesktopHomeSidebar store={store} />
-        </div>
-      </DesktopContainer>
+      {sections === null ? (
+        <DesktopContainer className="space-y-6 py-6">
+          <div className="aspect-video w-full animate-pulse rounded-3xl bg-[#EEF3F7]" />
+          <div className="mx-auto h-14 w-full max-w-[760px] animate-pulse rounded-full bg-[#EEF3F7]" />
+          <div className="h-40 w-full animate-pulse rounded-2xl bg-[#EEF3F7]" />
+        </DesktopContainer>
+      ) : (
+        visible.map((section, i) => renderSection(section, i > 0 ? visible[i - 1]!.key : null))
+      )}
     </div>
   );
 }

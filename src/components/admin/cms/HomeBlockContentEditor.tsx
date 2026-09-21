@@ -22,6 +22,15 @@ import { parseServiceShortcuts } from "@/lib/home/service-shortcuts";
 import { parseGroupBuyBannerSettings } from "@/types/home-group-buy-banner";
 import { DESKTOP_HOME_HERO_PLACEMENT } from "@/lib/desktop/inner-page-config";
 import { PAGE_HERO_SIZE } from "@/lib/page-heroes";
+import { DEFAULT_HOT_SEARCH_KEYWORDS, parseHotSearchKeywords, type HotSearchKeyword } from "@/lib/home/hot-search";
+import {
+  DEFAULT_INGREDIENT_HINT,
+  DEFAULT_SEARCH_PLACEHOLDER,
+  listToText,
+  parseAiSection,
+  parseStoreB2b,
+  textToList,
+} from "@/lib/home/website-home-config";
 
 type Patch = (patch: Partial<CmsBlock>) => void;
 
@@ -126,6 +135,70 @@ function ProductPicker({ ids, onChange }: { ids: string[]; onChange: (ids: strin
       )}
     </div>
   );
+}
+
+const KEYWORD_TYPES: Array<{ value: NonNullable<HotSearchKeyword["linkType"]>; label: string }> = [
+  { value: "product_search", label: "搜尋商品" },
+  { value: "recipe_search", label: "搜尋食譜" },
+  { value: "custom", label: "自訂連結" },
+];
+
+/** 熱門搜尋 chips: label + where it goes. Stored as config.keywords. */
+function KeywordEditor({ value, onChange }: { value: HotSearchKeyword[]; onChange: (next: HotSearchKeyword[]) => void }) {
+  const update = (i: number, patch: Partial<HotSearchKeyword>) =>
+    onChange(value.map((k, idx) => (idx === i ? { ...k, ...patch } : k)));
+  const move = (i: number, d: number) => {
+    const j = i + d;
+    if (j < 0 || j >= value.length) return;
+    const next = [...value];
+    [next[i], next[j]] = [next[j]!, next[i]!];
+    onChange(next);
+  };
+  return (
+    <div className="space-y-2">
+      {value.map((k, i) => (
+        <div key={k.id} className="space-y-1.5 rounded-lg border border-[#E9EDF2] p-2">
+          <div className="flex items-center gap-1.5">
+            <Input value={k.label} placeholder="標籤文字" onChange={(e) => update(i, { label: e.target.value, keyword: e.target.value })} />
+            <button type="button" title="上移" onClick={() => move(i, -1)} className="p-1 text-[#687386]"><ArrowUp className="h-3.5 w-3.5" /></button>
+            <button type="button" title="下移" onClick={() => move(i, 1)} className="p-1 text-[#687386]"><ArrowDown className="h-3.5 w-3.5" /></button>
+            <button type="button" title="刪除" onClick={() => onChange(value.filter((_, idx) => idx !== i))} className="p-1 text-[#B42318]"><Trash2 className="h-3.5 w-3.5" /></button>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {KEYWORD_TYPES.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => update(i, { linkType: t.value })}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                  (k.linkType ?? "product_search") === t.value ? "bg-[#153E73] text-white" : "bg-[#F2F4F7] text-[#153E73]"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {k.linkType === "custom" ? (
+            <LinkInput value={k.linkTarget ?? ""} onChange={(href) => update(i, { linkTarget: href })} />
+          ) : null}
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() =>
+          onChange([...value, { id: `kw-${Date.now().toString(36)}`, label: "", keyword: "", linkType: "product_search", enabled: true }])
+        }
+        className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-[#153E73]/30 py-1.5 text-xs font-semibold text-[#153E73]"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        新增標籤
+      </button>
+    </div>
+  );
+}
+
+function Note({ children }: { children: React.ReactNode }) {
+  return <p className="rounded-lg bg-[#FFF5CC] px-2.5 py-2 text-[11px] leading-relaxed text-[#153E73]">{children}</p>;
 }
 
 const HOME_HERO_SPEC = {
@@ -237,8 +310,210 @@ export function HomeBlockContentEditor({
             onChange={(next) => setConfig(block, onChange, { ...next })}
           />
         );
+      case "hot_searches": {
+        const kws = parseHotSearchKeywords(cfg);
+        const keywords = kws.length ? kws : DEFAULT_HOT_SEARCH_KEYWORDS;
+        return (
+          <>
+            <Field label="搜尋框提示文字">
+              <Input
+                value={str(cfg.placeholder)}
+                placeholder={DEFAULT_SEARCH_PLACEHOLDER}
+                disabled={readOnly}
+                onChange={(e) => setConfig(block, onChange, { placeholder: e.target.value })}
+              />
+            </Field>
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-[#153E73]">熱門搜尋標籤（手機可左右滑）</span>
+              <KeywordEditor
+                value={keywords}
+                onChange={(next) =>
+                  setConfig(block, onChange, {
+                    keywords: next
+                      .filter((k) => k.label.trim())
+                      .map((k, i) => ({ ...k, keyword: k.keyword || k.label, sortOrder: (i + 1) * 10 })),
+                  })
+                }
+              />
+            </div>
+          </>
+        );
+      }
+      case "popular_categories":
+        return (
+          <>
+            {viewAll}
+            <Note>
+              分類圖片、名稱與順序沿用「商城分類」的設定（勾選「顯示在商城首頁」的分類，最多 7 個，最後自動加上「全部分類」）。
+              {" "}
+              <a href="/admin/shop/categories" className="font-semibold underline">前往商城分類</a>
+            </Note>
+          </>
+        );
+      case "popular_baking_products":
+      case "weekly_new_products": {
+        const manual = s.source_mode === "manual";
+        return (
+          <>
+            {viewAll}
+            <div className="flex gap-1">
+              {[
+                ["auto", key === "popular_baking_products" ? "自動（商品標記為熱門）" : "自動（商品標記為新品）"],
+                ["manual", "自己挑選"],
+              ].map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setSettings(block, onChange, { source_mode: mode })}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    (manual ? "manual" : "auto") === mode ? "bg-[#153E73] text-white" : "bg-[#F2F4F7] text-[#153E73]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {manual ? (
+              <ProductPicker
+                ids={Array.isArray(s.manual_ids) ? (s.manual_ids as string[]) : []}
+                onChange={(ids) => setSettings(block, onChange, { manual_ids: ids })}
+              />
+            ) : (
+              <Note>
+                自動顯示在「商品管理」勾選為{key === "popular_baking_products" ? "「熱門」" : "「新品」"}的商品（最多 12 個）。手機左右滑動，電腦一排 5 個。
+              </Note>
+            )}
+          </>
+        );
+      }
+      case "ai_assistant": {
+        const ai = parseAiSection(cfg);
+        return (
+          <>
+            <Field label="小標籤">
+              <Input value={ai.badge} disabled={readOnly} onChange={(e) => setConfig(block, onChange, { badge: e.target.value })} />
+            </Field>
+            <Field label="說明文字">
+              <textarea
+                className="min-h-[72px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={ai.body}
+                disabled={readOnly}
+                onChange={(e) => setConfig(block, onChange, { body: e.target.value })}
+              />
+            </Field>
+            <Field label="功能標籤（用、分隔）">
+              <Input value={listToText(ai.chips)} disabled={readOnly} onChange={(e) => setConfig(block, onChange, { chips: textToList(e.target.value) })} />
+            </Field>
+            <Field label="按鈕文字">
+              <Input value={ai.buttonText} disabled={readOnly} onChange={(e) => setConfig(block, onChange, { button_text: e.target.value })} />
+            </Field>
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-[#153E73]">按鈕連到</span>
+              <LinkInput value={ai.href} onChange={(href) => setConfig(block, onChange, { link_url: href })} />
+            </div>
+            <AdminImageUpload
+              label="右側 IP 圖（透明底 PNG；未上傳時使用天使 IP）"
+              images={str(cfg.image_url) ? [str(cfg.image_url)] : []}
+              onChange={(imgs) => setConfig(block, onChange, { image_url: imgs[0] ?? "" })}
+              uploadFolder="cms/home/ai"
+              multiple={false}
+              aspectRatio="square"
+            />
+          </>
+        );
+      }
+      case "store_information": {
+        const sb = parseStoreB2b(cfg);
+        const raw = cfg as { store?: Record<string, unknown>; b2b?: Record<string, unknown> };
+        const setStore = (patch: Record<string, unknown>) => setConfig(block, onChange, { store: { ...(raw.store ?? {}), ...patch } });
+        const setB2b = (patch: Record<string, unknown>) => setConfig(block, onChange, { b2b: { ...(raw.b2b ?? {}), ...patch } });
+        return (
+          <>
+            <p className="text-xs font-bold text-[#153E73]">門市卡片</p>
+            <Field label="門市名稱">
+              <Input value={sb.store.name} disabled={readOnly} onChange={(e) => setStore({ name: e.target.value })} />
+            </Field>
+            <Field label="地址">
+              <Input value={sb.store.address} disabled={readOnly} onChange={(e) => setStore({ address: e.target.value })} />
+            </Field>
+            <Field label="標籤（用、分隔）">
+              <Input value={listToText(sb.store.tags)} disabled={readOnly} onChange={(e) => setStore({ tags: textToList(e.target.value) })} />
+            </Field>
+            <Field label="連結文字">
+              <Input value={sb.store.linkText} disabled={readOnly} onChange={(e) => setStore({ link_text: e.target.value })} />
+            </Field>
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-[#153E73]">連到</span>
+              <LinkInput value={sb.store.href} onChange={(href) => setStore({ link_url: href })} />
+            </div>
+            <AdminImageUpload
+              label="門市照片（選填；未上傳時使用「門市管理」的照片）"
+              images={sb.store.imageUrl ? [sb.store.imageUrl] : []}
+              onChange={(imgs) => setStore({ image_url: imgs[0] ?? "" })}
+              uploadFolder="cms/home/store"
+              multiple={false}
+              aspectRatio="photo32"
+            />
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs font-bold text-[#153E73]">企業採購卡片</p>
+              <label className="flex items-center gap-1 text-xs text-[#153E73]">
+                <input type="checkbox" checked={sb.b2b.enabled} onChange={(e) => setB2b({ enabled: e.target.checked })} />
+                顯示
+              </label>
+            </div>
+            {sb.b2b.enabled ? (
+              <>
+                <Field label="標題">
+                  <Input value={sb.b2b.title} disabled={readOnly} onChange={(e) => setB2b({ title: e.target.value })} />
+                </Field>
+                <Field label="適用對象（用、分隔）">
+                  <Input value={listToText(sb.b2b.tags)} disabled={readOnly} onChange={(e) => setB2b({ tags: textToList(e.target.value) })} />
+                </Field>
+                <Field label="補充說明">
+                  <Input value={sb.b2b.note} disabled={readOnly} onChange={(e) => setB2b({ note: e.target.value })} />
+                </Field>
+                <Field label="按鈕文字">
+                  <Input value={sb.b2b.buttonText} disabled={readOnly} onChange={(e) => setB2b({ button_text: e.target.value })} />
+                </Field>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-[#153E73]">按鈕連到</span>
+                  <LinkInput value={sb.b2b.href} onChange={(href) => setB2b({ link_url: href })} />
+                </div>
+              </>
+            ) : null}
+          </>
+        );
+      }
       case "ingredient_shop":
-        return viewAll;
+        return (
+          <>
+            {viewAll}
+            <label className="flex items-center gap-2 text-xs text-[#153E73]">
+              <input
+                type="checkbox"
+                checked={cfg.hint_enabled !== false}
+                onChange={(e) => setConfig(block, onChange, { hint_enabled: e.target.checked })}
+              />
+              放在「精選食譜」下方時顯示提示文字
+            </label>
+            {cfg.hint_enabled !== false ? (
+              <Input
+                value={str(cfg.hint_text)}
+                placeholder={DEFAULT_INGREDIENT_HINT}
+                disabled={readOnly}
+                onChange={(e) => setConfig(block, onChange, { hint_text: e.target.value })}
+              />
+            ) : null}
+            <Note>商品依後台設定的材料分類自動挑選；可在下方「自己挑選」模式手動指定。</Note>
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-[#153E73]">自己挑選商品（選填，挑了就只顯示這些）</span>
+              <ProductPicker
+                ids={Array.isArray(s.manual_ids) ? (s.manual_ids as string[]) : []}
+                onChange={(ids) => setSettings(block, onChange, { manual_ids: ids, source_mode: ids.length ? "manual" : "auto" })}
+              />
+            </div>
+          </>
+        );
       case "custom_banner":
         return (
           <>

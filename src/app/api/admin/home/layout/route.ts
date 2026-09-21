@@ -185,6 +185,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ draft: nextDraft });
     }
 
+    if (action === "apply_website_home_layout") {
+      const { loadLiveBlocks } = await import("@/lib/home/layout-versions");
+      const { buildWebsiteHomeLayout } = await import("@/lib/home/blocks");
+      const draft = await getDraft();
+      const base = draft.blocks_snapshot?.length ? draft.blocks_snapshot : await loadLiveBlocks();
+      const next = buildWebsiteHomeLayout(base);
+      const nextDraft = await saveDraft(next, {
+        label: "新版首頁排版",
+        note: "依首頁效果圖重新排序並加入新區塊（保留原有內容）",
+        updatedBy: auth!.profile.id,
+      });
+      await logAudit(
+        auth!.profile.id,
+        "update",
+        "homepage_layout_draft",
+        nextDraft.id,
+        null,
+        { action: "apply_website_home_layout", block_count: next.length },
+        request as never
+      );
+      return NextResponse.json({ draft: nextDraft });
+    }
+
     if (action === "reset_draft_from_live") {
       const { loadLiveBlocks } = await import("@/lib/home/layout-versions");
       const live = await loadLiveBlocks();

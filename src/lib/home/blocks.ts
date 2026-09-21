@@ -2,6 +2,10 @@ import type { HomepageBlock } from "@/lib/types/database";
 import {
   HOME_SECTION_SORT_DEFAULT,
   PRIMARY_HOME_SECTION_KEYS,
+  WEBSITE_HOME_OFF_BY_DEFAULT,
+  WEBSITE_HOME_SECTION_KEYS,
+  WEBSITE_HOME_TITLES,
+  WEBSITE_HOME_V2_MARKER_KEYS,
   isCustomHomeBlockKey,
   isHomeSectionKey,
   type HomeSectionKey,
@@ -473,14 +477,32 @@ export function homeBlockDesktopConfig(
   };
 }
 
+/** True once the stored layout was saved with the new website layout. */
+export function isWebsiteHomeLayoutV2(
+  blocks: Array<Pick<HomepageBlock, "block_key" | "config">> | null | undefined
+) {
+  return (blocks ?? []).some(
+    (b) =>
+      WEBSITE_HOME_V2_MARKER_KEYS.has(b.block_key) &&
+      Number((b.config as Record<string, unknown> | null)?.website_layout) >= 2
+  );
+}
+
 /**
- * Website home sections: primary sections (one each, same order as the app)
- * plus any number of custom blocks, all in the editor's order.
+ * Website home sections (one responsive layout for every device).
+ *
+ * - Layout saved with the new website layout → editor order is used as-is;
+ *   a block that was removed in the editor is not shown.
+ * - Older layout → sections are shown in the approved new order
+ *   (WEBSITE_HOME_SECTION_KEYS) using each block's saved content, and new
+ *   sections fall back to their defaults, until an editor applies the new
+ *   layout in 後台 › 頁面編輯 › 首頁.
  */
 export function listOrderedDesktopHomeSections(
   blocks: HomepageBlock[] | null | undefined
 ): Array<ResolvedHomeBlock & { desktop: HomeBlockDesktopConfig }> {
   type Out = ResolvedHomeBlock & { desktop: HomeBlockDesktopConfig };
+  const v2 = isWebsiteHomeLayoutV2(blocks);
   const byKey = new Map<HomeSectionKey, HomepageBlock>();
   const custom: HomepageBlock[] = [];
   for (const row of blocks ?? []) {
@@ -489,30 +511,108 @@ export function listOrderedDesktopHomeSections(
       custom.push(row);
       continue;
     }
-    if (!PRIMARY_HOME_SECTION_KEYS.includes(row.block_key)) continue;
+    if (!WEBSITE_HOME_SECTION_KEYS.includes(row.block_key)) continue;
     if (!byKey.has(row.block_key)) byKey.set(row.block_key, row);
   }
 
-  const withDesktop = (row: HomepageBlock | null, resolved: ResolvedHomeBlock | null, sort: number): Out | null => {
+  const withDesktop = (
+    row: HomepageBlock | null,
+    resolved: ResolvedHomeBlock | null,
+    sort: number,
+    fallbackVisible: boolean
+  ): Out | null => {
     if (!resolved) return null;
-    const desktop = homeBlockDesktopConfig(row, resolved.visible);
+    const desktop = homeBlockDesktopConfig(row, fallbackVisible);
     if (!desktop.visible) return null;
     return { ...resolved, sortOrder: sort, desktop };
   };
 
-  const primary = PRIMARY_HOME_SECTION_KEYS.map((key) => {
-    const row = byKey.get(key) ?? null;
-    const resolved = row ? resolveHomeBlockRow(row) : resolveHomeBlock([], key);
-    const sort = row
-      ? Number(row.sort_order ?? HOME_SECTION_SORT_DEFAULT[key])
-      : HOME_SECTION_SORT_DEFAULT[key];
-    return withDesktop(row, resolved, sort);
-  });
-  const extras = custom.map((row) =>
-    withDesktop(row, resolveHomeBlockRow(row), Number(row.sort_order ?? 0))
-  );
+  if (v2) {
+    const rows = [...Array.from(byKey.values()), ...custom];
+    return rows
+      .map((row) => {
+        const resolved = resolveHomeBlockRow(row);
+        return withDesktop(row, resolved, Number(row.sort_order ?? 0), resolved?.visible ?? true);
+      })
+      .filter((b): b is Out => Boolean(b))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+  }
 
-  return [...primary, ...extras]
-    .filter((b): b is Out => Boolean(b))
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+  // Older layout: approved order, saved content.
+  const out: Out[] = [];
+  WEBSITE_HOME_SECTION_KEYS.forEach((key, index) => {
+    const sort = (index + 1) * 10;
+    const row = byKey.get(key) ?? null;
+    if (WEBSITE_HOME_OFF_BY_DEFAULT.has(key)) {
+      // Not part of the approved layout until an editor turns it on.
+      const cfg = (row?.config ?? {}) as Record<string, unknown>;
+      if (cfg.desktop_visible !== true) return;
+    }
+    const resolved = row ? resolveHomeBlockRow(row) : resolveHomeBlock([], key);
+    if (!resolved) return;
+    // New sections are part of the approved layout even if an old hidden
+    // row with the same key exists; their saved content is still used.
+    const isNew = WEBSITE_HOME_V2_MARKER_KEYS.has(key);
+    if (!row || isNew) {
+      resolved.visible = true;
+      resolved.title = WEBSITE_HOME_TITLES[key] ?? resolved.title;
+    }
+    const item = withDesktop(isNew ? null : row, resolved, sort, row && !isNew ? resolved.visible : true);
+    if (item) out.push(item);
+  });
+  // Custom blocks sit after 一鍵買齊材料 in their saved order.
+  const anchor = (WEBSITE_HOME_SECTION_KEYS.indexOf("ingredient_shop") + 1) * 10;
+  [...custom]
+    .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
+    .forEach((row, i) => {
+      const item = withDesktop(row, resolveHomeBlockRow(row), anchor + 1 + i * 0.01, true);
+      if (item) out.push(item);
+    });
+  return out.sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/**
+ * 「套用新版首頁排版」: rebuild the draft in the approved website order.
+ * Keeps every existing block's id and content; adds the new sections with
+ * their defaults; custom blocks move right after 一鍵買齊材料.
+ */
+export function buildWebsiteHomeLayout(existing: HomepageBlock[] | null | undefined): HomepageBlock[] {
+  const byKey = new Map<string, HomepageBlock>();
+  const custom: HomepageBlock[] = [];
+  for (const row of existing ?? []) {
+    if (isCustomHomeBlockKey(row.block_key)) {
+      custom.push(row);
+      continue;
+    }
+    if (!byKey.has(row.block_key)) byKey.set(row.block_key, row);
+  }
+  custom.sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0));
+
+  const ordered: HomepageBlock[] = [];
+  for (const key of WEBSITE_HOME_SECTION_KEYS) {
+    const found = byKey.get(key);
+    let row: HomepageBlock;
+    if (found) {
+      row = { ...found };
+    } else {
+      row = createBlockInstance(key);
+      row.title = WEBSITE_HOME_TITLES[key] ?? row.title;
+    }
+    const cfg = { ...((row.config ?? {}) as Record<string, unknown>) };
+    if (WEBSITE_HOME_OFF_BY_DEFAULT.has(key) && typeof cfg.desktop_visible !== "boolean") {
+      cfg.desktop_visible = false;
+    }
+    if (WEBSITE_HOME_V2_MARKER_KEYS.has(key)) {
+      // Marks the layout as saved in the new website order.
+      cfg.website_layout = 2;
+      row.is_visible = true;
+      if (found && !isWebsiteHomeLayoutV2([found])) row.title = WEBSITE_HOME_TITLES[key] ?? row.title;
+      if (typeof cfg.desktop_visible === "boolean" && !found) delete cfg.desktop_visible;
+    }
+    row.config = cfg;
+    ordered.push(row);
+    if (key === "ingredient_shop") ordered.push(...custom.map((c) => ({ ...c })));
+  }
+  const now = new Date().toISOString();
+  return ordered.map((row, i) => ({ ...row, sort_order: (i + 1) * 10, updated_at: now }));
 }

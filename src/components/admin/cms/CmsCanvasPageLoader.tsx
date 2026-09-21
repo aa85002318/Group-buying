@@ -31,6 +31,7 @@ import type { HomepageBlock } from "@/lib/types/database";
 import type { ShopLayoutSettings } from "@/lib/shop/layout-settings";
 import type { GroupBuyPageSettings } from "@/lib/group-buy/page-settings";
 import type { PageLayoutSetting } from "@/lib/layout/page-layout-settings";
+import { WEBSITE_HOME_V2_MARKER_KEYS } from "@/lib/home/section-keys";
 
 const LEGACY_HREF: Record<string, string> = {
   home: "/admin/home",
@@ -372,6 +373,36 @@ export function CmsCanvasPageLoader({
     [layoutKey, load, pageId, platform]
   );
 
+  const [applying, setApplying] = useState(false);
+  const needsWebsiteLayout =
+    pageId === "home" &&
+    canSave &&
+    !!page &&
+    !page.blocks.some(
+      (b) =>
+        WEBSITE_HOME_V2_MARKER_KEYS.has(String(b.sourceKey || b.settings?.legacyKey || b.type)) &&
+        Number((b.settings?.config as Record<string, unknown> | undefined)?.website_layout) >= 2
+    );
+
+  const applyWebsiteLayout = useCallback(async () => {
+    setApplying(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/home/layout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "apply_website_home_layout" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "套用失敗");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "套用失敗");
+    } finally {
+      setApplying(false);
+    }
+  }, [load]);
+
   if (loading) {
     return <p className="p-6 text-sm text-[#8A94A6]">載入編輯器…</p>;
   }
@@ -386,6 +417,22 @@ export function CmsCanvasPageLoader({
         <p className="rounded-[10px] bg-[#FDE8E6] px-3 py-2 text-sm text-[#B42318]">
           {error}
         </p>
+      ) : null}
+      {needsWebsiteLayout ? (
+        <div className="flex flex-col gap-2 rounded-[10px] bg-[#EEF8FC] px-3 py-2.5 text-sm text-[#153E73] sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            網站首頁已換成新版排版（搜尋列、商品分類、熱門商品、新品上架、AI 小幫手、門市與企業採購）。
+            按右邊按鈕，把這裡的區塊清單換成相同順序，之後就能逐一編輯；原有內容都會保留，會先存成草稿，確認後再按「發布」。
+          </p>
+          <button
+            type="button"
+            disabled={applying}
+            onClick={() => void applyWebsiteLayout()}
+            className="shrink-0 rounded-full bg-[#153E73] px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {applying ? "套用中…" : "套用新版首頁排版"}
+          </button>
+        </div>
       ) : null}
       {!isPageLive(pageId, platform) ? (
         <p className="rounded-[10px] bg-[#FFF5CC] px-3 py-2 text-sm text-[#153E73]">

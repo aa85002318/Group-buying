@@ -217,7 +217,13 @@ export const CMS_BLOCK_REGISTRY: CmsBlockDefinition[] = [
   def("quick_entry", "常用服務", "nav", { allowedPageIds: ["home"] }),
   def("latest_recipes", "精選食譜", "recipe", { allowedPageIds: ["home"] }),
   def("ingredient_shop", "一鍵買齊材料", "product", { allowedPageIds: ["home"] }),
-  def("service_shortcuts", "快捷服務入口", "service", { allowedPageIds: ["home"] }),
+  def("service_shortcuts", "快捷服務", "service", { allowedPageIds: ["home"] }),
+  def("hot_searches", "搜尋列與熱門搜尋", "nav", { allowedPageIds: ["home"] }),
+  def("popular_categories", "商品分類", "product", { allowedPageIds: ["home"] }),
+  def("popular_baking_products", "熱門商品", "product", { allowedPageIds: ["home"] }),
+  def("weekly_new_products", "新品上架", "product", { allowedPageIds: ["home"] }),
+  def("ai_assistant", "AI 烘焙小幫手", "recipe", { allowedPageIds: ["home"] }),
+  def("store_information", "大安門市與企業採購", "service", { allowedPageIds: ["home"] }),
 ];
 
 /** Blocks the unified home editor may add (others are fixed by the app). */
@@ -226,11 +232,17 @@ export const HOME_ADDABLE_BLOCK_TYPES = [
   "custom_products",
   "custom_text",
   "hero",
+  "hot_searches",
+  "popular_categories",
   "latest_campaigns",
-  "quick_entry",
+  "popular_baking_products",
+  "weekly_new_products",
   "latest_recipes",
   "ingredient_shop",
+  "ai_assistant",
+  "store_information",
   "service_shortcuts",
+  "quick_entry",
 ] as const;
 /** Of HOME_ADDABLE_BLOCK_TYPES, these may appear more than once. */
 export const HOME_REPEATABLE_BLOCK_TYPES = new Set(["custom_banner", "custom_products", "custom_text"]);
