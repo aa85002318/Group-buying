@@ -222,6 +222,7 @@ export const CMS_BLOCK_REGISTRY: CmsBlockDefinition[] = [
   def("popular_categories", "商品分類", "product", { allowedPageIds: ["home"] }),
   def("popular_baking_products", "熱門商品", "product", { allowedPageIds: ["home"] }),
   def("weekly_new_products", "新品上架", "product", { allowedPageIds: ["home"] }),
+  def("brand_statement", "品牌過渡區", "basic", { allowedPageIds: ["home"] }),
   def("ai_assistant", "AI 烘焙小幫手", "recipe", { allowedPageIds: ["home"] }),
   def("store_information", "大安門市與企業採購", "service", { allowedPageIds: ["home"] }),
 ];
@@ -237,6 +238,7 @@ export const HOME_ADDABLE_BLOCK_TYPES = [
   "latest_campaigns",
   "popular_baking_products",
   "weekly_new_products",
+  "brand_statement",
   "latest_recipes",
   "ingredient_shop",
   "ai_assistant",

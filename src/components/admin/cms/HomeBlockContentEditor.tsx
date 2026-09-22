@@ -28,6 +28,7 @@ import {
   DEFAULT_SEARCH_PLACEHOLDER,
   listToText,
   parseAiSection,
+  parseBrandBreath,
   parseStoreB2b,
   textToList,
 } from "@/lib/home/website-home-config";
@@ -386,10 +387,55 @@ export function HomeBlockContentEditor({
           </>
         );
       }
+      case "brand_statement": {
+        const bb = parseBrandBreath(cfg);
+        return (
+          <>
+            <Note>放在「新品上架」和「精選食譜」之間的過渡區，讓畫面從購物切換到烘焙靈感。標題請寫在上方「標題」欄。</Note>
+            <Field label="小字（英文標語）">
+              <Input value={bb.eyebrow} disabled={readOnly} onChange={(e) => setConfig(block, onChange, { eyebrow: e.target.value })} />
+            </Field>
+            <Field label="副標">
+              <textarea
+                className="min-h-[72px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={bb.body}
+                disabled={readOnly}
+                onChange={(e) => setConfig(block, onChange, { body: e.target.value })}
+              />
+            </Field>
+            <Field label="按鈕文字">
+              <Input value={bb.buttonText} disabled={readOnly} onChange={(e) => setConfig(block, onChange, { button_text: e.target.value })} />
+            </Field>
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-[#153E73]">按鈕連到</span>
+              <LinkInput value={bb.href} onChange={(href) => setConfig(block, onChange, { link_url: href })} />
+            </div>
+            <AdminImageUpload
+              label="右側 IP／素材圖（透明底 PNG；未上傳時使用揮手 IP）"
+              images={str(cfg.image_url) ? [str(cfg.image_url)] : []}
+              onChange={(imgs) => setConfig(block, onChange, { image_url: imgs[0] ?? "" })}
+              uploadFolder="cms/home/brand"
+              multiple={false}
+              aspectRatio="square"
+            />
+          </>
+        );
+      }
       case "ai_assistant": {
         const ai = parseAiSection(cfg);
         return (
           <>
+            <AdminImageUpload
+              label="左側情境大圖（建議 1500×1200；未上傳時使用烘焙情境圖）"
+              images={str(cfg.scene_image_url) ? [str(cfg.scene_image_url)] : []}
+              onChange={(imgs) => setConfig(block, onChange, { scene_image_url: imgs[0] ?? "" })}
+              uploadFolder="cms/home/ai"
+              multiple={false}
+              aspectRatio="photo32"
+            />
+            <Field label="引言（粗體一句）">
+              <Input value={ai.lead} disabled={readOnly} onChange={(e) => setConfig(block, onChange, { lead: e.target.value })} />
+            </Field>
             <Field label="小標籤">
               <Input value={ai.badge} disabled={readOnly} onChange={(e) => setConfig(block, onChange, { badge: e.target.value })} />
             </Field>
@@ -412,7 +458,7 @@ export function HomeBlockContentEditor({
               <LinkInput value={ai.href} onChange={(href) => setConfig(block, onChange, { link_url: href })} />
             </div>
             <AdminImageUpload
-              label="右側 IP 圖（透明底 PNG；未上傳時使用天使 IP）"
+              label="小 IP 圖（透明底 PNG；未上傳時使用天使 IP）"
               images={str(cfg.image_url) ? [str(cfg.image_url)] : []}
               onChange={(imgs) => setConfig(block, onChange, { image_url: imgs[0] ?? "" })}
               uploadFolder="cms/home/ai"
@@ -447,7 +493,7 @@ export function HomeBlockContentEditor({
               <LinkInput value={sb.store.href} onChange={(href) => setStore({ link_url: href })} />
             </div>
             <AdminImageUpload
-              label="門市照片（選填；未上傳時使用「門市管理」的照片）"
+              label="門市照片（建議 1600×1000；未上傳時使用「門市管理」的照片）"
               images={sb.store.imageUrl ? [sb.store.imageUrl] : []}
               onChange={(imgs) => setStore({ image_url: imgs[0] ?? "" })}
               uploadFolder="cms/home/store"
@@ -466,6 +512,14 @@ export function HomeBlockContentEditor({
                 <Field label="標題">
                   <Input value={sb.b2b.title} disabled={readOnly} onChange={(e) => setB2b({ title: e.target.value })} />
                 </Field>
+                <AdminImageUpload
+                  label="卡片圖片（建議 1600×1000；未上傳時使用烘焙器具情境圖）"
+                  images={str(raw.b2b?.image_url) ? [str(raw.b2b?.image_url)] : []}
+                  onChange={(imgs) => setB2b({ image_url: imgs[0] ?? "" })}
+                  uploadFolder="cms/home/b2b"
+                  multiple={false}
+                  aspectRatio="photo32"
+                />
                 <Field label="適用對象（用、分隔）">
                   <Input value={listToText(sb.b2b.tags)} disabled={readOnly} onChange={(e) => setB2b({ tags: textToList(e.target.value) })} />
                 </Field>

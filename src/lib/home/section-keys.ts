@@ -178,6 +178,7 @@ export const WEBSITE_HOME_SECTION_KEYS: HomeSectionKey[] = [
   "latest_campaigns",
   "popular_baking_products",
   "weekly_new_products",
+  "brand_statement",
   "latest_recipes",
   "ingredient_shop",
   "ai_assistant",
@@ -203,6 +204,7 @@ export const WEBSITE_HOME_V2_MARKER_KEYS = new Set<string>([
   "weekly_new_products",
   "ai_assistant",
   "store_information",
+  "brand_statement",
 ]);
 
 /** Shown in the list but off on the website until an editor turns it on. */
@@ -214,6 +216,7 @@ export const WEBSITE_HOME_TITLES: Partial<Record<HomeSectionKey, string>> = {
   popular_categories: "商品分類",
   popular_baking_products: "熱門商品",
   weekly_new_products: "新品上架",
+  brand_statement: "烘焙，不只是買材料",
   ai_assistant: "AI 烘焙小幫手",
   store_information: "大安門市與企業採購",
   service_shortcuts: "快捷服務",

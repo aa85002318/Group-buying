@@ -3,7 +3,7 @@
  * (首頁效果圖). Everything lives in homepage_blocks.config — no schema change.
  */
 
-import { DESKTOP_IP_ANGEL_PNG } from "@/lib/desktop/brand-assets";
+import { DESKTOP_IP_ANGEL_PNG, DESKTOP_IP_WAVE_PNG } from "@/lib/desktop/brand-assets";
 
 function rec(v: unknown): Record<string, unknown> {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
@@ -29,35 +29,74 @@ export function searchPlaceholder(config: Record<string, unknown> | null | undef
 
 export const DEFAULT_INGREDIENT_HINT = "喜歡這道食譜？材料也幫你準備好了 ↓";
 
-/* AI 烘焙小幫手 -------------------------------------------------------- */
+/* 品牌呼吸過渡區（block_key: brand_statement） ------------------------ */
 
-export type AiSectionSettings = {
-  badge: string;
+export type BrandBreathSettings = {
+  eyebrow: string;
   body: string;
-  chips: string[];
   buttonText: string;
   href: string;
   imageUrl: string;
 };
 
+export const DEFAULT_BRAND_BREATH_TITLE = "烘焙，不只是買材料";
+
+export const DEFAULT_BRAND_BREATH: BrandBreathSettings = {
+  eyebrow: "Bake a Better Life",
+  body: "從找靈感、選食材，\n到完成今天想做的甜點。",
+  buttonText: "找今天的烘焙靈感",
+  href: "/recipes",
+  imageUrl: DESKTOP_IP_WAVE_PNG,
+};
+
+export function parseBrandBreath(config: Record<string, unknown> | null | undefined): BrandBreathSettings {
+  const c = rec(config);
+  return {
+    eyebrow: str(c.eyebrow, DEFAULT_BRAND_BREATH.eyebrow),
+    body: str(c.body, DEFAULT_BRAND_BREATH.body),
+    buttonText: str(c.button_text, DEFAULT_BRAND_BREATH.buttonText),
+    href: str(c.link_url, DEFAULT_BRAND_BREATH.href),
+    imageUrl: str(c.image_url, DEFAULT_BRAND_BREATH.imageUrl),
+  };
+}
+
+/* AI 烘焙小幫手 -------------------------------------------------------- */
+
+export type AiSectionSettings = {
+  badge: string;
+  lead: string;
+  body: string;
+  chips: string[];
+  buttonText: string;
+  href: string;
+  /** Small IP beside the copy (≤ 40% of the section). */
+  imageUrl: string;
+  /** Large baking scene on the other side (60%). */
+  sceneImageUrl: string;
+};
+
 export const DEFAULT_AI_SECTION: AiSectionSettings = {
   badge: "CHIMEIDIY AI",
-  body: "材料推薦、份量換算、失敗分析，\n陪你解決每一個烘焙問題。",
-  chips: ["材料推薦", "份量換算", "失敗分析"],
-  buttonText: "開始提問",
+  lead: "不知道今天要做什麼？",
+  body: "告訴我你手邊有哪些材料，\n我幫你找可以做的甜點。",
+  chips: [],
+  buttonText: "立即體驗",
   href: "/ai",
   imageUrl: DESKTOP_IP_ANGEL_PNG,
+  sceneImageUrl: "/images/shop/promo/spring-5x2.jpg",
 };
 
 export function parseAiSection(config: Record<string, unknown> | null | undefined): AiSectionSettings {
   const c = rec(config);
   return {
     badge: str(c.badge, DEFAULT_AI_SECTION.badge),
+    lead: typeof c.lead === "string" ? c.lead : DEFAULT_AI_SECTION.lead,
     body: str(c.body, DEFAULT_AI_SECTION.body),
     chips: strList(c.chips, DEFAULT_AI_SECTION.chips),
     buttonText: str(c.button_text, DEFAULT_AI_SECTION.buttonText),
     href: str(c.link_url, DEFAULT_AI_SECTION.href),
     imageUrl: str(c.image_url, DEFAULT_AI_SECTION.imageUrl),
+    sceneImageUrl: str(c.scene_image_url, DEFAULT_AI_SECTION.sceneImageUrl),
   };
 }
 
@@ -82,6 +121,7 @@ export type StoreB2bSettings = {
     note: string;
     buttonText: string;
     href: string;
+    imageUrl: string;
   };
 };
 
@@ -103,6 +143,7 @@ export const DEFAULT_STORE_B2B: StoreB2bSettings = {
     note: "雙北滿額配送",
     buttonText: "立即詢價",
     href: "/corporate",
+    imageUrl: "/images/shop/promo/tools-5x2.jpg",
   },
 };
 
@@ -129,6 +170,7 @@ export function parseStoreB2b(config: Record<string, unknown> | null | undefined
       note: str(b.note, d.b2b.note),
       buttonText: str(b.button_text, d.b2b.buttonText),
       href: str(b.link_url, d.b2b.href),
+      imageUrl: str(b.image_url, d.b2b.imageUrl),
     },
   };
 }

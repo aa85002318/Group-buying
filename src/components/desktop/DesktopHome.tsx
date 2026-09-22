@@ -18,13 +18,15 @@ import {
 import { DesktopContainer } from "@/components/desktop/DesktopContainer";
 import { DesktopProductCard } from "@/components/desktop/DesktopProductCard";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
-import { DESKTOP_HERO_FALLBACK } from "@/lib/desktop/brand-assets";
+import { DESKTOP_HERO_FALLBACK, DESKTOP_IP_ANGEL_PNG as DESKTOP_IP_ANGEL } from "@/lib/desktop/brand-assets";
 import { listOrderedDesktopHomeSections } from "@/lib/home/blocks";
 import { hotSearchHref, resolveHotSearchKeywords } from "@/lib/home/hot-search";
 import { parseServiceShortcuts } from "@/lib/home/service-shortcuts";
 import {
+  DEFAULT_BRAND_BREATH_TITLE,
   DEFAULT_INGREDIENT_HINT,
   parseAiSection,
+  parseBrandBreath,
   parseStoreB2b,
   searchPlaceholder,
 } from "@/lib/home/website-home-config";
@@ -137,27 +139,35 @@ function lgCols(n: number) {
 /* Layout primitives                                                   */
 /* ------------------------------------------------------------------ */
 
+type BandTone = "white" | "warm" | "cream" | "sky";
+const BAND_BG: Record<BandTone, string> = {
+  white: "bg-white",
+  warm: "bg-[#FFFEFA]",
+  cream: "bg-[#FFF5CC]",
+  sky: "bg-[#EEF8FC]",
+};
+/** Section rhythm: generous vertical space so the page can breathe. */
+const BAND_PAD = {
+  normal: "py-[clamp(48px,6vw,96px)]",
+  compact: "py-[clamp(32px,4vw,64px)]",
+  none: "",
+} as const;
+
 function Band({
-  tone = "plain",
+  tone = "warm",
+  pad = "normal",
   label,
   className,
   children,
 }: {
-  tone?: "plain" | "cream" | "hero";
+  tone?: BandTone;
+  pad?: keyof typeof BAND_PAD;
   label?: string;
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <section
-      aria-label={label}
-      className={cn(
-        "py-[clamp(20px,3.2vw,40px)]",
-        tone === "cream" && "bg-[#FFF5CC]",
-        tone === "hero" && "bg-gradient-to-b from-[#FFF5CC] to-[#FFFEFA]",
-        className
-      )}
-    >
+    <section aria-label={label} className={cn(BAND_BG[tone], BAND_PAD[pad], className)}>
       <DesktopContainer>{children}</DesktopContainer>
     </section>
   );
@@ -175,10 +185,10 @@ function SectionHeading({
   linkLabel?: string;
 }) {
   return (
-    <div className="mb-[clamp(14px,2vw,24px)] flex items-end justify-between gap-4">
+    <div className="mb-[clamp(18px,2.4vw,32px)] flex items-end justify-between gap-4">
       <div className="min-w-0 space-y-1">
-        <h2 className="text-[clamp(20px,2.2vw,28px)] font-black tracking-wide text-[#153E73]">{title}</h2>
-        {subtitle ? <p className="text-[clamp(13px,1.1vw,15px)] text-[#4A5B78]">{subtitle}</p> : null}
+        <h2 className="text-[clamp(24px,2.8vw,38px)] font-black tracking-wide text-[#153E73]">{title}</h2>
+        {subtitle ? <p className="text-[clamp(14px,1.2vw,17px)] text-[#4A5B78]">{subtitle}</p> : null}
       </div>
       {href ? (
         <Link
@@ -199,7 +209,7 @@ function SectionHeading({
  */
 function Rail({
   cols,
-  itemClassName = "w-[44%] sm:w-[30%] md:w-[23%]",
+  itemClassName = "w-[clamp(150px,42vw,220px)]",
   children,
 }: {
   cols: number;
@@ -209,8 +219,8 @@ function Rail({
   return (
     <div
       className={cn(
-        "scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:gap-4 sm:px-6",
-        "lg:mx-0 lg:grid lg:gap-5 lg:overflow-visible lg:px-0 lg:pb-0",
+        "scrollbar-hide -mx-4 flex snap-x snap-proximity gap-[clamp(12px,2vw,28px)] overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6",
+        "lg:mx-0 lg:grid lg:overflow-visible lg:px-0 lg:pb-0",
         lgCols(cols)
       )}
     >
@@ -337,13 +347,11 @@ export function DesktopHome() {
       /* 主視覺：圖片＋連結 */
       case "hero":
         return (
-          <Band key={section.id} tone="hero" label={section.title || "主視覺"} className="pb-0 pt-3 sm:pt-5">
+          <Band key={section.id} tone="warm" pad="none" label={section.title || "主視覺"} className="pt-[clamp(12px,2vw,24px)]">
+            <h1 className="sr-only">CHIMEIDIY 烘焙材料｜烘焙生活平台</h1>
             <Link
               href={heroBanner?.link_url || APP_ROUTES.shop}
-              className={cn(
-                "relative block w-full overflow-hidden rounded-[clamp(16px,2vw,28px)] bg-[#EEF8FC]",
-                heroBanner?.mobile_image_url ? "aspect-[3/2] md:aspect-video" : "aspect-video"
-              )}
+              className="block w-full overflow-hidden rounded-[clamp(16px,2vw,28px)] bg-[#EEF8FC]"
             >
               <picture>
                 {heroBanner?.mobile_image_url ? (
@@ -353,7 +361,7 @@ export function DesktopHome() {
                 <img
                   src={heroSrc}
                   alt={heroBanner?.title || "CHIMEIDIY"}
-                  className="absolute inset-0 h-full w-full object-cover object-center"
+                  className="block h-auto w-full"
                   fetchPriority="high"
                 />
               </picture>
@@ -381,10 +389,10 @@ export function DesktopHome() {
       case "hot_searches": {
         const keywords = resolveHotSearchKeywords(cfg).slice(0, Math.max(1, section.displayCount || 8));
         return (
-          <Band key={section.id} label="搜尋" className="pt-[clamp(16px,2.4vw,28px)]">
+          <Band key={section.id} tone="warm" pad="compact" label="搜尋">
             <form
               role="search"
-              className="mx-auto flex h-[clamp(50px,4.4vw,64px)] w-full max-w-[760px] items-center gap-2 rounded-full bg-white pl-4 pr-1.5 shadow-[0_8px_28px_rgba(21,62,115,0.12)] sm:pl-6"
+              className="mx-auto flex h-[clamp(48px,4vw,58px)] w-full max-w-[760px] items-center gap-2 rounded-full bg-white pl-4 pr-1.5 shadow-[0_8px_28px_rgba(21,62,115,0.12)] sm:pl-6"
               onSubmit={(e) => {
                 e.preventDefault();
                 const q = query.trim();
@@ -410,7 +418,7 @@ export function DesktopHome() {
               </button>
             </form>
             {keywords.length ? (
-              <div className="mt-4 flex items-center gap-2 md:justify-center">
+              <div className="mt-5 flex items-center gap-2 md:justify-center">
                 <span className="hidden shrink-0 text-sm font-bold text-[#4A5B78] md:inline">
                   {section.title && section.title !== "搜尋列與熱門搜尋" ? section.title : "熱門搜尋"}
                 </span>
@@ -439,14 +447,14 @@ export function DesktopHome() {
           tiles.push({ id: "__new", name: "新品上架", href: "/shop/new-arrivals", bgColor: "#FFF5CC" });
         tiles.push({ id: "__all", name: "全部分類", href: "/shop/categories", bgColor: "#EEF8FC" });
         return (
-          <Band key={section.id} label={section.title}>
+          <Band key={section.id} tone="white" label={section.title}>
             <SectionHeading
               title={section.title || "商品分類"}
               subtitle={section.subtitle}
               href={section.viewAllUrl || APP_ROUTES.shop}
               linkLabel="全部商品"
             />
-            <ul className="grid grid-cols-4 gap-x-2 gap-y-4 sm:gap-x-4 lg:grid-cols-8 lg:gap-5">
+            <ul className="grid grid-cols-4 gap-x-[clamp(8px,2vw,28px)] gap-y-[clamp(18px,2.4vw,28px)] lg:grid-cols-8">
               {tiles.map((c) => (
                 <li key={c.id}>
                   <Link href={c.href} className="group flex flex-col items-center gap-2 text-center">
@@ -491,12 +499,12 @@ export function DesktopHome() {
             ? section.viewAllUrl
             : APP_ROUTES.promotions;
         return (
-          <Band key={section.id} label={section.title}>
+          <Band key={section.id} tone="warm" label={section.title}>
             <SectionHeading title={section.title || "最新活動"} subtitle={section.subtitle} href={viewAll} linkLabel="所有活動" />
             <div
               className={cn(
-                "scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:-mx-6 sm:px-6",
-                "md:mx-0 md:grid md:gap-5 md:overflow-visible md:px-0",
+                "scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-[clamp(12px,2vw,28px)] overflow-x-auto px-4 sm:-mx-6 sm:px-6",
+                "md:mx-0 md:grid md:overflow-visible md:px-0",
                 perRow === 3 ? "md:grid-cols-2 lg:grid-cols-3" : perRow === 1 ? "md:grid-cols-1" : "md:grid-cols-2"
               )}
             >
@@ -548,7 +556,14 @@ export function DesktopHome() {
               ? "/shop/new-arrivals"
               : null;
         return (
-          <Band key={section.id} label={section.title}>
+          <Band
+            key={section.id}
+            tone={section.key === "custom_products" ? "warm" : "white"}
+            label={section.title}
+            className={
+              section.key === "weekly_new_products" && prevKey === "popular_baking_products" ? "pt-0" : undefined
+            }
+          >
             <SectionHeading
               title={section.title}
               subtitle={section.subtitle}
@@ -570,14 +585,14 @@ export function DesktopHome() {
         const list = picked.slice(0, fillRows(Math.min(picked.length, section.displayCount || 3), perRow));
         if (!list.length) return null;
         return (
-          <Band key={section.id} tone="cream" label={section.title} className="pb-4 sm:pb-6">
+          <Band key={section.id} tone="warm" label={section.title} className="pb-[clamp(20px,3vw,40px)]">
             <SectionHeading
               title={section.title || "精選食譜"}
               subtitle={section.subtitle}
               href={section.viewAllUrl || APP_ROUTES.recipes}
               linkLabel="更多食譜"
             />
-            <Rail cols={perRow} itemClassName="w-[76%] sm:w-[46%] md:w-[31%]">
+            <Rail cols={perRow} itemClassName="w-[clamp(260px,82vw,340px)]">
               {list.map((r) => {
                 const cover = r.cover_image_url || r.cover_image;
                 const mins = r.total_time ?? r.prep_time ?? r.cook_time;
@@ -638,11 +653,11 @@ export function DesktopHome() {
         const hint = cfg.hint_enabled === false ? "" : str(cfg.hint_text) || DEFAULT_INGREDIENT_HINT;
         const afterRecipes = prevKey === "latest_recipes";
         return (
-          <Band key={section.id} tone={afterRecipes ? "cream" : "plain"} label={section.title} className={afterRecipes ? "pt-2" : undefined}>
+          <Band key={section.id} tone="warm" label={section.title} className={afterRecipes ? "pt-0" : undefined}>
             {afterRecipes && hint ? (
-              <p className="mb-4 text-center text-[clamp(14px,1.2vw,16px)] font-bold text-[#153E73]">{hint}</p>
+              <p className="mb-[clamp(18px,2.4vw,32px)] text-center text-[clamp(15px,1.3vw,18px)] font-bold text-[#153E73]">{hint}</p>
             ) : null}
-            <div className="flex flex-col gap-5 rounded-[clamp(18px,2vw,24px)] bg-white p-[clamp(18px,2.4vw,32px)] shadow-[0_4px_18px_rgba(21,62,115,0.08)] lg:flex-row lg:items-center lg:gap-8">
+            <div className="flex flex-col gap-5 rounded-[clamp(18px,2vw,24px)] border border-[#F3E9C6] bg-[#FFF5CC]/60 p-[clamp(18px,2.4vw,36px)] lg:flex-row lg:items-center lg:gap-8">
               <div className="flex shrink-0 flex-col gap-2 lg:w-[260px]">
                 <h2 className="text-[clamp(22px,2.2vw,30px)] font-black text-[#153E73]">{section.title || "一鍵買齊材料"}</h2>
                 <p className="text-[clamp(13px,1.1vw,15px)] leading-relaxed text-[#4A5B78]">{subtitle}</p>
@@ -656,7 +671,7 @@ export function DesktopHome() {
               </div>
               {list.length ? (
                 <div className="min-w-0 flex-1">
-                  <Rail cols={4} itemClassName="w-[44%] sm:w-[30%] md:w-[23%]">
+                  <Rail cols={4}>
                     {list.map((p) => (
                       <ProductTile key={p.id} p={p} />
                     ))}
@@ -668,18 +683,60 @@ export function DesktopHome() {
         );
       }
 
-      /* AI 烘焙小幫手 */
+      /* 品牌呼吸過渡區：購物 → 靈感 */
+      case "brand_statement": {
+        const bb = parseBrandBreath(cfg);
+        const title =
+          section.title && section.title !== "品牌定位" ? section.title : DEFAULT_BRAND_BREATH_TITLE;
+        return (
+          <section
+            key={section.id}
+            aria-label={title}
+            className="my-[clamp(24px,5vw,72px)] overflow-hidden bg-[#FFF5CC]"
+          >
+            <DesktopContainer className="flex min-h-[clamp(220px,60vw,300px)] flex-col items-center gap-6 py-[clamp(40px,6vw,88px)] md:min-h-[clamp(280px,26vw,380px)] md:flex-row md:justify-between md:gap-10">
+              <div className="flex max-w-[620px] flex-col items-center gap-[clamp(10px,1.4vw,18px)] text-center md:items-start md:text-left">
+                <span className="text-[clamp(12px,1vw,14px)] font-bold uppercase tracking-[0.2em] text-[#F16458]">
+                  {bb.eyebrow}
+                </span>
+                <h2 className="text-[clamp(28px,3.6vw,52px)] font-black leading-tight text-[#153E73]">{title}</h2>
+                <p className="whitespace-pre-line text-[clamp(15px,1.3vw,19px)] leading-relaxed text-[#36507A]">{bb.body}</p>
+                <Link
+                  href={bb.href}
+                  className="mt-2 inline-flex h-12 items-center gap-2 rounded-full bg-[#153E73] px-7 text-[15px] font-bold text-white hover:brightness-110"
+                >
+                  {bb.buttonText}
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+              </div>
+              {bb.imageUrl ? (
+                <div className="relative aspect-[220/142] w-[min(56vw,240px)] shrink-0 md:w-[clamp(220px,24vw,340px)]">
+                  <Image src={bb.imageUrl} alt="" fill className="object-contain" sizes="(min-width:768px) 24vw, 56vw" />
+                </div>
+              ) : null}
+            </DesktopContainer>
+          </section>
+        );
+      }
+
+      /* AI 烘焙小幫手：大型情境區（60 / 40） */
       case "ai_assistant": {
         const ai = parseAiSection(cfg);
         return (
-          <Band key={section.id} label={section.title}>
-            <div className="relative flex flex-col overflow-hidden rounded-[clamp(20px,2.4vw,28px)] bg-[#EEF8FC] md:flex-row md:items-center">
-              <div className="relative z-10 flex flex-1 flex-col gap-3 p-[clamp(22px,4vw,64px)] pb-0 md:pb-[clamp(22px,4vw,64px)] md:pr-0">
+          <Band key={section.id} tone="sky" label={section.title}>
+            <div className="grid items-center gap-[clamp(20px,4vw,64px)] md:grid-cols-[3fr_2fr]">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[clamp(18px,2.2vw,28px)] bg-white md:aspect-[5/4]">
+                <Image src={ai.sceneImageUrl} alt="" fill className="object-cover" sizes="(min-width:768px) 58vw, 100vw" />
+              </div>
+              <div className="relative flex flex-col gap-[clamp(10px,1.4vw,16px)]">
                 <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-bold text-[#153E73]">
                   <Sparkles className="h-3.5 w-3.5" aria-hidden />
                   {ai.badge}
                 </span>
-                <h2 className="text-[clamp(26px,3vw,40px)] font-black text-[#153E73]">{section.title || "AI 烘焙小幫手"}</h2>
+                <h2 className="text-[clamp(28px,3.4vw,46px)] font-black leading-tight text-[#153E73]">
+                  {section.title || "AI 烘焙小幫手"}
+                </h2>
+                {ai.lead ? <p className="text-[clamp(17px,1.6vw,22px)] font-bold text-[#153E73]">{ai.lead}</p> : null}
                 <p className="whitespace-pre-line text-[clamp(14px,1.2vw,17px)] leading-relaxed text-[#36507A]">{ai.body}</p>
                 {ai.chips.length ? (
                   <ul className="flex flex-wrap gap-2">
@@ -690,43 +747,48 @@ export function DesktopHome() {
                     ))}
                   </ul>
                 ) : null}
-                <Link
-                  href={ai.href}
-                  className="mt-1 inline-flex h-12 w-fit items-center gap-2 rounded-full bg-[#153E73] px-6 text-[15px] font-bold text-white hover:brightness-110"
-                >
-                  {ai.buttonText}
-                  <ArrowRight className="h-4 w-4" aria-hidden />
-                </Link>
-              </div>
-              <div className="relative ml-auto mt-2 aspect-[656/552] w-[48%] max-w-[220px] self-end md:mt-0 md:w-[40%] md:max-w-[440px]">
-                <div
-                  aria-hidden
-                  className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(121,199,232,0.45)_0%,rgba(121,199,232,0)_65%)]"
-                />
-                <Image src={ai.imageUrl} alt="" fill className="object-contain object-bottom" sizes="(min-width:768px) 40vw, 48vw" />
+                <div className="mt-2 flex items-end justify-between gap-4">
+                  <Link
+                    href={ai.href}
+                    className="inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-[#153E73] px-7 text-[15px] font-bold text-white hover:brightness-110"
+                  >
+                    {ai.buttonText}
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </Link>
+                  {ai.imageUrl ? (
+                    <div className="relative aspect-[656/552] w-[40%] max-w-[180px]">
+                      <Image src={ai.imageUrl} alt="" fill className="object-contain object-bottom" sizes="180px" />
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           </Band>
         );
       }
 
-      /* 大安門市＋企業採購 */
+      /* 大安門市＋企業採購：兩張大型圖片卡（圖約 60%） */
       case "store_information": {
         const sb = parseStoreB2b(cfg);
         const photo = sb.store.imageUrl || store?.cover_image_url || store?.image_url || "";
+        const card =
+          "flex h-full flex-col overflow-hidden rounded-[clamp(18px,2vw,24px)] bg-white shadow-[0_4px_18px_rgba(21,62,115,0.08)]";
+        const media = "relative aspect-[16/10] w-full shrink-0 overflow-hidden";
         return (
-          <Band key={section.id} label={section.title}>
-            <div className={cn("grid gap-4 lg:gap-6", sb.b2b.enabled && "md:grid-cols-2")}>
-              <div className="flex flex-col overflow-hidden rounded-[clamp(18px,2vw,24px)] bg-white shadow-[0_4px_18px_rgba(21,62,115,0.08)] sm:flex-row">
-                {photo ? (
-                  <div className="relative aspect-[16/9] shrink-0 bg-[#EEF8FC] sm:aspect-auto sm:w-[42%]">
-                    <Image src={photo} alt={sb.store.name} fill className="object-cover" sizes="(min-width:768px) 20vw, 100vw" />
-                  </div>
-                ) : null}
-                <div className="flex flex-1 flex-col gap-3 p-[clamp(18px,2.4vw,32px)]">
+          <Band key={section.id} tone="white" label={section.title}>
+            <div className={cn("grid gap-[clamp(16px,2.4vw,32px)]", sb.b2b.enabled && "md:grid-cols-2")}>
+              <article className={card}>
+                <div className={cn(media, "bg-[#FFF5CC]")}>
+                  {photo ? (
+                    <Image src={photo} alt={sb.store.name} fill className="object-cover" sizes="(min-width:768px) 50vw, 100vw" />
+                  ) : (
+                    <Image src={DESKTOP_IP_ANGEL} alt="" fill className="object-contain p-[8%]" sizes="(min-width:768px) 40vw, 80vw" />
+                  )}
+                </div>
+                <div className="flex flex-1 flex-col gap-3 p-[clamp(20px,2.4vw,32px)]">
                   <span className="text-[13px] font-bold text-[#F16458]">{sb.store.eyebrow}</span>
-                  <h2 className="text-[clamp(20px,2vw,28px)] font-black text-[#153E73]">{sb.store.name}</h2>
-                  <p className="flex gap-1.5 text-[clamp(14px,1.1vw,15px)] leading-relaxed text-[#36507A]">
+                  <h2 className="text-[clamp(22px,2.2vw,30px)] font-black text-[#153E73]">{sb.store.name}</h2>
+                  <p className="flex gap-1.5 text-[clamp(14px,1.2vw,16px)] leading-relaxed text-[#36507A]">
                     <MapPin className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
                     {sb.store.address}
                   </p>
@@ -739,39 +801,47 @@ export function DesktopHome() {
                       ))}
                     </ul>
                   ) : null}
-                  <Link href={sb.store.href} className="mt-auto inline-flex items-center gap-1.5 pt-1 text-[15px] font-bold text-[#153E73] hover:text-[#F16458]">
+                  <Link href={sb.store.href} className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[15px] font-bold text-[#153E73] hover:text-[#F16458]">
                     {sb.store.linkText}
                     <ArrowRight className="h-4 w-4" aria-hidden />
                   </Link>
                 </div>
-              </div>
+              </article>
               {sb.b2b.enabled ? (
-                <div className="flex flex-col gap-3 rounded-[clamp(18px,2vw,24px)] p-[clamp(20px,2.6vw,36px)] text-white" style={{ background: NAVY }}>
-                  <span className="text-[13px] font-bold text-[#FFD454]">{sb.b2b.eyebrow}</span>
-                  <h2 className="text-[clamp(20px,2vw,28px)] font-black">{sb.b2b.title}</h2>
-                  {sb.b2b.tags.length ? (
-                    <ul className="flex flex-wrap gap-2">
-                      {sb.b2b.tags.map((t) => (
-                        <li key={t} className="rounded-full bg-white/[0.12] px-3.5 py-1 text-sm">
-                          {t}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {sb.b2b.note ? (
-                    <p className="flex items-center gap-2 text-[15px] text-[#DCE6F5]">
-                      <Truck className="h-5 w-5 text-[#FFD454]" aria-hidden />
-                      {sb.b2b.note}
-                    </p>
-                  ) : null}
-                  <Link
-                    href={sb.b2b.href}
-                    className="mt-auto inline-flex h-12 w-fit items-center gap-1.5 rounded-full bg-[#FFD454] px-6 text-[15px] font-bold text-[#153E73] hover:brightness-95"
-                  >
-                    {sb.b2b.buttonText}
-                    <ArrowRight className="h-4 w-4" aria-hidden />
-                  </Link>
-                </div>
+                <article className={card}>
+                  <div className={cn(media, "bg-[#EEF8FC]")}>
+                    {sb.b2b.imageUrl ? (
+                      <Image src={sb.b2b.imageUrl} alt={sb.b2b.title} fill className="object-cover" sizes="(min-width:768px) 50vw, 100vw" />
+                    ) : null}
+                  </div>
+                  <div className="flex flex-1 flex-col gap-3 p-[clamp(20px,2.4vw,32px)]">
+                    <span className="text-[13px] font-bold text-[#F16458]">{sb.b2b.eyebrow}</span>
+                    <h2 className="text-[clamp(22px,2.2vw,30px)] font-black text-[#153E73]">{sb.b2b.title}</h2>
+                    {sb.b2b.tags.length ? (
+                      <ul className="flex flex-wrap gap-2">
+                        {sb.b2b.tags.map((t) => (
+                          <li key={t} className="rounded-full bg-[#EEF8FC] px-3.5 py-1 text-sm font-bold text-[#153E73]">
+                            {t}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {sb.b2b.note ? (
+                      <p className="flex items-center gap-2 text-[clamp(14px,1.2vw,16px)] text-[#36507A]">
+                        <Truck className="h-5 w-5 text-[#153E73]" aria-hidden />
+                        {sb.b2b.note}
+                      </p>
+                    ) : null}
+                    <Link
+                      href={sb.b2b.href}
+                      className="mt-auto inline-flex h-12 w-fit items-center gap-1.5 rounded-full px-6 text-[15px] font-bold text-white hover:brightness-110"
+                      style={{ background: NAVY }}
+                    >
+                      {sb.b2b.buttonText}
+                      <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
+                  </div>
+                </article>
               ) : null}
             </div>
           </Band>
@@ -786,8 +856,8 @@ export function DesktopHome() {
           .slice(0, 8);
         if (!items.length) return null;
         return (
-          <Band key={section.id} label={section.title || "快捷服務"} className="pb-[clamp(28px,4.4vw,64px)]">
-            <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:gap-5">
+          <Band key={section.id} tone="cream" label={section.title || "快捷服務"}>
+            <ul className="grid grid-cols-2 gap-[clamp(12px,2vw,28px)] md:grid-cols-4">
               {items.map((item) => {
                 const labelled = item.labelsInImage !== false && Boolean(item.imageUrl);
                 return (

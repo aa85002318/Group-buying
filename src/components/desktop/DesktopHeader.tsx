@@ -67,11 +67,11 @@ export function DesktopHeader() {
 
   return (
     <header
-      className="sticky top-0 z-40 bg-white shadow-[0_1px_0_rgba(21,62,115,0.08)]"
+      className="sticky top-0 z-50 bg-white/[0.96] shadow-[0_1px_0_rgba(21,62,115,0.08)] backdrop-blur-[10px]"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <DesktopContainer className="relative flex h-16 items-center justify-between gap-2 lg:h-[80px]">
-        <div className="relative z-20 flex shrink-0 items-center gap-1">
+        <div className="z-20 flex shrink-0 items-center gap-1 lg:relative">
           <button
             type="button"
             aria-label="開啟選單"
@@ -81,7 +81,10 @@ export function DesktopHeader() {
           >
             <Menu className="h-6 w-6" strokeWidth={2} />
           </button>
-          <DesktopBrandLogo height={48} fluid priority />
+          {/* Phones/tablets: logo centered; lg+: left beside the nav. */}
+          <span className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 lg:static lg:translate-x-0 lg:translate-y-0">
+            <DesktopBrandLogo height={48} fluid priority />
+          </span>
         </div>
 
         {/* True center: relative to full header container, not logo↔utils mid-gap */}
@@ -179,7 +182,8 @@ export function DesktopHeader() {
                 aria-label={label}
                 className={cn(
                   "h-10 w-10 items-center justify-center rounded-full text-[#153E73] hover:bg-[#FFF5CC]",
-                  href === APP_ROUTES.favorites ? "hidden sm:inline-flex" : "inline-flex"
+                  // Phones keep search + cart only; the rest sit in the menu.
+                  "hidden lg:inline-flex"
                 )}
               >
                 <Icon className="h-5 w-5" strokeWidth={1.9} />
@@ -236,6 +240,22 @@ export function DesktopHeader() {
               <Search className="h-4 w-4" />
               搜尋商品、食譜…
             </Link>
+            <div className="mx-4 mt-3 grid grid-cols-2 gap-2">
+              <Link
+                href={APP_ROUTES.member}
+                className="flex h-11 items-center justify-center gap-1.5 rounded-full bg-[#FFD454] text-sm font-bold text-[#153E73]"
+              >
+                <UserRound className="h-4 w-4" />
+                會員中心
+              </Link>
+              <Link
+                href={APP_ROUTES.favorites}
+                className="flex h-11 items-center justify-center gap-1.5 rounded-full border border-[#E9EDF2] bg-white text-sm font-bold text-[#153E73]"
+              >
+                <Heart className="h-4 w-4" />
+                我的收藏
+              </Link>
+            </div>
             <ul className="mt-3 flex-1 px-2 pb-6">
               {navLinks.map((link) => {
                 const children = link.children ?? [];
