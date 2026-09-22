@@ -219,7 +219,7 @@ function Rail({
   return (
     <div
       className={cn(
-        "scrollbar-hide -mx-4 flex snap-x snap-proximity gap-[clamp(12px,2vw,28px)] overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6",
+        "scrollbar-hide -mx-4 flex scroll-px-4 sm:scroll-px-6 snap-x snap-proximity gap-[clamp(12px,2vw,28px)] overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6",
         "lg:mx-0 lg:grid lg:overflow-visible lg:px-0 lg:pb-0",
         lgCols(cols)
       )}
@@ -503,7 +503,7 @@ export function DesktopHome() {
             <SectionHeading title={section.title || "最新活動"} subtitle={section.subtitle} href={viewAll} linkLabel="所有活動" />
             <div
               className={cn(
-                "scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-[clamp(12px,2vw,28px)] overflow-x-auto px-4 sm:-mx-6 sm:px-6",
+                "scrollbar-hide -mx-4 flex scroll-px-4 sm:scroll-px-6 snap-x snap-mandatory gap-[clamp(12px,2vw,28px)] overflow-x-auto px-4 sm:-mx-6 sm:px-6",
                 "md:mx-0 md:grid md:overflow-visible md:px-0",
                 perRow === 3 ? "md:grid-cols-2 lg:grid-cols-3" : perRow === 1 ? "md:grid-cols-1" : "md:grid-cols-2"
               )}
