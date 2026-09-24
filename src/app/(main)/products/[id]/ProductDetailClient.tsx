@@ -59,15 +59,6 @@ type RelatedProduct = {
   stock?: number;
 };
 
-type TabId = "intro" | "specs" | "shipping" | "reviews";
-
-const TABS: { id: TabId; label: string }[] = [
-  { id: "intro", label: "商品介紹" },
-  { id: "specs", label: "商品規格" },
-  { id: "shipping", label: "配送取貨" },
-  { id: "reviews", label: "商品評價" },
-];
-
 function stripDemoPrefix(name: string) {
   return name.replace(/^\[DEMO\]\s*/i, "").trim();
 }
@@ -118,7 +109,6 @@ export default function ProductDetailClient({ id }: { id: string }) {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
-  const [tab, setTab] = useState<TabId>("intro");
   const [toast, setToast] = useState<string | null>(null);
   const [shippingNotice, setShippingNotice] = useState(
     defaultSiteDocumentContent("shipping")
@@ -554,130 +544,99 @@ export default function ProductDetailClient({ id }: { id: string }) {
             ))}
           </div>
 
-          {/* Tabs */}
-          <div className="overflow-hidden rounded-2xl border border-[#E8E1D7] bg-white">
-            <div className="flex gap-1 overflow-x-auto border-b border-[#E8E1D7] px-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {TABS.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTab(t.id)}
-                  className={cn(
-                    "relative shrink-0 px-3 py-3 text-sm",
-                    tab === t.id ? "font-bold text-[#153E73]" : "font-medium text-[#667085]"
-                  )}
-                >
-                  {t.label}
-                  {tab === t.id ? (
-                    <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#FEE169]" />
-                  ) : null}
-                </button>
-              ))}
-            </div>
-            <div className="space-y-3 p-4">
-              {tab === "intro" ? (
-                <>
-                  <IntroCard title="商品特色">
-                    {(product as { rich_description?: string | null }).rich_description ||
-                      product.description ||
-                      "尚無商品特色說明。"}
-                  </IntroCard>
-                  <IntroCard title="適合用途">
-                    {(product as { product_info?: string }).product_info ||
-                      product.subtitle ||
-                      "適合居家烘焙與日常料理使用。"}
-                  </IntroCard>
-                  <IntroCard title="商品規格">
-                    {product.specifications ||
-                      product.package_spec ||
-                      (product.unit ? `單位：${product.unit}` : "請見包裝標示。")}
-                  </IntroCard>
-                  {contentImages.length > 0 ? (
-                    <div className="space-y-3">
-                      <h3 className="text-sm font-bold">商品內容圖片</h3>
-                      {contentImages.map((img, i) => (
-                        <figure key={`${img.url}-${i}`} className={cn("space-y-2", widthModeClass(img.width_mode))}>
-                          {img.caption ? (
-                            <figcaption className="text-sm font-medium text-[#153E73]">
-                              {img.caption}
-                            </figcaption>
-                          ) : null}
-                          <div className="relative w-full overflow-hidden rounded-xl bg-[#F7F1E7]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={img.url}
-                              alt={img.alt_text || `${name} 內容圖 ${i + 1}`}
-                              loading="lazy"
-                              className="h-auto w-full object-contain"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLImageElement).style.display = "none";
-                              }}
-                            />
-                          </div>
-                        </figure>
-                      ))}
+        </div>
+
+        {/* 商品介紹：整頁寬度，一段一段往下排（不再分頁籤） */}
+        <div className="md:col-span-2 space-y-6 pt-6 md:pt-10">
+          <section id="pdp-intro" className="space-y-3 rounded-2xl border border-[#E8E1D7] bg-white p-4 md:p-6">
+            <h2 className="text-lg font-bold text-[#153E73] md:text-xl">商品介紹</h2>
+            <IntroCard title="商品特色">
+              {(product as { rich_description?: string | null }).rich_description ||
+                product.description ||
+                "尚無商品特色說明。"}
+            </IntroCard>
+            {contentImages.length > 0 ? (
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold">商品內容圖片</h3>
+                {contentImages.map((img, i) => (
+                  <figure key={`${img.url}-${i}`} className={cn("space-y-2", widthModeClass(img.width_mode))}>
+                    {img.caption ? (
+                      <figcaption className="text-sm font-medium text-[#153E73]">{img.caption}</figcaption>
+                    ) : null}
+                    <div className="relative w-full overflow-hidden rounded-xl bg-[#F7F1E7]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.url}
+                        alt={img.alt_text || `${name} 內容圖 ${i + 1}`}
+                        loading="lazy"
+                        className="h-auto w-full object-contain"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
                     </div>
-                  ) : null}
-                  <IntroCard title="配送注意事項">
-                    {shippingNotice}
-                  </IntroCard>
-                  <p className="text-xs text-[#667085]">
-                    <Link href="/support/shipping" className="font-medium text-[#153E73] underline">
-                      查看完整配送說明
-                    </Link>
-                  </p>
-                </>
-              ) : null}
-              {tab === "specs" ? (
-                <dl className="space-y-2 text-sm">
-                  {[
-                    ["SKU", product.sku],
-                    ["條碼", product.barcode],
-                    ["單位", product.unit],
-                    ["淨重", (product as { weight_grams?: number }).weight_grams
-                      ? `${(product as { weight_grams?: number }).weight_grams}g`
-                      : null],
-                    ["規格", product.specifications || product.package_spec],
-                  ]
-                    .filter(([, v]) => v)
-                    .map(([k, v]) => {
-                      const text = String(v);
-                      const htmlSpec = k === "規格" && looksLikeHtml(text);
-                      return (
-                        <div
-                          key={String(k)}
-                          className={cn(
-                            "gap-3 border-b border-[#E8E1D7]/80 py-2",
-                            htmlSpec ? "block space-y-2" : "flex"
-                          )}
-                        >
-                          <dt className="w-20 shrink-0 text-[#667085]">{k}</dt>
-                          <dd className={cn("min-w-0 font-medium", htmlSpec && "font-normal")}>
-                            {htmlSpec ? <RichTextHtml html={text} /> : text}
-                          </dd>
-                        </div>
-                      );
-                    })}
-                </dl>
-              ) : null}
-              {tab === "shipping" ? (
-                <div className="space-y-3 text-sm leading-relaxed text-[#334155]">
-                  <p className="flex items-start gap-2">
-                    <Truck className="mt-0.5 h-4 w-4 shrink-0" />
-                    支援門市取貨
-                    {(product as { ship_home?: boolean }).ship_home !== false
-                      ? "、宅配到府"
-                      : ""}
-                    。
-                  </p>
-                  <p>實際配送時程依庫存與門市作業時間為準。</p>
-                </div>
-              ) : null}
-              {tab === "reviews" ? (
-                <p className="text-sm text-[#667085]">評價功能準備中，歡迎先下單體驗商品品質。</p>
-              ) : null}
+                  </figure>
+                ))}
+              </div>
+            ) : null}
+          </section>
+
+          <section id="pdp-specs" className="space-y-3 rounded-2xl border border-[#E8E1D7] bg-white p-4 md:p-6">
+            <h2 className="text-lg font-bold text-[#153E73] md:text-xl">商品規格</h2>
+            <dl className="space-y-2 text-sm">
+              {[
+                ["SKU", product.sku],
+                ["條碼", product.barcode],
+                ["單位", product.unit],
+                ["淨重", (product as { weight_grams?: number }).weight_grams
+                  ? `${(product as { weight_grams?: number }).weight_grams}g`
+                  : null],
+                ["規格", product.specifications || product.package_spec],
+              ]
+                .filter(([, v]) => v)
+                .map(([k, v]) => {
+                  const text = String(v);
+                  const htmlSpec = k === "規格" && looksLikeHtml(text);
+                  return (
+                    <div
+                      key={String(k)}
+                      className={cn(
+                        "gap-3 border-b border-[#E8E1D7]/80 py-2",
+                        htmlSpec ? "block space-y-2" : "flex"
+                      )}
+                    >
+                      <dt className="w-20 shrink-0 text-[#667085]">{k}</dt>
+                      <dd className={cn("min-w-0 font-medium", htmlSpec && "font-normal")}>
+                        {htmlSpec ? <RichTextHtml html={text} /> : text}
+                      </dd>
+                    </div>
+                  );
+                })}
+            </dl>
+          </section>
+
+          <section id="pdp-shipping" className="space-y-3 rounded-2xl border border-[#E8E1D7] bg-white p-4 md:p-6">
+            <h2 className="text-lg font-bold text-[#153E73] md:text-xl">配送與取貨</h2>
+            <div className="space-y-3 text-sm leading-relaxed text-[#334155]">
+              <p className="flex items-start gap-2">
+                <Truck className="mt-0.5 h-4 w-4 shrink-0" />
+                支援門市取貨
+                {(product as { ship_home?: boolean }).ship_home !== false ? "、宅配到府" : ""}。
+              </p>
+              <p>實際配送時程依庫存與門市作業時間為準。</p>
             </div>
-          </div>
+            <IntroCard title="配送注意事項">{shippingNotice}</IntroCard>
+            <p className="text-xs text-[#667085]">
+              <Link href="/support/shipping" className="font-medium text-[#153E73] underline">
+                查看完整配送說明
+              </Link>
+            </p>
+          </section>
+
+          <section id="pdp-reviews" className="space-y-3 rounded-2xl border border-[#E8E1D7] bg-white p-4 md:p-6">
+            <h2 className="text-lg font-bold text-[#153E73] md:text-xl">商品評價</h2>
+            <p className="text-sm text-[#667085]">評價功能準備中，歡迎先下單體驗商品品質。</p>
+          </section>
         </div>
 
         {/* Related — full width below grid on desktop */}

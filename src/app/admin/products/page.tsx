@@ -41,6 +41,7 @@ function AdminProductsPageInner() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [bulkRemoveOpen, setBulkRemoveOpen] = useState(false);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -292,6 +293,12 @@ function AdminProductsPageInner() {
     await refresh();
   };
 
+  /** 多選刪除 = 下架：前台立刻看不到，資料與訂單紀錄都保留。 */
+  const bulkRemove = async () => {
+    setBulkRemoveOpen(false);
+    await quickStatus("inactive");
+  };
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -454,6 +461,7 @@ function AdminProductsPageInner() {
           <Button size="sm" variant="secondary" onClick={() => void quickStatus("active")}>上架</Button>
           <Button size="sm" variant="secondary" onClick={() => void quickStatus("inactive")}>下架</Button>
           <Button size="sm" variant="secondary" onClick={() => void quickStatus("draft")}>改為草稿</Button>
+          <Button size="sm" variant="destructive" onClick={() => setBulkRemoveOpen(true)}>刪除（下架）</Button>
           <Link href="/admin/products/images/batch">
             <Button size="sm" variant="outline">批次圖片</Button>
           </Link>
@@ -480,6 +488,26 @@ function AdminProductsPageInner() {
             render: (p) => (
               <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleOne(p.id)} aria-label="選取商品" />
             ),
+          },
+          {
+            key: "image",
+            header: "圖片",
+            render: (p) => {
+              const src = (p as { image_url?: string | null }).image_url;
+              return src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  className="h-12 w-12 rounded-lg border border-[#E9EDF2] object-cover"
+                />
+              ) : (
+                <span className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-[#E9EDF2] text-[10px] text-[#8A94A6]">
+                  無圖
+                </span>
+              );
+            },
           },
           {
             key: "name",
@@ -661,6 +689,26 @@ function AdminProductsPageInner() {
             void refresh();
           }}
         />
+      ) : null}
+
+      {bulkRemoveOpen ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+            <h2 className="text-base font-bold text-[#153E73]">刪除選取的 {selected.size} 件商品？</h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#667085]">
+              這些商品會立刻從前台下架，客人看不到，但資料與過去的訂單紀錄都會保留。
+              之後在上方「狀態」選「下架」就能找回來，再按「上架」即可恢復。
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button size="sm" variant="ghost" onClick={() => setBulkRemoveOpen(false)}>
+                取消
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => void bulkRemove()}>
+                確定刪除（下架）
+              </Button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </div>
   );

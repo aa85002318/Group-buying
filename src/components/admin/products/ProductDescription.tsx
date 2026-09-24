@@ -20,7 +20,7 @@ export function ProductDescription({
         onChange={(rich_description) => patch({ rich_description })}
         footer={
           <p className="mt-2 text-xs text-[#8A94A6]">
-            前台顯示於「商品特色」。公版可至{" "}
+            前台顯示於商品介紹頁的「商品特色」。公版可至{" "}
             <Link href="/admin/products/content-templates" className="text-[#153E73] underline">
               商品內容公版
             </Link>{" "}
@@ -29,21 +29,12 @@ export function ProductDescription({
         }
       />
       <ProductContentBlockEditor
-        title="適合用途"
-        section="product_info"
-        value={form.product_info}
-        onChange={(product_info) => patch({ product_info })}
-        footer={
-          <p className="mt-2 text-xs text-[#8A94A6]">前台顯示於商品介紹分頁的「適合用途」。</p>
-        }
-      />
-      <ProductContentBlockEditor
         title="商品規格"
         section="specifications"
         value={form.specifications}
         onChange={(specifications) => patch({ specifications })}
         footer={
-          <p className="mt-2 text-xs text-[#8A94A6]">前台顯示於商品介紹分頁的「商品規格」。</p>
+          <p className="mt-2 text-xs text-[#8A94A6]">前台顯示於商品介紹頁的「商品規格」。</p>
         }
       />
       <section className="rounded-xl border border-dashed border-gray-200 bg-[#FFFEFA] p-4">
