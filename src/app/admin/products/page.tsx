@@ -493,7 +493,13 @@ function AdminProductsPageInner() {
             key: "image",
             header: "圖片",
             render: (p) => {
-              const src = (p as { image_url?: string | null }).image_url;
+              const row = p as { image_url?: string | null; images?: unknown };
+              const first = Array.isArray(row.images)
+                ? row.images
+                    .map((i) => (typeof i === "string" ? i : (i as { url?: string })?.url))
+                    .find((u): u is string => Boolean(u))
+                : undefined;
+              const src = row.image_url || first;
               return src ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
