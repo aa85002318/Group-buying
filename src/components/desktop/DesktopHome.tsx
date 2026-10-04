@@ -185,15 +185,20 @@ function SectionHeading({
   linkLabel?: string;
 }) {
   return (
-    <div className="mb-[clamp(18px,2.4vw,32px)] flex items-end justify-between gap-4">
-      <div className="min-w-0 space-y-1">
-        <h2 className="text-[clamp(24px,2.8vw,38px)] font-black tracking-wide text-[#153E73]">{title}</h2>
-        {subtitle ? <p className="text-[clamp(14px,1.2vw,17px)] text-[#4A5B78]">{subtitle}</p> : null}
+    <div className="mb-3.5 flex items-start justify-between gap-3 md:mb-[18px]">
+      <div className="flex min-w-0 items-start gap-2">
+        <span className="mt-[5px] h-7 w-1.5 shrink-0 rounded-full bg-[#FFD454]" aria-hidden />
+        <div className="min-w-0">
+          <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">{title}</h2>
+          {subtitle ? (
+            <p className="mt-1.5 line-clamp-1 text-[13px] text-[#687386] md:text-sm">{subtitle}</p>
+          ) : null}
+        </div>
       </div>
       {href ? (
         <Link
           href={href}
-          className="inline-flex shrink-0 items-center gap-0.5 text-sm font-bold text-[#153E73] hover:text-[#F16458]"
+          className="mt-1 inline-flex shrink-0 items-center gap-0.5 text-[14px] font-bold text-[#153E73] hover:text-[#F16458] md:mt-2"
         >
           {linkLabel}
           <ChevronRight className="h-4 w-4" />
