@@ -99,7 +99,7 @@ export function CmsPublishModal({
             className="bg-[#153E73] text-white hover:bg-[#153E73]/90"
             onClick={onConfirm}
           >
-            {busy ? "發布中…" : `確認發布${label}`}
+            {busy ? "發布中…" : "確認發布"}
           </Button>
         </div>
       </div>

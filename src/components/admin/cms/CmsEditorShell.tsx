@@ -20,7 +20,6 @@ import {
   PAGE_BUILDER_BASE,
   PAGE_BUILDER_DEFAULT_WIDTH,
   isPageLive,
-  isPageUnified,
   PAGE_BUILDER_UNIFIED_WIDTHS,
   pageBuilderPlatformHref,
   pageBuilderPreviewSrc,
@@ -92,7 +91,6 @@ export function CmsEditorShell({
 
   // One設定 for every device: the storefront lays the same blocks out
   // responsively, so the editor shows one scope and two preview sizes.
-  const unified = isPageUnified(pageId) && platform === "mobile";
   const widths: number[] = [...PAGE_BUILDER_UNIFIED_WIDTHS];
   const scopeLabel = "手機＋網頁";
   const previewLabel = previewWidth >= 1024 ? "網頁版" : "手機版";
