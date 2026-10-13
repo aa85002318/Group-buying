@@ -311,16 +311,10 @@ export function ShopCmsStudio() {
             actions={
               <>
                 <Link
-                  href="/admin/page-builder/desktop/shop"
-                  className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
-                >
-                  網頁版 CMS
-                </Link>
-                <Link
                   href="/admin/page-builder/mobile/shop"
                   className={cn(buttonVariants({ size: "sm" }))}
                 >
-                  手機 App CMS
+                  前往新版編輯器
                 </Link>
                 <Link
                   href={previewHref}

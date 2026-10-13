@@ -7,7 +7,6 @@ export { CmsPropertyPanel } from "./CmsPropertyPanel";
 export { CmsManager, CmsManagerWithLiveStatus } from "./CmsManager";
 export { CmsCanvasPageLoader } from "./CmsCanvasPageLoader";
 export { PageBuilderHub } from "./PageBuilderHub";
-export { PageBuilderPlatformHub } from "./PageBuilderPlatformHub";
 export { CmsPublishModal } from "./CmsPublishModal";
 export { CmsPublishValidation } from "./CmsPublishValidation";
 export { CmsVersionHistoryPanel } from "./CmsVersionHistoryPanel";

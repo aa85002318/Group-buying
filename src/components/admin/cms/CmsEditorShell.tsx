@@ -19,13 +19,11 @@ import { summarizeValidation, validateCmsPageForPublish } from "@/lib/cms/cms-va
 import {
   PAGE_BUILDER_BASE,
   PAGE_BUILDER_DEFAULT_WIDTH,
-  PAGE_BUILDER_PREVIEW_WIDTHS,
   isPageLive,
   isPageUnified,
   PAGE_BUILDER_UNIFIED_WIDTHS,
   pageBuilderPlatformHref,
   pageBuilderPreviewSrc,
-  platformLabel,
   type PageBuilderPlatform,
 } from "@/lib/cms/page-builder";
 import { CmsScaledPreview } from "@/components/admin/cms/CmsScaledPreview";
@@ -92,12 +90,12 @@ export function CmsEditorShell({
     return pageBuilderPreviewSrc(pageId, platform, path);
   }, [initialPage.previewPath, page?.previewPath, pageId, platform]);
 
+  // One設定 for every device: the storefront lays the same blocks out
+  // responsively, so the editor shows one scope and two preview sizes.
   const unified = isPageUnified(pageId) && platform === "mobile";
-  const widths: number[] = unified
-    ? [...PAGE_BUILDER_UNIFIED_WIDTHS]
-    : PAGE_BUILDER_PREVIEW_WIDTHS[platform];
-  const scopeLabel = unified ? "手機＋網頁" : platformLabel(platform);
-  const previewLabel = unified ? (previewWidth >= 1024 ? "網頁版" : "手機版") : platformLabel(platform);
+  const widths: number[] = [...PAGE_BUILDER_UNIFIED_WIDTHS];
+  const scopeLabel = "手機＋網頁";
+  const previewLabel = previewWidth >= 1024 ? "網頁版" : "手機版";
   const hubHref = pageBuilderPlatformHref(platform);
 
   const handleSave = async () => {
@@ -191,8 +189,7 @@ export function CmsEditorShell({
         </span>
 
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
-          {unified ? (
-            <div className="flex rounded-md border border-[#E9EDF2] bg-white p-0.5" role="group" aria-label="預覽裝置">
+          <div className="flex rounded-md border border-[#E9EDF2] bg-white p-0.5" role="group" aria-label="預覽裝置">
               {widths.map((w) => (
                 <button
                   key={w}
@@ -206,21 +203,7 @@ export function CmsEditorShell({
                   {w >= 1024 ? "網頁版預覽" : "手機版預覽"}
                 </button>
               ))}
-            </div>
-          ) : (
-            <select
-              className="h-8 rounded-md border border-[#E9EDF2] bg-white px-2 text-xs text-[#153E73]"
-              value={previewWidth}
-              onChange={(e) => setPreviewWidth(Number(e.target.value))}
-              title="預覽尺寸"
-            >
-              {widths.map((w) => (
-                <option key={w} value={w}>
-                  {w}
-                </option>
-              ))}
-            </select>
-          )}
+          </div>
 
           <Button
             type="button"

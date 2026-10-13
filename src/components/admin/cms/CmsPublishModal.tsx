@@ -22,7 +22,6 @@ type Props = {
 
 export function CmsPublishModal({
   open,
-  platform,
   page,
   onClose,
   onConfirm,
@@ -41,7 +40,7 @@ export function CmsPublishModal({
 
   if (!open) return null;
 
-  const label = platform === "desktop" ? "網頁版" : "手機版";
+  
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4">
@@ -52,9 +51,8 @@ export function CmsPublishModal({
       >
         <h2 className="text-lg font-bold text-[#153E73]">準備發布</h2>
         <p className="mt-1 text-sm text-[#687386]">
-          這次只會發布
-          <span className="mx-1 font-semibold text-[#153E73]">{label}</span>
-          的排列，{platform === "desktop" ? "手機版" : "網頁版"}不受影響。
+          發布後<span className="mx-1 font-semibold text-[#153E73]">手機和網站</span>
+          會一起更新，客人重新整理就會看到。
         </p>
 
         <ul className="mt-4 space-y-2 text-sm">

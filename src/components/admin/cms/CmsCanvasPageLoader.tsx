@@ -20,7 +20,6 @@ import {
   isPageWirable,
   PAGE_BUILDER_BASE,
   isPageLive,
-  platformLabel,
   type PageBuilderPlatform,
 } from "@/lib/cms/page-builder";
 import { getPageRegistryEntry } from "@/lib/cms/page-registry";
@@ -105,7 +104,7 @@ export function CmsCanvasPageLoader({
             id: v.id,
             version_number: v.version_number,
             status: "published",
-            label: `網頁版 第 ${v.version_number} 版`,
+            label: `第 ${v.version_number} 版`,
             published_at: v.updated_at,
             updated_at: v.updated_at,
           }))
@@ -437,8 +436,8 @@ export function CmsCanvasPageLoader({
       {!isPageLive(pageId, platform) ? (
         <p className="rounded-[10px] bg-[#FFF5CC] px-3 py-2 text-sm text-[#153E73]">
           {canSave
-            ? `這個頁面的${platformLabel(platform)}還沒連動網站：可以編排和儲存，但發布後前台不會改變。`
-            : `這個頁面的${platformLabel(platform)}目前由程式固定排版，這裡只能檢視，無法儲存。`}
+            ? "這個頁面還沒連動網站：可以編排和儲存，但發布後前台不會改變。"
+            : "這個頁面目前由程式固定排版，這裡只能檢視，無法儲存。"}
           {" "}
           <a href={PAGE_BUILDER_BASE} className="underline">
             返回頁面清單

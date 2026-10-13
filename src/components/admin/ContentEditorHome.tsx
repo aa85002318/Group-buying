@@ -7,9 +7,7 @@ import {
   ImagePlus,
   LayoutTemplate,
   Megaphone,
-  Monitor,
   Newspaper,
-  Smartphone,
   type LucideIcon,
 } from "lucide-react";
 
@@ -19,18 +17,6 @@ const WORKSPACE: Array<{ title: string; href: string; Icon: LucideIcon; tone: st
     href: "/admin/page-builder",
     Icon: LayoutTemplate,
     tone: "#FFF5CC",
-  },
-  {
-    title: "網頁版設定",
-    href: "/admin/page-builder/desktop",
-    Icon: Monitor,
-    tone: "#EEF8FC",
-  },
-  {
-    title: "手機 App 設定",
-    href: "/admin/page-builder/mobile",
-    Icon: Smartphone,
-    tone: "#EFF9EE",
   },
   { title: "文章新增", href: "/admin/articles/new", Icon: FileText, tone: "#F3EEFF" },
   { title: "食譜新增", href: "/admin/recipes/new", Icon: BookOpen, tone: "#FFF0EE" },
@@ -55,7 +41,7 @@ export function ContentEditorHome({ fullName }: { fullName?: string | null }) {
           {greeting(fullName)}
         </h1>
         <p className="mt-1 text-sm text-[var(--admin-muted)]">
-          網頁版與手機 App 分開設定；商品／食譜等內容共用。流程：草稿 → 預覽 → 發布。
+每一頁只有一份設定，手機和電腦會自動套用；商品／食譜等內容共用。流程：草稿 → 預覽 → 發布。
         </p>
       </div>
 

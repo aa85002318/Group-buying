@@ -120,8 +120,7 @@ export function CmsPropertyPanel({
       <div className="border-b border-[#E9EDF2] p-3">
         <p className="truncate text-sm font-bold text-[#153E73]">{block.name}</p>
         <p className="mt-1 text-[11px] text-[#687386]">
-          文字與圖片網頁版、手機版共用；排列方式只影響
-          <span className="font-semibold text-[#153E73]">{isDesktop ? "網頁版" : "手機版"}</span>
+          這裡的設定手機和網站共用，改一次兩邊都會變。
         </p>
       </div>
 
@@ -194,7 +193,7 @@ export function CmsPropertyPanel({
 
             {isDesktop ? (
               <ImageUploader
-                label="網頁版專用圖片（選填）"
+                label="電腦專用圖片（選填，不填就用上面那張）"
                 value={desktopImage}
                 disabled={readOnly}
                 spec={CMS_IMAGE_SPECS.campaignWide}
@@ -207,7 +206,7 @@ export function CmsPropertyPanel({
               />
             ) : (
               <ImageUploader
-                label="手機版專用圖片（選填）"
+                label="手機專用圖片（選填，不填就用上面那張）"
                 value={mobileImage}
                 disabled={readOnly}
                 spec={CMS_IMAGE_SPECS.campaignWide}
@@ -259,7 +258,7 @@ export function CmsPropertyPanel({
           <>
             <label className="block space-y-1">
               <span className="text-xs font-medium text-[#153E73]">
-                {isDesktop ? "網頁版排列方式" : "手機版排列方式"}
+                排列方式
               </span>
               <select
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
@@ -352,7 +351,7 @@ export function CmsPropertyPanel({
                   disabled={readOnly}
                   onChange={(e) => onChange({ enabled: e.target.checked })}
                 />
-                顯示此區塊（只影響{isDesktop ? "網頁版" : "手機版"}）
+                顯示此區塊（手機和網站一起）
               </label>
             )}
             <label className="block space-y-1">
@@ -490,39 +489,29 @@ function UnifiedVisibilityFields({
   const cfg = blockConfig(block);
   const websiteVisible =
     typeof cfg.desktop_visible === "boolean" ? cfg.desktop_visible : block.enabled;
+  const visible = block.enabled && websiteVisible;
   return (
     <div className="space-y-2 rounded-[10px] border border-[#E9EDF2] bg-[#FAFBFC] p-3">
-      <p className="text-xs font-semibold text-[#153E73]">在哪裡顯示</p>
       <label className="flex items-center gap-2 text-sm text-[#153E73]">
         <input
           type="checkbox"
-          checked={block.enabled}
+          checked={visible}
           disabled={readOnly}
           onChange={(e) => {
-            // Keep the website choice explicit so hiding on the app does not
-            // silently hide the website too.
+            // One switch for every device:手機和網站一起顯示或隱藏。
             onChange({
               enabled: e.target.checked,
               settings: {
                 ...block.settings,
-                config: { ...cfg, desktop_visible: websiteVisible },
+                config: { ...cfg, desktop_visible: e.target.checked },
               },
             });
           }}
         />
-        手機 App
-      </label>
-      <label className="flex items-center gap-2 text-sm text-[#153E73]">
-        <input
-          type="checkbox"
-          checked={websiteVisible}
-          disabled={readOnly}
-          onChange={(e) => patchConfig(block, onChange, { desktop_visible: e.target.checked })}
-        />
-        網站（電腦版）
+        顯示此區塊（手機和網站一起）
       </label>
       <p className="text-[11px] leading-relaxed text-[#8A94A6]">
-        標題、連結、挑選的商品與顯示筆數兩邊共用，改一次就好。
+        標題、連結、挑選的商品與顯示筆數手機和網站共用，改一次就好。
       </p>
     </div>
   );
@@ -545,7 +534,7 @@ function UnifiedLayoutFields({
     <div className="space-y-3">
       {WEBSITE_COLUMN_KEYS.has(key) ? (
         <label className="block space-y-1">
-          <span className="text-xs font-medium text-[#153E73]">網站每列幾個</span>
+          <span className="text-xs font-medium text-[#153E73]">電腦版每列幾個（手機自動調整）</span>
           <Input
             type="number"
             min={1}

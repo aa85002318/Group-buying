@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Classic Desktop layout hub → unified Desktop Page Builder */
+/** 舊的網頁版版面設定 → 現在只有一份設定的前台內容編輯器 */
 export default function AdminDesktopLayoutIndexRedirect() {
-  redirect("/admin/page-builder/desktop");
+  redirect("/admin/page-builder");
 }
