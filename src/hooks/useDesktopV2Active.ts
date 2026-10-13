@@ -1,13 +1,19 @@
 "use client";
 
-import { isDesktopV2EnabledClient } from "@/lib/features/desktop-v2";
+import { useIsDesktopLg } from "@/hooks/useIsDesktopLg";
+import {
+  isDesktopV2AllScreensClient,
+  isDesktopV2EnabledClient,
+} from "@/lib/features/desktop-v2";
 
 /**
- * True when the single responsive website layout (Desktop V2) is enabled for
- * this host. Since ④ it no longer depends on screen width: phones, tablets and
- * computers all get the same layout, which reflows by breakpoint.
- * (Production stays on the legacy app layout until go-live.)
+ * True when the website layout (Desktop V2) should render.
+ * Staging: every screen size gets the same responsive layout.
+ * Production: only computer widths (>= 1024px); phones and tablets keep the
+ * app layout.
  */
 export function useDesktopV2Active(): boolean {
-  return isDesktopV2EnabledClient();
+  const isDesktopLg = useIsDesktopLg();
+  if (!isDesktopV2EnabledClient()) return false;
+  return isDesktopV2AllScreensClient() || isDesktopLg;
 }

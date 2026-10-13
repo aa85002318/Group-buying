@@ -3,9 +3,10 @@ import { GROUP_BUY_CONSUMER_VISIBLE } from "@/lib/features/group-buy-visibility"
 /**
  * Desktop V2 feature gate.
  *
- * Staging: on by default when APP_ENV=staging or hostname is staging
- *   (set NEXT_PUBLIC_ENABLE_DESKTOP_V2=false to force off).
- * Production: always off (hostname + APP_ENV hard-block).
+ * Staging and production: on by default (hostname or APP_ENV).
+ * Set NEXT_PUBLIC_ENABLE_DESKTOP_V2=false to force it off on either.
+ * Production only uses it at computer widths (>= DESKTOP_BREAKPOINT_PX);
+ * phones and tablets there keep the app layout.
  */
 
 const PRODUCTION_HOST = "shop.chimeidiygroupbuying.com";
@@ -20,19 +21,18 @@ function isProductionContext(): boolean {
 
 /** Server / build-time gate. */
 export function isDesktopV2EnvEnabled(): boolean {
-  if (isProductionContext()) return false;
   if (process.env.NEXT_PUBLIC_ENABLE_DESKTOP_V2 === "false") return false;
+  if (isProductionContext()) return true;
   if (process.env.NEXT_PUBLIC_ENABLE_DESKTOP_V2 === "true") return true;
   if (process.env.NEXT_PUBLIC_APP_ENV === "staging") return true;
   return false;
 }
 
-/** Client-side gate with hostname hard-block on production. */
+/** Client-side gate by hostname. */
 export function isDesktopV2EnabledClient(): boolean {
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
-    if (host === PRODUCTION_HOST) return false;
-    if (host === STAGING_HOST) {
+    if (host === PRODUCTION_HOST || host === STAGING_HOST) {
       return process.env.NEXT_PUBLIC_ENABLE_DESKTOP_V2 !== "false";
     }
     if (host === "localhost" || host === "127.0.0.1") {
@@ -43,6 +43,17 @@ export function isDesktopV2EnabledClient(): boolean {
     }
   }
   return isDesktopV2EnvEnabled();
+}
+
+/**
+ * Whether the website layout also replaces the app layout on phones and
+ * tablets. Production keeps the app layout below DESKTOP_BREAKPOINT_PX.
+ */
+export function isDesktopV2AllScreensClient(): boolean {
+  if (typeof window !== "undefined") {
+    return window.location.hostname !== PRODUCTION_HOST;
+  }
+  return !isProductionContext();
 }
 
 export const DESKTOP_BREAKPOINT_PX = 1024;
@@ -105,7 +116,7 @@ export function getDesktopV2BootScript(): string {
     bp: DESKTOP_BREAKPOINT_PX,
     attr: DESKTOP_V2_BOOT_ATTR,
   });
-  return `(function(c){try{var h=location.hostname,on;if(h===c.prod)on=false;else if(h===c.staging)on=c.flag!=="false";else if(h==="localhost"||h==="127.0.0.1")on=c.flag==="true"||c.dev;else on=c.env;if(on&&window.matchMedia("(min-width: "+c.bp+"px)").matches)document.documentElement.setAttribute(c.attr,"")}catch(e){}})(${cfg});`;
+  return `(function(c){try{var h=location.hostname,on;if(h===c.prod||h===c.staging)on=c.flag!=="false";else if(h==="localhost"||h==="127.0.0.1")on=c.flag==="true"||c.dev;else on=c.env;if(on&&window.matchMedia("(min-width: "+c.bp+"px)").matches)document.documentElement.setAttribute(c.attr,"")}catch(e){}})(${cfg});`;
 }
 
 /**
