@@ -72,11 +72,15 @@ export function DesktopProductCard({
         ) : null}
       </Link>
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <Link href={path} className="line-clamp-2 text-sm font-semibold text-[#153E73]">
+        {/* Fixed two-line name and one-line spec keep cards in a row the same height. */}
+        <Link
+          href={path}
+          className="line-clamp-2 min-h-[2.5em] text-sm font-semibold leading-[1.25] text-[#153E73]"
+        >
           {name}
         </Link>
-        {showSpec && spec ? (
-          <p className="line-clamp-1 text-xs text-[#687386]">{spec}</p>
+        {showSpec ? (
+          <p className="line-clamp-1 min-h-[1.25em] text-xs leading-[1.25] text-[#687386]">{spec ?? ""}</p>
         ) : null}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           <p className="text-base font-bold text-[#F16458]">{formatCurrency(price)}</p>

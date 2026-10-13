@@ -117,41 +117,56 @@ function productSpec(p: Product) {
 function str(v: unknown) {
   return typeof v === "string" ? v : "";
 }
-/** Avoid a lone orphan row: trim to full rows once there is at least one. */
-function fillRows(count: number, perRow: number) {
-  if (count <= perRow) return count;
-  return Math.floor(count / perRow) * perRow;
-}
-
-/** lg+ column classes (Tailwind-safe list). Phones scroll sideways. */
-const LG_COLS: Record<number, string> = {
-  2: "lg:grid-cols-2",
-  3: "lg:grid-cols-3",
-  4: "lg:grid-cols-4",
-  5: "lg:grid-cols-5",
-  6: "lg:grid-cols-6",
-};
-function lgCols(n: number) {
-  return LG_COLS[Math.min(6, Math.max(2, n))] ?? LG_COLS[5];
-}
-
 /* ------------------------------------------------------------------ */
 /* Layout primitives                                                   */
 /* ------------------------------------------------------------------ */
 
-type BandTone = "white" | "warm" | "cream" | "sky";
+/** Every section shares one content edge. */
+const CONTENT_MAX = "max-w-[1280px]";
+
+type BandTone = "white" | "warm" | "soft" | "cream" | "sky";
 const BAND_BG: Record<BandTone, string> = {
   white: "bg-white",
   warm: "bg-[#FFFEFA]",
+  soft: "bg-[#FFF9EC]",
   cream: "bg-[#FFF5CC]",
   sky: "bg-[#EEF8FC]",
 };
-/** Section rhythm: generous vertical space so the page can breathe. */
+/** Two neighbouring bands add up to ~48px (phone) / 72–80px (desktop) between sections. */
 const BAND_PAD = {
-  normal: "py-[clamp(48px,6vw,96px)]",
-  compact: "py-[clamp(32px,4vw,64px)]",
+  normal: "py-6 md:py-9 lg:py-10",
+  compact: "py-4 md:py-6",
   none: "",
 } as const;
+
+/** Sections that paint their own background and don't join the warm / soft alternation. */
+const SELF_TONED: Partial<Record<string, BandTone>> = {
+  hero: "warm",
+  hot_searches: "warm",
+  brand_statement: "cream",
+  ai_assistant: "sky",
+};
+
+function alternateTones(sections: Array<{ id: string; key: string }>) {
+  const tones = new Map<string, BandTone>();
+  let last: BandTone = "warm";
+  sections.forEach((s, i) => {
+    const own = SELF_TONED[s.key];
+    if (own) {
+      last = own;
+      return;
+    }
+    // 一鍵買齊材料 continues the recipe band right above it.
+    if (s.key === "ingredient_shop" && sections[i - 1]?.key === "latest_recipes") {
+      tones.set(s.id, last);
+      return;
+    }
+    const tone: BandTone = last === "soft" || last === "cream" ? "warm" : "soft";
+    tones.set(s.id, tone);
+    last = tone;
+  });
+  return tones;
+}
 
 function Band({
   tone = "warm",
@@ -168,7 +183,7 @@ function Band({
 }) {
   return (
     <section aria-label={label} className={cn(BAND_BG[tone], BAND_PAD[pad], className)}>
-      <DesktopContainer>{children}</DesktopContainer>
+      <DesktopContainer className={CONTENT_MAX}>{children}</DesktopContainer>
     </section>
   );
 }
@@ -208,29 +223,40 @@ function SectionHeading({
   );
 }
 
+/** Cards visible on a screen size: whole rows only (all of them if fewer than one row). */
+function fullRows(count: number, perRow: number) {
+  return count < perRow ? count : Math.floor(count / perRow) * perRow;
+}
+
+const GRID_LAYOUT = {
+  /** Products: phone 2 · tablet 3 · desktop 4 */
+  products: { cls: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4", phone: 2, tablet: 3, desktop: 4 },
+  /** Recipes: phone 2 · tablet / desktop 3 */
+  recipes: { cls: "grid-cols-2 md:grid-cols-3", phone: 2, tablet: 3, desktop: 3 },
+} as const;
+
 /**
- * Cards that scroll sideways on phones/tablets and become a grid on lg+.
- * One DOM for every screen size.
+ * Fixed-column card grid. Cards that would leave a short last row on the
+ * current screen size are hidden there, so every row is full.
  */
-function Rail({
-  cols,
-  itemClassName = "w-[clamp(150px,42vw,220px)]",
-  children,
-}: {
-  cols: number;
-  itemClassName?: string;
-  children: ReactNode[];
-}) {
+function CardGrid({ layout, children }: { layout: keyof typeof GRID_LAYOUT; children: ReactNode[] }) {
+  const g = GRID_LAYOUT[layout];
+  const n = children.length;
+  const phone = fullRows(n, g.phone);
+  const tablet = fullRows(n, g.tablet);
+  const desktop = fullRows(n, g.desktop);
   return (
-    <div
-      className={cn(
-        "scrollbar-hide -mx-4 flex scroll-px-4 sm:scroll-px-6 snap-x snap-proximity gap-[clamp(12px,2vw,28px)] overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6",
-        "lg:mx-0 lg:grid lg:overflow-visible lg:px-0 lg:pb-0",
-        lgCols(cols)
-      )}
-    >
+    <div className={cn("grid gap-3 md:gap-5 lg:gap-6", g.cls)}>
       {children.map((child, i) => (
-        <div key={i} className={cn("shrink-0 snap-start lg:w-auto", itemClassName)}>
+        <div
+          key={i}
+          className={cn(
+            "min-w-0",
+            i >= phone && "max-md:hidden",
+            i >= tablet && "md:max-lg:hidden",
+            i >= desktop && "lg:hidden"
+          )}
+        >
           {child}
         </div>
       ))}
@@ -342,7 +368,7 @@ export function DesktopHome() {
     return recipes;
   };
 
-  const renderSection = (section: DesktopSection, prevKey: string | null): ReactNode => {
+  const renderSection = (section: DesktopSection, prevKey: string | null, tone: BandTone): ReactNode => {
     // Group-buy sections stay hidden while FEATURES.groupBuying is off.
     if (!GROUP_BUY_CONSUMER_VISIBLE && HIDDEN_HOME_GROUP_BUY_KEYS.has(section.key)) return null;
     const cfg = section.config ?? {};
@@ -354,9 +380,13 @@ export function DesktopHome() {
         return (
           <Band key={section.id} tone="warm" pad="none" label={section.title || "主視覺"} className="pt-[clamp(12px,2vw,24px)]">
             <h1 className="sr-only">CHIMEIDIY 烘焙材料｜烘焙生活平台</h1>
+            {/* Desktop 5:2. Phones use the 6:5 phone image; without one they keep 5:2 so the desktop art isn't cropped. */}
             <Link
               href={heroBanner?.link_url || APP_ROUTES.shop}
-              className="block w-full overflow-hidden rounded-[clamp(16px,2vw,28px)] bg-[#EEF8FC]"
+              className={cn(
+                "relative block w-full overflow-hidden rounded-[14px] bg-[#EEF8FC] md:rounded-[20px]",
+                heroBanner?.mobile_image_url ? "aspect-[6/5] md:aspect-[5/2]" : "aspect-[5/2]"
+              )}
             >
               <picture>
                 {heroBanner?.mobile_image_url ? (
@@ -366,7 +396,7 @@ export function DesktopHome() {
                 <img
                   src={heroSrc}
                   alt={heroBanner?.title || "CHIMEIDIY"}
-                  className="block h-auto w-full"
+                  className="absolute inset-0 h-full w-full object-cover"
                   fetchPriority="high"
                 />
               </picture>
@@ -452,19 +482,19 @@ export function DesktopHome() {
           tiles.push({ id: "__new", name: "新品上架", href: "/shop/new-arrivals", bgColor: "#FFF5CC" });
         tiles.push({ id: "__all", name: "全部分類", href: "/shop/categories", bgColor: "#EEF8FC" });
         return (
-          <Band key={section.id} tone="white" label={section.title}>
+          <Band key={section.id} tone={tone} label={section.title}>
             <SectionHeading
               title={section.title || "商品分類"}
               subtitle={section.subtitle}
               href={section.viewAllUrl || APP_ROUTES.shop}
               linkLabel="全部商品"
             />
-            <ul className="grid grid-cols-4 gap-x-[clamp(8px,2vw,28px)] gap-y-[clamp(18px,2.4vw,28px)] lg:grid-cols-8">
+            <ul className="grid grid-cols-4 gap-x-3 gap-y-4 md:gap-x-5 md:gap-y-6 lg:grid-cols-8">
               {tiles.map((c) => (
                 <li key={c.id}>
                   <Link href={c.href} className="group flex flex-col items-center gap-2 text-center">
                     <span
-                      className="relative flex aspect-square w-full max-w-[128px] items-center justify-center overflow-hidden rounded-full shadow-[0_4px_14px_rgba(21,62,115,0.10)] transition group-hover:-translate-y-0.5"
+                      className="relative flex aspect-square w-full max-w-[112px] items-center justify-center overflow-hidden rounded-full shadow-[0_4px_14px_rgba(21,62,115,0.10)] transition group-hover:-translate-y-0.5"
                       style={{ background: c.bgColor || "#FFF5CC" }}
                     >
                       {c.image ? (
@@ -476,7 +506,9 @@ export function DesktopHome() {
                         <LayoutGrid className="h-[38%] w-[38%] text-[#153E73]" strokeWidth={1.7} aria-hidden />
                       )}
                     </span>
-                    <span className="line-clamp-1 text-[clamp(12px,1.1vw,15px)] font-bold text-[#153E73]">{c.name}</span>
+                    <span className="line-clamp-2 min-h-[2.5em] text-[13px] font-bold leading-[1.25] text-[#153E73] md:text-[15px]">
+                      {c.name}
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -504,11 +536,11 @@ export function DesktopHome() {
             ? section.viewAllUrl
             : APP_ROUTES.promotions;
         return (
-          <Band key={section.id} tone="warm" label={section.title}>
+          <Band key={section.id} tone={tone} label={section.title}>
             <SectionHeading title={section.title || "最新活動"} subtitle={section.subtitle} href={viewAll} linkLabel="所有活動" />
             <div
               className={cn(
-                "scrollbar-hide -mx-4 flex scroll-px-4 sm:scroll-px-6 snap-x snap-mandatory gap-[clamp(12px,2vw,28px)] overflow-x-auto px-4 sm:-mx-6 sm:px-6",
+                "scrollbar-hide -mx-4 flex scroll-px-4 sm:scroll-px-6 snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:-mx-6 sm:px-6 md:gap-5 lg:gap-6",
                 "md:mx-0 md:grid md:overflow-visible md:px-0",
                 perRow === 3 ? "md:grid-cols-2 lg:grid-cols-3" : perRow === 1 ? "md:grid-cols-1" : "md:grid-cols-2"
               )}
@@ -517,7 +549,7 @@ export function DesktopHome() {
                 <Link
                   key={s.id}
                   href={s.href || APP_ROUTES.promotions}
-                  className="group relative block aspect-[5/2] w-[86%] shrink-0 snap-start overflow-hidden rounded-[clamp(14px,1.6vw,20px)] bg-[#EEF8FC] md:w-auto"
+                  className="group relative block aspect-[5/2] w-[86%] shrink-0 snap-start overflow-hidden rounded-[14px] bg-[#EEF8FC] md:w-auto md:rounded-[18px]"
                 >
                   <Image
                     src={s.imageUrl}
@@ -551,8 +583,7 @@ export function DesktopHome() {
                 : products.filter((p) => p.is_new)
               : [];
         const source = section.key === "custom_products" || (section.sourceMode === "manual" && manual.length) ? manual : auto;
-        const perRow = cols ?? 5;
-        const list = source.slice(0, fillRows(Math.min(source.length, section.displayCount || 10), perRow));
+        const list = source.slice(0, Math.max(4, section.displayCount || 8));
         if (!list.length) return null;
         const fallbackHref =
           section.key === "popular_baking_products"
@@ -561,24 +592,17 @@ export function DesktopHome() {
               ? "/shop/new-arrivals"
               : null;
         return (
-          <Band
-            key={section.id}
-            tone={section.key === "custom_products" ? "warm" : "white"}
-            label={section.title}
-            className={
-              section.key === "weekly_new_products" && prevKey === "popular_baking_products" ? "pt-0" : undefined
-            }
-          >
+          <Band key={section.id} tone={tone} label={section.title}>
             <SectionHeading
               title={section.title}
               subtitle={section.subtitle}
               href={section.viewAllUrl || fallbackHref}
             />
-            <Rail cols={perRow}>
+            <CardGrid layout="products">
               {list.map((p) => (
                 <ProductTile key={p.id} p={p} />
               ))}
-            </Rail>
+            </CardGrid>
           </Band>
         );
       }
@@ -586,38 +610,40 @@ export function DesktopHome() {
       /* 精選食譜 */
       case "latest_recipes": {
         const picked = pickRecipes(section);
-        const perRow = cols ?? 3;
-        const list = picked.slice(0, fillRows(Math.min(picked.length, section.displayCount || 3), perRow));
+        const list = picked.slice(0, Math.max(2, section.displayCount || 3));
         if (!list.length) return null;
         return (
-          <Band key={section.id} tone="warm" label={section.title} className="pb-[clamp(20px,3vw,40px)]">
+          <Band key={section.id} tone={tone} label={section.title}>
             <SectionHeading
               title={section.title || "精選食譜"}
               subtitle={section.subtitle}
               href={section.viewAllUrl || APP_ROUTES.recipes}
               linkLabel="更多食譜"
             />
-            <Rail cols={perRow} itemClassName="w-[clamp(260px,82vw,340px)]">
+            <CardGrid layout="recipes">
               {list.map((r) => {
                 const cover = r.cover_image_url || r.cover_image;
                 const mins = r.total_time ?? r.prep_time ?? r.cook_time;
                 const href = `/recipes/${r.slug || r.id}`;
                 const intro = r.summary || r.description;
                 return (
-                  <article key={r.id} className="flex h-full flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_2px_12px_rgba(21,62,115,0.08)]">
+                  <article key={r.id} className="flex h-full flex-col overflow-hidden rounded-[14px] bg-white shadow-[0_2px_12px_rgba(21,62,115,0.08)] md:rounded-[18px]">
                     <Link href={href} className="relative block aspect-[4/3] bg-[#EEF8FC]">
                       {cover ? (
-                        <Image src={cover} alt={r.title} fill className="object-cover" sizes="(min-width:1024px) 30vw, 76vw" />
+                        <Image src={cover} alt={r.title} fill className="object-cover" sizes="(min-width:768px) 33vw, 50vw" />
                       ) : null}
                       <span className="absolute right-2 top-2" onClick={(e) => e.preventDefault()}>
                         <FavoriteButton targetType="recipe" targetId={r.id} size="sm" />
                       </span>
                     </Link>
-                    <div className="flex flex-1 flex-col gap-2 p-[clamp(14px,1.6vw,20px)]">
-                      <Link href={href} className="line-clamp-2 text-[clamp(16px,1.4vw,20px)] font-black text-[#153E73]">
+                    <div className="flex flex-1 flex-col gap-1.5 p-3 md:gap-2 md:p-5">
+                      <Link
+                        href={href}
+                        className="line-clamp-2 min-h-[2.5em] text-[15px] font-black leading-[1.25] text-[#153E73] md:text-[18px]"
+                      >
                         {r.title}
                       </Link>
-                      <p className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-[#4A5B78]">
+                      <p className="flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-[#4A5B78] md:gap-x-4 md:text-[13px]">
                         {mins != null ? (
                           <span className="inline-flex items-center gap-1">
                             <Clock3 className="h-4 w-4" aria-hidden />
@@ -631,8 +657,10 @@ export function DesktopHome() {
                           </span>
                         ) : null}
                       </p>
-                      {intro ? <p className="line-clamp-2 text-[13px] leading-relaxed text-[#4A5B78]">{intro}</p> : null}
-                      <Link href={href} className="mt-auto inline-flex items-center gap-1 pt-1 text-sm font-bold text-[#F16458]">
+                      {intro ? (
+                        <p className="line-clamp-2 hidden text-[13px] leading-relaxed text-[#4A5B78] md:block">{intro}</p>
+                      ) : null}
+                      <Link href={href} className="mt-auto inline-flex items-center gap-1 pt-1 text-[13px] font-bold text-[#F16458] md:text-sm">
                         查看食譜
                         <ArrowRight className="h-4 w-4" aria-hidden />
                       </Link>
@@ -640,7 +668,7 @@ export function DesktopHome() {
                   </article>
                 );
               })}
-            </Rail>
+            </CardGrid>
           </Band>
         );
       }
@@ -653,35 +681,37 @@ export function DesktopHome() {
           ? products.filter((p) => p.product_categories?.slug && slugs.includes(p.product_categories.slug))
           : [];
         const source = manual.length ? manual : bySlug.length >= 4 ? bySlug : products;
-        const list = source.slice(0, fillRows(Math.min(source.length, section.displayCount || 8, 8), 4));
+        const list = source.slice(0, Math.min(8, Math.max(4, section.displayCount || 8)));
         const subtitle = section.subtitle || str(cfg.subtitle) || "完整食材一次購足，讓烘焙更輕鬆！";
         const hint = cfg.hint_enabled === false ? "" : str(cfg.hint_text) || DEFAULT_INGREDIENT_HINT;
         const afterRecipes = prevKey === "latest_recipes";
         return (
-          <Band key={section.id} tone="warm" label={section.title} className={afterRecipes ? "pt-0" : undefined}>
+          <Band key={section.id} tone={tone} label={section.title} className={afterRecipes ? "pt-0 md:pt-0 lg:pt-0" : undefined}>
             {afterRecipes && hint ? (
-              <p className="mb-[clamp(18px,2.4vw,32px)] text-center text-[clamp(15px,1.3vw,18px)] font-bold text-[#153E73]">{hint}</p>
+              <p className="mb-4 text-center text-[15px] font-bold text-[#153E73] md:mb-6 md:text-[17px]">{hint}</p>
             ) : null}
-            <div className="flex flex-col gap-5 rounded-[clamp(18px,2vw,24px)] border border-[#F3E9C6] bg-[#FFF5CC]/60 p-[clamp(18px,2.4vw,36px)] lg:flex-row lg:items-center lg:gap-8">
-              <div className="flex shrink-0 flex-col gap-2 lg:w-[260px]">
-                <h2 className="text-[clamp(22px,2.2vw,30px)] font-black text-[#153E73]">{section.title || "一鍵買齊材料"}</h2>
-                <p className="text-[clamp(13px,1.1vw,15px)] leading-relaxed text-[#4A5B78]">{subtitle}</p>
+            <div className="rounded-[16px] border border-[#F3E9C6] bg-[#FFF5CC]/60 p-4 md:rounded-[20px] md:p-6 lg:p-8">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between md:mb-6">
+                <div className="min-w-0">
+                  <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">
+                    {section.title || "一鍵買齊材料"}
+                  </h2>
+                  <p className="mt-1.5 text-[13px] text-[#687386] md:text-sm">{subtitle}</p>
+                </div>
                 <Link
                   href={section.viewAllUrl || APP_ROUTES.shop}
-                  className="mt-2 inline-flex h-11 w-fit items-center gap-1.5 rounded-full bg-[#F16458] px-5 text-sm font-bold text-white hover:brightness-95"
+                  className="inline-flex h-11 w-fit shrink-0 items-center gap-1.5 rounded-full bg-[#F16458] px-5 text-sm font-bold text-white hover:brightness-95"
                 >
                   全部商品
                   <ArrowRight className="h-4 w-4" aria-hidden />
                 </Link>
               </div>
               {list.length ? (
-                <div className="min-w-0 flex-1">
-                  <Rail cols={4}>
-                    {list.map((p) => (
-                      <ProductTile key={p.id} p={p} />
-                    ))}
-                  </Rail>
-                </div>
+                <CardGrid layout="products">
+                  {list.map((p) => (
+                    <ProductTile key={p.id} p={p} />
+                  ))}
+                </CardGrid>
               ) : null}
             </div>
           </Band>
@@ -697,9 +727,14 @@ export function DesktopHome() {
           <section
             key={section.id}
             aria-label={title}
-            className="my-[clamp(24px,5vw,72px)] overflow-hidden bg-[#FFF5CC]"
+            className="overflow-hidden bg-[#FFF5CC]"
           >
-            <DesktopContainer className="flex min-h-[clamp(220px,60vw,300px)] flex-col items-center gap-6 py-[clamp(40px,6vw,88px)] md:min-h-[clamp(280px,26vw,380px)] md:flex-row md:justify-between md:gap-10">
+            <DesktopContainer
+              className={cn(
+                CONTENT_MAX,
+                "flex flex-col items-center gap-6 py-10 md:flex-row md:justify-between md:gap-10 md:py-14"
+              )}
+            >
               <div className="flex max-w-[620px] flex-col items-center gap-[clamp(10px,1.4vw,18px)] text-center md:items-start md:text-left">
                 <span className="text-[clamp(12px,1vw,14px)] font-bold uppercase tracking-[0.2em] text-[#F16458]">
                   {bb.eyebrow}
@@ -780,8 +815,8 @@ export function DesktopHome() {
           "flex h-full flex-col overflow-hidden rounded-[clamp(18px,2vw,24px)] bg-white shadow-[0_4px_18px_rgba(21,62,115,0.08)]";
         const media = "relative aspect-[16/10] w-full shrink-0 overflow-hidden";
         return (
-          <Band key={section.id} tone="white" label={section.title}>
-            <div className={cn("grid gap-[clamp(16px,2.4vw,32px)]", sb.b2b.enabled && "md:grid-cols-2")}>
+          <Band key={section.id} tone={tone} label={section.title}>
+            <div className={cn("grid gap-3 md:gap-5 lg:gap-6", sb.b2b.enabled && "md:grid-cols-2")}>
               <article className={card}>
                 <div className={cn(media, "bg-[#FFF5CC]")}>
                   {photo ? (
@@ -861,8 +896,8 @@ export function DesktopHome() {
           .slice(0, 8);
         if (!items.length) return null;
         return (
-          <Band key={section.id} tone="cream" label={section.title || "快捷服務"}>
-            <ul className="grid grid-cols-2 gap-[clamp(12px,2vw,28px)] md:grid-cols-4">
+          <Band key={section.id} tone={tone} label={section.title || "快捷服務"}>
+            <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5 lg:gap-6">
               {items.map((item) => {
                 const labelled = item.labelsInImage !== false && Boolean(item.imageUrl);
                 return (
@@ -901,7 +936,7 @@ export function DesktopHome() {
           .sort((a, b) => a.sortOrder - b.sortOrder);
         if (!items.length) return null;
         return (
-          <Band key={section.id} label={section.title}>
+          <Band key={section.id} tone={tone} label={section.title}>
             <SectionHeading title={section.title || qs.title || "常用服務"} href={qs.allServicesHref || null} />
             <ul className="grid grid-cols-4 gap-3 lg:grid-cols-8">
               {items.slice(0, 16).map((item) => (
@@ -932,7 +967,7 @@ export function DesktopHome() {
       case "weekly_live_streams":
       case "chime_select":
         return (
-          <Band key={section.id} label={section.title}>
+          <Band key={section.id} tone={tone} label={section.title}>
             <div className="desktop-home-band">
               {section.key === "group_buy_banner" ? (
                 <HomeGroupBuyBannerSection block={section} />
@@ -962,7 +997,7 @@ export function DesktopHome() {
           </picture>
         );
         return (
-          <Band key={section.id} label={section.title}>
+          <Band key={section.id} tone={tone} label={section.title}>
             <div
               className={cn(
                 "overflow-hidden rounded-[clamp(16px,2vw,24px)] bg-[#EEF8FC]",
@@ -988,7 +1023,7 @@ export function DesktopHome() {
         const href = str(cfg.link_url);
         if (!section.title && !body && !img) return null;
         return (
-          <Band key={section.id} label={section.title}>
+          <Band key={section.id} tone={tone} label={section.title}>
             <div className={cn("overflow-hidden rounded-[clamp(16px,2vw,24px)] bg-white", img ? "grid md:grid-cols-2" : "p-6 md:p-8")}>
               {img ? (
                 <div className="aspect-[3/2] bg-[#EEF8FC]">
@@ -1016,9 +1051,11 @@ export function DesktopHome() {
     }
   };
 
-  const visible = (sections ?? []).filter(
-    (s) => GROUP_BUY_CONSUMER_VISIBLE || !HIDDEN_HOME_GROUP_BUY_KEYS.has(s.key)
-  );
+  // Drop sections with nothing to show first, so the background alternation only counts real bands.
+  const visible = (sections ?? [])
+    .filter((s) => GROUP_BUY_CONSUMER_VISIBLE || !HIDDEN_HOME_GROUP_BUY_KEYS.has(s.key))
+    .filter((s) => renderSection(s, null, "warm") !== null);
+  const tones = alternateTones(visible);
 
   return (
     <div className="desktop-home w-full overflow-x-clip bg-[#FFFEFA]">
@@ -1028,13 +1065,15 @@ export function DesktopHome() {
         </div>
       ) : null}
       {sections === null ? (
-        <DesktopContainer className="space-y-6 py-6">
+        <DesktopContainer className={cn(CONTENT_MAX, "space-y-6 py-6")}>
           <div className="aspect-video w-full animate-pulse rounded-3xl bg-[#EEF3F7]" />
           <div className="mx-auto h-14 w-full max-w-[760px] animate-pulse rounded-full bg-[#EEF3F7]" />
           <div className="h-40 w-full animate-pulse rounded-2xl bg-[#EEF3F7]" />
         </DesktopContainer>
       ) : (
-        visible.map((section, i) => renderSection(section, i > 0 ? visible[i - 1]!.key : null))
+        visible.map((section, i) =>
+          renderSection(section, i > 0 ? visible[i - 1]!.key : null, tones.get(section.id) ?? "warm")
+        )
       )}
     </div>
   );
