@@ -229,11 +229,26 @@ function fullRows(count: number, perRow: number) {
 }
 
 const GRID_LAYOUT = {
-  /** Products: phone 2 · tablet 3 · desktop 4 */
-  products: { cls: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4", phone: 2, tablet: 3, desktop: 4 },
-  /** Recipes: phone 2 · tablet / desktop 3 */
-  recipes: { cls: "grid-cols-2 md:grid-cols-3", phone: 2, tablet: 3, desktop: 3 },
+  /** Products (dense): phone 2 · tablet 4 · desktop 5; at most 4 rows on phones */
+  products: {
+    cls: "grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-4 lg:grid-cols-5 lg:gap-5",
+    phone: 2,
+    tablet: 4,
+    desktop: 5,
+    phoneMax: 8,
+  },
+  /** Recipes stay large: phone 2 · tablet / desktop 3 */
+  recipes: {
+    cls: "grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:gap-6",
+    phone: 2,
+    tablet: 3,
+    desktop: 3,
+    phoneMax: Infinity,
+  },
 } as const;
+
+/** Homepage product sections load enough for two full desktop rows. */
+const HOME_PRODUCT_COUNT = 10;
 
 /**
  * Fixed-column card grid. Cards that would leave a short last row on the
@@ -242,11 +257,11 @@ const GRID_LAYOUT = {
 function CardGrid({ layout, children }: { layout: keyof typeof GRID_LAYOUT; children: ReactNode[] }) {
   const g = GRID_LAYOUT[layout];
   const n = children.length;
-  const phone = fullRows(n, g.phone);
+  const phone = fullRows(Math.min(n, g.phoneMax), g.phone);
   const tablet = fullRows(n, g.tablet);
   const desktop = fullRows(n, g.desktop);
   return (
-    <div className={cn("grid gap-3 md:gap-5 lg:gap-6", g.cls)}>
+    <div className={cn("grid", g.cls)}>
       {children.map((child, i) => (
         <div
           key={i}
@@ -273,6 +288,7 @@ function ProductTile({ p }: { p: Product }) {
       image_url={p.image_url}
       spec={productSpec(p)}
       href={productPath(p.id)}
+      compact
       className="h-full shadow-[0_2px_10px_rgba(21,62,115,0.07)]"
     />
   );
@@ -583,7 +599,7 @@ export function DesktopHome() {
                 : products.filter((p) => p.is_new)
               : [];
         const source = section.key === "custom_products" || (section.sourceMode === "manual" && manual.length) ? manual : auto;
-        const list = source.slice(0, Math.max(4, section.displayCount || 8));
+        const list = source.slice(0, Math.max(HOME_PRODUCT_COUNT, section.displayCount || 0));
         if (!list.length) return null;
         const fallbackHref =
           section.key === "popular_baking_products"
@@ -681,7 +697,7 @@ export function DesktopHome() {
           ? products.filter((p) => p.product_categories?.slug && slugs.includes(p.product_categories.slug))
           : [];
         const source = manual.length ? manual : bySlug.length >= 4 ? bySlug : products;
-        const list = source.slice(0, Math.min(8, Math.max(4, section.displayCount || 8)));
+        const list = source.slice(0, HOME_PRODUCT_COUNT);
         const subtitle = section.subtitle || str(cfg.subtitle) || "完整食材一次購足，讓烘焙更輕鬆！";
         const hint = cfg.hint_enabled === false ? "" : str(cfg.hint_text) || DEFAULT_INGREDIENT_HINT;
         const afterRecipes = prevKey === "latest_recipes";
