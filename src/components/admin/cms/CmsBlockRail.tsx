@@ -27,11 +27,31 @@ function websiteVisible(block: CmsBlock): boolean {
   return typeof cfg?.desktop_visible === "boolean" ? cfg.desktop_visible : block.enabled;
 }
 
+/** Added blocks only appear on the site once they have content. */
+function needsContent(block: CmsBlock): boolean {
+  const key = homeBlockKey(block);
+  const cfg = (block.settings?.config ?? {}) as Record<string, unknown>;
+  const ids = Array.isArray(block.settings?.manual_ids)
+    ? (block.settings?.manual_ids as string[])
+    : [];
+  const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  if (key === "custom_banner") return !str(cfg.image_url) && !str(cfg.mobile_image_url);
+  if (key === "custom_products") return ids.length === 0;
+  if (key === "custom_recipes") {
+    return block.settings?.source_mode === "manual" && ids.length === 0;
+  }
+  if (key === "custom_text") {
+    return !str(cfg.body) && !str(cfg.image_url) && !str(block.settings?.title);
+  }
+  return false;
+}
+
 /** Unified home: where the block shows + shared count. */
 function unifiedSummary(block: CmsBlock): string {
   const app = block.enabled;
   const web = websiteVisible(block);
   const where = app && web ? "手機＋網站" : app ? "只在手機" : web ? "只在網站" : "都已隱藏";
+  if (needsContent(block)) return "尚未設定內容，前台不會顯示";
   const n = block.settings?.display_count ?? block.settings?.display_limit;
   return typeof n === "number" ? `${where}・顯示 ${n} 筆` : where;
 }

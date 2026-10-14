@@ -50,7 +50,11 @@ import {
   type ResolvedHomeBlock,
 } from "@/lib/home/blocks";
 import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
-import { CREAM_ZONE_KEYS, type HomeSectionKey } from "@/lib/home/section-keys";
+import {
+  CREAM_ZONE_KEYS,
+  isCustomHomeBlockKey,
+  type HomeSectionKey,
+} from "@/lib/home/section-keys";
 import {
   DEFAULT_HOME_LAYOUT_SETTINGS,
   MOBILE_SPACING_CLASS,
@@ -796,8 +800,10 @@ function HomePageMobile() {
 
   const creamKeys = new Set<HomeSectionKey>(CREAM_ZONE_KEYS);
   // 後台「手機版」版面：可單獨隱藏區塊、單獨設定間距。
+  // 編輯器自己新增的區塊（圖片 Banner、圖文、商品列、分類列、食譜列、空白間距）
+  // 不在固定清單裡，但手機版也要顯示。
   const creamSections = ordered
-    .filter((b) => creamKeys.has(b.key))
+    .filter((b) => creamKeys.has(b.key) || isCustomHomeBlockKey(b.key))
     .filter((b) => blockVisibleOn({ is_visible: b.visible, config: b.config }, "mobile", b.visible));
 
   const ctx: HomeDataCtx = {
