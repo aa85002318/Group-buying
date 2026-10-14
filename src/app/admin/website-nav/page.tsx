@@ -5,11 +5,7 @@ import { ArrowDown, ArrowUp, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  CmsLinkPicker,
-  cmsLinkFromHref,
-  hrefFromCmsLink,
-} from "@/components/admin/home/CmsLinkPicker";
+import { CmsHrefField } from "@/components/admin/home/CmsLinkPicker";
 import {
   WEBSITE_NAV_MAX_ITEMS,
   newNavId,
@@ -29,7 +25,7 @@ function move<T>(list: T[], from: number, to: number): T[] {
 function LinkField({ href, onChange }: { href: string; onChange: (href: string) => void }) {
   return (
     <div className="space-y-1">
-      <CmsLinkPicker value={cmsLinkFromHref(href)} onChange={(v) => onChange(hrefFromCmsLink(v))} />
+      <CmsHrefField value={href} onChange={onChange} />
       <Input
         value={href}
         placeholder="/shop 或 https://…"

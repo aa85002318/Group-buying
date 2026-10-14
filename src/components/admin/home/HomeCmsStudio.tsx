@@ -16,7 +16,7 @@ import { CategoryMenuEditor } from "@/components/admin/home/CategoryMenuEditor";
 import { ServiceShortcutsEditor } from "@/components/admin/home/ServiceShortcutsEditor";
 import { ExternalSourcePanel } from "@/components/admin/home/ExternalSourcePanel";
 import { CmsImageField, CMS_IMAGE_SPECS } from "@/components/admin/home/CmsImageField";
-import { CmsLinkPicker, cmsLinkFromHref, hrefFromCmsLink } from "@/components/admin/home/CmsLinkPicker";
+import { CmsHrefField } from "@/components/admin/home/CmsLinkPicker";
 import {
   CmsLivePreview,
   CmsSectionList,
@@ -765,10 +765,9 @@ function SectionPanel({
             {(section.hasViewAllUrl || section.hasExternalSourcePanel) && (
               <div className="sm:col-span-2">
                 <label className="mb-1 block text-[11px] text-muted-foreground">查看全部連結</label>
-                <CmsLinkPicker
-                  value={cmsLinkFromHref(viewAllUrl)}
-                  onChange={(link) => {
-                    const href = hrefFromCmsLink(link);
+                <CmsHrefField
+                  value={viewAllUrl}
+                  onChange={(href) => {
                     setViewAllUrl(href);
                     void onPatch(block.id, { view_all_url: href || null });
                   }}
@@ -1070,11 +1069,11 @@ export function GroupBuyBannerPanel({
             }}
             placeholder="標題"
           />
-          <CmsLinkPicker
-            value={cmsLinkFromHref(slide.href)}
-            onChange={(link) => {
+          <CmsHrefField
+            value={slide.href}
+            onChange={(href) => {
               const slides = [...value.slides];
-              slides[index] = { ...slide, href: hrefFromCmsLink(link) };
+              slides[index] = { ...slide, href };
               onChange({ ...value, slides });
             }}
           />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { FEATURES } from "@/lib/features";
@@ -90,6 +90,7 @@ export function CmsLinkPicker({
 }) {
   const current = value ?? emptyLink();
   const [q, setQ] = useState("");
+  const [urlText, setUrlText] = useState(current.href ?? "");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -127,6 +128,12 @@ export function CmsLinkPicker({
     () => LINK_TYPES.find((t) => t.id === current.type)?.label ?? "",
     [current.type]
   );
+
+  /** 外部改了連結（例如選了商品）時，把網址欄同步過來；使用者正在輸入時不覆蓋。 */
+  useEffect(() => {
+    const next = current.href ?? "";
+    setUrlText((prev) => (canonicalizeAppHref(prev.trim()) === next ? prev : next));
+  }, [current.href]);
 
   return (
     <div className={cn("space-y-2 rounded-xl border border-border bg-white p-3", className)}>
@@ -219,29 +226,59 @@ export function CmsLinkPicker({
         </>
       ) : null}
 
-      {current.type === "custom" ? (
-        <div className="space-y-2">
-          <Input
-            value={current.href}
-            onChange={(e) => onChange({ ...current, href: canonicalizeAppHref(e.target.value) })}
-            placeholder="https:// 或 /path"
+      {/* 直接輸入網址：不用下拉選單也能貼上任何連結 */}
+      <div className="space-y-2 rounded-lg bg-surface-soft/60 p-2">
+        <p className="text-[11px] font-medium text-muted-foreground">
+          或直接輸入網址（完整網址或站內路徑，例如 /shop）
+        </p>
+        <Input
+          value={urlText}
+          onChange={(e) => {
+            const raw = e.target.value;
+            setUrlText(raw);
+            const trimmed = raw.trim();
+            if (!trimmed) {
+              onChange(emptyLink());
+              return;
+            }
+            onChange({
+              type: "custom",
+              href: canonicalizeAppHref(trimmed),
+              refId: null,
+              label: null,
+              openInNewTab: /^https?:\/\//i.test(trimmed) || Boolean(current.openInNewTab),
+            });
+          }}
+          placeholder="https://example.com 或 /shop/products/123"
+        />
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={Boolean(current.openInNewTab)}
+            onChange={(e) => onChange({ ...current, openInNewTab: e.target.checked })}
           />
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={Boolean(current.openInNewTab)}
-              onChange={(e) => onChange({ ...current, openInNewTab: e.target.checked })}
-            />
-            另開視窗
-          </label>
-        </div>
-      ) : null}
+          另開視窗
+        </label>
+      </div>
 
       {current.href ? (
-        <p className="truncate text-[11px] text-muted-foreground">
-          目前：{current.label ? `${current.label} → ` : ""}
-          {current.href}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+            目前：{current.label ? `${current.label} → ` : ""}
+            {current.href}
+          </p>
+          <button
+            type="button"
+            className="shrink-0 text-[11px] text-muted-foreground underline"
+            onClick={() => {
+              setUrlText("");
+              setQ("");
+              onChange(emptyLink());
+            }}
+          >
+            清除
+          </button>
+        </div>
       ) : null}
     </div>
   );
@@ -356,4 +393,45 @@ export function cmsLinkFromHref(href?: string | null): CmsLinkValue {
     return { type: "internal", href: internal.href, refId: internal.id, label: internal.label };
   if (h === "/member") return { type: "member", href: "/member", refId: "member", label: "會員中心" };
   return { type: "custom", href: h, openInNewTab: /^https?:\/\//i.test(h) };
+}
+
+/**
+ * 連結欄位（只存 href 的地方用這個）。
+ *
+ * 為什麼要有這層：CmsLinkPicker 的 value 是完整的 CmsLinkValue，但多數 CMS 欄位
+ * 只存一個 href 字串。如果直接用 cmsLinkFromHref(href) 當 value，使用者一選
+ * 「商品 / 食譜 / 自訂網址」時 href 還是空的，cmsLinkFromHref("") 會把類型推回
+ * 「無連結」，下拉選單看起來就像「選不動」，底下的搜尋清單也永遠出不來。
+ * 這裡把選到的類型放在本地 state，只有外部 href 真的被改掉時才重新同步。
+ */
+export function CmsHrefField({
+  value,
+  onChange,
+  className,
+}: {
+  value?: string | null;
+  onChange: (href: string) => void;
+  className?: string;
+}) {
+  const [link, setLink] = useState<CmsLinkValue>(() => cmsLinkFromHref(value));
+  const lastHref = useRef<string>(canonicalizeAppHref((value ?? "").trim()));
+
+  useEffect(() => {
+    const incoming = canonicalizeAppHref((value ?? "").trim());
+    if (incoming === lastHref.current) return;
+    lastHref.current = incoming;
+    setLink(cmsLinkFromHref(incoming));
+  }, [value]);
+
+  const apply = useCallback(
+    (next: CmsLinkValue) => {
+      setLink(next);
+      const href = hrefFromCmsLink(next);
+      lastHref.current = canonicalizeAppHref(href.trim());
+      onChange(href);
+    },
+    [onChange]
+  );
+
+  return <CmsLinkPicker value={link} onChange={apply} className={className} />;
 }

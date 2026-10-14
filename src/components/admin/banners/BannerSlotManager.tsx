@@ -5,11 +5,7 @@ import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  CmsLinkPicker,
-  cmsLinkFromHref,
-  hrefFromCmsLink,
-} from "@/components/admin/home/CmsLinkPicker";
+import { CmsHrefField } from "@/components/admin/home/CmsLinkPicker";
 import { cn } from "@/lib/utils";
 
 type Banner = {
@@ -221,9 +217,9 @@ export function BannerSlotManager({
           <div className={compact ? "grid gap-3" : "grid gap-4 md:grid-cols-2"}>
             <div className="space-y-1">
               <span className="text-xs font-medium text-[#153E73]">點擊後連到（選填）</span>
-              <CmsLinkPicker
-                value={cmsLinkFromHref(form.link_url)}
-                onChange={(v) => setForm({ ...form, link_url: hrefFromCmsLink(v) })}
+              <CmsHrefField
+                value={form.link_url}
+                onChange={(href) => setForm({ ...form, link_url: href })}
               />
             </div>
             <label className="block space-y-1">

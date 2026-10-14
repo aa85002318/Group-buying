@@ -121,7 +121,13 @@ export function CmsPropertyPanel({
     (block.settings.mobile_image as string | undefined) ||
     null;
   const linkHref = (block.settings.link_href as string | undefined) || "";
-  const linkValue = cmsLinkFromHref(linkHref);
+  // 優先用存下來的完整連結物件：只靠 href 回推的話，選了「商品／食譜」但還沒挑
+  // 內容時類型會被推回「無連結」，下拉選單就會像選不動。
+  const storedLink = block.settings.link as CmsLinkValue | undefined;
+  const linkValue =
+    storedLink && typeof storedLink === "object" && typeof storedLink.type === "string"
+      ? { ...storedLink, href: storedLink.href ?? linkHref }
+      : cmsLinkFromHref(linkHref);
 
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: "content", label: "內容" },

@@ -4,11 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CmsImageField, CMS_IMAGE_SPECS } from "@/components/admin/home/CmsImageField";
-import {
-  CmsLinkPicker,
-  cmsLinkFromHref,
-  hrefFromCmsLink,
-} from "@/components/admin/home/CmsLinkPicker";
+import { CmsHrefField } from "@/components/admin/home/CmsLinkPicker";
 import {
   DEFAULT_LATEST_CAMPAIGN_SETTINGS,
   type HomeLatestCampaignSettings,
@@ -128,9 +124,9 @@ export function LatestCampaignEditor({
               onChange={(e) => updateSlide(index, { title: e.target.value })}
               placeholder="活動名稱"
             />
-            <CmsLinkPicker
-              value={cmsLinkFromHref(slide.href)}
-              onChange={(link) => updateSlide(index, { href: hrefFromCmsLink(link) })}
+            <CmsHrefField
+              value={slide.href}
+              onChange={(href) => updateSlide(index, { href })}
             />
             <CmsImageField
               spec={CMS_IMAGE_SPECS.campaignWide}

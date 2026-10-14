@@ -6,9 +6,7 @@ import type { CmsBlock } from "@/types/cms";
 import { Input } from "@/components/ui/input";
 import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import {
-  CmsLinkPicker,
-  cmsLinkFromHref,
-  hrefFromCmsLink,
+  CmsHrefField,
 } from "@/components/admin/home/CmsLinkPicker";
 import { LatestCampaignEditor } from "@/components/admin/home/LatestCampaignEditor";
 import { QuickServicesEditor } from "@/components/admin/home/QuickServicesEditor";
@@ -64,7 +62,7 @@ function Field({ label, children, hint }: { label: string; children: React.React
 }
 
 function LinkInput({ value, onChange }: { value: string; onChange: (href: string) => void }) {
-  return <CmsLinkPicker value={cmsLinkFromHref(value)} onChange={(v) => onChange(hrefFromCmsLink(v))} />;
+  return <CmsHrefField value={value} onChange={onChange} />;
 }
 
 type ProductLite = { id: string; name: string; image_url?: string | null; price?: number | null };
