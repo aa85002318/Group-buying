@@ -9,6 +9,7 @@ import type { CmsPage, CmsSaveStatus } from "@/types/cms";
 import { CMS_SAVE_STATUS_LABEL } from "@/types/cms";
 import { useCmsEditor } from "@/hooks/useCmsEditor";
 import { CmsBlockRail } from "@/components/admin/cms/CmsBlockRail";
+import { getBlockDefinition } from "@/lib/cms/block-registry";
 import { CmsPropertyPanel } from "@/components/admin/cms/CmsPropertyPanel";
 import { CmsPublishModal } from "@/components/admin/cms/CmsPublishModal";
 import {
@@ -381,7 +382,13 @@ export function CmsEditorShell({
             }}
             onAddBlock={(type) => {
               if (!canMutateLocal) return;
-              editor.addBlock(type);
+              // 放在目前選取的區塊下面，並直接跳到「設定」，
+              // 使用者按下去就看得到要填什麼。
+              editor.insertBlockAfter(type, editor.selectedBlockId);
+              setMobilePane("props");
+              setNotice(
+                `已新增「${getBlockDefinition(type)?.name ?? type}」。請在右側「內容」把資料填好，再按「儲存草稿」，最後按「發布」網站才會改變。`
+              );
             }}
             readOnly={!canMutateLocal}
           />

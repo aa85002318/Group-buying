@@ -152,7 +152,16 @@ async function applyBlocksToLive(blocks: HomepageBlock[]) {
       updated_at: nowIso(),
     };
     const { error } = await admin.from("homepage_blocks").upsert(row, { onConflict: "id" });
-    if (error) throw new Error(error.message);
+    if (error) {
+      // 舊資料庫上 block_key 還留著 UNIQUE，第二個同類型區塊（例如兩個
+      // 「圖片資訊」）就會在這裡爆掉。講人話，不要丟原始的 SQL 錯誤。
+      if (/duplicate key|unique constraint/i.test(error.message)) {
+        throw new Error(
+          `「${row.title || row.block_key}」無法發布：資料庫還限制每種區塊只能有一個。請執行 20260729160000_homepage_blocks_multi_instance 這個 migration 後再發布。`
+        );
+      }
+      throw new Error(error.message);
+    }
   }
 }
 

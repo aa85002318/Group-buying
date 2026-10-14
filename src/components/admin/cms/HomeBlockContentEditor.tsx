@@ -234,7 +234,7 @@ export function HomeBlockContentEditor({
           onChange={(e) => onChange({ name: e.target.value, settings: { ...s, title: e.target.value } })}
         />
       </Field>
-      {key !== "custom_banner" && key !== "hero" ? (
+      {key !== "hero" ? (
         <Field label="副標（選填）">
           <Input value={str(s.subtitle)} disabled={readOnly} onChange={(e) => setSettings(block, onChange, { subtitle: e.target.value || null })} />
         </Field>
@@ -598,6 +598,24 @@ export function HomeBlockContentEditor({
               multiple={false}
               aspectRatio="photo32"
             />
+            <Field
+              label="說明文字（選填）"
+              hint="填了會顯示在圖片下方；留白就只顯示圖片。"
+            >
+              <textarea
+                className="min-h-[72px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={str(cfg.caption)}
+                disabled={readOnly}
+                onChange={(e) => setConfig(block, onChange, { caption: e.target.value })}
+              />
+            </Field>
+            <Field label="按鈕文字（選填）">
+              <Input
+                value={str(cfg.button_text)}
+                disabled={readOnly}
+                onChange={(e) => setConfig(block, onChange, { button_text: e.target.value })}
+              />
+            </Field>
             <div className="space-y-1">
               <span className="text-xs font-medium text-[#153E73]">點擊後連到（選填）</span>
               <LinkInput value={str(cfg.link_url)} onChange={(href) => setConfig(block, onChange, { link_url: href })} />
@@ -607,6 +625,9 @@ export function HomeBlockContentEditor({
       case "custom_products":
         return (
           <>
+            <Note>
+              挑好商品後才會出現在前台。想顯示幾個，就挑幾個（也可以在「版型」調整一排幾個）。
+            </Note>
             {viewAll}
             <div className="space-y-1">
               <span className="text-xs font-medium text-[#153E73]">挑選商品</span>

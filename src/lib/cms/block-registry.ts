@@ -200,23 +200,23 @@ export const CMS_BLOCK_REGISTRY: CmsBlockDefinition[] = [
   def("cookie_notice", "Cookie／隱私提示", "global"),
 
   // 首頁（手機＋網站同一份）：type = homepage_blocks.block_key
-  def("custom_banner", "圖片 Banner", "basic", {
+  def("custom_banner", "圖片資訊", "basic", {
     allowedPageIds: ["home"],
-    description: "一張圖片加連結，可放很多個",
+    description: "一張圖片，可加標題、說明和連結，可放很多個",
   }),
-  def("custom_products", "精選商品", "product", {
+  def("custom_products", "商品區域", "product", {
     allowedPageIds: ["home"],
-    description: "自己挑選要展示的商品",
+    description: "自己挑選商品排成一列，可放很多個",
   }),
   def("custom_text", "圖文區塊", "basic", {
     allowedPageIds: ["home"],
     description: "標題、說明文字、圖片與按鈕",
   }),
-  def("custom_categories", "分類列（可重複）", "product", {
+  def("custom_categories", "分類列", "product", {
     allowedPageIds: ["home"],
     description: "自己挑選分類排成一列，可放很多個",
   }),
-  def("custom_recipes", "食譜列（可重複）", "recipe", {
+  def("custom_recipes", "食譜列", "recipe", {
     allowedPageIds: ["home"],
     description: "自己挑選食譜排成一列，可放很多個",
   }),

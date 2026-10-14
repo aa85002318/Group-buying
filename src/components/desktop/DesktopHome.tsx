@@ -20,6 +20,7 @@ import { DesktopProductCard } from "@/components/desktop/DesktopProductCard";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { DESKTOP_HERO_FALLBACK, DESKTOP_IP_ANGEL_PNG as DESKTOP_IP_ANGEL } from "@/lib/desktop/brand-assets";
 import { listOrderedDesktopHomeSections } from "@/lib/home/blocks";
+import { isCustomBannerHeading } from "@/lib/home/section-keys";
 import {
   DEFAULT_HOME_LAYOUT_SETTINGS,
   DESKTOP_SPACING_CLASS,
@@ -1107,6 +1108,9 @@ export function DesktopHome() {
             <img src={img} alt={section.title} className="h-full w-full object-cover" loading="lazy" />
           </picture>
         );
+        const caption = str(cfg.caption);
+        const buttonText = str(cfg.button_text);
+        const heading = isCustomBannerHeading(section.title) ? section.title : "";
         return (
           <Band key={section.id} tone={tone} label={section.title}>
             <div
@@ -1123,6 +1127,24 @@ export function DesktopHome() {
                 pic
               )}
             </div>
+            {heading || caption || (buttonText && href) ? (
+              <div className="mt-3 space-y-1.5 md:mt-4">
+                {heading ? (
+                  <h2 className="text-[20px] font-bold text-[#153E73] md:text-[24px]">{heading}</h2>
+                ) : null}
+                {caption ? (
+                  <p className="whitespace-pre-line text-sm text-[#687386] md:text-[15px]">{caption}</p>
+                ) : null}
+                {buttonText && href ? (
+                  <Link
+                    href={href}
+                    className="inline-flex rounded-full bg-[#FFD454] px-4 py-2 text-sm font-bold text-[#153E73]"
+                  >
+                    {buttonText}
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
           </Band>
         );
       }

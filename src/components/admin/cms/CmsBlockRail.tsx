@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Copy,
   Eye,
@@ -13,13 +13,10 @@ import type { CmsBlock } from "@/types/cms";
 import { useCmsDragDrop } from "@/hooks/useCmsDragDrop";
 import { getBlockDefinition } from "@/lib/cms/block-registry";
 import { CmsBlockLibrary } from "@/components/admin/cms/CmsBlockLibrary";
+import { CmsAddBlockPanel } from "@/components/admin/cms/CmsAddBlockPanel";
 import { cn } from "@/lib/utils";
 import { describeBlockLayout } from "@/lib/cms/plain-labels";
 import { isPageUnified } from "@/lib/cms/page-builder";
-import {
-  HOME_ADDABLE_BLOCK_TYPES,
-  HOME_REPEATABLE_BLOCK_TYPES,
-} from "@/lib/cms/block-registry";
 import { homeBlockKey, homeBlockThumbnail } from "@/components/admin/cms/HomeBlockContentEditor";
 
 function websiteVisible(block: CmsBlock): boolean {
@@ -91,6 +88,17 @@ export function CmsBlockRail({
   const [libraryOpen, setLibraryOpen] = useState(false);
   const drag = useCmsDragDrop(onReorder);
   const unified = isPageUnified(pageId);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // 新增或選取區塊後，把它捲到看得到的位置（不然新區塊會躲在長清單下面，
+  // 看起來就像「按了沒反應」）。
+  useEffect(() => {
+    if (!selectedBlockId) return;
+    const el = listRef.current?.querySelector<HTMLElement>(
+      `[data-block-id="${selectedBlockId}"]`
+    );
+    el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [selectedBlockId, blocks.length]);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
@@ -102,20 +110,22 @@ export function CmsBlockRail({
       </div>
 
       <div className="border-b border-[#E9EDF2] p-2">
-        {libraryOpen && !readOnly ? (
+        {libraryOpen && !readOnly && unified ? (
+          <CmsAddBlockPanel
+            usedTypes={blocks.map((b) => homeBlockKey(b))}
+            disabled={readOnly}
+            onClose={() => setLibraryOpen(false)}
+            onAdd={(type) => {
+              onAddBlock(type);
+              setLibraryOpen(false);
+            }}
+          />
+        ) : libraryOpen && !readOnly ? (
           <div className="max-h-52 overflow-hidden rounded-[12px] border border-[#E9EDF2]">
             <CmsBlockLibrary
               pageId={pageId}
-              allowedTypes={unified ? [...HOME_ADDABLE_BLOCK_TYPES] : undefined}
-              usedTypes={
-                unified
-                  ? HOME_ADDABLE_BLOCK_TYPES.filter(
-                      (t) =>
-                        !HOME_REPEATABLE_BLOCK_TYPES.has(t) &&
-                        blocks.some((b) => homeBlockKey(b) === t)
-                    )
-                  : undefined
-              }
+              allowedTypes={undefined}
+              usedTypes={undefined}
               onAddBlock={(type) => {
                 onAddBlock(type);
                 setLibraryOpen(false);
@@ -136,7 +146,7 @@ export function CmsBlockRail({
         )}
       </div>
 
-      <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2">
+      <ul ref={listRef} className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2">
         {blocks.length === 0 ? (
           <li className="px-2 py-8 text-center text-xs text-[#8A94A6]">
             尚無區塊
@@ -148,6 +158,7 @@ export function CmsBlockRail({
             return (
               <li
                 key={block.id}
+                data-block-id={block.id}
                 draggable={!readOnly}
                 onDragStart={() => drag.onDragStart(index)}
                 onDragOver={(e) => drag.onDragOver(index, e)}

@@ -237,3 +237,19 @@ export const WEBSITE_HOME_TITLES: Partial<Record<HomeSectionKey, string>> = {
   store_information: "大安門市與企業採購",
   service_shortcuts: "快捷服務",
 };
+
+/**
+ * 「圖片資訊」區塊的預設標題只是後台用來辨識的名字，不應該印在前台。
+ * 使用者自己打過標題時才顯示。
+ */
+const CUSTOM_BANNER_PLACEHOLDER_TITLES = new Set([
+  "圖片資訊",
+  "圖片 Banner",
+  "custom_banner",
+  "",
+]);
+
+export function isCustomBannerHeading(title?: string | null): boolean {
+  const t = (title ?? "").trim();
+  return t.length > 0 && !CUSTOM_BANNER_PLACEHOLDER_TITLES.has(t);
+}

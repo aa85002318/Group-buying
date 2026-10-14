@@ -52,6 +52,7 @@ import {
 import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
 import {
   CREAM_ZONE_KEYS,
+  isCustomBannerHeading,
   isCustomHomeBlockKey,
   type HomeSectionKey,
 } from "@/lib/home/section-keys";
@@ -571,9 +572,26 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
         // eslint-disable-next-line @next/next/no-img-element
         <img src={img} alt={block.title} className="w-full rounded-2xl object-cover" loading="lazy" />
       );
+      const caption = typeof cfg.caption === "string" ? cfg.caption : "";
+      const buttonText = typeof cfg.button_text === "string" ? cfg.button_text : "";
+      const heading = isCustomBannerHeading(block.title) ? block.title : "";
       return (
-        <section key={reactKey} className="px-4 py-2">
+        <section key={reactKey} className="space-y-2 px-4 py-2">
           {href ? <Link href={href}>{pic}</Link> : pic}
+          {heading ? (
+            <h2 className="text-base font-black text-[#153E73]">{heading}</h2>
+          ) : null}
+          {caption ? (
+            <p className="whitespace-pre-line text-sm text-[#687386]">{caption}</p>
+          ) : null}
+          {buttonText && href ? (
+            <Link
+              href={href}
+              className="inline-flex rounded-full bg-[#FFD454] px-4 py-2 text-sm font-bold text-[#153E73]"
+            >
+              {buttonText}
+            </Link>
+          ) : null}
         </section>
       );
     }

@@ -38,9 +38,9 @@ export const SECTION_DEFAULTS: Record<
   }
 > = {
   hero: { title: "主視覺 Banner", displayCount: 5, visible: true, dataSource: "brand_heroes" },
-  custom_banner: { title: "圖片 Banner", displayCount: 1, visible: true, config: {} },
+  custom_banner: { title: "圖片資訊", displayCount: 1, visible: true, config: {} },
   custom_products: {
-    title: "精選商品",
+    title: "商品區域",
     displayCount: 10,
     visible: true,
     sourceMode: "manual",

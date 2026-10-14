@@ -187,6 +187,26 @@ export function useCmsEditor(initialPage?: CmsPage | null) {
     [updateBlocks]
   );
 
+  /**
+   * Add a block right below `afterId` (the block the user had selected), so the
+   * new one lands where they are looking instead of at the bottom of a long
+   * list. Returns the new block's id.
+   */
+  const insertBlockAfter = useCallback(
+    (type: string, afterId?: string | null) => {
+      const page = pageRef.current;
+      if (!page) return null;
+      const idx = afterId ? page.blocks.findIndex((b) => b.id === afterId) : -1;
+      const block = createEmptyBlock(type, idx >= 0 ? idx + 1 : page.blocks.length);
+      const blocks = [...page.blocks];
+      blocks.splice(idx >= 0 ? idx + 1 : blocks.length, 0, block);
+      updateBlocks(blocks);
+      dispatch({ type: "select", blockId: block.id });
+      return block.id;
+    },
+    [updateBlocks]
+  );
+
   const duplicateBlock = useCallback(
     (blockId: string) => {
       const page = pageRef.current;
@@ -246,6 +266,7 @@ export function useCmsEditor(initialPage?: CmsPage | null) {
     updateBlocks,
     updateSelectedBlock,
     addBlock,
+    insertBlockAfter,
     duplicateBlock,
     removeBlock,
     moveBlock,
