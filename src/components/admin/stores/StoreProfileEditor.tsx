@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import {
   buildGoogleMapsEmbedUrl,
   buildGoogleMapsNavUrl,
@@ -789,19 +790,14 @@ function GalleryEditor({
         <input type="checkbox" checked={show} onChange={(e) => onShowChange(e.target.checked)} />
         前台顯示圖片區
       </label>
-      <Field label="門市封面（1500×600）">
-        <div className="flex flex-wrap gap-2">
-          <Input
-            className="min-w-[200px] flex-1"
-            value={coverUrl ?? ""}
-            onChange={(e) => onCoverChange(e.target.value || null)}
-            placeholder="封面圖網址"
-          />
-          <Button type="button" variant="outline" onClick={() => addImage("cover")}>
-            貼上網址
-          </Button>
-        </div>
-      </Field>
+      <AdminImageUpload
+        label="門市封面（建議 1500×600）"
+        images={coverUrl ? [coverUrl] : []}
+        onChange={(imgs) => onCoverChange(imgs[0] ?? null)}
+        uploadFolder="stores/cover"
+        multiple={false}
+        aspectRatio="banner52"
+      />
       {STORE_GALLERY_CATEGORIES.filter((c) => c.id !== "cover").map((cat) => (
         <div key={cat.id} className="rounded-[12px] border border-[#E9DED4] p-3">
           <div className="mb-2 flex items-center justify-between">
@@ -811,9 +807,27 @@ function GalleryEditor({
             </div>
             <Button type="button" size="sm" variant="outline" onClick={() => addImage(cat.id)}>
               <Plus className="mr-1 h-3.5 w-3.5" />
-              新增
+              新增網址
             </Button>
           </div>
+          <AdminImageUpload
+            label=""
+            hint="直接上傳照片（可多張）"
+            images={[]}
+            onChange={(imgs) =>
+              onGalleryChange([
+                ...gallery,
+                ...imgs.map((url, i) => ({
+                  id: newId(),
+                  category: cat.id,
+                  url,
+                  sort_order: gallery.length + i,
+                })),
+              ])
+            }
+            uploadFolder={`stores/${cat.id}`}
+            aspectRatio="photo32"
+          />
           <div className="space-y-2">
             {sorted
               .filter((g) => g.category === cat.id)

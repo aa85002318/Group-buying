@@ -50,6 +50,14 @@ import {
 import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
 import { CREAM_ZONE_KEYS, type HomeSectionKey } from "@/lib/home/section-keys";
 import {
+  DEFAULT_HOME_LAYOUT_SETTINGS,
+  MOBILE_SPACING_CLASS,
+  blockVisibleOn,
+  normalizeHomeLayoutSettings,
+  resolveBlockSpacing,
+  type HomeLayoutSettings,
+} from "@/lib/home/layout-device";
+import {
   GROUP_BUY_CONSUMER_VISIBLE,
   HIDDEN_HOME_GROUP_BUY_KEYS,
 } from "@/lib/features/group-buy-visibility";
@@ -605,6 +613,22 @@ function HomePageMobile() {
 
   const blocks = cmsLoad.data;
   const ordered = useMemo(() => listOrderedHomeSections(blocks), [blocks]);
+  const [mobileSpacing, setMobileSpacing] = useState<HomeLayoutSettings>(
+    DEFAULT_HOME_LAYOUT_SETTINGS
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/home-layout-settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d?.settings) setMobileSpacing(normalizeHomeLayoutSettings(d.settings));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     for (const b of blocks) {
@@ -613,7 +637,10 @@ function HomePageMobile() {
   }, [blocks]);
 
   const creamKeys = new Set<HomeSectionKey>(CREAM_ZONE_KEYS);
-  const creamSections = ordered.filter((b) => creamKeys.has(b.key));
+  // 後台「手機版」版面：可單獨隱藏區塊、單獨設定間距。
+  const creamSections = ordered
+    .filter((b) => creamKeys.has(b.key))
+    .filter((b) => blockVisibleOn({ is_visible: b.visible, config: b.config }, "mobile", b.visible));
 
   const ctx: HomeDataCtx = {
     blocks,
@@ -654,7 +681,18 @@ function HomePageMobile() {
         </div>
       ) : null}
       <section className="w-full max-w-full overflow-x-clip p-0">
-        {creamToRender.map((block) => renderHomeSection(block, ctx))}
+        {creamToRender.map((block) => (
+          <div
+            key={`spacing-${block.id}`}
+            className={
+              MOBILE_SPACING_CLASS[
+                resolveBlockSpacing(block.config, "mobile", mobileSpacing.spacing.mobile)
+              ]
+            }
+          >
+            {renderHomeSection(block, ctx)}
+          </div>
+        ))}
       </section>
 
       <HomepagePopupDialog />

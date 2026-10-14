@@ -1,4 +1,5 @@
 import type { HomepageBlock } from "@/lib/types/database";
+import { blockColumnsOn, blockVisibleOn } from "@/lib/home/layout-device";
 import {
   HOME_SECTION_SORT_DEFAULT,
   PRIMARY_HOME_SECTION_KEYS,
@@ -467,13 +468,21 @@ export function homeBlockDesktopConfig(
   fallbackVisible = true
 ): HomeBlockDesktopConfig {
   const config = (row?.config ?? {}) as Record<string, unknown>;
-  const mobileVisible = row ? row.is_visible !== false : fallbackVisible;
-  const visible =
-    typeof config.desktop_visible === "boolean" ? config.desktop_visible : mobileVisible;
-  const cols = Number(config.desktop_columns);
   return {
-    visible,
-    columns: Number.isFinite(cols) && cols >= 1 ? Math.min(8, Math.round(cols)) : null,
+    visible: blockVisibleOn(row, "desktop", fallbackVisible),
+    columns: blockColumnsOn(config, "desktop"),
+  };
+}
+
+/** Phone (app) layout: visibility + cards per row, same per-device keys. */
+export function homeBlockMobileConfig(
+  row: Pick<HomepageBlock, "is_visible" | "config"> | null | undefined,
+  fallbackVisible = true
+): HomeBlockDesktopConfig {
+  const config = (row?.config ?? {}) as Record<string, unknown>;
+  return {
+    visible: blockVisibleOn(row, "mobile", fallbackVisible),
+    columns: blockColumnsOn(config, "mobile"),
   };
 }
 

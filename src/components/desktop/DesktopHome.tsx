@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,14 @@ import { DesktopProductCard } from "@/components/desktop/DesktopProductCard";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { DESKTOP_HERO_FALLBACK, DESKTOP_IP_ANGEL_PNG as DESKTOP_IP_ANGEL } from "@/lib/desktop/brand-assets";
 import { listOrderedDesktopHomeSections } from "@/lib/home/blocks";
+import {
+  DEFAULT_HOME_LAYOUT_SETTINGS,
+  DESKTOP_SPACING_CLASS,
+  normalizeHomeLayoutSettings,
+  parseHomeCategorySettings,
+  resolveBlockSpacing,
+  type HomeLayoutSettings,
+} from "@/lib/home/layout-device";
 import { hotSearchHref, resolveHotSearchKeywords } from "@/lib/home/hot-search";
 import { parseServiceShortcuts } from "@/lib/home/service-shortcuts";
 import {
@@ -38,6 +46,7 @@ import {
 import type { HomepageBlock } from "@/lib/types/database";
 import { parseQuickServicesSettings } from "@/types/home-quick-service";
 import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
+import { HomepagePopupDialog } from "@/components/home/HomepagePopupDialog";
 import { HomeGroupBuyBannerSection } from "@/components/home/group-buy-banner/HomeGroupBuyBannerSection";
 import {
   ChimeSelectGroupBuySection,
@@ -99,6 +108,19 @@ type StoreRow = {
   image_url?: string | null;
 };
 
+/** 後台「商品分類」的資料（含排序與圖示）。 */
+type AdminCategory = {
+  id: string;
+  name: string;
+  slug?: string | null;
+  sort_order?: number | null;
+  icon_url?: string | null;
+  shop_home_icon?: string | null;
+  shop_home_bg_color?: string | null;
+  custom_link?: string | null;
+  show_on_shop_home?: boolean | null;
+};
+
 type HomeCategory = { id: string; name: string; href: string; image?: string; bgColor?: string };
 
 const DIFFICULTY: Record<string, string> = { easy: "初階", medium: "進階", hard: "挑戰" };
@@ -138,6 +160,9 @@ const BAND_PAD = {
   compact: "py-4 md:py-6",
   none: "",
 } as const;
+
+/** Spacing the editor chose for the section being rendered (後台 › 版面 › 間距). */
+const SectionSpacing = createContext<string | undefined>(undefined);
 
 /** Sections that paint their own background and don't join the warm / soft alternation. */
 const SELF_TONED: Partial<Record<string, BandTone>> = {
@@ -181,8 +206,12 @@ function Band({
   className?: string;
   children: ReactNode;
 }) {
+  const spacing = useContext(SectionSpacing);
   return (
-    <section aria-label={label} className={cn(BAND_BG[tone], BAND_PAD[pad], className)}>
+    <section
+      aria-label={label}
+      className={cn(BAND_BG[tone], spacing ?? BAND_PAD[pad], className)}
+    >
       <DesktopContainer className={CONTENT_MAX}>{children}</DesktopContainer>
     </section>
   );
@@ -315,6 +344,8 @@ export function DesktopHome() {
   const [store, setStore] = useState<StoreRow | null>(null);
   const [query, setQuery] = useState("");
   const [draftPreview, setDraftPreview] = useState(false);
+  const [layout, setLayout] = useState<HomeLayoutSettings>(DEFAULT_HOME_LAYOUT_SETTINGS);
+  const [allCategories, setAllCategories] = useState<AdminCategory[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -332,14 +363,22 @@ export function DesktopHome() {
       safe(fetch("/api/shop/popular-products?limit=12")),
       safe(fetch("/api/shop/new-products?limit=12")),
       safe(fetch("/api/shop/home-categories")),
-    ]).then(([cms, prod, rec, stores, pop, neu, cats]) => {
+      safe(fetch("/api/home-layout-settings")),
+      safe(fetch("/api/categories")),
+    ]).then(([cms, prod, rec, stores, pop, neu, cats, layoutSettings, allCats]) => {
       if (cancelled) return;
       setSections(listOrderedDesktopHomeSections((cms.blocks as HomepageBlock[]) ?? []));
+      setLayout(
+        layoutSettings?.settings
+          ? normalizeHomeLayoutSettings(layoutSettings.settings)
+          : DEFAULT_HOME_LAYOUT_SETTINGS
+      );
       setBanners((cms.banners as Banner[]) ?? []);
       setProducts((prod.products as Product[]) ?? []);
       setRecipes((rec.recipes as Recipe[]) ?? []);
       setPopular((pop.products as Product[]) ?? []);
       setFresh((neu.products as Product[]) ?? []);
+      setAllCategories(((allCats?.categories ?? []) as AdminCategory[]) ?? []);
       setCategories(
         ((cats.categories as HomeCategory[]) ?? []).filter((c) => c.name && c.name !== "全部分類")
       );
@@ -493,10 +532,33 @@ export function DesktopHome() {
 
       /* 商品分類（後台 › 商城分類） */
       case "popular_categories": {
-        const tiles: HomeCategory[] = categories.slice(0, 7);
-        if (tiles.length <= 6)
-          tiles.push({ id: "__new", name: "新品上架", href: "/shop/new-arrivals", bgColor: "#FFF5CC" });
-        tiles.push({ id: "__all", name: "全部分類", href: "/shop/categories", bgColor: "#EEF8FC" });
+        const catCfg = parseHomeCategorySettings(cfg);
+        const byId = new Map(allCategories.map((c) => [c.id, c]));
+        const toTile = (c: AdminCategory): HomeCategory => ({
+          id: c.id,
+          name: c.name,
+          href: c.custom_link?.trim() || `/shop/category/${c.slug ?? c.id}`,
+          image: c.shop_home_icon || c.icon_url || undefined,
+          bgColor: c.shop_home_bg_color || "#FFF5CC",
+        });
+        // 後台挑選的分類優先；沒挑過就沿用「顯示在商城首頁」的設定。
+        const picked = catCfg.items
+          .filter((i) => i.enabled)
+          .map((i) => byId.get(i.id))
+          .filter((c): c is AdminCategory => Boolean(c))
+          .map(toTile);
+        const fallback = categories.length
+          ? categories
+          : allCategories
+              .filter((c) => c.show_on_shop_home !== false)
+              .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
+              .map(toTile);
+        const base = picked.length ? picked : fallback;
+        const tiles: HomeCategory[] = base.slice(0, catCfg.maxItems);
+        if (catCfg.showAllTile) {
+          tiles.push({ id: "__all", name: "全部分類", href: "/shop/categories", bgColor: "#EEF8FC" });
+        }
+        if (!tiles.length) return null;
         return (
           <Band key={section.id} tone={tone} label={section.title}>
             <SectionHeading
@@ -505,27 +567,43 @@ export function DesktopHome() {
               href={section.viewAllUrl || APP_ROUTES.shop}
               linkLabel="全部商品"
             />
-            <ul className="grid grid-cols-4 gap-x-3 gap-y-4 md:gap-x-5 md:gap-y-6 lg:grid-cols-8">
+            <ul
+              className={cn(
+                "grid gap-x-3 gap-y-4 md:gap-x-5 md:gap-y-6",
+                catCfg.showIcons
+                  ? "grid-cols-4 lg:grid-cols-8"
+                  : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
+              )}
+            >
               {tiles.map((c) => (
                 <li key={c.id}>
-                  <Link href={c.href} className="group flex flex-col items-center gap-2 text-center">
-                    <span
-                      className="relative flex aspect-square w-full max-w-[112px] items-center justify-center overflow-hidden rounded-full shadow-[0_4px_14px_rgba(21,62,115,0.10)] transition group-hover:-translate-y-0.5"
-                      style={{ background: c.bgColor || "#FFF5CC" }}
+                  {catCfg.showIcons ? (
+                    <Link href={c.href} className="group flex flex-col items-center gap-2 text-center">
+                      <span
+                        className="relative flex aspect-square w-full max-w-[112px] items-center justify-center overflow-hidden rounded-full shadow-[0_4px_14px_rgba(21,62,115,0.10)] transition group-hover:-translate-y-0.5"
+                        style={{ background: c.bgColor || "#FFF5CC" }}
+                      >
+                        {c.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={c.image} alt="" className="absolute inset-0 h-full w-full object-contain" loading="lazy" />
+                        ) : c.id === "__all" ? (
+                          <LayoutGrid className="h-[38%] w-[38%] text-[#153E73]" strokeWidth={1.7} aria-hidden />
+                        ) : (
+                          <Sparkles className="h-[38%] w-[38%] text-[#153E73]" strokeWidth={1.7} aria-hidden />
+                        )}
+                      </span>
+                      <span className="line-clamp-2 min-h-[2.5em] text-[13px] font-bold leading-[1.25] text-[#153E73] md:text-[15px]">
+                        {c.name}
+                      </span>
+                    </Link>
+                  ) : (
+                    <Link
+                      href={c.href}
+                      className="flex h-12 items-center justify-center rounded-full bg-white px-3 text-center text-[14px] font-bold text-[#153E73] shadow-[0_2px_10px_rgba(21,62,115,0.07)] transition hover:-translate-y-0.5 md:text-[15px]"
                     >
-                      {c.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={c.image} alt="" className="absolute inset-0 h-full w-full object-contain" loading="lazy" />
-                      ) : c.id === "__new" ? (
-                        <Sparkles className="h-[38%] w-[38%] text-[#153E73]" strokeWidth={1.7} aria-hidden />
-                      ) : (
-                        <LayoutGrid className="h-[38%] w-[38%] text-[#153E73]" strokeWidth={1.7} aria-hidden />
-                      )}
-                    </span>
-                    <span className="line-clamp-2 min-h-[2.5em] text-[13px] font-bold leading-[1.25] text-[#153E73] md:text-[15px]">
-                      {c.name}
-                    </span>
-                  </Link>
+                      <span className="line-clamp-1">{c.name}</span>
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -1087,10 +1165,26 @@ export function DesktopHome() {
           <div className="h-40 w-full animate-pulse rounded-2xl bg-[#EEF3F7]" />
         </DesktopContainer>
       ) : (
-        visible.map((section, i) =>
-          renderSection(section, i > 0 ? visible[i - 1]!.key : null, tones.get(section.id) ?? "warm")
-        )
+        visible.map((section, i) => (
+          <SectionSpacing.Provider
+            key={section.id}
+            value={
+              DESKTOP_SPACING_CLASS[
+                resolveBlockSpacing(section.config, "desktop", layout.spacing.desktop)
+              ]
+            }
+          >
+            {renderSection(
+              section,
+              i > 0 ? visible[i - 1]!.key : null,
+              tones.get(section.id) ?? "warm"
+            )}
+          </SectionSpacing.Provider>
+        ))
       )}
+
+      {/* 首頁彈跳公告：與手機版共用同一份後台設定。 */}
+      <HomepagePopupDialog />
     </div>
   );
 }

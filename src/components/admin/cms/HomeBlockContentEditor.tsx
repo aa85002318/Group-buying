@@ -22,6 +22,7 @@ import { parseServiceShortcuts } from "@/lib/home/service-shortcuts";
 import { parseGroupBuyBannerSettings } from "@/types/home-group-buy-banner";
 import { DESKTOP_HOME_HERO_PLACEMENT } from "@/lib/desktop/inner-page-config";
 import { PAGE_HERO_SIZE } from "@/lib/page-heroes";
+import { parseHomeCategorySettings, type HomeCategoryPick } from "@/lib/home/layout-device";
 import { DEFAULT_HOT_SEARCH_KEYWORDS, parseHotSearchKeywords, type HotSearchKeyword } from "@/lib/home/hot-search";
 import {
   DEFAULT_INGREDIENT_HINT,
@@ -344,10 +345,22 @@ export function HomeBlockContentEditor({
         return (
           <>
             {viewAll}
+            <HomeCategoryPicker
+              value={parseHomeCategorySettings(cfg)}
+              readOnly={readOnly}
+              onChange={(next) =>
+                setConfig(block, onChange, {
+                  category_items: next.items,
+                  show_icons: next.showIcons,
+                  show_all_tile: next.showAllTile,
+                  category_max: next.maxItems,
+                })
+              }
+            />
             <Note>
-              分類圖片、名稱與順序沿用「商城分類」的設定（勾選「顯示在商城首頁」的分類，最多 7 個，最後自動加上「全部分類」）。
+              分類的名稱、圖片與連結沿用「商品分類」的設定，改那邊這裡會同步。
               {" "}
-              <a href="/admin/shop/categories" className="font-semibold underline">前往商城分類</a>
+              <a href="/admin/shop/categories" className="font-semibold underline">前往商品分類</a>
             </Note>
           </>
         );
@@ -647,6 +660,132 @@ export function HomeBlockContentEditor({
     <div className={readOnly ? "pointer-events-none space-y-3 opacity-60" : "space-y-3"}>
       {common}
       {body}
+    </div>
+  );
+}
+
+type CategoryRow = { id: string; name: string; slug?: string | null; sort_order?: number | null };
+
+/** 首頁「商品分類」：選要顯示的分類、排序，以及要不要顯示圖示。 */
+function HomeCategoryPicker({
+  value,
+  onChange,
+  readOnly,
+}: {
+  value: ReturnType<typeof parseHomeCategorySettings>;
+  onChange: (next: ReturnType<typeof parseHomeCategorySettings>) => void;
+  readOnly?: boolean;
+}) {
+  const [rows, setRows] = useState<CategoryRow[]>([]);
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((d) => setRows((d.categories ?? []) as CategoryRow[]))
+      .catch(() => {});
+  }, []);
+
+  const picks = new Map(value.items.map((i) => [i.id, i]));
+  const ordered: CategoryRow[] = [
+    ...value.items
+      .map((i) => rows.find((r) => r.id === i.id))
+      .filter((r): r is CategoryRow => Boolean(r)),
+    ...rows.filter((r) => !picks.has(r.id)),
+  ];
+
+  const commit = (items: HomeCategoryPick[]) => onChange({ ...value, items });
+
+  const toggle = (id: string, enabled: boolean) => {
+    const next: HomeCategoryPick[] = ordered.map((r, i) => ({
+      id: r.id,
+      enabled: r.id === id ? enabled : picks.get(r.id)?.enabled ?? false,
+      sortOrder: (i + 1) * 10,
+    }));
+    commit(next.filter((i) => i.enabled || picks.has(i.id)));
+  };
+
+  const move = (id: string, dir: -1 | 1) => {
+    const list: HomeCategoryPick[] = ordered.map((r, i) => ({
+      id: r.id,
+      enabled: picks.get(r.id)?.enabled ?? false,
+      sortOrder: (i + 1) * 10,
+    }));
+    const idx = list.findIndex((i) => i.id === id);
+    const j = idx + dir;
+    if (idx < 0 || j < 0 || j >= list.length) return;
+    [list[idx], list[j]] = [list[j]!, list[idx]!];
+    commit(list.map((i, n) => ({ ...i, sortOrder: (n + 1) * 10 })));
+  };
+
+  const selectedCount = value.items.filter((i) => i.enabled).length;
+
+  return (
+    <div className="space-y-2">
+      <Field label="顯示圖示">
+        <div className="flex gap-1">
+          {([
+            [true, "圖片圓形圖示"],
+            [false, "只顯示文字"],
+          ] as const).map(([on, label]) => (
+            <button
+              key={String(on)}
+              type="button"
+              disabled={readOnly}
+              onClick={() => onChange({ ...value, showIcons: on })}
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                value.showIcons === on ? "bg-[#153E73] text-white" : "bg-[#F2F4F7] text-[#153E73]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </Field>
+      <label className="flex items-center gap-2 text-xs text-[#153E73]">
+        <input
+          type="checkbox"
+          checked={value.showAllTile}
+          disabled={readOnly}
+          onChange={(e) => onChange({ ...value, showAllTile: e.target.checked })}
+        />
+        最後加上「全部分類」
+      </label>
+      <Field label="最多顯示幾個分類">
+        <Input
+          type="number"
+          min={1}
+          max={12}
+          value={value.maxItems}
+          disabled={readOnly}
+          onChange={(e) => onChange({ ...value, maxItems: Number(e.target.value) || 8 })}
+        />
+      </Field>
+      <div className="space-y-1">
+        <span className="text-xs font-medium text-[#153E73]">
+          顯示分類{selectedCount ? `（已選 ${selectedCount} 個）` : "（未選＝自動沿用商城首頁分類）"}
+        </span>
+        <ul className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-[#E9EDF2] p-1">
+          {ordered.map((r) => (
+            <li key={r.id} className="flex items-center gap-1.5 rounded px-1.5 py-1 text-sm">
+              <input
+                type="checkbox"
+                checked={picks.get(r.id)?.enabled ?? false}
+                disabled={readOnly}
+                onChange={(e) => toggle(r.id, e.target.checked)}
+              />
+              <span className="min-w-0 flex-1 truncate text-[#153E73]">{r.name}</span>
+              <button type="button" title="上移" onClick={() => move(r.id, -1)} className="p-1 text-[#687386]">
+                <ArrowUp className="h-3.5 w-3.5" />
+              </button>
+              <button type="button" title="下移" onClick={() => move(r.id, 1)} className="p-1 text-[#687386]">
+                <ArrowDown className="h-3.5 w-3.5" />
+              </button>
+            </li>
+          ))}
+          {rows.length === 0 ? (
+            <li className="px-2 py-3 text-xs text-[#8A94A6]">載入分類中…</li>
+          ) : null}
+        </ul>
+      </div>
     </div>
   );
 }

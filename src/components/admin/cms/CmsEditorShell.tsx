@@ -26,6 +26,14 @@ import {
   type PageBuilderPlatform,
 } from "@/lib/cms/page-builder";
 import { CmsScaledPreview } from "@/components/admin/cms/CmsScaledPreview";
+import {
+  DEFAULT_HOME_LAYOUT_SETTINGS,
+  HOME_SPACING_LABELS,
+  normalizeHomeLayoutSettings,
+  type HomeDevice,
+  type HomeLayoutSettings,
+  type HomeSpacing,
+} from "@/lib/home/layout-device";
 
 type Props = {
   initialPage: CmsPage;
@@ -66,6 +74,41 @@ export function CmsEditorShell({
   const [mobilePane, setMobilePane] = useState<"blocks" | "preview" | "props">(
     "preview"
   );
+  // 桌機 / 手機：切換要編輯哪一個版型（內容兩邊共用）。
+  const [device, setDevice] = useState<HomeDevice>("desktop");
+  const [layoutSettings, setLayoutSettings] = useState<HomeLayoutSettings>(
+    DEFAULT_HOME_LAYOUT_SETTINGS
+  );
+  const [savingSpacing, setSavingSpacing] = useState(false);
+
+  useEffect(() => {
+    if (initialPage.id !== "home") return;
+    fetch("/api/admin/home/layout-settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.settings) setLayoutSettings(normalizeHomeLayoutSettings(d.settings));
+      })
+      .catch(() => {});
+  }, [initialPage.id]);
+
+  const saveSpacing = async (next: HomeLayoutSettings) => {
+    setLayoutSettings(next);
+    setSavingSpacing(true);
+    try {
+      const res = await fetch("/api/admin/home/layout-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: next }),
+      });
+      if (!res.ok) throw new Error("間距儲存失敗");
+      setNotice("整頁間距已儲存，重新整理前台即可看到。");
+      setPreviewReload((n) => n + 1);
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "間距儲存失敗");
+    } finally {
+      setSavingSpacing(false);
+    }
+  };
 
   useEffect(() => {
     editor.loadPage(initialPage);
@@ -92,8 +135,8 @@ export function CmsEditorShell({
   // One設定 for every device: the storefront lays the same blocks out
   // responsively, so the editor shows one scope and two preview sizes.
   const widths: number[] = [...PAGE_BUILDER_UNIFIED_WIDTHS];
-  const scopeLabel = "手機＋網頁";
-  const previewLabel = previewWidth >= 1024 ? "網頁版" : "手機版";
+  const scopeLabel = device === "mobile" ? "手機版版面" : "桌機版版面";
+  const previewLabel = device === "mobile" ? "手機版" : "桌機版";
   const hubHref = pageBuilderPlatformHref(platform);
 
   const handleSave = async () => {
@@ -187,20 +230,26 @@ export function CmsEditorShell({
         </span>
 
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
-          <div className="flex rounded-md border border-[#E9EDF2] bg-white p-0.5" role="group" aria-label="預覽裝置">
-              {widths.map((w) => (
-                <button
-                  key={w}
-                  type="button"
-                  onClick={() => setPreviewWidth(w)}
-                  className={cn(
-                    "h-7 rounded px-2.5 text-xs font-semibold",
-                    previewWidth === w ? "bg-[#FFE149] text-[#153E73]" : "text-[#687386]"
-                  )}
-                >
-                  {w >= 1024 ? "網頁版預覽" : "手機版預覽"}
-                </button>
-              ))}
+          <div className="flex rounded-md border border-[#E9EDF2] bg-white p-0.5" role="group" aria-label="編輯裝置">
+            {([
+              ["desktop", "桌機版", widths[widths.length - 1] ?? 1440],
+              ["mobile", "手機版", widths[0] ?? 390],
+            ] as const).map(([value, label, width]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setDevice(value);
+                  setPreviewWidth(width);
+                }}
+                className={cn(
+                  "h-7 rounded px-2.5 text-xs font-semibold",
+                  device === value ? "bg-[#FFE149] text-[#153E73]" : "text-[#687386]"
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           <Button
@@ -364,8 +413,48 @@ export function CmsEditorShell({
               block={editor.selectedBlock}
               pageId={page?.id ?? initialPage.id}
               platform={platform}
+              device={device}
               readOnly={!canMutateLocal}
               onChange={editor.updateSelectedBlock}
+              pageSettings={
+                (page?.id ?? initialPage.id) === "home" ? (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-[#687386]">
+                      整頁的區塊間距（目前設定：
+                      <span className="font-semibold text-[#153E73]">
+                        {device === "mobile" ? "手機版" : "桌機版"}
+                      </span>
+                      ）。個別區塊可以在「版型」再微調。
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(Object.keys(HOME_SPACING_LABELS) as HomeSpacing[]).map((value) => (
+                        <button
+                          key={value}
+                          type="button"
+                          disabled={!canMutateLocal || savingSpacing}
+                          onClick={() =>
+                            void saveSpacing({
+                              ...layoutSettings,
+                              spacing: { ...layoutSettings.spacing, [device]: value },
+                            })
+                          }
+                          className={cn(
+                            "rounded-full px-3 py-1.5 text-xs font-semibold",
+                            layoutSettings.spacing[device] === value
+                              ? "bg-[#153E73] text-white"
+                              : "bg-[#F2F4F7] text-[#153E73]"
+                          )}
+                        >
+                          {HOME_SPACING_LABELS[value]}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-[#8A94A6]">
+                      間距會立即儲存，不需要按發布。
+                    </p>
+                  </div>
+                ) : undefined
+              }
             />
           </div>
           {showVersions ? (

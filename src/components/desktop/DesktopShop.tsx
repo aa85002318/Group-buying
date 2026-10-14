@@ -21,6 +21,8 @@ type Product = {
   spec?: string | null;
   specification?: string | null;
   category?: string | null;
+  category_id?: string | null;
+  product_categories?: { name?: string | null; slug?: string | null } | null;
   brand?: string | null;
   stock?: number | null;
   is_new?: boolean;
@@ -30,8 +32,12 @@ type Product = {
 
 const PAGE_SIZE = 20;
 
+type ShopCategory = { id: string; name: string; slug?: string | null; sort_order?: number | null };
+
 export function DesktopShop() {
   const [products, setProducts] = useState<Product[]>([]);
+  // 側邊分類沿用後台「商品分類」的設定與排序。
+  const [categories, setCategories] = useState<ShopCategory[]>([]);
   const [category, setCategory] = useState("all");
   const [filters, setFilters] = useState<Record<string, string[]>>({ tag: ["all"] });
   const [sort, setSort] = useState("default");
@@ -40,6 +46,12 @@ export function DesktopShop() {
 
   useEffect(() => {
     let cancelled = false;
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setCategories((d.categories ?? []) as ShopCategory[]);
+      })
+      .catch(() => {});
     fetch("/api/products")
       .then((r) => r.json())
       .then((d) => {
@@ -59,8 +71,16 @@ export function DesktopShop() {
   const filtered = useMemo(() => {
     let list = [...products];
     if (category !== "all") {
+      const picked = categories.find((c) => c.id === category);
+      const name = picked?.name ?? category;
+      const slug = picked?.slug ?? null;
       list = list.filter(
-        (p) => p.category === category || (p.name || "").includes(category)
+        (p) =>
+          p.category_id === category ||
+          (slug && p.product_categories?.slug === slug) ||
+          p.product_categories?.name === name ||
+          p.category === name ||
+          (!picked && (p.name || "").includes(category))
       );
     }
     if ((filters.stock ?? []).includes("in_stock")) {
@@ -79,7 +99,7 @@ export function DesktopShop() {
       );
     }
     return list;
-  }, [products, category, filters, sort]);
+  }, [products, categories, category, filters, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -87,6 +107,15 @@ export function DesktopShop() {
   useEffect(() => setPage(1), [category, filters, sort]);
 
   const dynamicNav = useMemo(() => {
+    if (categories.length) {
+      const sorted = [...categories].sort(
+        (a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)
+      );
+      return [
+        { key: "all", label: "全部商品" },
+        ...sorted.map((c) => ({ key: c.id, label: c.name })),
+      ];
+    }
     const cats = Array.from(
       new Set(products.map((p) => p.category).filter(Boolean) as string[])
     ).slice(0, 8);
@@ -95,7 +124,7 @@ export function DesktopShop() {
       { key: "all", label: "全部商品" },
       ...cats.map((c) => ({ key: c, label: c })),
     ];
-  }, [products]);
+  }, [categories, products]);
 
   return (
     <DesktopInnerPageLayout

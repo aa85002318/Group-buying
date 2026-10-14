@@ -15,6 +15,13 @@ import {
 } from "@/components/admin/home/CmsLinkPicker";
 import { CMS_IMAGE_SPECS } from "@/components/admin/home/CmsImageField";
 import { isPageUnified, type PageBuilderPlatform } from "@/lib/cms/page-builder";
+import {
+  HOME_BLOCK_SPACING_OPTIONS,
+  blockColumnsOn,
+  blockSpacingValue,
+  blockVisibleOn,
+  type HomeDevice,
+} from "@/lib/home/layout-device";
 import { cn } from "@/lib/utils";
 
 const SHOP_HOME_CONTENT_HREF: Record<string, string> = {
@@ -37,8 +44,12 @@ type Props = {
   block: CmsBlock | null;
   pageId: string;
   platform: PageBuilderPlatform;
+  /** Which device's layout the editor is set to (桌機 / 手機). */
+  device?: HomeDevice;
   onChange: (patch: Partial<CmsBlock>) => void;
   readOnly?: boolean;
+  /** Page-wide spacing editor, shown when no block is selected. */
+  pageSettings?: React.ReactNode;
 };
 
 function patchSettings(
@@ -75,20 +86,24 @@ export function CmsPropertyPanel({
   block,
   pageId,
   platform,
+  device = "desktop",
   onChange,
   readOnly,
+  pageSettings,
 }: Props) {
   const [tab, setTab] = useState<TabId>("content");
   const isDesktop = platform === "desktop";
   const unified = isPageUnified(pageId) && platform === "mobile";
+  const deviceLabel = device === "mobile" ? "手機版" : "桌機版";
 
   if (!block) {
     return (
-      <div className="flex h-full flex-col p-4">
-        <p className="text-sm font-bold text-[#153E73]">區塊設定</p>
-        <p className="mt-3 text-sm text-[#8A94A6]">
-          從左側選取區塊後，在此編輯內容與版型。
-        </p>
+      <div className="flex h-full flex-col overflow-y-auto p-4">
+        <p className="text-sm font-bold text-[#153E73]">頁面設定</p>
+        {pageSettings ?? (
+          <p className="mt-3 text-sm text-[#8A94A6]">從左側選取區塊後，在此編輯內容與版型。</p>
+        )}
+        <p className="mt-4 text-xs text-[#8A94A6]">選取左側的區塊，就能編輯它的內容與版型。</p>
       </div>
     );
   }
@@ -120,7 +135,9 @@ export function CmsPropertyPanel({
       <div className="border-b border-[#E9EDF2] p-3">
         <p className="truncate text-sm font-bold text-[#153E73]">{block.name}</p>
         <p className="mt-1 text-[11px] text-[#687386]">
-          這裡的設定手機和網站共用，改一次兩邊都會變。
+          內容（文字、圖片、挑選的商品）手機和桌機共用；
+          <span className="font-semibold text-[#153E73]">版面與顯示</span>
+          目前編輯的是 <span className="font-semibold text-[#153E73]">{deviceLabel}</span>。
         </p>
       </div>
 
@@ -251,7 +268,7 @@ export function CmsPropertyPanel({
         ) : null}
 
         {tab === "layout" && unified ? (
-          <UnifiedLayoutFields block={block} onChange={onChange} readOnly={readOnly} />
+          <UnifiedLayoutFields block={block} device={device} onChange={onChange} readOnly={readOnly} />
         ) : null}
 
         {tab === "layout" && !unified ? (
@@ -342,7 +359,7 @@ export function CmsPropertyPanel({
         {tab === "display" ? (
           <>
             {unified ? (
-              <UnifiedVisibilityFields block={block} onChange={onChange} readOnly={readOnly} />
+              <UnifiedVisibilityFields block={block} device={device} onChange={onChange} readOnly={readOnly} />
             ) : (
               <label className="flex items-center gap-2 text-sm text-[#153E73]">
                 <input
@@ -476,20 +493,24 @@ function blockKey(block: CmsBlock): string {
   return String(block.sourceKey || block.settings.legacyKey || block.type || "");
 }
 
-/** 顯示 tab (unified home): one toggle per platform. */
+/** 顯示 tab: one toggle for the device the editor is set to. */
 function UnifiedVisibilityFields({
   block,
+  device,
   onChange,
   readOnly,
 }: {
   block: CmsBlock;
+  device: HomeDevice;
   onChange: Props["onChange"];
   readOnly?: boolean;
 }) {
   const cfg = blockConfig(block);
-  const websiteVisible =
-    typeof cfg.desktop_visible === "boolean" ? cfg.desktop_visible : block.enabled;
-  const visible = block.enabled && websiteVisible;
+  const row = { is_visible: block.enabled, config: cfg };
+  const visible = blockVisibleOn(row, device, block.enabled);
+  const other: HomeDevice = device === "desktop" ? "mobile" : "desktop";
+  const otherVisible = blockVisibleOn(row, other, block.enabled);
+  const label = device === "mobile" ? "手機版" : "桌機版";
   return (
     <div className="space-y-2 rounded-[10px] border border-[#E9EDF2] bg-[#FAFBFC] p-3">
       <label className="flex items-center gap-2 text-sm text-[#153E73]">
@@ -498,43 +519,53 @@ function UnifiedVisibilityFields({
           checked={visible}
           disabled={readOnly}
           onChange={(e) => {
-            // One switch for every device:手機和網站一起顯示或隱藏。
+            const next = e.target.checked;
+            // is_visible stays the app's switch; config keeps both devices explicit.
             onChange({
-              enabled: e.target.checked,
+              enabled: device === "mobile" ? next : block.enabled,
               settings: {
                 ...block.settings,
-                config: { ...cfg, desktop_visible: e.target.checked },
+                config: {
+                  ...cfg,
+                  [`${device}_visible`]: next,
+                  [`${other}_visible`]: otherVisible,
+                },
               },
             });
           }}
         />
-        顯示此區塊（手機和網站一起）
+        在{label}顯示此區塊
       </label>
       <p className="text-[11px] leading-relaxed text-[#8A94A6]">
-        標題、連結、挑選的商品與顯示筆數手機和網站共用，改一次就好。
+        {other === "mobile" ? "手機版" : "桌機版"}目前{otherVisible ? "顯示" : "隱藏"}
+        ：切到上方的{other === "mobile" ? "手機版" : "桌機版"}就能分開設定。內容兩邊共用。
       </p>
     </div>
   );
 }
 
-/** 版型 tab (unified home): the app layout is fixed; website can change cards per row. */
+/** 版型 tab: cards per row + section spacing, for the selected device. */
 function UnifiedLayoutFields({
   block,
+  device,
   onChange,
   readOnly,
 }: {
   block: CmsBlock;
+  device: HomeDevice;
   onChange: Props["onChange"];
   readOnly?: boolean;
 }) {
   const cfg = blockConfig(block);
   const key = blockKey(block);
-  const cols = typeof cfg.desktop_columns === "number" ? cfg.desktop_columns : "";
+  const cols = blockColumnsOn(cfg, device) ?? "";
+  const spacing = blockSpacingValue(cfg, device);
+  const label = device === "mobile" ? "手機版" : "桌機版";
   return (
     <div className="space-y-3">
       {WEBSITE_COLUMN_KEYS.has(key) ? (
         <label className="block space-y-1">
-          <span className="text-xs font-medium text-[#153E73]">電腦版每列幾個（手機自動調整）</span>
+          <span className="text-xs font-medium text-[#153E73]">{label}每列幾個</span>
           <Input
             type="number"
             min={1}
@@ -544,17 +575,39 @@ function UnifiedLayoutFields({
             value={cols}
             onChange={(e) =>
               patchConfig(block, onChange, {
-                desktop_columns: e.target.value ? Number(e.target.value) : null,
+                [`${device}_columns`]: e.target.value ? Number(e.target.value) : null,
               })
             }
           />
           <span className="block text-[11px] text-[#8A94A6]">留空 = 使用預設排列。</span>
         </label>
-      ) : (
-        <p className="text-sm text-[#687386]">這個區塊的網站版排列是固定的，沒有可調整的選項。</p>
-      )}
+      ) : null}
+
+      <label className="block space-y-1">
+        <span className="text-xs font-medium text-[#153E73]">這一區的上下間距（{label}）</span>
+        <select
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+          disabled={readOnly}
+          value={spacing}
+          onChange={(e) =>
+            patchConfig(block, onChange, {
+              [`${device}_spacing`]: e.target.value === "page" ? null : e.target.value,
+            })
+          }
+        >
+          {HOME_BLOCK_SPACING_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <span className="block text-[11px] text-[#8A94A6]">
+          整頁的鬆緊度在「頁面設定」調整（取消選取區塊即可看到）。
+        </span>
+      </label>
+
       <p className="rounded-[10px] bg-[#F7F8FA] px-2.5 py-2 text-[11px] leading-relaxed text-[#687386]">
-        手機 App 的排列方式由 App 版型決定；要改順序請在左側拖曳，兩邊會一起變。
+        區塊順序在左側拖曳，手機和桌機共用同一個順序。
       </p>
     </div>
   );

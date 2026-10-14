@@ -51,7 +51,7 @@ type ProductCard = {
   inStock: boolean;
 };
 
-function AiBakingPageInner() {
+function AiBakingPageInner({ embedded = false }: { embedded?: boolean }) {
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>("recipes");
   const [loading, setLoading] = useState(false);
@@ -253,13 +253,24 @@ function AiBakingPageInner() {
 
   return (
     <div className="ai-hub space-y-0 bg-white">
-      <div className="w-full max-w-none bg-[#FDE045]">
-        <AiHeroSection />
-      </div>
+      {/* Embedded on the website: the page already shows the hero and title. */}
+      {embedded ? null : (
+        <div className="w-full max-w-none bg-[#FDE045]">
+          <AiHeroSection />
+        </div>
+      )}
 
-      <div className="mx-auto w-full max-w-[720px] space-y-6 bg-white px-4 py-6 md:px-6 md:py-8">
+      <div
+        className={
+          embedded
+            ? "mx-auto w-full max-w-[720px] space-y-6 bg-white"
+            : "mx-auto w-full max-w-[720px] space-y-6 bg-white px-4 py-6 md:px-6 md:py-8"
+        }
+      >
         <div>
-          <h1 className="text-xl font-black text-[#153E73]">AI 烘焙助手</h1>
+          {embedded ? null : (
+            <h1 className="text-xl font-black text-[#153E73]">AI 烘焙助手</h1>
+          )}
           <p className="mt-1 text-sm text-[#687386]">
             材料推薦 · 份量換算 · 烤箱換算 · 替代方案 · 失敗分析
           </p>
@@ -1107,10 +1118,10 @@ function ConfirmAddModal({
   );
 }
 
-export default function AiBakingPage() {
+export default function AiBakingPage({ embedded = false }: { embedded?: boolean }) {
   return (
     <Suspense fallback={<div className="page-enter p-6 text-sm text-muted-foreground">載入中…</div>}>
-      <AiBakingPageInner />
+      <AiBakingPageInner embedded={embedded} />
     </Suspense>
   );
 }
