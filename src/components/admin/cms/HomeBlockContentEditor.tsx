@@ -619,6 +619,76 @@ export function HomeBlockContentEditor({
             </div>
           </>
         );
+      case "custom_categories":
+        return (
+          <>
+            {viewAll}
+            <HomeCategoryPicker
+              value={parseHomeCategorySettings(cfg)}
+              readOnly={readOnly}
+              onChange={(next) =>
+                setConfig(block, onChange, {
+                  category_items: next.items,
+                  show_icons: next.showIcons,
+                  show_all_tile: next.showAllTile,
+                  category_max: next.maxItems,
+                })
+              }
+            />
+          </>
+        );
+      case "custom_recipes":
+        return (
+          <>
+            {viewAll}
+            <RecipePickerEditor
+              manualIds={Array.isArray(s.manual_ids) ? (s.manual_ids as string[]) : []}
+              sourceMode={s.source_mode === "manual" ? "manual" : "auto"}
+              onManualIdsChange={(ids) => setSettings(block, onChange, { manual_ids: ids })}
+              onSourceModeChange={(mode) => setSettings(block, onChange, { source_mode: mode })}
+            />
+          </>
+        );
+      case "custom_spacer":
+        return (
+          <>
+            <Note>只是一段空白，用來把上下兩個區塊分開。</Note>
+            <Field label="高度">
+              <div className="flex flex-wrap gap-1">
+                {([
+                  ["tight", "小"],
+                  ["normal", "中"],
+                  ["loose", "大"],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    disabled={readOnly}
+                    onClick={() => setConfig(block, onChange, { height: value })}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      (str(cfg.height) || "normal") === value
+                        ? "bg-[#153E73] text-white"
+                        : "bg-[#F2F4F7] text-[#153E73]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <Field label="分隔線（選填）">
+              <label className="flex items-center gap-2 text-xs text-[#153E73]">
+                <input
+                  type="checkbox"
+                  checked={cfg.divider === true}
+                  disabled={readOnly}
+                  onChange={(e) => setConfig(block, onChange, { divider: e.target.checked })}
+                />
+                顯示一條淡淡的分隔線
+              </label>
+            </Field>
+          </>
+        );
       case "custom_text":
         return (
           <>

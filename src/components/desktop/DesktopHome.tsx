@@ -531,7 +531,8 @@ export function DesktopHome() {
       }
 
       /* 商品分類（後台 › 商城分類） */
-      case "popular_categories": {
+      case "popular_categories":
+      case "custom_categories": {
         const catCfg = parseHomeCategorySettings(cfg);
         const byId = new Map(allCategories.map((c) => [c.id, c]));
         const toTile = (c: AdminCategory): HomeCategory => ({
@@ -702,7 +703,8 @@ export function DesktopHome() {
       }
 
       /* 精選食譜 */
-      case "latest_recipes": {
+      case "latest_recipes":
+      case "custom_recipes": {
         const picked = pickRecipes(section);
         const list = picked.slice(0, Math.max(2, section.displayCount || 3));
         if (!list.length) return null;
@@ -1077,6 +1079,21 @@ export function DesktopHome() {
             </div>
           </Band>
         );
+
+      case "custom_spacer": {
+        const height = str(cfg.height) || "normal";
+        const cls =
+          height === "tight" ? "h-6 md:h-10" : height === "loose" ? "h-16 md:h-28" : "h-10 md:h-16";
+        return (
+          <div key={section.id} className={cn(BAND_BG[tone], "w-full")} aria-hidden>
+            <DesktopContainer className={CONTENT_MAX}>
+              <div className={cn(cls, "flex items-center")}>
+                {cfg.divider === true ? <span className="h-px w-full bg-[#E9EDF2]" /> : null}
+              </div>
+            </DesktopContainer>
+          </div>
+        );
+      }
 
       case "custom_banner": {
         const img = str(cfg.image_url);

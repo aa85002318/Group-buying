@@ -36,6 +36,8 @@ import {
   WeeklyLiveStreamsSection,
 } from "@/components/home/group-buy-hub/HomeGroupBuySections";
 import { SectionHeader } from "@/components/consumer/SectionHeader";
+import { formatCurrency } from "@/lib/utils";
+import { productPath } from "@/lib/site-links";
 import {
   filterProductsByScope,
   getRecentProducts,
@@ -543,6 +545,162 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
         </section>
       );
     }
+    /* 後台自己加的區塊（可重複）：手機版也要看得到。 */
+    case "custom_spacer": {
+      const cfg = (block.config ?? {}) as Record<string, unknown>;
+      const height = typeof cfg.height === "string" ? cfg.height : "normal";
+      const cls = height === "tight" ? "h-4" : height === "loose" ? "h-12" : "h-8";
+      return (
+        <div key={reactKey} className={`${cls} flex items-center px-4`} aria-hidden>
+          {cfg.divider === true ? <span className="h-px w-full bg-[#ECE6DA]" /> : null}
+        </div>
+      );
+    }
+    case "custom_banner": {
+      const cfg = (block.config ?? {}) as Record<string, unknown>;
+      const img =
+        (typeof cfg.mobile_image_url === "string" && cfg.mobile_image_url) ||
+        (typeof cfg.image_url === "string" ? cfg.image_url : "");
+      if (!img) return null;
+      const href = typeof cfg.link_url === "string" ? cfg.link_url : "";
+      const pic = (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={img} alt={block.title} className="w-full rounded-2xl object-cover" loading="lazy" />
+      );
+      return (
+        <section key={reactKey} className="px-4 py-2">
+          {href ? <Link href={href}>{pic}</Link> : pic}
+        </section>
+      );
+    }
+    case "custom_text": {
+      const cfg = (block.config ?? {}) as Record<string, unknown>;
+      const body = typeof cfg.body === "string" ? cfg.body : "";
+      const img = typeof cfg.image_url === "string" ? cfg.image_url : "";
+      const btn = typeof cfg.button_text === "string" ? cfg.button_text : "";
+      const href = typeof cfg.link_url === "string" ? cfg.link_url : "";
+      if (!block.title && !body && !img) return null;
+      return (
+        <section key={reactKey} className="px-4 py-2">
+          <div className="overflow-hidden rounded-2xl bg-white">
+            {img ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={img} alt="" className="h-40 w-full object-cover" loading="lazy" />
+            ) : null}
+            <div className="space-y-2 p-4">
+              {block.title ? (
+                <h2 className="text-lg font-black text-[#153E73]">{block.title}</h2>
+              ) : null}
+              {block.subtitle ? (
+                <p className="text-sm font-semibold text-[#79C7E8]">{block.subtitle}</p>
+              ) : null}
+              {body ? (
+                <p className="whitespace-pre-line text-sm leading-relaxed text-[#465467]">{body}</p>
+              ) : null}
+              {btn && href ? (
+                <Link
+                  href={href}
+                  className="inline-flex h-10 items-center rounded-full bg-[#153E73] px-5 text-sm font-bold text-white"
+                >
+                  {btn}
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    case "custom_products": {
+      const byId = new Map(ctx.products.map((p) => [p.id, p]));
+      const picked = block.manualIds
+        .map((id) => byId.get(id))
+        .filter((p): p is (typeof ctx.products)[number] => Boolean(p))
+        .slice(0, block.displayCount || 10);
+      if (!picked.length) return null;
+      return (
+        <section key={reactKey} className="space-y-3 px-4 py-2">
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="text-lg font-black text-[#153E73]">{block.title || "精選商品"}</h2>
+            {block.viewAllUrl ? (
+              <Link href={block.viewAllUrl} className="text-sm font-semibold text-[#153E73]">
+                查看全部
+              </Link>
+            ) : null}
+          </div>
+          <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4">
+            {picked.map((p) => (
+              <Link
+                key={p.id}
+                href={productPath(p.id)}
+                className="w-[42%] shrink-0 overflow-hidden rounded-2xl bg-white"
+              >
+                {p.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.image_url} alt="" className="aspect-square w-full object-cover" loading="lazy" />
+                ) : (
+                  <span className="block aspect-square w-full bg-[#F3F4F6]" />
+                )}
+                <span className="block space-y-1 p-2.5">
+                  <span className="line-clamp-2 block text-[13px] font-semibold text-[#153E73]">
+                    {p.name}
+                  </span>
+                  <span className="block text-[15px] font-black text-[#F16458]">
+                    {formatCurrency(Number(p.sale_price ?? p.price ?? 0))}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      );
+    }
+    case "custom_recipes": {
+      const byId = new Map(ctx.recipes.map((r) => [r.id, r]));
+      const picked = (
+        block.manualIds.length
+          ? block.manualIds.map((id) => byId.get(id)).filter(Boolean)
+          : ctx.recipes
+      ).slice(0, block.displayCount || 3) as typeof ctx.recipes;
+      if (!picked.length) return null;
+      return (
+        <section key={reactKey} className="space-y-3 px-4 py-2">
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="text-lg font-black text-[#153E73]">{block.title || "精選食譜"}</h2>
+            <Link href={block.viewAllUrl || "/recipes"} className="text-sm font-semibold text-[#153E73]">
+              更多食譜
+            </Link>
+          </div>
+          <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4">
+            {picked.map((r) => {
+              const cover =
+                (r as { cover_image_url?: string | null }).cover_image_url ||
+                (r as { cover_image?: string | null }).cover_image ||
+                null;
+              return (
+                <Link
+                  key={r.id}
+                  href={`/recipes/${(r as { slug?: string | null }).slug || r.id}`}
+                  className="w-[70%] shrink-0 overflow-hidden rounded-2xl bg-white"
+                >
+                  {cover ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={cover} alt="" className="aspect-[4/3] w-full object-cover" loading="lazy" />
+                  ) : (
+                    <span className="block aspect-[4/3] w-full bg-[#F3F4F6]" />
+                  )}
+                  <span className="block p-3 text-[15px] font-black text-[#153E73]">
+                    {(r as { title?: string; name?: string }).title ??
+                      (r as { name?: string }).name ??
+                      "食譜"}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      );
+    }
+
     default: {
       warnUnknownHomeSection(key);
       return null;

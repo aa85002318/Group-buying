@@ -212,6 +212,18 @@ export const CMS_BLOCK_REGISTRY: CmsBlockDefinition[] = [
     allowedPageIds: ["home"],
     description: "標題、說明文字、圖片與按鈕",
   }),
+  def("custom_categories", "分類列（可重複）", "product", {
+    allowedPageIds: ["home"],
+    description: "自己挑選分類排成一列，可放很多個",
+  }),
+  def("custom_recipes", "食譜列（可重複）", "recipe", {
+    allowedPageIds: ["home"],
+    description: "自己挑選食譜排成一列，可放很多個",
+  }),
+  def("custom_spacer", "空白間距", "basic", {
+    allowedPageIds: ["home"],
+    description: "在兩個區塊之間留一段空白",
+  }),
   def("hero", "主視覺 Banner", "nav", { allowedPageIds: ["home"] }),
   def("latest_campaigns", "最新活動", "nav", { allowedPageIds: ["home"] }),
   def("quick_entry", "常用服務", "nav", { allowedPageIds: ["home"] }),
@@ -232,6 +244,9 @@ export const HOME_ADDABLE_BLOCK_TYPES = [
   "custom_banner",
   "custom_products",
   "custom_text",
+  "custom_categories",
+  "custom_recipes",
+  "custom_spacer",
   "hero",
   "hot_searches",
   "popular_categories",
@@ -247,7 +262,14 @@ export const HOME_ADDABLE_BLOCK_TYPES = [
   "quick_entry",
 ] as const;
 /** Of HOME_ADDABLE_BLOCK_TYPES, these may appear more than once. */
-export const HOME_REPEATABLE_BLOCK_TYPES = new Set(["custom_banner", "custom_products", "custom_text"]);
+export const HOME_REPEATABLE_BLOCK_TYPES = new Set([
+  "custom_banner",
+  "custom_products",
+  "custom_text",
+  "custom_categories",
+  "custom_recipes",
+  "custom_spacer",
+]);
 
 const byType = new Map(CMS_BLOCK_REGISTRY.map((b) => [b.type, b]));
 const byLegacy = new Map<string, CmsBlockDefinition>();

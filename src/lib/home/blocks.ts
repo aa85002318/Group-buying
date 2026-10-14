@@ -47,6 +47,21 @@ export const SECTION_DEFAULTS: Record<
     viewAllUrl: "/shop",
   },
   custom_text: { title: "圖文區塊", displayCount: 1, visible: true, config: {} },
+  custom_categories: {
+    title: "分類列",
+    displayCount: 8,
+    visible: true,
+    viewAllUrl: "/shop",
+    config: { show_icons: true, show_all_tile: false },
+  },
+  custom_recipes: {
+    title: "食譜列",
+    displayCount: 3,
+    visible: true,
+    sourceMode: "manual",
+    viewAllUrl: "/recipes",
+  },
+  custom_spacer: { title: "空白間距", displayCount: 1, visible: true, config: { height: "normal" } },
   latest_campaigns: {
     title: "最新活動",
     displayCount: 6,
@@ -345,8 +360,14 @@ export function listOrderedHomeSections(
   blocks: HomepageBlock[] | null | undefined
 ): ResolvedHomeBlock[] {
   const byKey = new Map<HomeSectionKey, HomepageBlock>();
+  // Blocks editors added themselves (圖片 Banner、商品列、空白間距…）can repeat.
+  const custom: HomepageBlock[] = [];
   for (const row of blocks ?? []) {
     if (!isHomeSectionKey(row.block_key)) continue;
+    if (isCustomHomeBlockKey(row.block_key)) {
+      custom.push(row);
+      continue;
+    }
     if (!PRIMARY_HOME_SECTION_KEYS.includes(row.block_key)) continue;
     if (!byKey.has(row.block_key)) byKey.set(row.block_key, row);
   }
@@ -367,7 +388,15 @@ export function listOrderedHomeSections(
       : null;
   }).filter((b): b is ResolvedHomeBlock => Boolean(b));
 
-  return resolved.sort((a, b) => a.sortOrder - b.sortOrder);
+  const extras = custom
+    .map((row) => {
+      const r = resolveHomeBlockRow(row);
+      if (!r || !r.visible) return null;
+      return { ...r, sortOrder: Number(row.sort_order ?? 0) };
+    })
+    .filter((b): b is ResolvedHomeBlock => Boolean(b));
+
+  return [...resolved, ...extras].sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 export function warnUnknownHomeSection(key: string) {

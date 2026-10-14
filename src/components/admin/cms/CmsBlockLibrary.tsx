@@ -25,6 +25,8 @@ const CATEGORY_LABEL: Record<string, string> = {
 type Props = {
   pageId: string;
   allowedTypes?: string[];
+  /** Types already on the page: shown greyed with a reason instead of hidden. */
+  usedTypes?: string[];
   onAddBlock: (type: string) => void;
   disabled?: boolean;
 };
@@ -32,9 +34,11 @@ type Props = {
 export function CmsBlockLibrary({
   pageId,
   allowedTypes,
+  usedTypes,
   onAddBlock,
   disabled,
 }: Props) {
+  const used = new Set(usedTypes ?? []);
   const [q, setQ] = useState("");
   const groups = useMemo(() => {
     const byCat = listBlocksByCategory();
@@ -93,16 +97,19 @@ export function CmsBlockLibrary({
                   <li key={b.type}>
                     <button
                       type="button"
-                      disabled={disabled}
+                      disabled={disabled || used.has(b.type)}
+                      title={used.has(b.type) ? "這個區塊已經在頁面上了" : undefined}
                       onClick={() => onAddBlock(b.type)}
                       className={cn(
                         "flex w-full items-center justify-between rounded-[12px] border border-[#E7EAF0] bg-white px-3 py-2 text-left text-sm transition hover:border-[#FFE149] hover:bg-[#FFFDF6]",
-                        disabled && "cursor-not-allowed opacity-50"
+                        (disabled || used.has(b.type)) && "cursor-not-allowed opacity-50"
                       )}
                     >
                       <span>
                         <span className="block font-medium text-[#153E73]">{b.name}</span>
-                        {b.description ? (
+                        {used.has(b.type) ? (
+                          <span className="block text-[11px] text-[#8A94A6]">已在頁面上</span>
+                        ) : b.description ? (
                           <span className="block text-[11px] text-[#8A94A6]">
                             {b.description}
                           </span>
@@ -117,7 +124,9 @@ export function CmsBlockLibrary({
           ))
         )}
         <p className="text-[11px] text-[#8A94A6]">
-          已註冊 {CMS_BLOCK_REGISTRY.length} 種區塊（多數設定面板於後續階段開放）
+          {pageId === "home"
+            ? "標示「已在頁面上」的區塊每頁只能放一個；下方「可重複」的區塊想放幾個都可以。"
+            : `已註冊 ${CMS_BLOCK_REGISTRY.length} 種區塊（多數設定面板於後續階段開放）`}
         </p>
       </div>
       {!disabled ? (
@@ -126,7 +135,7 @@ export function CmsBlockLibrary({
             type="button"
             variant="outline"
             className="w-full"
-            onClick={() => onAddBlock("spacer")}
+            onClick={() => onAddBlock(pageId === "home" ? "custom_spacer" : "spacer")}
           >
             <Plus className="mr-1 h-4 w-4" />
             快速加入間距

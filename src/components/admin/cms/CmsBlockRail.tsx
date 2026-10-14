@@ -86,12 +86,13 @@ export function CmsBlockRail({
           <div className="max-h-52 overflow-hidden rounded-[12px] border border-[#E9EDF2]">
             <CmsBlockLibrary
               pageId={pageId}
-              allowedTypes={
+              allowedTypes={unified ? [...HOME_ADDABLE_BLOCK_TYPES] : undefined}
+              usedTypes={
                 unified
                   ? HOME_ADDABLE_BLOCK_TYPES.filter(
                       (t) =>
-                        HOME_REPEATABLE_BLOCK_TYPES.has(t) ||
-                        !blocks.some((b) => homeBlockKey(b) === t)
+                        !HOME_REPEATABLE_BLOCK_TYPES.has(t) &&
+                        blocks.some((b) => homeBlockKey(b) === t)
                     )
                   : undefined
               }
