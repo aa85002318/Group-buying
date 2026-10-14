@@ -359,44 +359,35 @@ export function resolveHomeBlock(
 export function listOrderedHomeSections(
   blocks: HomepageBlock[] | null | undefined
 ): ResolvedHomeBlock[] {
-  const byKey = new Map<HomeSectionKey, HomepageBlock>();
-  // Blocks editors added themselves (圖片 Banner、商品列、空白間距…）can repeat.
-  const custom: HomepageBlock[] = [];
+  // 後台清單上有幾個，前台就畫幾個。以前同一種 block_key 只留第一列，
+  // 所以在後台新增第二個（例如再加一個「一鍵買齊材料」）存了也永遠不會出現。
+  const seen = new Set<HomeSectionKey>();
+  const rows: ResolvedHomeBlock[] = [];
   for (const row of blocks ?? []) {
     if (!isHomeSectionKey(row.block_key)) continue;
-    if (isCustomHomeBlockKey(row.block_key)) {
-      custom.push(row);
+    const key = row.block_key;
+    if (!isCustomHomeBlockKey(key) && !PRIMARY_HOME_SECTION_KEYS.includes(key)) {
       continue;
     }
-    if (!PRIMARY_HOME_SECTION_KEYS.includes(row.block_key)) continue;
-    if (!byKey.has(row.block_key)) byKey.set(row.block_key, row);
+    seen.add(key);
+    const resolved = resolveHomeBlockRow(row);
+    if (!resolved || !resolved.visible) continue;
+    rows.push({
+      ...resolved,
+      sortOrder: Number(row.sort_order ?? HOME_SECTION_SORT_DEFAULT[key]),
+    });
   }
 
-  const resolved = PRIMARY_HOME_SECTION_KEYS.map((key) => {
-    const row = byKey.get(key);
-    if (row) {
-      const resolvedRow = resolveHomeBlockRow(row);
-      if (!resolvedRow || !resolvedRow.visible) return null;
-      return {
-        ...resolvedRow,
-        sortOrder: Number(row.sort_order ?? HOME_SECTION_SORT_DEFAULT[key]),
-      };
-    }
+  // 完全沒有這一列的核心區塊，用預設值補上，首頁才不會缺一塊。
+  for (const key of PRIMARY_HOME_SECTION_KEYS) {
+    if (seen.has(key)) continue;
     const fallback = resolveHomeBlock([], key);
-    return fallback.visible
-      ? { ...fallback, sortOrder: HOME_SECTION_SORT_DEFAULT[key] }
-      : null;
-  }).filter((b): b is ResolvedHomeBlock => Boolean(b));
+    if (fallback.visible) {
+      rows.push({ ...fallback, sortOrder: HOME_SECTION_SORT_DEFAULT[key] });
+    }
+  }
 
-  const extras = custom
-    .map((row) => {
-      const r = resolveHomeBlockRow(row);
-      if (!r || !r.visible) return null;
-      return { ...r, sortOrder: Number(row.sort_order ?? 0) };
-    })
-    .filter((b): b is ResolvedHomeBlock => Boolean(b));
-
-  return [...resolved, ...extras].sort((a, b) => a.sortOrder - b.sortOrder);
+  return rows.sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 export function warnUnknownHomeSection(key: string) {
@@ -566,8 +557,15 @@ export function listOrderedDesktopHomeSections(
   };
 
   if (v2) {
-    const rows = [...Array.from(byKey.values()), ...custom];
-    return rows
+    // 編輯器排好的順序就是前台順序，而且清單上有幾個就畫幾個
+    // （同一種區塊放兩個也要兩個都出現，不然新增了卻看不到）。
+    return (blocks ?? [])
+      .filter(
+        (row) =>
+          isHomeSectionKey(row.block_key) &&
+          (isCustomHomeBlockKey(row.block_key) ||
+            WEBSITE_HOME_SECTION_KEYS.includes(row.block_key))
+      )
       .map((row) => {
         const resolved = resolveHomeBlockRow(row);
         return withDesktop(row, resolved, Number(row.sort_order ?? 0), resolved?.visible ?? true);
@@ -598,6 +596,24 @@ export function listOrderedDesktopHomeSections(
     const item = withDesktop(isNew ? null : row, resolved, sort, row && !isNew ? resolved.visible : true);
     if (item) out.push(item);
   });
+  // 同一種區塊在後台放了第二個：接在它本尊後面，不要被吃掉。
+  const usedRowIds = new Set(Array.from(byKey.values()).map((r) => r.id));
+  (blocks ?? [])
+    .filter(
+      (row) =>
+        !usedRowIds.has(row.id) &&
+        isHomeSectionKey(row.block_key) &&
+        !isCustomHomeBlockKey(row.block_key) &&
+        WEBSITE_HOME_SECTION_KEYS.includes(row.block_key)
+    )
+    .sort((a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0))
+    .forEach((row, i) => {
+      const base =
+        (WEBSITE_HOME_SECTION_KEYS.indexOf(row.block_key as HomeSectionKey) + 1) * 10;
+      const item = withDesktop(row, resolveHomeBlockRow(row), base + 0.5 + i * 0.01, true);
+      if (item) out.push(item);
+    });
+
   // Custom blocks sit after 一鍵買齊材料 in their saved order.
   const anchor = (WEBSITE_HOME_SECTION_KEYS.indexOf("ingredient_shop") + 1) * 10;
   [...custom]
