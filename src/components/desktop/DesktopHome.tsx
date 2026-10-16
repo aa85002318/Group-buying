@@ -230,31 +230,50 @@ function SectionHeading({
   subtitle,
   href,
   linkLabel = "查看全部",
+  ctaStyle = "link",
 }: {
   title: string;
   subtitle?: string | null;
   href?: string | null;
   linkLabel?: string;
+  /** Match 「精選烘焙材料」: plain title, optional red pill CTA. */
+  ctaStyle?: "link" | "button";
 }) {
   return (
-    <div className="mb-3.5 flex items-start justify-between gap-3 md:mb-[18px]">
-      <div className="flex min-w-0 items-start gap-2">
-        <span className="mt-[5px] h-7 w-1.5 shrink-0 rounded-full bg-[#FFD454]" aria-hidden />
-        <div className="min-w-0">
-          <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">{title}</h2>
-          {subtitle ? (
-            <p className="mt-1.5 line-clamp-1 text-[13px] text-[#687386] md:text-sm">{subtitle}</p>
-          ) : null}
-        </div>
+    <div
+      className={cn(
+        "mb-3.5 flex gap-3 md:mb-[18px]",
+        ctaStyle === "button"
+          ? "flex-col sm:flex-row sm:items-end sm:justify-between"
+          : "items-start justify-between"
+      )}
+    >
+      <div className="min-w-0">
+        <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">{title}</h2>
+        {subtitle ? (
+          <p className="mt-1.5 line-clamp-2 text-[13px] text-[#687386] md:line-clamp-1 md:text-sm">
+            {subtitle}
+          </p>
+        ) : null}
       </div>
       {href ? (
-        <Link
-          href={href}
-          className="mt-1 inline-flex shrink-0 items-center gap-0.5 text-[14px] font-bold text-[#153E73] hover:text-[#F16458] md:mt-2"
-        >
-          {linkLabel}
-          <ChevronRight className="h-4 w-4" />
-        </Link>
+        ctaStyle === "button" ? (
+          <Link
+            href={href}
+            className="inline-flex h-11 w-fit shrink-0 items-center gap-1.5 rounded-full bg-[#F16458] px-5 text-sm font-bold text-white hover:brightness-95"
+          >
+            {linkLabel}
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        ) : (
+          <Link
+            href={href}
+            className="mt-1 inline-flex shrink-0 items-center gap-0.5 text-[14px] font-bold text-[#153E73] hover:text-[#F16458] md:mt-2"
+          >
+            {linkLabel}
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        )
       ) : null}
     </div>
   );
@@ -861,30 +880,22 @@ export function DesktopHome() {
             {afterRecipes && hint ? (
               <p className="mb-4 text-center text-[15px] font-bold text-[#153E73] md:mb-6 md:text-[17px]">{hint}</p>
             ) : null}
-            <div className="rounded-[16px] border border-[#F3E9C6] bg-[#FFF5CC]/60 p-4 md:rounded-[20px] md:p-6 lg:p-8">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between md:mb-6">
-                <div className="min-w-0">
-                  <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">
-                    {section.title || "一鍵買齊材料"}
-                  </h2>
-                  <p className="mt-1.5 text-[13px] text-[#687386] md:text-sm">{subtitle}</p>
-                </div>
-                <Link
-                  href={section.viewAllUrl || APP_ROUTES.shop}
-                  className="inline-flex h-11 w-fit shrink-0 items-center gap-1.5 rounded-full bg-[#F16458] px-5 text-sm font-bold text-white hover:brightness-95"
-                >
-                  全部商品
-                  <ArrowRight className="h-4 w-4" aria-hidden />
-                </Link>
-              </div>
-              {list.length ? (
+            <SectionHeading
+              title={section.title || "精選烘焙材料"}
+              subtitle={subtitle}
+              href={section.viewAllUrl || APP_ROUTES.shop}
+              linkLabel="全部商品"
+              ctaStyle="button"
+            />
+            {list.length ? (
+              <div className="rounded-[16px] border border-[#F3E9C6] bg-[#FFF5CC]/60 p-4 md:rounded-[20px] md:p-6 lg:p-8">
                 <CardGrid layout="products">
                   {list.map((p) => (
                     <ProductTile key={p.id} p={p} />
                   ))}
                 </CardGrid>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </Band>
         );
       }
@@ -1204,7 +1215,7 @@ export function DesktopHome() {
             {heading || caption || (buttonText && href) ? (
               <div className="mt-3 space-y-1.5 md:mt-4">
                 {heading ? (
-                  <h2 className="text-[20px] font-bold text-[#153E73] md:text-[24px]">{heading}</h2>
+                  <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">{heading}</h2>
                 ) : null}
                 {caption ? (
                   <p className="whitespace-pre-line text-sm text-[#687386] md:text-[15px]">{caption}</p>
@@ -1239,7 +1250,9 @@ export function DesktopHome() {
                 </div>
               ) : null}
               <div className={cn("flex flex-col justify-center gap-3", img && "p-6 md:p-8")}>
-                {section.title ? <h2 className="text-2xl font-black text-[#153E73]">{section.title}</h2> : null}
+                {section.title ? (
+                  <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">{section.title}</h2>
+                ) : null}
                 {section.subtitle ? <p className="text-sm font-semibold text-[#4A5B78]">{section.subtitle}</p> : null}
                 {body ? <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#465467]">{body}</p> : null}
                 {btn && href ? (
