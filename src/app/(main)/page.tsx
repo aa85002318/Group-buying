@@ -50,6 +50,7 @@ import {
   type ResolvedHomeBlock,
 } from "@/lib/home/blocks";
 import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
+import { sharedJson } from "@/lib/home/shared-fetch";
 import {
   CREAM_ZONE_KEYS,
   isCustomBannerHeading,
@@ -807,18 +808,17 @@ function HomePageMobile() {
       typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).get("preview") === "draft";
     setDraftPreview(preview);
-    const r = await fetch(preview ? "/api/cms?preview=draft" : "/api/cms", {
-      credentials: "include",
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error ?? "首頁設定載入失敗");
+    const d = await sharedJson<{ blocks?: HomepageBlock[]; error?: string }>(
+      preview ? "/api/cms?preview=draft" : "/api/cms",
+      { credentials: "include" }
+    );
+    if (d.error) throw new Error(d.error);
     return d.blocks ?? [];
   });
 
   const productsLoad = useIndependentLoad<Product[]>(mockProducts, async () => {
-    const r = await fetch("/api/products");
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error ?? "商品載入失敗");
+    const d = await sharedJson<{ products?: Product[]; error?: string }>("/api/products");
+    if (d.error) throw new Error(d.error);
     return d.products?.length ? d.products : mockProducts;
   });
 
@@ -834,9 +834,8 @@ function HomePageMobile() {
   );
 
   const recipesLoad = useIndependentLoad<RecipeSummary[]>([], async () => {
-    const r = await fetch("/api/recipes");
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error ?? "食譜載入失敗");
+    const d = await sharedJson<{ recipes?: RecipeSummary[]; error?: string }>("/api/recipes");
+    if (d.error) throw new Error(d.error);
     return d.recipes ?? [];
   });
 
@@ -848,9 +847,8 @@ function HomePageMobile() {
   });
 
   const articlesLoad = useIndependentLoad<Article[]>([], async () => {
-    const r = await fetch("/api/articles");
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error ?? "文章載入失敗");
+    const d = await sharedJson<{ articles?: Article[]; error?: string }>("/api/articles");
+    if (d.error) throw new Error(d.error);
     return d.articles ?? [];
   });
 
@@ -862,8 +860,7 @@ function HomePageMobile() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/home-layout-settings")
-      .then((r) => (r.ok ? r.json() : null))
+    sharedJson<{ settings?: unknown }>("/api/home-layout-settings")
       .then((d) => {
         if (!cancelled && d?.settings) setMobileSpacing(normalizeHomeLayoutSettings(d.settings));
       })

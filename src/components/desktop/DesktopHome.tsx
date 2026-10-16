@@ -21,6 +21,7 @@ import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { DESKTOP_HERO_FALLBACK, DESKTOP_IP_ANGEL_PNG as DESKTOP_IP_ANGEL } from "@/lib/desktop/brand-assets";
 import { listOrderedDesktopHomeSections } from "@/lib/home/blocks";
 import { isCustomBannerHeading } from "@/lib/home/section-keys";
+import { sharedJson } from "@/lib/home/shared-fetch";
 import {
   articleHref,
   parseFeaturedArticleSettings,
@@ -362,18 +363,20 @@ export function DesktopHome() {
       typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).get("preview") === "draft";
     setDraftPreview(previewDraft);
-    const safe = (p: Promise<Response>) => p.then((r) => r.json()).catch(() => ({}));
+    // 和 App 版共用同一份結果，換版型時不會再把同一支 API 叫第二次。
+    const safe = (url: string) =>
+      sharedJson<Record<string, unknown>>(url, { credentials: "include" });
     Promise.all([
-      safe(fetch(previewDraft ? "/api/cms?preview=draft" : "/api/cms", { credentials: "include" })),
-      safe(fetch("/api/products")),
-      safe(fetch("/api/recipes")),
-      safe(fetch("/api/stores?channel=website")),
-      safe(fetch("/api/shop/popular-products?limit=12")),
-      safe(fetch("/api/shop/new-products?limit=12")),
-      safe(fetch("/api/shop/home-categories")),
-      safe(fetch("/api/home-layout-settings")),
-      safe(fetch("/api/categories")),
-      safe(fetch("/api/articles")),
+      safe(previewDraft ? "/api/cms?preview=draft" : "/api/cms"),
+      safe("/api/products"),
+      safe("/api/recipes"),
+      safe("/api/stores?channel=website"),
+      safe("/api/shop/popular-products?limit=12"),
+      safe("/api/shop/new-products?limit=12"),
+      safe("/api/shop/home-categories"),
+      safe("/api/home-layout-settings"),
+      safe("/api/categories"),
+      safe("/api/articles"),
     ]).then(([cms, prod, rec, stores, pop, neu, cats, layoutSettings, allCats, arts]) => {
       if (cancelled) return;
       setSections(listOrderedDesktopHomeSections((cms.blocks as HomepageBlock[]) ?? []));

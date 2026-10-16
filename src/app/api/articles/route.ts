@@ -19,5 +19,8 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ articles: data });
+  return NextResponse.json(
+    { articles: data },
+    { headers: { "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=60" } }
+  );
 }

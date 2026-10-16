@@ -13,6 +13,21 @@ function isBannerLive(b: CmsBanner, now: Date): boolean {
   return true;
 }
 
+/** 排程檢查的節流：同一個 serverless 執行個體一分鐘最多跑一次。 */
+const DUE_SCHEDULE_INTERVAL_MS = 60_000;
+let lastDueScheduleRun = 0;
+function shouldRunDueSchedules(): boolean {
+  const now = Date.now();
+  if (now - lastDueScheduleRun < DUE_SCHEDULE_INTERVAL_MS) return false;
+  lastDueScheduleRun = now;
+  return true;
+}
+
+/** 公開內容放 CDN 快取：同一份內容一分鐘內的重複請求不用再回來打資料庫。 */
+const PUBLIC_CACHE = {
+  "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=60",
+};
+
 /** Public CMS: banners, homepage blocks, pages, store announcements */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -33,8 +48,10 @@ export async function GET(request: Request) {
   const supabase = await createClient();
   const admin = createAdminClient();
 
-  // Auto-apply due scheduled CMS (home + group-buy) before serving live
-  if (preview !== "draft") {
+  // Auto-apply due scheduled CMS (home + group-buy) before serving live.
+  // 以前每一次有人開首頁都會跑一次（三組排程各查一次資料庫），首頁最慢的
+  // 就是這支 API。改成同一個執行個體最多一分鐘跑一次。
+  if (preview !== "draft" && shouldRunDueSchedules()) {
     try {
       await publishAllDueCmsSchedules();
     } catch {
@@ -105,9 +122,12 @@ export async function GET(request: Request) {
   const now = new Date();
   const banners = ((bannersRes.data ?? []) as CmsBanner[]).filter((b) => isBannerLive(b, now));
 
-  return NextResponse.json({
-    banners,
-    blocks: blocks.data ?? [],
-    announcements: announcements.data ?? [],
-  });
+  return NextResponse.json(
+    {
+      banners,
+      blocks: blocks.data ?? [],
+      announcements: announcements.data ?? [],
+    },
+    { headers: PUBLIC_CACHE }
+  );
 }
