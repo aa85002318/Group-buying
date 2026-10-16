@@ -8,6 +8,10 @@ import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 import {
   CmsHrefField,
 } from "@/components/admin/home/CmsLinkPicker";
+import {
+  parseFeaturedArticleSettings,
+  type FeaturedArticleSettings,
+} from "@/lib/home/featured-articles";
 import { LatestCampaignEditor } from "@/components/admin/home/LatestCampaignEditor";
 import { QuickServicesEditor } from "@/components/admin/home/QuickServicesEditor";
 import { RecipePickerEditor } from "@/components/admin/home/RecipePickerEditor";
@@ -201,6 +205,76 @@ function Note({ children }: { children: React.ReactNode }) {
   return <p className="rounded-lg bg-[#FFF5CC] px-2.5 py-2 text-[11px] leading-relaxed text-[#153E73]">{children}</p>;
 }
 
+/** 精選活動：挑一個文章分類，或只顯示勾了「精選」的文章。 */
+function FeaturedArticlesEditor({
+  value,
+  onChange,
+  readOnly,
+}: {
+  value: FeaturedArticleSettings;
+  onChange: (next: FeaturedArticleSettings) => void;
+  readOnly?: boolean;
+}) {
+  const [cats, setCats] = useState<string[]>([]);
+  const [count, setCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let dead = false;
+    fetch("/api/articles")
+      .then((r) => r.json())
+      .then((d) => {
+        if (dead) return;
+        const list = (d.articles ?? []) as Array<Record<string, unknown>>;
+        setCount(list.length);
+        const names = new Set<string>();
+        for (const a of list) {
+          const c = a.article_categories as { name?: string } | null;
+          if (c?.name) names.add(c.name);
+        }
+        setCats(Array.from(names));
+      })
+      .catch(() => {});
+    return () => {
+      dead = true;
+    };
+  }, []);
+
+  return (
+    <div className="space-y-2">
+      <Field label="要顯示哪一個分類的文章" hint="留「全部文章」就會顯示所有已發布的文章。">
+        <select
+          className="input-field w-full"
+          value={value.category}
+          disabled={readOnly}
+          onChange={(e) => onChange({ ...value, category: e.target.value })}
+        >
+          <option value="">全部文章</option>
+          {cats.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+          {value.category && !cats.includes(value.category) ? (
+            <option value={value.category}>{value.category}</option>
+          ) : null}
+        </select>
+      </Field>
+      <label className="flex items-center gap-2 text-xs text-[#153E73]">
+        <input
+          type="checkbox"
+          checked={value.onlyFeatured}
+          disabled={readOnly}
+          onChange={(e) => onChange({ ...value, onlyFeatured: e.target.checked })}
+        />
+        只顯示在文章裡勾選「精選」的那幾篇
+      </label>
+      {count !== null ? (
+        <p className="text-[11px] text-[#8A94A6]">目前已發布的文章共 {count} 篇。</p>
+      ) : null}
+    </div>
+  );
+}
+
 const HOME_HERO_SPEC = {
   desktop: { width: 1920, height: 1080, ratio: "16:9", aspect: "video" as const, aspectClass: "aspect-video" },
   mobile: { ...PAGE_HERO_SIZE.mobile, aspect: "photo32" as const, aspectClass: "aspect-[3/2]" },
@@ -274,6 +348,26 @@ export function HomeBlockContentEditor({
             <LatestCampaignEditor
               value={parseLatestCampaignSettings(cfg)}
               onChange={(next) => setConfig(block, onChange, { ...next })}
+            />
+          </>
+        );
+      case "featured_articles":
+        return (
+          <>
+            <Note>
+              這一區顯示後台「文章管理」裡的活動文章。新增一篇活動文章、上傳封面圖並設為發布，
+              就會自動出現在這裡，不用再回來設定。
+            </Note>
+            {viewAll}
+            <FeaturedArticlesEditor
+              value={parseFeaturedArticleSettings(cfg)}
+              readOnly={readOnly}
+              onChange={(next) =>
+                setConfig(block, onChange, {
+                  article_category: next.category,
+                  only_featured: next.onlyFeatured,
+                })
+              }
             />
           </>
         );

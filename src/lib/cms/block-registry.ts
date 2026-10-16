@@ -225,6 +225,10 @@ export const CMS_BLOCK_REGISTRY: CmsBlockDefinition[] = [
     description: "在兩個區塊之間留一段空白",
   }),
   def("hero", "主視覺 Banner", "nav", { allowedPageIds: ["home"] }),
+  def("featured_articles", "精選活動（活動文章輪播）", "service", {
+    allowedPageIds: ["home"],
+    description: "把後台「文章管理」的活動文章排成輪播",
+  }),
   def("latest_campaigns", "最新活動", "nav", { allowedPageIds: ["home"] }),
   def("quick_entry", "常用服務", "nav", { allowedPageIds: ["home"] }),
   def("latest_recipes", "精選食譜", "recipe", { allowedPageIds: ["home"] }),
@@ -242,6 +246,7 @@ export const CMS_BLOCK_REGISTRY: CmsBlockDefinition[] = [
 /** Blocks the unified home editor may add (others are fixed by the app). */
 export const HOME_ADDABLE_BLOCK_TYPES = [
   "custom_banner",
+  "featured_articles",
   "custom_products",
   "custom_text",
   "custom_categories",

@@ -208,6 +208,51 @@ export async function POST(request: Request) {
       return NextResponse.json({ draft: nextDraft });
     }
 
+    // 2026-10 排版：網頁版與手機版同一份順序。publish=true 直接上線。
+    if (action === "apply_home_layout_202610") {
+      const { loadLiveBlocks } = await import("@/lib/home/layout-versions");
+      const { buildHomeLayout202610 } = await import("@/lib/home/blocks");
+      const draft = await getDraft();
+      const live = await loadLiveBlocks();
+      // 以線上為底、再疊上草稿，兩邊的區塊和內容都不會掉。
+      const merged = new Map<string, HomepageBlock>();
+      for (const b of live) merged.set(b.id, b);
+      for (const b of draft.blocks_snapshot ?? []) merged.set(b.id, b);
+      const next = buildHomeLayout202610(Array.from(merged.values()));
+      const nextDraft = await saveDraft(next, {
+        label: "2026/10 首頁排版",
+        note: "網頁版與手機版同一份順序（保留原有內容）",
+        updatedBy: auth!.profile.id,
+      });
+      await logAudit(
+        auth!.profile.id,
+        "update",
+        "homepage_layout_draft",
+        nextDraft.id,
+        null,
+        { action: "apply_home_layout_202610", block_count: next.length },
+        request as never
+      );
+      if (body.publish === true) {
+        const result = await publishDraft({
+          label: "發布 2026/10 首頁排版",
+          note: "網頁版與手機版同一份順序",
+          publishedBy: auth!.profile.id,
+        });
+        await logAudit(
+          auth!.profile.id,
+          "publish",
+          "homepage_layout",
+          result.published.id,
+          null,
+          { action: "apply_home_layout_202610" },
+          request as never
+        );
+        return NextResponse.json(result);
+      }
+      return NextResponse.json({ draft: nextDraft });
+    }
+
     if (action === "reset_draft_from_live") {
       const { loadLiveBlocks } = await import("@/lib/home/layout-versions");
       const live = await loadLiveBlocks();

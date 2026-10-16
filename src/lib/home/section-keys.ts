@@ -33,6 +33,7 @@ export type HomeSectionKey =
   | "ingredient_shop"
   | "quick_entry"
   | "group_buy_banner"
+  | "featured_articles"
   // Free-form blocks editors can add any number of times (CMS step ③).
   | "custom_banner"
   | "custom_products"
@@ -86,6 +87,7 @@ export const HOME_SECTION_KEYS: HomeSectionKey[] = [
   "latest_videos",
   "trust_services",
   "brand_statement",
+  "featured_articles",
   "quick_menu",
   "ai_assistant",
   "baking_inspiration",
@@ -165,6 +167,7 @@ export const HOME_SECTION_SORT_DEFAULT: Record<HomeSectionKey, number> = {
   monthly_challenge: 280,
   seasonal_themes: 290,
   store_information: 300,
+  featured_articles: 125,
   custom_banner: 400,
   custom_products: 410,
   custom_text: 420,
@@ -201,6 +204,7 @@ export const WEBSITE_HOME_SECTION_KEYS: HomeSectionKey[] = [
   "store_information",
   "service_shortcuts",
   "quick_entry",
+  "featured_articles",
   "group_buy_banner",
   "weekly_group_buys",
   "closing_group_buys",
@@ -228,6 +232,7 @@ export const WEBSITE_HOME_OFF_BY_DEFAULT = new Set<string>(["quick_entry"]);
 
 /** Titles used when a website block is created for the first time. */
 export const WEBSITE_HOME_TITLES: Partial<Record<HomeSectionKey, string>> = {
+  featured_articles: "精選活動",
   hot_searches: "搜尋列與熱門搜尋",
   popular_categories: "商品分類",
   popular_baking_products: "熱門商品",

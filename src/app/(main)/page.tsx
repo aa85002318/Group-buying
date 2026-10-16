@@ -53,9 +53,13 @@ import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
 import {
   CREAM_ZONE_KEYS,
   isCustomBannerHeading,
-  isCustomHomeBlockKey,
-  type HomeSectionKey,
 } from "@/lib/home/section-keys";
+import {
+  articleHref,
+  parseFeaturedArticleSettings,
+  pickFeaturedArticles,
+  type ArticleLike,
+} from "@/lib/home/featured-articles";
 import {
   DEFAULT_HOME_LAYOUT_SETTINGS,
   MOBILE_SPACING_CLASS,
@@ -194,6 +198,56 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
     }
     case "quick_entry":
       return <HomeQuickServicesSection key={reactKey} />;
+    /* 精選活動：後台「文章管理」的活動文章，輪播顯示 */
+    case "featured_articles": {
+      const picked = pickFeaturedArticles(
+        ctx.articles as ArticleLike[],
+        parseFeaturedArticleSettings(block.config),
+        block.displayCount || 6
+      );
+      if (!picked.length) return null;
+      return (
+        <section key={reactKey} className="space-y-3 px-4 py-2">
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="text-lg font-black text-[#153E73]">
+              {block.title || "精選活動"}
+            </h2>
+            <Link
+              href={block.viewAllUrl || "/articles"}
+              className="text-sm font-semibold text-[#153E73]"
+            >
+              所有活動
+            </Link>
+          </div>
+          <div className="scrollbar-hide -mx-4 flex gap-3 overflow-x-auto px-4">
+            {picked.map((a) => (
+              <Link
+                key={a.id}
+                href={articleHref(a)}
+                className="w-[78%] shrink-0 overflow-hidden rounded-2xl bg-white"
+              >
+                {a.cover_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={a.cover_image}
+                    alt=""
+                    className="aspect-[5/2] w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className="block aspect-[5/2] w-full bg-[#EEF8FC]" />
+                )}
+                <span className="block p-2.5">
+                  <span className="line-clamp-2 block text-[13px] font-semibold text-[#153E73]">
+                    {a.title}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      );
+    }
     case "latest_recipes":
       return (
         <WeeklyPopularRecipesSection
@@ -284,7 +338,8 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
         />
       );
     case "weekly_new_products": {
-      const baking = filterProductsByScope(ctx.products, "baking");
+      const scoped = filterProductsByScope(ctx.products, "baking");
+      const baking = scoped.length ? scoped : ctx.products;
       const newDays = Math.max(1, Number(block.config?.new_days ?? 7) || 7);
       const mode =
         block.dataSource === "mixed"
@@ -292,10 +347,18 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
           : block.sourceMode === "manual" && block.manualIds.length > 0
             ? "mixed"
             : "auto";
+      // 這段時間內沒有新上架的商品時，就照上架時間新到舊自動帶，
+      // 不然「本月新品」會整塊空掉。
+      const recent = getRecentProducts(baking, newDays);
+      const newest = recent.length
+        ? recent
+        : [...baking].sort((a, b) =>
+            String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))
+          );
       const products = pickHomeProducts({
         products: baking,
         manualIds: block.manualIds,
-        autoList: getRecentProducts(baking, newDays),
+        autoList: newest,
         mode,
         limit: block.displayCount,
       });
@@ -816,13 +879,11 @@ function HomePageMobile() {
     }
   }, [blocks]);
 
-  const creamKeys = new Set<HomeSectionKey>(CREAM_ZONE_KEYS);
-  // 後台「手機版」版面：可單獨隱藏區塊、單獨設定間距。
-  // 編輯器自己新增的區塊（圖片 Banner、圖文、商品列、分類列、食譜列、空白間距）
-  // 不在固定清單裡，但手機版也要顯示。
-  const creamSections = ordered
-    .filter((b) => creamKeys.has(b.key) || isCustomHomeBlockKey(b.key))
-    .filter((b) => blockVisibleOn({ is_visible: b.visible, config: b.config }, "mobile", b.visible));
+  // 手機版和網站版用同一份排版：後台清單上有什麼就畫什麼，順序也一樣。
+  // 只有「在手機版隱藏」的區塊會被濾掉；畫不出來的區塊 renderer 自己回 null。
+  const creamSections = ordered.filter((b) =>
+    blockVisibleOn({ is_visible: b.visible, config: b.config }, "mobile", b.visible)
+  );
 
   const ctx: HomeDataCtx = {
     blocks,

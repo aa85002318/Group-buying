@@ -22,6 +22,12 @@ import { DESKTOP_HERO_FALLBACK, DESKTOP_IP_ANGEL_PNG as DESKTOP_IP_ANGEL } from 
 import { listOrderedDesktopHomeSections } from "@/lib/home/blocks";
 import { isCustomBannerHeading } from "@/lib/home/section-keys";
 import {
+  articleHref,
+  parseFeaturedArticleSettings,
+  pickFeaturedArticles,
+  type ArticleLike,
+} from "@/lib/home/featured-articles";
+import {
   DEFAULT_HOME_LAYOUT_SETTINGS,
   DESKTOP_SPACING_CLASS,
   normalizeHomeLayoutSettings,
@@ -347,6 +353,7 @@ export function DesktopHome() {
   const [draftPreview, setDraftPreview] = useState(false);
   const [layout, setLayout] = useState<HomeLayoutSettings>(DEFAULT_HOME_LAYOUT_SETTINGS);
   const [allCategories, setAllCategories] = useState<AdminCategory[]>([]);
+  const [articles, setArticles] = useState<ArticleLike[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -366,7 +373,8 @@ export function DesktopHome() {
       safe(fetch("/api/shop/home-categories")),
       safe(fetch("/api/home-layout-settings")),
       safe(fetch("/api/categories")),
-    ]).then(([cms, prod, rec, stores, pop, neu, cats, layoutSettings, allCats]) => {
+      safe(fetch("/api/articles")),
+    ]).then(([cms, prod, rec, stores, pop, neu, cats, layoutSettings, allCats, arts]) => {
       if (cancelled) return;
       setSections(listOrderedDesktopHomeSections((cms.blocks as HomepageBlock[]) ?? []));
       setLayout(
@@ -380,6 +388,7 @@ export function DesktopHome() {
       setPopular((pop.products as Product[]) ?? []);
       setFresh((neu.products as Product[]) ?? []);
       setAllCategories(((allCats?.categories ?? []) as AdminCategory[]) ?? []);
+      setArticles(((arts?.articles ?? []) as ArticleLike[]) ?? []);
       setCategories(
         ((cats.categories as HomeCategory[]) ?? []).filter((c) => c.name && c.name !== "全部分類")
       );
@@ -390,6 +399,13 @@ export function DesktopHome() {
       cancelled = true;
     };
   }, []);
+
+  /** 「本月新品」沒有勾選任何新品時，就照上架時間新到舊自動帶。 */
+  const newestProducts = useMemo(() => {
+    const at = (p: Product) =>
+      String((p as Product & { created_at?: string | null }).created_at ?? "");
+    return [...products].sort((a, b) => at(b).localeCompare(at(a)));
+  }, [products]);
 
   const heroBanners = useMemo(() => {
     const active = banners.filter((b) => b.is_active !== false && bannerImage(b));
@@ -661,6 +677,59 @@ export function DesktopHome() {
         );
       }
 
+      /* 精選活動：後台「文章管理」的活動文章，輪播顯示 */
+      case "featured_articles": {
+        const picked = pickFeaturedArticles(
+          articles,
+          parseFeaturedArticleSettings(cfg),
+          section.displayCount || 6
+        );
+        if (!picked.length) return null;
+        const perRow = Math.min(3, cols ?? 3);
+        return (
+          <Band key={section.id} tone={tone} label={section.title}>
+            <SectionHeading
+              title={section.title || "精選活動"}
+              subtitle={section.subtitle}
+              href={section.viewAllUrl || "/articles"}
+              linkLabel="所有活動"
+            />
+            <div
+              className={cn(
+                "scrollbar-hide -mx-4 flex scroll-px-4 snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:-mx-6 sm:scroll-px-6 sm:px-6 md:gap-5 lg:gap-6",
+                "md:mx-0 md:grid md:overflow-visible md:px-0",
+                perRow === 3 ? "md:grid-cols-2 lg:grid-cols-3" : perRow === 1 ? "md:grid-cols-1" : "md:grid-cols-2"
+              )}
+            >
+              {picked.map((a) => (
+                <Link
+                  key={a.id}
+                  href={articleHref(a)}
+                  className="group block w-[86%] shrink-0 snap-start overflow-hidden rounded-[14px] bg-white md:w-auto md:rounded-[18px]"
+                >
+                  <span className="relative block aspect-[5/2] w-full overflow-hidden bg-[#EEF8FC]">
+                    {a.cover_image ? (
+                      <Image
+                        src={a.cover_image}
+                        alt={a.title ?? ""}
+                        fill
+                        className="object-cover transition duration-300 group-hover:scale-[1.02]"
+                        sizes="(min-width:768px) 33vw, 86vw"
+                      />
+                    ) : null}
+                  </span>
+                  <span className="block px-3 py-2.5 md:px-4 md:py-3">
+                    <span className="line-clamp-2 block text-[15px] font-bold leading-snug text-[#153E73] md:text-base">
+                      {a.title}
+                    </span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </Band>
+        );
+      }
+
       /* 熱門商品 / 新品上架 / 精選商品 */
       case "popular_baking_products":
       case "weekly_new_products":
@@ -676,7 +745,9 @@ export function DesktopHome() {
             : section.key === "weekly_new_products"
               ? fresh.length
                 ? fresh
-                : products.filter((p) => p.is_new)
+                : products.filter((p) => p.is_new).length
+                  ? products.filter((p) => p.is_new)
+                  : newestProducts
               : [];
         const source = section.key === "custom_products" || (section.sourceMode === "manual" && manual.length) ? manual : auto;
         const list = source.slice(0, Math.max(HOME_PRODUCT_COUNT, section.displayCount || 0));

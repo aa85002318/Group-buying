@@ -280,6 +280,14 @@ export const SECTION_DEFAULTS: Record<
     visible: false,
     viewAllUrl: "/articles",
   },
+  // 精選活動：後台「文章管理」新增的活動文章，用輪播圖顯示在首頁。
+  featured_articles: {
+    title: "精選活動",
+    displayCount: 6,
+    visible: true,
+    viewAllUrl: "/articles",
+    config: { article_category: "", only_featured: false },
+  },
 };
 
 export type ResolvedHomeBlock = {
@@ -669,4 +677,82 @@ export function buildWebsiteHomeLayout(existing: HomepageBlock[] | null | undefi
   }
   const now = new Date().toISOString();
   return ordered.map((row, i) => ({ ...row, sort_order: (i + 1) * 10, updated_at: now }));
+}
+
+/* ------------------------------------------------------------------ */
+/* 2026-10 首頁排版：網頁版與手機版用同一份順序。                      */
+/* ------------------------------------------------------------------ */
+
+/** 這份排版要顯示的區塊，由上到下。 */
+export const HOME_LAYOUT_2026_10: Array<{ key: HomeSectionKey; title?: string }> = [
+  { key: "hero", title: "主視覺 Banner" },
+  { key: "hot_searches", title: "搜尋" },
+  { key: "latest_campaigns", title: "最新活動" },
+  { key: "quick_entry", title: "常用服務" },
+  { key: "featured_articles", title: "精選活動" },
+  { key: "latest_recipes", title: "精選食譜" },
+  { key: "ingredient_shop", title: "精選烘焙材料" },
+  { key: "weekly_new_products", title: "本月新品" },
+  { key: "service_shortcuts", title: "快捷服務入口" },
+  { key: "ai_assistant", title: "AI 烘焙小幫手" },
+  { key: "store_information", title: "門市資訊與企業採購" },
+];
+
+/**
+ * 套用上面那份排版：
+ * - 清單裡的區塊照順序排好、改成指定標題、兩個版本都打開
+ * - 其餘現有區塊保留資料，但兩個版本都隱藏（排在後面）
+ * - 編輯器自己加的 custom_* 區塊一律保留，接在清單後面
+ */
+export function buildHomeLayout202610(
+  existing: HomepageBlock[] | null | undefined
+): HomepageBlock[] {
+  const rows = [...(existing ?? [])];
+  const wanted = new Set(HOME_LAYOUT_2026_10.map((x) => x.key));
+  const usedIds = new Set<string>();
+  const ordered: HomepageBlock[] = [];
+
+  HOME_LAYOUT_2026_10.forEach((item, index) => {
+    const found = rows.find((r) => r.block_key === item.key && !usedIds.has(r.id));
+    const row: HomepageBlock = found ? { ...found } : createBlockInstance(item.key);
+    if (found) usedIds.add(found.id);
+    const cfg = { ...((row.config ?? {}) as Record<string, unknown>) };
+    cfg.website_layout = 2; // 標記成新版排版，前台就照編輯器順序畫
+    cfg.desktop_visible = true;
+    cfg.mobile_visible = true;
+    row.config = cfg;
+    row.is_visible = true;
+    if (item.title) row.title = item.title;
+    row.sort_order = (index + 1) * 10;
+    // 「本月新品」自動依上架順序帶，不要卡在手動挑選
+    if (item.key === "weekly_new_products") {
+      row.source_mode = "auto";
+      row.manual_ids = [];
+      row.view_all_url = row.view_all_url || "/shop/new-arrivals";
+    }
+    ordered.push(row);
+  });
+
+  // 其餘區塊：資料留著，但前台兩邊都不顯示。
+  let tail = HOME_LAYOUT_2026_10.length * 10;
+  for (const row of rows) {
+    if (usedIds.has(row.id)) continue;
+    const isCustom = isCustomHomeBlockKey(row.block_key);
+    if (!isCustom && wanted.has(row.block_key as HomeSectionKey)) continue; // 同類型的重複列
+    tail += 10;
+    const cfg = { ...((row.config ?? {}) as Record<string, unknown>) };
+    if (!isCustom) {
+      cfg.desktop_visible = false;
+      cfg.mobile_visible = false;
+    }
+    ordered.push({
+      ...row,
+      config: cfg,
+      is_visible: isCustom ? row.is_visible : false,
+      sort_order: tail,
+    });
+  }
+
+  const now = new Date().toISOString();
+  return ordered.map((row) => ({ ...row, updated_at: now }));
 }
