@@ -12,6 +12,7 @@ import { QuickServicesHeader } from "@/components/home/QuickServicesHeader";
 import { QuickServicesCarousel } from "@/components/home/QuickServicesCarousel";
 import { MemberCenterCard } from "@/components/home/MemberCenterCard";
 import { HomeMemberPromoBanner } from "@/components/home/HomeMemberPromoBanner";
+import { sharedJson } from "@/lib/home/shared-fetch";
 
 /** Homepage common services — circular icons carousel + member center. */
 export function HomeQuickServicesSection() {
@@ -23,9 +24,10 @@ export function HomeQuickServicesSection() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/cms", { credentials: "include" });
-        const json = await res.json().catch(() => ({}));
-        if (cancelled || !res.ok) return;
+        const json = await sharedJson<{ blocks?: unknown }>("/api/cms", {
+          credentials: "include",
+        });
+        if (cancelled) return;
         const blocks = (json.blocks ?? []) as HomepageBlock[];
         const block = resolveHomeBlock(blocks, "quick_entry");
         const cfg = parseQuickServicesSettings(block.config);

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { sharedJson } from "@/lib/home/shared-fetch";
 
 type Announcement = {
   id: string;
@@ -14,9 +15,8 @@ export function StoreAnnouncementsSection() {
   const [items, setItems] = useState<Announcement[]>([]);
 
   useEffect(() => {
-    fetch("/api/cms")
-      .then((r) => r.json())
-      .then((d) => setItems(d.announcements ?? []))
+    sharedJson<{ announcements?: unknown[] }>("/api/cms")
+      .then((d) => setItems((d.announcements ?? []) as never))
       .catch(() => {});
   }, []);
 

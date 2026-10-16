@@ -65,6 +65,7 @@ import {
   GROUP_BUY_CONSUMER_VISIBLE,
 } from "@/lib/features/group-buy-visibility";
 import type { ProductCategory } from "@/lib/types/database";
+import { sharedJson } from "@/lib/home/shared-fetch";
 
 function BrandLockup({ className }: { className?: string }) {
   return (
@@ -809,8 +810,7 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/categories")
-      .then((response) => response.json())
+    sharedJson<{ categories?: unknown }>("/api/categories")
       .then((data) => {
         if (Array.isArray(data?.categories)) setMenuCategories(data.categories);
       })

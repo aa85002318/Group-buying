@@ -6,6 +6,7 @@ import { APP_ROUTES } from "@/lib/site-links";
 import { cn } from "@/lib/utils";
 import { externalLinkProps, isSafeLinkUrl } from "@/lib/cms/safeHtml";
 import type { CmsBanner } from "@/lib/types/database";
+import { sharedJson } from "@/lib/home/shared-fetch";
 
 type Slide = {
   id: string;
@@ -134,8 +135,7 @@ export function HomeHero({ className }: { className?: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/cms?placement=home_hero")
-      .then((r) => r.json())
+    sharedJson<{ banners?: unknown[] }>("/api/cms?placement=home_hero")
       .then((d) => {
         if (cancelled) return;
         const list = (d.banners ?? []) as CmsBanner[];

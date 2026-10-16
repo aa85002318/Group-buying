@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Headphones, ShieldCheck, Store, Truck } from "lucide-react";
 import type { HomepageBlock } from "@/lib/types/database";
 import { resolveHomeBlock, type ResolvedHomeBlock } from "@/lib/home/blocks";
+import { sharedJson } from "@/lib/home/shared-fetch";
 import {
   DEFAULT_SERVICE_SHORTCUTS,
   parseServiceShortcuts,
@@ -44,9 +45,10 @@ export function HomeServiceShortcutsSection({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/cms", { credentials: "include" });
-        const json = await res.json().catch(() => ({}));
-        if (cancelled || !res.ok) return;
+        const json = await sharedJson<{ blocks?: unknown }>("/api/cms", {
+          credentials: "include",
+        });
+        if (cancelled) return;
         const blocks = (json.blocks ?? []) as HomepageBlock[];
         const block = resolveHomeBlock(blocks, "service_shortcuts");
         const row = blocks.find((b) => b.block_key === "service_shortcuts");

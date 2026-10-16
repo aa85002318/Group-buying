@@ -13,6 +13,7 @@ import { ProductCategoryTabs } from "./ingredient-shop/ProductCategoryTabs";
 import { IngredientShopProductCard } from "./ingredient-shop/IngredientShopProductCard";
 import { MoreProductsCard } from "./ingredient-shop/MoreProductsCard";
 import { ProductHorizontalScroller } from "./ingredient-shop/ProductHorizontalScroller";
+import { sharedJson } from "@/lib/home/shared-fetch";
 
 export function HomeIngredientShopSection() {
   const [cmsSection, setCmsSection] = useState(() => resolveIngredientShopSection(null));
@@ -26,14 +27,11 @@ export function HomeIngredientShopSection() {
     let cancelled = false;
     (async () => {
       try {
-        const [cmsRes, productsRes, categoriesRes] = await Promise.all([
-          fetch("/api/cms", { credentials: "include" }),
-          fetch("/api/products?scope=baking"),
-          fetch("/api/categories"),
+        const [cmsJson, productsJson, categoriesJson] = await Promise.all([
+          sharedJson<{ blocks?: HomepageBlock[] }>("/api/cms", { credentials: "include" }),
+          sharedJson<{ products?: Product[] }>("/api/products?scope=baking"),
+          sharedJson<{ categories?: ProductCategory[] }>("/api/categories"),
         ]);
-        const cmsJson = await cmsRes.json().catch(() => ({}));
-        const productsJson = await productsRes.json().catch(() => ({}));
-        const categoriesJson = await categoriesRes.json().catch(() => ({}));
         if (cancelled) return;
 
         const blocks = (cmsJson.blocks ?? []) as HomepageBlock[];
