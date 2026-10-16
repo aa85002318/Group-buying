@@ -372,11 +372,10 @@ export function listOrderedHomeSections(
   const seen = new Set<HomeSectionKey>();
   const rows: ResolvedHomeBlock[] = [];
   for (const row of blocks ?? []) {
+    // 後台清單放什麼就畫什麼（不再只限 PRIMARY 那幾個固定區塊），
+    // 手機版才會跟網頁版同一份排版；畫不出來的區塊 renderer 自己回 null。
     if (!isHomeSectionKey(row.block_key)) continue;
     const key = row.block_key;
-    if (!isCustomHomeBlockKey(key) && !PRIMARY_HOME_SECTION_KEYS.includes(key)) {
-      continue;
-    }
     seen.add(key);
     const resolved = resolveHomeBlockRow(row);
     if (!resolved || !resolved.visible) continue;
