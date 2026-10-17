@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
-import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { Input } from "@/components/ui/input";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
+import {
+  HOME_SECTION_INSET,
+  HomeYellowSectionHeader,
+} from "@/components/home/HomeYellowSectionHeader";
 import type { HomeAiPrompt } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
@@ -65,57 +68,61 @@ export function AiAssistantSection({
   const visiblePrompts = prompts.slice(0, limit);
 
   return (
-    <section className={cn("space-y-4", className)} aria-label={title}>
-      <SectionHeader title={title} href={viewAllHref} accentClass="bg-brand-primary" />
-      {subtitle ? (
-        <p className="-mt-2 text-sm text-foreground-secondary">{subtitle}</p>
-      ) : null}
-
-      <form
-        className="flex gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          navigate(query);
-        }}
-      >
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder}
-          className="min-h-12 flex-1 rounded-[16px] border-[#F2D8BF] bg-[#FFF9EA]"
-          aria-label="AI 問題輸入"
+    <section className={cn("bg-white pb-7 pt-0 md:pb-10", className)} aria-label={title}>
+      <div className={cn(HOME_SECTION_INSET, "space-y-4")}>
+        <HomeYellowSectionHeader
+          title={title}
+          subtitle={subtitle}
+          href={viewAllHref}
+          linkLabel="立即體驗"
         />
-        <button
-          type="submit"
-          className="inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-[16px] bg-[#FF5A5F] px-4 text-sm font-bold text-white transition hover:opacity-90"
-        >
-          <Sparkles className="h-4 w-4" aria-hidden />
-          詢問
-        </button>
-      </form>
 
-      <HomeSectionFrame
-        loading={loading}
-        error={error}
-        onRetry={loadPrompts}
-        empty={!loading && !error && visiblePrompts.length === 0}
-        emptyTitle="尚無熱門提問"
-        skeletonCount={3}
-      >
-        <ul className="flex flex-wrap gap-2">
-          {visiblePrompts.map((p) => (
-            <li key={p.id}>
-              <button
-                type="button"
-                onClick={() => navigate(p.prompt || p.label)}
-                className="rounded-full border border-[#F2D8BF] bg-white px-3 py-1.5 text-xs font-medium text-[#6B3F24] transition hover:border-[#FF5A5F]/50 hover:text-[#FF5A5F]"
-              >
-                {p.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </HomeSectionFrame>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            navigate(query);
+          }}
+        >
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={placeholder}
+            className="min-h-12 flex-1 rounded-[16px] border-[#F2D8BF] bg-[#FFF9EA]"
+            aria-label="AI 問題輸入"
+          />
+          <button
+            type="submit"
+            className="inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-[16px] bg-[#FF5A5F] px-4 text-sm font-bold text-white transition hover:opacity-90"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden />
+            詢問
+          </button>
+        </form>
+
+        <HomeSectionFrame
+          loading={loading}
+          error={error}
+          onRetry={loadPrompts}
+          empty={!loading && !error && visiblePrompts.length === 0}
+          emptyTitle="尚無熱門提問"
+          skeletonCount={3}
+        >
+          <ul className="flex flex-wrap gap-2">
+            {visiblePrompts.map((p) => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  onClick={() => navigate(p.prompt || p.label)}
+                  className="rounded-full border border-[#F2D8BF] bg-white px-3 py-1.5 text-xs font-medium text-[#6B3F24] transition hover:border-[#FF5A5F]/50 hover:text-[#FF5A5F]"
+                >
+                  {p.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </HomeSectionFrame>
+      </div>
     </section>
   );
 }

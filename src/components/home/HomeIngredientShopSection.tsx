@@ -13,6 +13,10 @@ import { ProductCategoryTabs } from "./ingredient-shop/ProductCategoryTabs";
 import { IngredientShopProductCard } from "./ingredient-shop/IngredientShopProductCard";
 import { MoreProductsCard } from "./ingredient-shop/MoreProductsCard";
 import { ProductHorizontalScroller } from "./ingredient-shop/ProductHorizontalScroller";
+import {
+  HOME_SECTION_INSET,
+  HomeYellowSectionHeader,
+} from "@/components/home/HomeYellowSectionHeader";
 import { sharedJson } from "@/lib/home/shared-fetch";
 
 export function HomeIngredientShopSection() {
@@ -79,23 +83,8 @@ export function HomeIngredientShopSection() {
       className="ingredient-shop-section mt-[15px] bg-white pb-7 pt-0 md:pb-10"
       aria-label={cmsSection.title}
     >
-      <div className="mx-auto w-full max-w-[1440px] px-4 md:px-6 xl:max-w-[1320px]">
-        <header className="mb-3.5 md:mb-[18px]">
-          <div className="flex items-start gap-2">
-            <span
-              className="mt-[5px] h-7 w-1.5 shrink-0 rounded-full bg-[#FFD454]"
-              aria-hidden
-            />
-            <div className="min-w-0">
-              <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">
-                {cmsSection.title}
-              </h2>
-              <p className="mt-1.5 line-clamp-1 text-[13px] text-[#687386] md:text-sm">
-                {cmsSection.subtitle}
-              </p>
-            </div>
-          </div>
-        </header>
+      <div className={HOME_SECTION_INSET}>
+        <HomeYellowSectionHeader title={cmsSection.title} subtitle={cmsSection.subtitle} />
 
         <div className="mb-3.5 md:mb-[18px]">
           <ProductCategoryTabs

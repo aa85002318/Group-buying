@@ -372,7 +372,8 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       return (
         <HorizontalProductRail
           key={reactKey}
-          title={block.title || "本週新品推薦"}
+          title={block.title || "本月新品"}
+          subtitle={block.subtitle}
           href={block.viewAllUrl || "/products?sort=newest"}
           products={products}
           badge="new"

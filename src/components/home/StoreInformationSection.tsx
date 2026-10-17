@@ -4,8 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Clock, MapPin, Navigation } from "lucide-react";
-import { SectionHeader } from "@/components/consumer/SectionHeader";
 import { HomeSectionFrame } from "@/components/home/HomeSectionFrame";
+import {
+  HOME_SECTION_INSET,
+  HomeYellowSectionHeader,
+} from "@/components/home/HomeYellowSectionHeader";
 import type { Store } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
@@ -84,98 +87,100 @@ export function StoreInformationSection({
   const navUrl = store?.navigation_url || store?.map_url;
 
   return (
-    <section className={cn("space-y-3", className)} aria-label={title}>
-      <SectionHeader title={title} href={viewAllHref} accentClass="bg-warning" />
+    <section className={cn("bg-white pb-7 pt-0 md:pb-10", className)} aria-label={title}>
+      <div className={cn(HOME_SECTION_INSET, "space-y-3")}>
+        <HomeYellowSectionHeader title={title} href={viewAllHref} linkLabel="查看門市" />
 
-      <HomeSectionFrame
-        loading={loading}
-        error={error}
-        onRetry={load}
-        empty={!loading && !error && !store}
-        emptyTitle="尚無門市資訊"
-        emptyActionHref={viewAllHref}
-        emptyActionLabel="查看門市"
-        skeletonCount={1}
-      >
-        {store ? (
-          <article className="overflow-hidden rounded-[22px] border border-[#F2D8BF] bg-[#FFF9EA] shadow-soft">
-            <div className="relative aspect-[21/9] bg-white sm:aspect-[3/1]">
-              {cover ? (
-                <Image src={cover} alt="" fill className="object-cover" unoptimized />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-[#6B3F24]/50">
-                  門市照片
-                </div>
-              )}
-            </div>
-            <div className="space-y-3 p-4 sm:p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-bold text-[#6B3F24]">{store.name}</h3>
-                  {store.business_hours ? (
-                    <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-foreground-secondary">
-                      <Clock className="h-4 w-4 shrink-0" aria-hidden />
-                      {store.business_hours}
-                    </p>
-                  ) : null}
-                  <p className="mt-1 inline-flex items-start gap-1.5 text-sm text-foreground-secondary">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                    {store.address}
-                  </p>
-                  {store.phone ? (
-                    <p className="mt-1 text-sm text-foreground-secondary">電話 {store.phone}</p>
-                  ) : null}
-                </div>
-                {navUrl ? (
-                  <a
-                    href={navUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#FF5A5F] px-4 py-2 text-xs font-bold text-white transition hover:opacity-90"
-                  >
-                    <Navigation className="h-4 w-4" aria-hidden />
-                    導航
-                  </a>
+        <HomeSectionFrame
+          loading={loading}
+          error={error}
+          onRetry={load}
+          empty={!loading && !error && !store}
+          emptyTitle="尚無門市資訊"
+          emptyActionHref={viewAllHref}
+          emptyActionLabel="查看門市"
+          skeletonCount={1}
+        >
+          {store ? (
+            <article className="overflow-hidden rounded-[22px] border border-[#F2D8BF] bg-[#FFF9EA] shadow-soft">
+              <div className="relative aspect-[21/9] bg-white sm:aspect-[3/1]">
+                {cover ? (
+                  <Image src={cover} alt="" fill className="object-cover" unoptimized />
                 ) : (
-                  <Link
-                    href={viewAllHref}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[#F2D8BF] bg-white px-4 py-2 text-xs font-bold text-[#6B3F24]"
-                  >
-                    所有門市
-                  </Link>
+                  <div className="flex h-full items-center justify-center text-sm text-[#6B3F24]/50">
+                    門市照片
+                  </div>
                 )}
               </div>
-
-              {services.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {services.map((svc) => (
-                    <span
-                      key={svc.label}
-                      className="inline-flex items-center gap-1 rounded-full border border-[#F2D8BF] bg-white px-3 py-1 text-xs font-medium text-[#6B3F24]"
+              <div className="space-y-3 p-4 sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-bold text-[#6B3F24]">{store.name}</h3>
+                    {store.business_hours ? (
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-foreground-secondary">
+                        <Clock className="h-4 w-4 shrink-0" aria-hidden />
+                        {store.business_hours}
+                      </p>
+                    ) : null}
+                    <p className="mt-1 inline-flex items-start gap-1.5 text-sm text-foreground-secondary">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                      {store.address}
+                    </p>
+                    {store.phone ? (
+                      <p className="mt-1 text-sm text-foreground-secondary">電話 {store.phone}</p>
+                    ) : null}
+                  </div>
+                  {navUrl ? (
+                    <a
+                      href={navUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#FF5A5F] px-4 py-2 text-xs font-bold text-white transition hover:opacity-90"
                     >
-                      {svc.icon ? <span aria-hidden>{svc.icon}</span> : null}
-                      {svc.label}
-                    </span>
-                  ))}
+                      <Navigation className="h-4 w-4" aria-hidden />
+                      導航
+                    </a>
+                  ) : (
+                    <Link
+                      href={viewAllHref}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#F2D8BF] bg-white px-4 py-2 text-xs font-bold text-[#6B3F24]"
+                    >
+                      所有門市
+                    </Link>
+                  )}
                 </div>
-              ) : null}
 
-              {highlights.items && highlights.items.length > 0 ? (
-                <div className="rounded-[16px] border border-[#F2D8BF] bg-white px-3.5 py-3">
-                  <p className="text-xs font-bold text-[#FF5A5F]">
-                    {highlights.title || "今日推薦"}
-                  </p>
-                  <ul className="mt-2 space-y-1 text-sm text-[#6B3F24]">
-                    {highlights.items.map((item) => (
-                      <li key={item}>· {item}</li>
+                {services.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {services.map((svc) => (
+                      <span
+                        key={svc.label}
+                        className="inline-flex items-center gap-1 rounded-full border border-[#F2D8BF] bg-white px-3 py-1 text-xs font-medium text-[#6B3F24]"
+                      >
+                        {svc.icon ? <span aria-hidden>{svc.icon}</span> : null}
+                        {svc.label}
+                      </span>
                     ))}
-                  </ul>
-                </div>
-              ) : null}
-            </div>
-          </article>
-        ) : null}
-      </HomeSectionFrame>
+                  </div>
+                ) : null}
+
+                {highlights.items && highlights.items.length > 0 ? (
+                  <div className="rounded-[16px] border border-[#F2D8BF] bg-white px-3.5 py-3">
+                    <p className="text-xs font-bold text-[#FF5A5F]">
+                      {highlights.title || "今日推薦"}
+                    </p>
+                    <ul className="mt-2 space-y-1 text-sm text-[#6B3F24]">
+                      {highlights.items.map((item) => (
+                        <li key={item}>· {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            </article>
+          ) : null}
+        </HomeSectionFrame>
+      </div>
     </section>
   );
 }

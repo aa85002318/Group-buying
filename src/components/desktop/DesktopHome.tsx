@@ -241,7 +241,7 @@ function SectionHeading({
   subtitle?: string | null;
   href?: string | null;
   linkLabel?: string;
-  /** Match 「精選烘焙材料」: plain title, optional red pill CTA. */
+  /** Match 「精選烘焙材料」: yellow bar + title, optional red pill CTA. */
   ctaStyle?: "link" | "button";
 }) {
   return (
@@ -253,13 +253,16 @@ function SectionHeading({
           : "items-start justify-between"
       )}
     >
-      <div className="min-w-0">
-        <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">{title}</h2>
-        {subtitle ? (
-          <p className="mt-1.5 line-clamp-2 text-[13px] text-[#687386] md:line-clamp-1 md:text-sm">
-            {subtitle}
-          </p>
-        ) : null}
+      <div className="flex min-w-0 items-start gap-2">
+        <span className="mt-[5px] h-7 w-1.5 shrink-0 rounded-full bg-[#FFD454]" aria-hidden />
+        <div className="min-w-0">
+          <h2 className="text-[22px] font-bold leading-[1.25] text-[#153E73] md:text-[28px]">{title}</h2>
+          {subtitle ? (
+            <p className="mt-1.5 line-clamp-2 text-[13px] text-[#687386] md:line-clamp-1 md:text-sm">
+              {subtitle}
+            </p>
+          ) : null}
+        </div>
       </div>
       {href ? (
         ctaStyle === "button" ? (
@@ -988,6 +991,12 @@ export function DesktopHome() {
         const ai = parseAiSection(cfg);
         return (
           <Band key={section.id} tone="sky" label={section.title}>
+            <SectionHeading
+              title={section.title || "AI 烘焙小幫手"}
+              subtitle={section.subtitle || ai.lead || null}
+              href={ai.href}
+              linkLabel={ai.buttonText || "立即體驗"}
+            />
             <div className="grid items-center gap-[clamp(20px,4vw,64px)] md:grid-cols-[3fr_2fr]">
               <div className="relative aspect-[4/3] overflow-hidden rounded-[clamp(18px,2.2vw,28px)] bg-white md:aspect-[5/4]">
                 <Image src={ai.sceneImageUrl} alt="" fill className="object-cover" sizes="(min-width:768px) 58vw, 100vw" />
@@ -997,10 +1006,6 @@ export function DesktopHome() {
                   <Sparkles className="h-3.5 w-3.5" aria-hidden />
                   {ai.badge}
                 </span>
-                <h2 className="text-[clamp(28px,3.4vw,46px)] font-black leading-tight text-[#153E73]">
-                  {section.title || "AI 烘焙小幫手"}
-                </h2>
-                {ai.lead ? <p className="text-[clamp(17px,1.6vw,22px)] font-bold text-[#153E73]">{ai.lead}</p> : null}
                 <p className="whitespace-pre-line text-[clamp(14px,1.2vw,17px)] leading-relaxed text-[#36507A]">{ai.body}</p>
                 {ai.chips.length ? (
                   <ul className="flex flex-wrap gap-2">
@@ -1040,6 +1045,12 @@ export function DesktopHome() {
         const media = "relative aspect-[16/10] w-full shrink-0 overflow-hidden";
         return (
           <Band key={section.id} tone={tone} label={section.title}>
+            <SectionHeading
+              title={section.title || "門市資訊與企業採購"}
+              subtitle={section.subtitle}
+              href={section.viewAllUrl || "/stores"}
+              linkLabel="查看門市"
+            />
             <div className={cn("grid gap-3 md:gap-5 lg:gap-6", sb.b2b.enabled && "md:grid-cols-2")}>
               <article className={card}>
                 <div className={cn(media, "bg-[#FFF5CC]")}>
@@ -1051,7 +1062,7 @@ export function DesktopHome() {
                 </div>
                 <div className="flex flex-1 flex-col gap-3 p-[clamp(20px,2.4vw,32px)]">
                   <span className="text-[13px] font-bold text-[#F16458]">{sb.store.eyebrow}</span>
-                  <h2 className="text-[clamp(22px,2.2vw,30px)] font-black text-[#153E73]">{sb.store.name}</h2>
+                  <h3 className="text-[clamp(22px,2.2vw,30px)] font-black text-[#153E73]">{sb.store.name}</h3>
                   <p className="flex gap-1.5 text-[clamp(14px,1.2vw,16px)] leading-relaxed text-[#36507A]">
                     <MapPin className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden />
                     {sb.store.address}
@@ -1080,7 +1091,7 @@ export function DesktopHome() {
                   </div>
                   <div className="flex flex-1 flex-col gap-3 p-[clamp(20px,2.4vw,32px)]">
                     <span className="text-[13px] font-bold text-[#F16458]">{sb.b2b.eyebrow}</span>
-                    <h2 className="text-[clamp(22px,2.2vw,30px)] font-black text-[#153E73]">{sb.b2b.title}</h2>
+                    <h3 className="text-[clamp(22px,2.2vw,30px)] font-black text-[#153E73]">{sb.b2b.title}</h3>
                     {sb.b2b.tags.length ? (
                       <ul className="flex flex-wrap gap-2">
                         {sb.b2b.tags.map((t) => (
