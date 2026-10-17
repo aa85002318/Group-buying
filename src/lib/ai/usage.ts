@@ -108,11 +108,14 @@ export async function assertUsageAvailable(identity: UsageIdentity, tool?: AIToo
 export async function consumeUsage(
   identity: UsageIdentity,
   tool: AIToolId,
-  meta?: Record<string, unknown>
+  meta?: Record<string, unknown> & { counted?: boolean }
 ) {
+  // counted === false：額度已經由 reserve_ai_request 扣掉了，這一列只是明細日誌，
+  // 不可以再被舊的 count(*) 計進去，否則同一次請求會被算兩次。
+  const counted = meta?.counted !== false;
   const available = await assertUsageAvailable(identity, tool);
-  if (!available.ok) return available;
-  const snap = available.snap;
+  if (!available.ok && counted) return available;
+  const snap = available.ok ? available.snap : await getUsageSnapshot(identity, tool);
 
   if (!isSupabaseConfigured()) {
     return {
@@ -129,7 +132,7 @@ export async function consumeUsage(
       user_id: identity.userId,
       guest_key: identity.userId ? null : identity.guestKey,
       tool,
-      counted: true,
+      counted,
       usage_date: taipeiDayKey(),
       meta: meta ?? {},
     })
