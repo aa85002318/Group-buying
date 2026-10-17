@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,10 @@ function AiBakingPageInner({ embedded = false }: { embedded?: boolean }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryable, setRetryable] = useState(false);
+  // AI 功能限會員使用：未登入時改顯示登入入口，而不是只丟一句錯誤訊息。
+  const [authRequired, setAuthRequired] = useState(false);
+  // 冪等鍵：同一次提問按「重新送出」時沿用同一個 key，後端才不會重複扣次。
+  const requestKeyRef = useRef<string | null>(null);
   const [result, setResult] = useState<unknown>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
   const [lastPayload, setLastPayload] = useState<Record<string, unknown> | null>(null);
@@ -209,12 +213,21 @@ function AiBakingPageInner({ embedded = false }: { embedded?: boolean }) {
     setLoading(true);
     setError(null);
     setRetryable(false);
+    setAuthRequired(false);
     if (!isRetry) setResult(null);
+    // 新的提問才換 key；重送沿用上一次的，避免重複扣次與重複呼叫模型。
+    if (!isRetry || !requestKeyRef.current) {
+      requestKeyRef.current =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : null;
+    }
     const body = {
       tool: action,
       ...payload,
       conversationId,
       save: saveHistory,
+      ...(requestKeyRef.current ? { requestKey: requestKeyRef.current } : {}),
     };
     setLastPayload(body);
     try {
@@ -227,9 +240,12 @@ function AiBakingPageInner({ embedded = false }: { embedded?: boolean }) {
       if (json.usage) setUsage(json.usage);
       if (!json.success) {
         setError(json.error?.message ?? "分析失敗");
+        setAuthRequired(json.error?.code === "UNAUTHORIZED");
         setRetryable(Boolean(json.error?.retryable) || json.error?.code === "TIMEOUT");
         return;
       }
+      // 成功就把 key 用掉，下一次提問重新產生。
+      requestKeyRef.current = null;
       setResult(json.data);
       if (json.data?.conversationId) setConversationId(String(json.data.conversationId));
     } catch {
@@ -676,7 +692,15 @@ function AiBakingPageInner({ embedded = false }: { embedded?: boolean }) {
           <div className="space-y-3 rounded-xl bg-error-soft px-4 py-3 text-sm text-error">
             <p>{error}</p>
             <div className="flex flex-wrap gap-2">
-              {retryable && lastPayload ? (
+              {authRequired ? (
+                <Link
+                  href={`${APP_ROUTES.login}?next=${encodeURIComponent(APP_ROUTES.ai)}`}
+                  className="inline-flex min-h-11 items-center rounded-xl bg-[#153E73] px-4 font-bold text-white"
+                >
+                  登入會員
+                </Link>
+              ) : null}
+              {!authRequired && retryable && lastPayload ? (
                 <Button disabled={loading} onClick={() => run(tab, lastPayload, true)}>
                   重新送出
                 </Button>
