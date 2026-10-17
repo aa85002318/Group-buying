@@ -52,6 +52,10 @@ import {
 import { parseLatestCampaignSettings } from "@/types/home-latest-campaign";
 import { sharedJson } from "@/lib/home/shared-fetch";
 import {
+  parseProductBlockSettings,
+  pickProductsForBlock,
+} from "@/lib/home/product-block";
+import {
   CREAM_ZONE_KEYS,
   isCustomBannerHeading,
 } from "@/lib/home/section-keys";
@@ -168,6 +172,8 @@ type HomeDataCtx = {
   articlesLoading: boolean;
   articlesError: string | null;
   reloadArticles: () => void;
+  /** 首頁商品區塊指定分類時要用（含父子階層）。 */
+  productCategories: Array<{ id: string; parent_id?: string | null }>;
   cmsLoading: boolean;
 };
 
@@ -697,18 +703,25 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
       );
     }
     case "custom_products": {
-      const byId = new Map(ctx.products.map((p) => [p.id, p]));
-      const picked = block.manualIds
-        .map((id) => byId.get(id))
-        .filter((p): p is (typeof ctx.products)[number] => Boolean(p))
-        .slice(0, block.displayCount || 10);
+      // 和網站版共用同一套挑商品邏輯：來源、指定分類、排序、數量。
+      const settings = parseProductBlockSettings(block.config, {
+        displayCount: block.displayCount,
+        sourceMode: block.sourceMode,
+        viewAllUrl: block.viewAllUrl,
+      });
+      const picked = pickProductsForBlock({
+        settings,
+        products: ctx.products,
+        manualIds: block.manualIds,
+        categories: ctx.productCategories,
+      });
       if (!picked.length) return null;
       return (
         <section key={reactKey} className="space-y-3 px-4 py-2">
           <div className="flex items-end justify-between gap-3">
             <h2 className="text-lg font-black text-[#153E73]">{block.title || "精選商品"}</h2>
-            {block.viewAllUrl ? (
-              <Link href={block.viewAllUrl} className="text-sm font-semibold text-[#153E73]">
+            {settings.showMoreButton && settings.moreHref ? (
+              <Link href={settings.moreHref} className="text-sm font-semibold text-[#153E73]">
                 查看全部
               </Link>
             ) : null}
@@ -730,9 +743,11 @@ function renderHomeSection(block: ResolvedHomeBlock, ctx: HomeDataCtx): ReactNod
                   <span className="line-clamp-2 block text-[13px] font-semibold text-[#153E73]">
                     {p.name}
                   </span>
-                  <span className="block text-[15px] font-black text-[#F16458]">
-                    {formatCurrency(Number(p.sale_price ?? p.price ?? 0))}
-                  </span>
+                  {settings.showPrice ? (
+                    <span className="block text-[15px] font-black text-[#F16458]">
+                      {formatCurrency(Number(p.sale_price ?? p.price ?? 0))}
+                    </span>
+                  ) : null}
                 </span>
               </Link>
             ))}
@@ -852,6 +867,16 @@ function HomePageMobile() {
     return d.articles ?? [];
   });
 
+  const categoriesLoad = useIndependentLoad<Array<{ id: string; parent_id?: string | null }>>(
+    [],
+    async () => {
+      const d = await sharedJson<{ categories?: Array<{ id: string; parent_id?: string | null }> }>(
+        "/api/categories"
+      );
+      return d.categories ?? [];
+    }
+  );
+
   const blocks = cmsLoad.data;
   const ordered = useMemo(() => listOrderedHomeSections(blocks), [blocks]);
   const [mobileSpacing, setMobileSpacing] = useState<HomeLayoutSettings>(
@@ -904,6 +929,7 @@ function HomePageMobile() {
     articlesLoading: articlesLoad.loading,
     articlesError: articlesLoad.error,
     reloadArticles: articlesLoad.reload,
+    productCategories: categoriesLoad.data,
     cmsLoading: cmsLoad.loading,
   };
 

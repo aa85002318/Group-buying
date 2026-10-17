@@ -12,6 +12,11 @@ import {
   parseFeaturedArticleSettings,
   type FeaturedArticleSettings,
 } from "@/lib/home/featured-articles";
+import {
+  parseProductBlockSettings,
+  productBlockConfigPatch,
+} from "@/lib/home/product-block";
+import { ProductBlockEditor } from "@/components/admin/home/ProductBlockEditor";
 import { LatestCampaignEditor } from "@/components/admin/home/LatestCampaignEditor";
 import { QuickServicesEditor } from "@/components/admin/home/QuickServicesEditor";
 import { RecipePickerEditor } from "@/components/admin/home/RecipePickerEditor";
@@ -720,16 +725,42 @@ export function HomeBlockContentEditor({
         return (
           <>
             <Note>
-              挑好商品後才會出現在前台。想顯示幾個，就挑幾個（也可以在「版型」調整一排幾個）。
+              可以放很多個商品展示區域，每一個指定不同的商品分類。選「指定商品分類」之後
+              下面會出現分類清單（可搜尋、可多選）。
             </Note>
-            {viewAll}
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-[#153E73]">挑選商品</span>
-              <ProductPicker
-                ids={Array.isArray(s.manual_ids) ? (s.manual_ids as string[]) : []}
-                onChange={(ids) => setSettings(block, onChange, { manual_ids: ids, source_mode: "manual" })}
-              />
-            </div>
+            <ProductBlockEditor
+              value={parseProductBlockSettings(cfg, {
+                displayCount: typeof s.display_count === "number" ? s.display_count : null,
+                sourceMode: typeof s.source_mode === "string" ? s.source_mode : null,
+                viewAllUrl: typeof s.view_all_url === "string" ? s.view_all_url : null,
+              })}
+              readOnly={readOnly}
+              manualIds={Array.isArray(s.manual_ids) ? (s.manual_ids as string[]) : []}
+              onChange={(next) =>
+                onChange({
+                  settings: {
+                    ...s,
+                    // display_count 與 source_mode 是既有欄位，一起同步，
+                    // 讓舊的渲染路徑與後台列表摘要也看得到正確數字。
+                    display_count: next.limit,
+                    source_mode: next.source === "manual" ? "manual" : "auto",
+                    view_all_url: next.showMoreButton ? next.moreHref : null,
+                    config: { ...cfg, ...productBlockConfigPatch(next) },
+                  },
+                })
+              }
+            />
+            {parseProductBlockSettings(cfg).source === "manual" ? (
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-[#153E73]">挑選商品</span>
+                <ProductPicker
+                  ids={Array.isArray(s.manual_ids) ? (s.manual_ids as string[]) : []}
+                  onChange={(ids) =>
+                    setSettings(block, onChange, { manual_ids: ids, source_mode: "manual" })
+                  }
+                />
+              </div>
+            ) : null}
           </>
         );
       case "custom_categories":

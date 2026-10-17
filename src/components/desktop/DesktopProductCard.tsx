@@ -18,6 +18,8 @@ type DesktopProductCardProps = {
   showSpec?: boolean;
   showFavorite?: boolean;
   showAddToCart?: boolean;
+  /** 首頁商品區塊可以在後台關掉價格顯示。 */
+  showPrice?: boolean;
   /** Dense listing: 1:1 frame with the photo contained at 80% of it. */
   compact?: boolean;
   className?: string;
@@ -33,6 +35,7 @@ export function DesktopProductCard({
   showSpec = true,
   showFavorite = true,
   showAddToCart = true,
+  showPrice = true,
   compact = false,
   className,
 }: DesktopProductCardProps) {
@@ -104,9 +107,13 @@ export function DesktopProductCard({
           <p className="line-clamp-1 min-h-[1.25em] text-xs leading-[1.25] text-[#687386]">{spec ?? ""}</p>
         ) : null}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <p className={cn("font-bold text-[#F16458]", compact ? "text-[15px] md:text-base" : "text-base")}>
-            {formatCurrency(price)}
-          </p>
+          {showPrice ? (
+            <p className={cn("font-bold text-[#F16458]", compact ? "text-[15px] md:text-base" : "text-base")}>
+              {formatCurrency(price)}
+            </p>
+          ) : (
+            <span />
+          )}
           {showAddToCart ? (
             <button
               type="button"

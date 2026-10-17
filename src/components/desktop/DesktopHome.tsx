@@ -23,6 +23,10 @@ import { listOrderedDesktopHomeSections } from "@/lib/home/blocks";
 import { isCustomBannerHeading } from "@/lib/home/section-keys";
 import { sharedJson } from "@/lib/home/shared-fetch";
 import {
+  parseProductBlockSettings,
+  pickProductsForBlock,
+} from "@/lib/home/product-block";
+import {
   articleHref,
   parseFeaturedArticleSettings,
   pickFeaturedArticles,
@@ -127,6 +131,7 @@ type AdminCategory = {
   shop_home_bg_color?: string | null;
   custom_link?: string | null;
   show_on_shop_home?: boolean | null;
+  parent_id?: string | null;
 };
 
 type HomeCategory = { id: string; name: string; href: string; image?: string; bgColor?: string };
@@ -335,12 +340,14 @@ function CardGrid({ layout, children }: { layout: keyof typeof GRID_LAYOUT; chil
   );
 }
 
-function ProductTile({ p }: { p: Product }) {
+function ProductTile({ p, hidePrice, showCart }: { p: Product; hidePrice?: boolean; showCart?: boolean }) {
   return (
     <DesktopProductCard
       id={p.id}
       name={p.name}
       price={productPrice(p)}
+      showPrice={!hidePrice}
+      showAddToCart={showCart !== false}
       image_url={p.image_url}
       spec={productSpec(p)}
       href={productPath(p.id)}
@@ -756,6 +763,41 @@ export function DesktopHome() {
       case "popular_baking_products":
       case "weekly_new_products":
       case "custom_products": {
+        // 商品展示區域：照後台設定的來源／分類／排序挑商品。
+        // products 已經是前台可見的清單（API 只回 is_active），這裡不放寬可見性。
+        if (section.key === "custom_products") {
+          const settings = parseProductBlockSettings(section.config, {
+            displayCount: section.displayCount,
+            sourceMode: section.sourceMode,
+            viewAllUrl: section.viewAllUrl,
+          });
+          const picked = pickProductsForBlock({
+            settings,
+            products,
+            manualIds: section.manualIds,
+            categories: allCategories,
+          });
+          if (!picked.length) return null;
+          return (
+            <Band key={section.id} tone={tone} label={section.title}>
+              <SectionHeading
+                title={section.title}
+                subtitle={section.subtitle}
+                href={settings.showMoreButton ? settings.moreHref : null}
+              />
+              <CardGrid layout="products">
+                {picked.map((p) => (
+                  <ProductTile
+                    key={p.id}
+                    p={p}
+                    hidePrice={!settings.showPrice}
+                    showCart={settings.showCartButton}
+                  />
+                ))}
+              </CardGrid>
+            </Band>
+          );
+        }
         const manual = section.manualIds.length ? pickManual(section.manualIds) : [];
         // Shop rails API first; if it returns nothing, fall back to the
         // products flagged 熱門 / 新品 in 商品管理.
@@ -771,7 +813,7 @@ export function DesktopHome() {
                   ? products.filter((p) => p.is_new)
                   : newestProducts
               : [];
-        const source = section.key === "custom_products" || (section.sourceMode === "manual" && manual.length) ? manual : auto;
+        const source = section.sourceMode === "manual" && manual.length ? manual : auto;
         const list = source.slice(0, Math.max(HOME_PRODUCT_COUNT, section.displayCount || 0));
         if (!list.length) return null;
         const fallbackHref =

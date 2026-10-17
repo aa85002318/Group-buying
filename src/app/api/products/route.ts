@@ -25,7 +25,11 @@ export async function GET(request: Request) {
   const supabase = await createClient();
   let query = supabase
     .from("products")
-    .select("*, product_categories:product_categories!products_primary_category_id_fkey(name, slug)")
+    // product_category_links 是既有的多對多關聯：首頁「商品展示區域」指定分類時
+    // 要靠它判斷商品屬於哪些分類（商品可以同時掛在多個分類底下）。
+    .select(
+      "*, product_categories:product_categories!products_primary_category_id_fkey(name, slug), product_category_links(category_id)"
+    )
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
@@ -52,7 +56,16 @@ export async function GET(request: Request) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  let products = (data ?? []) as Product[];
+  // 把關聯攤平成 category_ids，前台挑商品時直接用，不用再多打一支 API。
+  let products = ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
+    const links = Array.isArray(row.product_category_links)
+      ? (row.product_category_links as Array<{ category_id?: string }>)
+      : [];
+    const ids = links.map((l) => l?.category_id).filter((id): id is string => Boolean(id));
+    const rest = { ...row };
+    delete rest.product_category_links;
+    return { ...rest, category_ids: ids } as Product;
+  });
 
   if (category && !/^[0-9a-f-]{36}$/i.test(category)) {
     products = products.filter((product) => matchesCategory(product, category));

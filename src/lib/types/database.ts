@@ -479,6 +479,9 @@ export interface Product {
   updated_at: string;
   product_scope?: ProductScope;
   product_categories?: ProductCategory;
+  /** 商品掛在哪些分類底下（來自既有的 product_category_links 多對多關聯）。 */
+  category_ids?: string[];
+  primary_category_id?: string | null;
   product_channels?: Array<{ channel: string; is_enabled: boolean }>;
   is_hot?: boolean;
   is_new?: boolean;
