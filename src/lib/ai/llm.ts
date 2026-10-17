@@ -40,7 +40,9 @@ function providers(): Provider[] {
       name: "openai",
       url: "https://api.openai.com/v1/chat/completions",
       key: openaiKey,
-      model: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
+      // 預設用便宜的小模型。OpenAI 的型號會汰換，所以一定留環境變數可覆寫
+      // （OPENAI_MODEL）；名稱錯時 /api/admin/ai/status 會回 404 並列出可用型號。
+      model: process.env.OPENAI_MODEL?.trim() || "gpt-6-luna",
     });
   }
   return out;

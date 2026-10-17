@@ -25,6 +25,7 @@ export async function GET() {
       keyLength: gatewayKey.length || null,
       model: process.env.AI_GATEWAY_MODEL?.trim() || "zai/glm-5.3",
       url: "https://ai-gateway.vercel.sh/v1/chat/completions",
+      modelsUrl: "https://ai-gateway.vercel.sh/v1/models",
       key: gatewayKey,
     },
     {
@@ -33,8 +34,9 @@ export async function GET() {
       envVar: "OPENAI_API_KEY",
       configured: Boolean(openaiKey),
       keyLength: openaiKey.length || null,
-      model: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
+      model: process.env.OPENAI_MODEL?.trim() || "gpt-6-luna",
       url: "https://api.openai.com/v1/chat/completions",
+      modelsUrl: "https://api.openai.com/v1/models",
       key: openaiKey,
     },
   ];
@@ -80,7 +82,39 @@ export async function GET() {
                   : res.status === 429
                     ? "被限流，稍後再試"
                     : `回應 ${res.status}`;
-        return { ...base, ok: res.ok, status: res.status, hint };
+        if (res.ok) return { ...base, ok: true, status: res.status, hint };
+
+        // 失敗時把供應商自己的錯誤訊息帶出來（這段不含金鑰），
+        // 並在「模型名稱錯」時直接列出這把金鑰實際可用的型號，
+        // 不用再去翻文件猜 OPENAI_MODEL 要填什麼。
+        const detail = (await res.text().catch(() => "")).slice(0, 300) || null;
+        let availableModels: string[] | null = null;
+        if (res.status === 404) {
+          try {
+            const list = await fetch(p.modelsUrl, {
+              headers: { Authorization: `Bearer ${p.key}` },
+              signal: controller.signal,
+            });
+            if (list.ok) {
+              const json = (await list.json()) as { data?: Array<{ id?: string }> };
+              availableModels = (json.data ?? [])
+                .map((m) => m.id)
+                .filter((id): id is string => Boolean(id))
+                .sort()
+                .slice(0, 40);
+            }
+          } catch {
+            // 列不出來就算了，不要讓檢查本身壞掉。
+          }
+        }
+        return {
+          ...base,
+          ok: false,
+          status: res.status,
+          hint,
+          detail,
+          available_models: availableModels,
+        };
       } catch {
         return { ...base, ok: false, status: null, hint: "連不上（逾時或網路問題）" };
       } finally {
