@@ -49,7 +49,10 @@ export async function POST(request: Request) {
     return aiError("UNAUTHORIZED", "請先登入會員才能使用 AI 助手。", { status: 401 });
   }
 
-  // 冪等鍵：前端重送同一個 key 不會重複扣次、也不會重複呼叫模型。
+  // 冪等鍵：前端重送同一個 key 不會重複扣次。
+  // 注意：這裡保證的是「額度只扣一次」，模型還是會再跑一次——上一次的回覆沒有留存
+  //（規格要求不儲存聊天全文），重送時只能重新產生。要連模型呼叫都省掉，就得把回覆
+  // 內容也寫進 ai_requests，那會牴觸不留存全文的要求，所以這裡選擇只保護額度。
   const requestKey =
     typeof body.requestKey === "string" && UUID_RE.test(body.requestKey)
       ? body.requestKey
