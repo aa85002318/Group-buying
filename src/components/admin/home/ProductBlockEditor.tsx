@@ -106,10 +106,40 @@ export function ProductBlockEditor({
     () => pickProductsForBlock({ settings: value, products, manualIds, categories }),
     [value, products, manualIds, categories]
   );
+  /**
+   * 「符合條件」要算的是篩選後的總數，不能用 preview.length——那是已經砍到
+   * limit 的結果，會讓「符合 20 件但只顯示 4 件」看起來像「只符合 4 件」。
+   */
+  const matchedCount = useMemo(
+    () =>
+      pickProductsForBlock({
+        settings: { ...value, limit: Number.MAX_SAFE_INTEGER },
+        products,
+        manualIds,
+        categories,
+      }).length,
+    [value, products, manualIds, categories]
+  );
   const expanded = useMemo(
     () => expandCategoryIds(value.categoryIds, categories, value.includeChildCategories),
     [value.categoryIds, categories, value.includeChildCategories]
   );
+  /** 「食材 › 烘焙用粉」這樣的所屬路徑；最上層分類沒有路徑就回空字串。 */
+  const parentPathOf = useMemo(() => {
+    const byId = new Map(categories.map((c) => [c.id, c]));
+    return (id: string): string => {
+      const names: string[] = [];
+      let cur = byId.get(id)?.parent_id ?? null;
+      // 分類階層很淺，但還是設個上限，避免資料有環的時候卡死。
+      for (let i = 0; cur && i < 10; i += 1) {
+        const parent = byId.get(cur);
+        if (!parent) break;
+        names.unshift(parent.name);
+        cur = parent.parent_id ?? null;
+      }
+      return names.join(" › ");
+    };
+  }, [categories]);
 
   return (
     <div className={cn("space-y-3", readOnly && "pointer-events-none opacity-60")}>
@@ -190,6 +220,12 @@ export function ProductBlockEditor({
                           onChange={() => toggle(c.id)}
                         />
                         <span className="text-[#153E73]">{c.name}</span>
+                        {/* 搜尋時列表是平的，同名分類會長得一模一樣，補上所屬路徑才分得出來。 */}
+                        {needle && parentPathOf(c.id) ? (
+                          <span className="text-[11px] text-[#8A94A6]">
+                            （{parentPathOf(c.id)}）
+                          </span>
+                        ) : null}
                         {!selected.has(c.id) && expanded.has(c.id) ? (
                           <span className="text-[11px] text-[#8A94A6]">（含在父分類內）</span>
                         ) : null}
@@ -277,7 +313,9 @@ export function ProductBlockEditor({
         {loading
           ? "計算中…"
           : preview.length
-            ? `符合條件的商品：${preview.length} 件（前台最多顯示 ${value.limit} 件）`
+            ? matchedCount > value.limit
+              ? `符合條件的商品：${matchedCount} 件，前台只會顯示前 ${value.limit} 件`
+              : `符合條件的商品：${matchedCount} 件（上限 ${value.limit} 件）`
             : productBlockEmptyText(value)}
         {preview.length ? (
           <span className="mt-1 block truncate text-[11px] text-[#1B6B3A]/80">

@@ -17,6 +17,7 @@ import { CmsAddBlockPanel } from "@/components/admin/cms/CmsAddBlockPanel";
 import { cn } from "@/lib/utils";
 import { describeBlockLayout } from "@/lib/cms/plain-labels";
 import { isPageUnified } from "@/lib/cms/page-builder";
+import { parseProductBlockSettings } from "@/lib/home/product-block";
 import { homeBlockKey, homeBlockThumbnail } from "@/components/admin/cms/HomeBlockContentEditor";
 
 function websiteVisible(block: CmsBlock): boolean {
@@ -33,7 +34,20 @@ function needsContent(block: CmsBlock): boolean {
     : [];
   const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
   if (key === "custom_banner") return !str(cfg.image_url) && !str(cfg.mobile_image_url);
-  if (key === "custom_products") return ids.length === 0;
+  if (key === "custom_products") {
+    // 商品來源不只「手動指定」一種。選了分類／全部／最新／熱門時區塊就是設定好的，
+    // 只有「手動指定卻沒挑商品」或「指定分類卻沒選分類」才算沒設定。
+    // 這裡直接用前台同一支解析函式，避免兩邊對「來源」的判讀走偏。
+    const settings = parseProductBlockSettings(cfg, {
+      displayCount:
+        typeof block.settings?.display_count === "number" ? block.settings.display_count : null,
+      sourceMode:
+        typeof block.settings?.source_mode === "string" ? block.settings.source_mode : null,
+    });
+    if (settings.source === "manual") return ids.length === 0;
+    if (settings.source === "category") return settings.categoryIds.length === 0;
+    return false;
+  }
   if (key === "custom_recipes") {
     return block.settings?.source_mode === "manual" && ids.length === 0;
   }
@@ -68,6 +82,11 @@ type Props = {
   onDuplicate: (id: string) => void;
   onRemove: (id: string) => void;
   onToggleEnabled: (id: string, enabled: boolean) => void;
+  /**
+   * 統一版首頁專用：這顆按鈕只切手機，不可以把網站版一起關掉。
+   * `enabled` 是手機的新狀態，`desktopVisible` 是要釘住的網站版狀態。
+   */
+  onToggleMobileVisible?: (id: string, enabled: boolean, desktopVisible: boolean) => void;
   onAddBlock: (type: string) => void;
   readOnly?: boolean;
 };
@@ -82,6 +101,7 @@ export function CmsBlockRail({
   onDuplicate,
   onRemove,
   onToggleEnabled,
+  onToggleMobileVisible,
   onAddBlock,
   readOnly,
 }: Props) {
@@ -218,7 +238,17 @@ export function CmsBlockRail({
                         }
                         onClick={(e) => {
                           e.stopPropagation();
-                          onToggleEnabled(block.id, !block.enabled);
+                          // 統一版：這顆只切手機。先把網站版目前的狀態釘住，
+                          // 否則 desktop_visible 沒設時會跟著 enabled 一起被關掉。
+                          if (unified && onToggleMobileVisible) {
+                            onToggleMobileVisible(
+                              block.id,
+                              !block.enabled,
+                              websiteVisible(block)
+                            );
+                          } else {
+                            onToggleEnabled(block.id, !block.enabled);
+                          }
                         }}
                       >
                         {block.enabled ? (

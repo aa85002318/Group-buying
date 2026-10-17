@@ -380,6 +380,29 @@ export function CmsEditorShell({
               );
               editor.selectBlock(id);
             }}
+            onToggleMobileVisible={(id, enabled, desktopVisible) => {
+              if (!page) return;
+              editor.updateBlocks(
+                page.blocks.map((b) =>
+                  b.id === id
+                    ? {
+                        ...b,
+                        enabled,
+                        settings: {
+                          ...(b.settings ?? {}),
+                          config: {
+                            ...((b.settings?.config as Record<string, unknown>) ?? {}),
+                            // 把網站版釘成現在的狀態，否則 desktop_visible 沒設時
+                            // 會跟著 enabled 一起被關掉，變成「在手機隱藏」把桌機也關了。
+                            desktop_visible: desktopVisible,
+                          },
+                        },
+                      }
+                    : b
+                )
+              );
+              editor.selectBlock(id);
+            }}
             onAddBlock={(type) => {
               if (!canMutateLocal) return;
               // 放在目前選取的區塊下面，並直接跳到「設定」，
