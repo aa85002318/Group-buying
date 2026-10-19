@@ -209,11 +209,42 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
   const categoryEmbed =
     "product_categories:product_categories!products_category_id_fkey(name, slug), primary_category:product_categories!products_primary_category_id_fkey(name, slug)";
-  const selectAttempts = [
-    `*, ${categoryEmbed}, group_buy_categories(name, slug)`,
-    `*, ${categoryEmbed}`,
-    "*",
-  ];
+
+  // 商品主檔有 107 個欄位，但後台列表只用得到十幾個。正式站 17,040 筆商品用
+  // `select *` 會回 41MB，光下載就要好幾分鐘。`view=list` 只取列表會用到的欄位
+  // （含所有篩選、排序、供應商標籤要用的），其餘端點維持原本的完整欄位不變。
+  const LIST_COLUMNS = [
+    "id",
+    "name",
+    "subtitle",
+    "sku",
+    "slug",
+    "image_url",
+    "images",
+    "price",
+    "sale_price",
+    "cost_price",
+    "stock",
+    "status",
+    "is_active",
+    "category_id",
+    "primary_category_id",
+    "supplier_id",
+    "supplier_name",
+    "created_at",
+    "updated_at",
+    "sort_order",
+    // 配送篩選用的四個旗標
+    "temp_ambient",
+    "temp_chilled",
+    "temp_frozen",
+    "ship_store_pickup",
+  ].join(", ");
+
+  const listView = searchParams.get("view") === "list";
+  const selectAttempts = listView
+    ? [`${LIST_COLUMNS}, ${categoryEmbed}`, LIST_COLUMNS]
+    : [`*, ${categoryEmbed}, group_buy_categories(name, slug)`, `*, ${categoryEmbed}`, "*"];
 
   let data: Record<string, unknown>[] = [];
   let fetchError: { message: string } | null = null;
@@ -275,6 +306,12 @@ export async function GET(request: Request) {
   const filtered = search
     ? normalized.filter((p) => matchesProductSearch(p, search))
     : normalized;
+
+  // 列表不顯示取貨門市與關聯商品／食譜，這兩個 attach 會再對全部商品多打幾輪查詢，
+  // 列表模式直接略過。其他呼叫端（維持舊行為）照舊補齊。
+  if (listView) {
+    return NextResponse.json({ products: filtered });
+  }
 
   try {
     const withPickup = await attachPickupStoresToProducts(admin, filtered);
