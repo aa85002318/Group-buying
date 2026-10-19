@@ -87,7 +87,11 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
       fetch("/api/admin/brands").then((r) => r.json()),
       fetch("/api/admin/suppliers").then((r) => r.json()),
       fetch("/api/admin/group-buy-categories").then((r) => r.json()),
-      mode === "edit" ? fetch("/api/admin/products").then((r) => r.json()) : Promise.resolve(null),
+      // 編輯模式原本是抓「全部商品」再用 find() 挑出這一筆——正式站 17,040 筆、
+      // 41MB，光下載就要好幾分鐘。改打單筆端點，回傳的欄位和原本一樣。
+      mode === "edit" && productId
+        ? fetch(`/api/admin/products/${productId}`).then((r) => r.json())
+        : Promise.resolve(null),
     ])
       .then(([bakingRes, allCatRes, storeRes, brandRes, supplierRes, gbCatRes, productRes]) => {
         const merged = new Map<string, ProductCategory>();
@@ -103,7 +107,7 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
         setSuppliers(supplierRes.suppliers ?? []);
         setGroupBuyCategories(gbCatRes.categories ?? []);
         if (mode === "edit" && productId) {
-          const product = (productRes?.products ?? []).find((p: { id: string }) => p.id === productId);
+          const product = productRes?.product ?? null;
           if (!product) {
             setNotFound(true);
             return;

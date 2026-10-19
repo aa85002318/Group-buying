@@ -6,6 +6,7 @@ import {
   fetchProductPickupStoreIds,
   syncProductPickupStores,
 } from "@/lib/services/productPickupStores";
+import { attachProductRelations } from "@/lib/services/productRelations";
 import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
 import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 
@@ -104,14 +105,21 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     (data.product_categories as { name?: string } | null) ??
     (data.primary_category as { name?: string } | null) ??
     null;
-  return NextResponse.json({
-    product: {
-      ...data,
-      product_categories: category,
-      images: Array.isArray(data.images) ? data.images : data.image_url ? [data.image_url] : [],
-      pickup_store_ids,
-    },
-  });
+  const base = {
+    ...data,
+    product_categories: category,
+    images: Array.isArray(data.images) ? data.images : data.image_url ? [data.image_url] : [],
+    pickup_store_ids,
+  };
+
+  // 編輯表單原本是從列表端點拿資料，那邊會補上關聯商品／食譜。這裡一併補，
+  // 讓改用單筆端點之後欄位完全一致，不會少掉關聯設定。
+  try {
+    const [withRelations] = await attachProductRelations(admin, [base]);
+    return NextResponse.json({ product: withRelations ?? base });
+  } catch {
+    return NextResponse.json({ product: base });
+  }
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

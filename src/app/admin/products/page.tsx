@@ -61,9 +61,11 @@ function AdminProductsPageInner() {
     setError(null);
     try {
       const params = new URLSearchParams();
+      // 只拿列表會用到的欄位。不加這個會回全部 107 個欄位，正式站是 41MB。
+      params.set("view", "list");
       const q = debouncedSearch.trim();
       if (q) params.set("search", q);
-      const res = await fetch(`/api/admin/products${params.size ? `?${params}` : ""}`);
+      const res = await fetch(`/api/admin/products?${params}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "載入失敗");
       setItems((data.products ?? []) as Product[]);
