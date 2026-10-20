@@ -39,10 +39,27 @@ export async function recordInventoryMovement(input: MovementInput) {
   }
 }
 
-/** Recompute store_inventory row as sum of active batch remaining_quantity */
+/**
+ * Recompute store_inventory row as sum of active batch remaining_quantity.
+ *
+ * 例外：已經人工盤點過的那一格（source = 'stocktake'）不覆蓋。
+ * POS 沒連動，賣出量算不出來，批號餘量不會因為賣出而減少，所以批號加總會比
+ * 實際庫存高。盤點過的數字才是真的，不能被這支蓋掉。
+ */
 export async function syncInventoryFromBatches(storeId: string, productId: string) {
   try {
     const admin = createAdminClient();
+
+    const { data: existing } = await admin
+      .from("store_inventory")
+      .select("source")
+      .eq("store_id", storeId)
+      .eq("product_id", productId)
+      .maybeSingle();
+
+    // source 欄位還沒 migrate 的環境會是 undefined，那就維持原本行為。
+    if (existing?.source === "stocktake") return;
+
     const { data: batches } = await admin
       .from("store_batches")
       .select("remaining_quantity, quantity, status")

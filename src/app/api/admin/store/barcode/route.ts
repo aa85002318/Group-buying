@@ -93,6 +93,22 @@ export async function GET(request: Request) {
     0
   );
 
+  // 盤點看的是「這間門市現在有多少」，不是商品主檔的總庫存。
+  // 帶 store_id 才查；不帶就維持原本的回傳內容，既有呼叫端不受影響。
+  const storeId = new URL(request.url).searchParams.get("store_id")?.trim() || null;
+  let storeQty: number | null = null;
+  let countedAt: string | null = null;
+  if (storeId) {
+    const { data: inv } = await admin
+      .from("store_inventory")
+      .select("quantity, counted_at")
+      .eq("store_id", storeId)
+      .eq("product_id", product.id)
+      .maybeSingle();
+    storeQty = Number(inv?.quantity ?? 0);
+    countedAt = (inv as { counted_at?: string | null } | null)?.counted_at ?? null;
+  }
+
   return NextResponse.json({
     product: {
       ...withBrand(product as Record<string, unknown>),
@@ -100,6 +116,8 @@ export async function GET(request: Request) {
       batch_qty: batchQty,
       matched_via: matchedVia,
       batches: active,
+      store_qty: storeQty,
+      counted_at: countedAt,
     },
   });
 }
