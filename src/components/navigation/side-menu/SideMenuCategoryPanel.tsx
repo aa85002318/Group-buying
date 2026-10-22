@@ -323,6 +323,7 @@ export function SideMenuCategoryPanel({
               <SideMenuCategoryRow
                 key={cat.id}
                 category={cat}
+                compact
                 onClick={() => {
                   onPushBrowse({ id: cat.id, label: cat.name, href: cat.route });
                   onOpenCategory(cat, cat.childCount > 0);
@@ -381,6 +382,7 @@ export function SideMenuCategoryPanel({
         <SideMenuCategoryRow
           key={cat.id}
           category={cat}
+          compact
           onClick={() => {
             onPushBrowse({ id: cat.id, label: cat.name, href: cat.route });
             onOpenCategory(cat, cat.childCount > 0);

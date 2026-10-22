@@ -458,6 +458,21 @@ export interface Product {
   publish_website?: boolean;
   publish_group_buy?: boolean;
   publish_store?: boolean;
+  /**
+   * 配送方式與保存溫層。後台一直有在寫這些欄位，只是型別沒宣告，
+   * 所以前台到處用 `(product as { ship_home?: boolean })` 這種斷言在讀。
+   * 補上宣告讓它們能被正常型別檢查。
+   *
+   * 預設值語意（與 product-form-v2 一致）：
+   * ship_home／ship_store_pickup／temp_ambient 沒值時視為開啟，其餘視為關閉。
+   */
+  ship_home?: boolean | null;
+  ship_store_pickup?: boolean | null;
+  ship_cvs?: boolean | null;
+  temp_ambient?: boolean | null;
+  temp_chilled?: boolean | null;
+  temp_frozen?: boolean | null;
+  storage_type?: string | null;
   stock: number;
   image_url: string | null;
   images?: string[];

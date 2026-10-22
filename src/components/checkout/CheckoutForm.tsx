@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+// 從不含伺服器端 import 的模組取用，避免把 createAdminClient 那條路拉進瀏覽器打包。
 import {
   CHECKOUT_PAYMENT_OPTIONS,
   CHECKOUT_SHIPMENT_OPTIONS,
   shippingFeeForMethod,
-} from "@/lib/checkout/options";
+} from "@/lib/checkout/shipment-options";
 import {
   buildTemperatureSplitNotice,
   collectTemperatureZones,

@@ -1,7 +1,8 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   normalizeDisplayOptions,
   type Quotation,
@@ -10,12 +11,14 @@ import {
 } from "@/lib/admin/quotations";
 import { formatCurrency } from "@/lib/utils";
 
-export default function AdminQuotationPrintPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
+/**
+ * params 在 Next 14.2 的 client component 是普通物件，不是 Promise，
+ * 對它呼叫 use() 會丟 React error #438（整頁白畫面）——原本這頁印不出來。
+ * 改用 useParams()，與專案其他 [id] 頁面一致。
+ */
+export default function AdminQuotationPrintPage() {
+  const params = useParams();
+  const id = String(params?.id ?? "");
   const [quote, setQuote] = useState<Quotation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

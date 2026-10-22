@@ -11,11 +11,14 @@ import {
   Search,
   ShoppingCart,
   Store,
-  Truck,
 } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
 import { useInquiryCart } from "@/hooks/useInquiryCart";
+import {
+  ProductDeliveryInfo,
+  resolveDeliveryMethods,
+} from "@/components/products/ProductDeliveryInfo";
 import { useDesktopV2Active } from "@/hooks/useDesktopV2Active";
 import { getMockProductById } from "@/lib/mock-data";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
@@ -604,7 +607,12 @@ export default function ProductDetailClient({ id }: { id: string }) {
           <div className="grid grid-cols-3 gap-2 rounded-[14px] border border-[#E8E1D7] bg-white p-3">
             {[
               { icon: Check, label: "品質嚴選" },
-              { icon: Store, label: "門市取貨" },
+              // 原本固定寫「門市取貨」，但後台可以把門市取貨關掉。
+              // 改用共用邏輯取這個商品第一個可用的配送方式。
+              {
+                icon: Store,
+                label: resolveDeliveryMethods(product)[0]?.label ?? "配送方式請洽客服",
+              },
               { icon: Package, label: "安心包裝" },
             ].map((s) => (
               <div key={s.label} className="flex flex-col items-center gap-1 px-1 py-2 text-center">
@@ -681,14 +689,9 @@ export default function ProductDetailClient({ id }: { id: string }) {
                       ))}
                     </div>
                   ) : null}
-                  <IntroCard title="配送注意事項">
-                    {shippingNotice}
-                  </IntroCard>
-                  <p className="text-xs text-[#667085]">
-                    <Link href="/support/shipping" className="font-medium text-[#153E73] underline">
-                      查看完整配送說明
-                    </Link>
-                  </p>
+                  {/* 配送注意事項原本重複出現在這裡（商品介紹分頁）。
+                      現在「配送取貨」分頁已經有完整的配送說明，留在這裡只會同一頁
+                      出現兩次，所以移除；資訊沒有少，只是回到該在的地方。 */}
                 </>
               ) : null}
               {tab === "specs" ? (
@@ -724,17 +727,7 @@ export default function ProductDetailClient({ id }: { id: string }) {
                 </dl>
               ) : null}
               {tab === "shipping" ? (
-                <div className="space-y-3 text-sm leading-relaxed text-[#334155]">
-                  <p className="flex items-start gap-2">
-                    <Truck className="mt-0.5 h-4 w-4 shrink-0" />
-                    支援門市取貨
-                    {(product as { ship_home?: boolean }).ship_home !== false
-                      ? "、宅配到府"
-                      : ""}
-                    。
-                  </p>
-                  <p>實際配送時程依庫存與門市作業時間為準。</p>
-                </div>
+                <ProductDeliveryInfo product={product} shippingNotice={shippingNotice} />
               ) : null}
               {tab === "reviews" ? (
                 <p className="text-sm text-[#667085]">評價功能準備中，歡迎先下單體驗商品品質。</p>
@@ -814,22 +807,12 @@ export default function ProductDetailClient({ id }: { id: string }) {
             </dl>
           </section>
 
-          <section id="pdp-shipping" className="space-y-3 rounded-2xl border border-[#E8E1D7] bg-white p-4 md:p-6">
-            <h2 className="text-lg font-bold text-[#153E73] md:text-xl">配送與取貨</h2>
-            <div className="space-y-3 text-sm leading-relaxed text-[#334155]">
-              <p className="flex items-start gap-2">
-                <Truck className="mt-0.5 h-4 w-4 shrink-0" />
-                支援門市取貨
-                {(product as { ship_home?: boolean }).ship_home !== false ? "、宅配到府" : ""}。
-              </p>
-              <p>實際配送時程依庫存與門市作業時間為準。</p>
-            </div>
-            <IntroCard title="配送注意事項">{shippingNotice}</IntroCard>
-            <p className="text-xs text-[#667085]">
-              <Link href="/support/shipping" className="font-medium text-[#153E73] underline">
-                查看完整配送說明
-              </Link>
-            </p>
+          <section id="pdp-shipping" className="rounded-2xl border border-[#E8E1D7] bg-white p-4 md:p-6">
+            <ProductDeliveryInfo
+              product={product}
+              shippingNotice={shippingNotice}
+              showHeading
+            />
           </section>
 
           <section id="pdp-reviews" className="space-y-3 rounded-2xl border border-[#E8E1D7] bg-white p-4 md:p-6">

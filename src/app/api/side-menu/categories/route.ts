@@ -128,12 +128,18 @@ export async function GET(request: Request) {
     const table = tableFor(source);
     const selectCols = "*";
 
+    // 只用 sort_order 排序不夠：實際資料有同分的情況（食材底下「乳製品」與
+    // 「餡料/果醬」都是 40、「巧克力」與「罐頭/醃漬物」都是 50、
+    // 「農產品專區」與「預拌粉」都是 130），而 Postgres 對同分的列不保證
+    // 回傳順序——所以同一個分類每次重新載入可能跑到不同位置。
+    // 補上 name 當決勝鍵，順序才會固定。
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q: any = supabase
       .from(table)
       .select(selectCols)
       .eq("is_active", true)
-      .order("sort_order", { ascending: true });
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
 
     if (parentId) {
       q = q.eq("parent_id", parentId);
@@ -157,6 +163,7 @@ export async function GET(request: Request) {
         .eq("is_active", true)
         .is("parent_id", null)
         .order("sort_order", { ascending: true })
+        .order("name", { ascending: true })
         .limit(80);
       data = fallback.data;
       error = fallback.error;
@@ -168,6 +175,7 @@ export async function GET(request: Request) {
         .select(selectCols)
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
+        .order("name", { ascending: true })
         .limit(80);
       if (fallback.error) {
         return NextResponse.json(
