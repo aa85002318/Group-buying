@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireFaqAdmin, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sanitizeCmsHtml } from "@/lib/cms/safeHtml";
 import { SITE_DOCUMENT_META, defaultSiteDocumentContent } from "@/lib/site-pages/defaults";
-import { emptyDocumentStub, getSiteDocument } from "@/lib/site-pages/service";
+import {
+  emptyDocumentStub,
+  getSiteDocument,
+  syncShippingSupportSettings,
+} from "@/lib/site-pages/service";
 import { isSiteDocumentKey } from "@/lib/site-pages/types";
+
+export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ key: string }> };
 
@@ -84,10 +91,9 @@ export async function PUT(request: Request, ctx: Ctx) {
   }
 
   if (key === "shipping") {
-    await admin
-      .from("support_settings")
-      .update({ shipping_info: content, updated_by: auth!.profile.id })
-      .eq("settings_key", "default");
+    await syncShippingSupportSettings(content, auth!.profile.id);
+    revalidatePath("/support/shipping");
+    revalidatePath("/api/site-pages/shipping");
   }
 
   await logAudit(

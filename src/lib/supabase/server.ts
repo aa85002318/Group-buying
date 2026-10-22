@@ -1,6 +1,11 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+/** Next.js patches global fetch to cache GETs — Supabase PostgREST reads must opt out. */
+function noStoreFetch(input: RequestInfo | URL, init?: RequestInit) {
+  return fetch(input, { ...init, cache: "no-store" });
+}
+
 export async function createClient() {
   const cookieStore = await cookies();
 
@@ -27,6 +32,7 @@ export async function createClient() {
           }
         },
       },
+      global: { fetch: noStoreFetch },
     }
   );
 }

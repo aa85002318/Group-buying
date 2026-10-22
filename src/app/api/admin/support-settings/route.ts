@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { requireRole, logAudit } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSafeLinkUrl } from "@/lib/cms/safeHtml";
+import { syncShippingLegalDocument } from "@/lib/site-pages/service";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const { error } = await requireRole(["admin", "customer_service"]);
@@ -82,6 +86,12 @@ export async function PATCH(request: Request) {
       .single();
     if (res.error) return NextResponse.json({ error: res.error.message }, { status: 500 });
     data = res.data;
+  }
+
+  if (typeof body.shipping_info === "string") {
+    await syncShippingLegalDocument(body.shipping_info.trim(), auth!.profile.id);
+    revalidatePath("/support/shipping");
+    revalidatePath("/api/site-pages/shipping");
   }
 
   await logAudit(auth!.profile.id, "update", "support_settings", data.id, existing, data, request as never);
