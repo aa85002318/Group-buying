@@ -33,12 +33,26 @@ export function SearchPageClient() {
       setResults([]);
       return;
     }
+    // 換關鍵字時先清掉上一輪的結果。不清的話，新結果回來之前畫面還停在舊關鍵字
+    // 的內容，看起來像是搜到了又突然變成別的東西。
+    setResults([]);
     setLoading(true);
-    fetch(`/api/search?q=${encodeURIComponent(q)}`)
+
+    // 連續換關鍵字時，慢的那一次可能比快的那一次晚回來。沒有中止就會用舊關鍵字
+    // 的結果蓋掉新的。
+    const controller = new AbortController();
+    fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((d) => setResults(d.results ?? []))
-      .catch(() => setResults([]))
-      .finally(() => setLoading(false));
+      .catch((e) => {
+        if ((e as Error)?.name === "AbortError") return;
+        setResults([]);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+
+    return () => controller.abort();
   }, [q]);
 
   const grouped = useMemo(() => {
