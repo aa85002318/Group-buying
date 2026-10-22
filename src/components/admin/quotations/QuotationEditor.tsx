@@ -64,11 +64,18 @@ function emptyItem(): DraftItem {
   };
 }
 
+/**
+ * 已上傳的報價單檔案。
+ * 刻意不存網址：檔案在私有 bucket，要看得透過 API 換短時效 signed URL，
+ * 所以這裡只需要知道「有檔案」和它的原始檔名。
+ */
 type QuoteFile = {
-  url: string;
   name: string | null;
   uploaded_at: string | null;
 };
+
+/** 與伺服器端一致：Vercel 請求上限約 4.5MB，留餘裕設 4MB。 */
+const MAX_QUOTE_FILE_BYTES = 4 * 1024 * 1024;
 
 /** 詢價單帶進來的一列商品（名稱與規格是客戶送出當下的快照）。 */
 type InquiryItemPrefill = {
@@ -152,7 +159,6 @@ export function QuotationEditor({ mode, quotationId }: Props) {
       setQuoteFile(
         q.quote_file_url
           ? {
-              url: String(q.quote_file_url),
               name: (q.quote_file_name as string | null) ?? null,
               uploaded_at: (q.quote_file_uploaded_at as string | null) ?? null,
             }
@@ -404,6 +410,14 @@ export function QuotationEditor({ mode, quotationId }: Props) {
       setError("請先儲存報價單再上傳檔案");
       return;
     }
+    // 先在瀏覽器擋掉過大的檔案：超過平台上限的話，請求根本到不了我們的程式，
+    // 回來的是一個非 JSON 的 413，使用者只會看到看不懂的錯誤。
+    if (file.size > MAX_QUOTE_FILE_BYTES) {
+      setError(
+        `檔案 ${(file.size / 1024 / 1024).toFixed(1)}MB 超過上限 4MB，請壓縮後再上傳。`
+      );
+      return;
+    }
     setUploadingFile(true);
     setError(null);
     setMessage(null);
@@ -414,9 +428,23 @@ export function QuotationEditor({ mode, quotationId }: Props) {
         method: "POST",
         body,
       });
-      const data = await res.json();
+      // 平台層的錯誤不是 JSON，直接 res.json() 會丟出解析錯誤蓋掉真正的原因。
+      const raw = await res.text();
+      let data: { error?: string; name?: string; uploaded_at?: string } = {};
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        if (!res.ok) {
+          throw new Error(
+            res.status === 413 ? "檔案太大，請壓縮後再上傳。" : `上傳失敗（${res.status}）`
+          );
+        }
+      }
       if (!res.ok) throw new Error(data.error ?? "上傳失敗");
-      setQuoteFile({ url: data.url, name: data.name, uploaded_at: data.uploaded_at });
+      setQuoteFile({
+        name: data.name ?? file.name,
+        uploaded_at: data.uploaded_at ?? new Date().toISOString(),
+      });
       setMessage("已上傳報價單檔案");
     } catch (e) {
       setError(e instanceof Error ? e.message : "上傳失敗");
@@ -652,6 +680,8 @@ export function QuotationEditor({ mode, quotationId }: Props) {
                     <th className="px-2 py-2">數量</th>
                     <th className="px-2 py-2">單價</th>
                     <th className="px-2 py-2">小計</th>
+                    {/* 客戶在詢價單上逐項寫的要求會帶進這裡，不顯示的話報價的人根本看不到。 */}
+                    <th className="px-2 py-2">備註</th>
                     <th className="px-2 py-2" />
                   </tr>
                 </thead>
@@ -726,6 +756,21 @@ export function QuotationEditor({ mode, quotationId }: Props) {
                       </td>
                       <td className="px-2 py-2 whitespace-nowrap">
                         {formatCurrency(item.quantity * item.unit_price)}
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          className="input-field h-9 w-full min-w-[160px]"
+                          placeholder="客戶備註／規格"
+                          value={item.note}
+                          disabled={locked}
+                          onChange={(e) =>
+                            setItems((prev) =>
+                              prev.map((row, i) =>
+                                i === idx ? { ...row, note: e.target.value } : row
+                              )
+                            )
+                          }
+                        />
                       </td>
                       <td className="px-2 py-2">
                         {!locked ? (
@@ -838,15 +883,16 @@ export function QuotationEditor({ mode, quotationId }: Props) {
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <h2 className="mb-2 text-sm font-semibold text-[#153E73]">自製報價單檔案</h2>
             <p className="mb-2 text-[11px] leading-relaxed text-[#8A94A6]">
-              需要蓋章或客戶指定格式時，可以上傳自己做好的報價單（PDF／Excel／Word／圖片，5MB
-              內）。沒有上傳就用系統內建的那份。
+              需要蓋章或客戶指定格式時，可以上傳自己做好的報價單（PDF／Excel／Word／圖片，4MB
+              內）。沒有上傳就用系統內建的那份。檔案存在私有空間，只有後台開得起來。
             </p>
             {!quotationId ? (
               <p className="text-xs text-[#8A94A6]">請先儲存報價單，才能上傳檔案。</p>
             ) : quoteFile ? (
               <div className="space-y-2">
+                {/* 私有 bucket：這支 API 會換一個短時效 signed URL 再轉過去。 */}
                 <a
-                  href={quoteFile.url}
+                  href={`/api/admin/quotations/${quotationId}/quote-file`}
                   target="_blank"
                   rel="noreferrer"
                   className="block break-all text-xs text-[#153E73] underline"
