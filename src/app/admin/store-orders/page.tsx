@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLatestRequest } from "@/hooks/useLatestRequest";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,10 @@ export default function AdminStoreOrdersPage() {
   const [logsOrderId, setLogsOrderId] = useState<string | null>(null);
   const [logs, setLogs] = useState<Array<{ id: string; to_status: string; note?: string | null; created_at: string }>>([]);
 
+  const latest = useLatestRequest();
+
   const load = () => {
+    const isLatest = latest();
     setLoading(true);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
@@ -54,10 +58,13 @@ export default function AdminStoreOrdersPage() {
     fetch(`/api/admin/store-orders?${params}`)
       .then((r) => r.json())
       .then((d) => {
+        if (!isLatest()) return;
         setOrders(d.orders ?? []);
         setStats(d.stats ?? {});
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (isLatest()) setLoading(false);
+      });
   };
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useLatestRequest } from "@/hooks/useLatestRequest";
 import Image from "next/image";
 import Link from "next/link";
 import { PackagePlus, Upload } from "lucide-react";
@@ -68,7 +69,10 @@ export default function AdminBakingMaterialsPage() {
   const pageSize = 20;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
+  const latest = useLatestRequest();
+
   const load = useCallback(async () => {
+    const isLatest = latest();
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -82,6 +86,7 @@ export default function AdminBakingMaterialsPage() {
 
       const res = await fetch(`/api/admin/baking-materials?${params}`);
       const data = await res.json();
+      if (!isLatest()) return;
       if (!res.ok) throw new Error(data.error ?? "載入失敗");
 
       setProducts(data.products ?? []);
@@ -90,12 +95,13 @@ export default function AdminBakingMaterialsPage() {
       setCategories(data.categories ?? []);
       setBrands(data.brands ?? []);
     } catch {
+      if (!isLatest()) return;
       setProducts([]);
       setTotal(0);
     } finally {
-      setLoading(false);
+      if (isLatest()) setLoading(false);
     }
-  }, [page, search, category, brand, status]);
+  }, [page, search, category, brand, status, latest]);
 
   useEffect(() => {
     load();

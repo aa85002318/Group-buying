@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
+import { useLatestRequest } from "@/hooks/useLatestRequest";
 import { ChevronDown, ChevronRight, Download, RefreshCw } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
@@ -79,20 +80,28 @@ export default function AdminAuditLogsPage() {
     [moduleId, entityType, action, q, from, to]
   );
 
+  const latest = useLatestRequest();
+
   const load = useCallback(() => {
+    const isLatest = latest();
     setLoading(true);
     setError(null);
     fetch(`/api/admin/audit-logs?${buildParams()}`)
       .then(async (r) => {
         const d = await r.json();
+        if (!isLatest()) return;
         if (!r.ok) throw new Error(d.error ?? "載入失敗");
         setLogs(d.logs ?? []);
         setTotal(d.total ?? 0);
         setEntityTypes(d.entity_types ?? []);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "載入失敗"))
-      .finally(() => setLoading(false));
-  }, [buildParams]);
+      .catch((e) => {
+        if (isLatest()) setError(e instanceof Error ? e.message : "載入失敗");
+      })
+      .finally(() => {
+        if (isLatest()) setLoading(false);
+      });
+  }, [buildParams, latest]);
 
   useEffect(() => {
     load();

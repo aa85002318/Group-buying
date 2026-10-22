@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useLatestRequest } from "@/hooks/useLatestRequest";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BarChart3, Download, Images, PackagePlus, Printer, Upload } from "lucide-react";
@@ -56,17 +57,11 @@ function AdminProductsPageInner() {
   >("default");
   const [suppliers, setSuppliers] = useState<Array<{ id: string; name: string }>>([]);
 
-  /**
-   * 每次查詢給一個流水號，只有「最後送出的那一次」可以寫入畫面。
-   *
-   * 沒有這個的話：正式站載入全部 17,040 筆要 3.5 秒，而搜尋只要 0.7 秒。
-   * 使用者一打字，搜尋結果先回來顯示，接著那包慢的全部商品才到、把搜尋結果
-   * 整個蓋掉——看起來就是「搜尋結果閃一下就不見了」。
-   */
-  const requestSeq = useRef(0);
+  // 只讓最後送出的那次查詢寫入畫面，否則慢的「全部商品」會蓋掉快的搜尋結果。
+  const latest = useLatestRequest();
 
   const refresh = useCallback(async () => {
-    const seq = ++requestSeq.current;
+    const isLatest = latest();
     setLoading(true);
     setError(null);
     try {
@@ -78,17 +73,17 @@ function AdminProductsPageInner() {
       const res = await fetch(`/api/admin/products?${params}`);
       const data = await res.json();
       // 這次請求送出之後又有新的查詢，這份結果已經過時，直接丟掉。
-      if (seq !== requestSeq.current) return;
+      if (!isLatest()) return;
       if (!res.ok) throw new Error(data.error ?? "載入失敗");
       setItems((data.products ?? []) as Product[]);
     } catch (e) {
-      if (seq !== requestSeq.current) return;
+      if (!isLatest()) return;
       setError(e instanceof Error ? e.message : "載入失敗");
     } finally {
       // loading 也只由最後一次請求收尾，否則舊請求結束會把轉圈提早關掉。
-      if (seq === requestSeq.current) setLoading(false);
+      if (isLatest()) setLoading(false);
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, latest]);
 
   useEffect(() => {
     void refresh();
