@@ -44,6 +44,10 @@ export function useCart() {
       if (product.is_active === false || (product.status && product.status !== "active")) {
         throw new Error("此商品已下架");
       }
+      // 僅供詢價的商品不走購物車：列表頁沒帶到 sales_mode 時，這裡還是會擋下來。
+      if (product.sales_mode === "inquiry") {
+        throw new Error("此商品僅供詢價，請改用「加入詢價單」。");
+      }
       if (Number(product.stock) <= 0) {
         throw new Error("此商品已售完");
       }

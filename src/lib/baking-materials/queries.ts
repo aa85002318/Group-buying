@@ -18,6 +18,24 @@ const LOW_STOCK_THRESHOLD = 10;
 const PRODUCT_LIST_FIELDS =
   "id, slug, name, sku, image_url, price, sale_price, original_price, stock, is_new, is_hot, brand_id, primary_category_id, storage_type, status, is_active, min_price, max_price, created_at, updated_at, brands(name, slug)";
 
+/**
+ * sales_mode（直接販售／僅供詢價）是後加的欄位。
+ *
+ * 直接寫進 select 的話，還沒跑 migration 的環境整個查詢會失敗，等於商品列表全空。
+ * 所以第一次查詢前探一次有沒有這個欄位，之後就沿用結果（程序活著期間只探一次）。
+ */
+let salesModeColumnExists: boolean | null = null;
+
+async function productListFields(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<string> {
+  if (salesModeColumnExists === null) {
+    const probe = await supabase.from("products").select("sales_mode").limit(1);
+    salesModeColumnExists = !probe.error;
+  }
+  return salesModeColumnExists ? `${PRODUCT_LIST_FIELDS}, sales_mode` : PRODUCT_LIST_FIELDS;
+}
+
 type DbCategoryRow = {
   id: string;
   name: string;
@@ -53,6 +71,8 @@ type DbProductRow = {
   max_price: number | null;
   created_at: string;
   updated_at: string;
+  /** 還沒 migrate 的環境查不到這個欄位，所以是選填。 */
+  sales_mode?: string | null;
   brands?: { name: string; slug: string } | { name: string; slug: string }[] | null;
 };
 
@@ -110,6 +130,7 @@ function mapListProduct(row: DbProductRow): BakingListProduct {
     brand_name: resolveBrandName(row.brands),
     stock_status: mapStockStatus(row.stock ?? 0),
     badges: buildBadges(row),
+    sales_mode: row.sales_mode === "inquiry" ? "inquiry" : "sell",
   };
 }
 
@@ -390,7 +411,7 @@ export async function searchBakingProducts(
 
     let query = supabase
       .from("products")
-      .select(PRODUCT_LIST_FIELDS, { count: "exact" })
+      .select(await productListFields(supabase), { count: "exact" })
       .eq("is_active", true)
       .or("status.is.null,status.eq.active");
 
@@ -436,7 +457,9 @@ export async function searchBakingProducts(
 
     if (error) return emptyProductsResult(page, pageSize);
 
-    let rows = (data ?? []) as DbProductRow[];
+    // select 的欄位是執行時才決定的（sales_mode 可能不存在），
+    // 所以 Supabase 推不出型別，這裡自己斷言成 DbProductRow。
+    let rows = (data ?? []) as unknown as DbProductRow[];
     if (filters.onSale) {
       rows = rows.filter((row) => {
         const listPrice = row.price ?? row.original_price ?? 0;

@@ -64,6 +64,28 @@ function emptyItem(): DraftItem {
   };
 }
 
+type QuoteFile = {
+  url: string;
+  name: string | null;
+  uploaded_at: string | null;
+};
+
+/** 詢價單帶進來的一列商品（名稱與規格是客戶送出當下的快照）。 */
+type InquiryItemPrefill = {
+  product_id: string | null;
+  product_name: string;
+  product_spec: string | null;
+  quantity: number;
+  note: string | null;
+  sort_order: number | null;
+  product?: {
+    sku: string | null;
+    barcode: string | null;
+    unit: string | null;
+    price: number;
+  } | null;
+};
+
 type Props = {
   mode: "create" | "edit";
   quotationId?: string;
@@ -80,6 +102,10 @@ export function QuotationEditor({ mode, quotationId }: Props) {
   const [quoteNumber, setQuoteNumber] = useState<string | null>(null);
   const [status, setStatus] = useState<QuotationStatus>("draft");
   const [convertedOrderId, setConvertedOrderId] = useState<string | null>(null);
+  const [inquiryId, setInquiryId] = useState<string | null>(null);
+  const [inquiryNote, setInquiryNote] = useState<string | null>(null);
+  const [quoteFile, setQuoteFile] = useState<QuoteFile | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const [companyName, setCompanyName] = useState("");
   const [contactName, setContactName] = useState("");
@@ -122,6 +148,16 @@ export function QuotationEditor({ mode, quotationId }: Props) {
       setQuoteNumber(q.quote_number);
       setStatus(q.status);
       setConvertedOrderId(q.converted_order_id ?? null);
+      setInquiryId(q.corporate_inquiry_id ?? null);
+      setQuoteFile(
+        q.quote_file_url
+          ? {
+              url: String(q.quote_file_url),
+              name: (q.quote_file_name as string | null) ?? null,
+              uploaded_at: (q.quote_file_uploaded_at as string | null) ?? null,
+            }
+          : null
+      );
       setCompanyName(q.company_name ?? "");
       setContactName(q.contact_name ?? "");
       setContactPhone(q.contact_phone ?? "");
@@ -163,6 +199,75 @@ export function QuotationEditor({ mode, quotationId }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // 從「詢價管理」按「轉成報價單」進來時（/admin/quotations/new?inquiry=<id>），
+  // 把客戶資料與勾選的商品直接帶進表單，單價用商品現價當起點，後台再調整。
+  // 讀 window.location 而不是 useSearchParams，省掉 Suspense 邊界的建置限制。
+  useEffect(() => {
+    if (mode !== "create") return;
+    const id = new URLSearchParams(window.location.search).get("inquiry");
+    if (!id) return;
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/corporate-inquiries/${id}`);
+        const data = await res.json();
+        if (cancelled) return;
+        if (!res.ok) throw new Error(data.error ?? "載入詢價單失敗");
+        const inq = data.inquiry as Record<string, unknown>;
+        setInquiryId(String(inq.id));
+        setCompanyName(
+          typeof inq.company_name === "string" && inq.company_name !== "（個人）"
+            ? inq.company_name
+            : ""
+        );
+        setContactName(String(inq.contact_name ?? ""));
+        setContactPhone(String(inq.contact_phone ?? ""));
+        setContactEmail(String(inq.contact_email ?? ""));
+        if (typeof inq.user_id === "string" && inq.user_id) {
+          setUserId(inq.user_id);
+          setBoundMemberLabel(`由詢價單帶入會員 ${inq.user_id.slice(0, 8)}…`);
+        }
+        // 配送資訊與方便聯絡時間不是報價單欄位，寫進備註，列印時看得到。
+        const extras = [
+          inq.delivery_info ? `配送資訊：${inq.delivery_info}` : "",
+          inq.preferred_contact_time ? `方便聯絡時間：${inq.preferred_contact_time}` : "",
+          inq.message && inq.message !== "（商品詢價）" ? `客戶需求：${inq.message}` : "",
+        ].filter(Boolean);
+        if (extras.length) setNotes(extras.join("\n"));
+
+        const lines = (inq.corporate_inquiry_items ?? []) as InquiryItemPrefill[];
+        const drafts = lines
+          .slice()
+          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+          .map((line) => ({
+            key: newItemKey(),
+            product_id: line.product_id ?? null,
+            product_name: line.product_name,
+            sku: line.product?.sku ?? "",
+            barcode: line.product?.barcode ?? "",
+            unit: line.product?.unit ?? "件",
+            quantity: Number(line.quantity) || 1,
+            unit_price: Number(line.product?.price) || 0,
+            note: [line.product_spec, line.note].filter(Boolean).join(" / "),
+          }));
+        setItems(drafts.length ? drafts : [emptyItem()]);
+        setInquiryNote(
+          drafts.length
+            ? `已帶入詢價單的 ${drafts.length} 項商品，單價先用商品現價，請確認後再儲存。`
+            : "此詢價單沒有商品明細，請手動新增。"
+        );
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "載入詢價單失敗");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
 
   useEffect(() => {
     const q = productQuery.trim();
@@ -237,6 +342,7 @@ export function QuotationEditor({ mode, quotationId }: Props) {
     tax_id: taxId || null,
     address: address || null,
     user_id: userId,
+    corporate_inquiry_id: inquiryId,
     discount_amount: discountAmount,
     shipping_fee: shippingFee,
     notes: notes || null,
@@ -290,6 +396,52 @@ export function QuotationEditor({ mode, quotationId }: Props) {
       setError(e instanceof Error ? e.message : "儲存失敗");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const uploadQuoteFile = async (file: File) => {
+    if (!quotationId) {
+      setError("請先儲存報價單再上傳檔案");
+      return;
+    }
+    setUploadingFile(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch(`/api/admin/quotations/${quotationId}/quote-file`, {
+        method: "POST",
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "上傳失敗");
+      setQuoteFile({ url: data.url, name: data.name, uploaded_at: data.uploaded_at });
+      setMessage("已上傳報價單檔案");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "上傳失敗");
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const removeQuoteFile = async () => {
+    if (!quotationId) return;
+    if (!confirm("移除後客戶會改看系統內建的報價單，確定要移除嗎？")) return;
+    setUploadingFile(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/quotations/${quotationId}/quote-file`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "移除失敗");
+      setQuoteFile(null);
+      setMessage("已移除報價單檔案");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "移除失敗");
+    } finally {
+      setUploadingFile(false);
     }
   };
 
@@ -366,6 +518,14 @@ export function QuotationEditor({ mode, quotationId }: Props) {
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           此報價單已轉單，內容鎖定不可修改。
         </p>
+      ) : null}
+      {inquiryId ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#BBD4F5] bg-[#EAF2FF] px-4 py-3 text-sm text-[#153E73]">
+          <span>{inquiryNote ?? "此報價單對應一張客戶詢價單。"}</span>
+          <Link href="/admin/corporate" className="underline">
+            回詢價管理
+          </Link>
+        </div>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
@@ -673,6 +833,57 @@ export function QuotationEditor({ mode, quotationId }: Props) {
                 </label>
               ))}
             </div>
+          </section>
+
+          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <h2 className="mb-2 text-sm font-semibold text-[#153E73]">自製報價單檔案</h2>
+            <p className="mb-2 text-[11px] leading-relaxed text-[#8A94A6]">
+              需要蓋章或客戶指定格式時，可以上傳自己做好的報價單（PDF／Excel／Word／圖片，10MB
+              內）。沒有上傳就用系統內建的那份。
+            </p>
+            {!quotationId ? (
+              <p className="text-xs text-[#8A94A6]">請先儲存報價單，才能上傳檔案。</p>
+            ) : quoteFile ? (
+              <div className="space-y-2">
+                <a
+                  href={quoteFile.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block break-all text-xs text-[#153E73] underline"
+                >
+                  {quoteFile.name || "已上傳的報價單"}
+                </a>
+                {quoteFile.uploaded_at ? (
+                  <p className="text-[11px] text-[#8A94A6]">
+                    上傳於 {new Date(quoteFile.uploaded_at).toLocaleString("zh-TW")}
+                  </p>
+                ) : null}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={uploadingFile}
+                  onClick={() => void removeQuoteFile()}
+                >
+                  {uploadingFile ? "處理中…" : "移除檔案"}
+                </Button>
+              </div>
+            ) : (
+              <input
+                type="file"
+                className="w-full text-xs"
+                accept=".pdf,.xlsx,.xls,.docx,.doc,.jpg,.jpeg,.png"
+                disabled={uploadingFile}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) void uploadQuoteFile(file);
+                }}
+              />
+            )}
+            {uploadingFile && !quoteFile ? (
+              <p className="mt-2 text-xs text-[#8A94A6]">上傳中…</p>
+            ) : null}
           </section>
 
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">

@@ -53,6 +53,8 @@ export interface BakingListProduct {
   stock_status: BakingStockStatus;
   badges: string[];
   primary_variant_name?: string;
+  /** "inquiry" 的商品不顯示價格、不能加入購物車，只能加入詢價單。 */
+  sales_mode?: "sell" | "inquiry";
 }
 
 export interface BakingProductFilters {

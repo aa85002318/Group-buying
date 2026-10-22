@@ -453,6 +453,8 @@ export interface Product {
   website_price?: number | null;
   group_buy_price?: number | null;
   msrp?: number | null;
+  /** sell = 直接販售；inquiry = 僅供詢價（前台隱藏價格） */
+  sales_mode?: "sell" | "inquiry";
   publish_website?: boolean;
   publish_group_buy?: boolean;
   publish_store?: boolean;

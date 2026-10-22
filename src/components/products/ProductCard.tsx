@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Plus } from "lucide-react";
+import { FileText, Plus } from "lucide-react";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
 import { ProductSticker, type ProductStickerType } from "@/components/brand/ProductSticker";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
+import { useInquiryCart } from "@/hooks/useInquiryCart";
 import { useState } from "react";
 
 export type ProductBadge = "new" | "hot" | "groupBuy" | "preorder" | "instock" | "soldout";
@@ -30,6 +31,13 @@ interface ProductCardProps {
   showQuickAdd?: boolean;
   /** Shop mall card styling (coral price + yellow cart). */
   variant?: "default" | "shop";
+  /**
+   * "inquiry" 的商品不顯示價格、不能加入購物車，只能加入詢價單。
+   * 沒傳就照原本的販售流程走。
+   */
+  salesMode?: "sell" | "inquiry";
+  /** 詢價單明細要帶的規格快照（可留空）。 */
+  spec?: string | null;
 }
 
 const BADGE_CLASS: Record<ProductBadge, string> = {
@@ -89,6 +97,8 @@ export function ProductCard({
   groupBuyProductId,
   showQuickAdd = true,
   variant = "default",
+  salesMode = "sell",
+  spec,
 }: ProductCardProps) {
   const link = href ?? `/shop/products/${id}`;
   const resolvedBadge: ProductBadge | undefined =
@@ -96,9 +106,19 @@ export function ProductCard({
     (isGroupBuy || groupBuyLabel ? "groupBuy" : undefined) ??
     (sticker ? STICKER_TO_BADGE[sticker] : undefined);
   const { addItem } = useCart();
+  const inquiry = useInquiryCart();
   const [adding, setAdding] = useState(false);
-  const [addedHint, setAddedHint] = useState(false);
+  const [addedHint, setAddedHint] = useState<string | null>(null);
   const shop = variant === "shop";
+  const inquiryOnly = salesMode === "inquiry";
+
+  const onAddInquiry = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const res = inquiry.addItem({ productId: id, name, imageUrl: image_url, spec: spec ?? null });
+    setAddedHint(res.ok ? (res.duplicated ? "已在詢價單中，數量 +1" : "已加入詢價單") : res.reason);
+    window.setTimeout(() => setAddedHint(null), 1800);
+  };
 
   const onQuickAdd = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -114,8 +134,8 @@ export function ProductCard({
         groupBuyEventId: groupBuyEventId ?? null,
         groupBuyProductId: groupBuyProductId ?? null,
       });
-      setAddedHint(true);
-      window.setTimeout(() => setAddedHint(false), 1600);
+      setAddedHint("已加入購物車");
+      window.setTimeout(() => setAddedHint(null), 1600);
     } catch {
       /* ignore */
     } finally {
@@ -134,7 +154,7 @@ export function ProductCard({
     >
       {addedHint ? (
         <div className="absolute inset-x-2 top-2 z-20 rounded-full bg-[#153E73] px-2 py-1 text-center text-[10px] font-bold text-white">
-          已加入購物車
+          {addedHint}
         </div>
       ) : null}
       <Link href={link} className="relative block aspect-square overflow-hidden bg-transparent">
@@ -189,35 +209,59 @@ export function ProductCard({
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-1">
           <div className="min-w-0">
-            <p
-              className={cn(
-                "font-semibold",
-                shop ? "text-[#F0645A]" : "text-brand-primary"
-              )}
-            >
-              {formatCurrency(price)}
-            </p>
-            {original_price && original_price > price && (
-              <p className="text-xs text-foreground-muted line-through">
-                {formatCurrency(original_price)}
-              </p>
+            {inquiryOnly ? (
+              // 詢價商品不顯示價格——價格由後台個案報價。
+              <p className="text-sm font-semibold text-[#153E73]">價格請詢問</p>
+            ) : (
+              <>
+                <p
+                  className={cn(
+                    "font-semibold",
+                    shop ? "text-[#F0645A]" : "text-brand-primary"
+                  )}
+                >
+                  {formatCurrency(price)}
+                </p>
+                {original_price && original_price > price && (
+                  <p className="text-xs text-foreground-muted line-through">
+                    {formatCurrency(original_price)}
+                  </p>
+                )}
+              </>
             )}
           </div>
-          {showQuickAdd && (
+          {inquiryOnly ? (
             <button
               type="button"
-              onClick={onQuickAdd}
-              disabled={adding || resolvedBadge === "soldout"}
-              aria-label="將商品加入購物車"
+              onClick={onAddInquiry}
+              aria-label="將商品加入詢價單"
               className={cn(
-                "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition active:scale-95 disabled:opacity-50",
-                shop
-                  ? "bg-[#FFD54F] text-[#153E73] hover:brightness-95"
+                "inline-flex h-10 shrink-0 items-center gap-1 rounded-full px-3 text-xs font-bold transition active:scale-95",
+                inquiry.has(id)
+                  ? "bg-[#153E73] text-white"
                   : "bg-[#FFD54F] text-[#153E73] hover:brightness-95"
               )}
             >
-              <Plus className="h-5 w-5" aria-hidden />
+              <FileText className="h-4 w-4" aria-hidden />
+              {inquiry.has(id) ? "已加入" : "詢價"}
             </button>
+          ) : (
+            showQuickAdd && (
+              <button
+                type="button"
+                onClick={onQuickAdd}
+                disabled={adding || resolvedBadge === "soldout"}
+                aria-label="將商品加入購物車"
+                className={cn(
+                  "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition active:scale-95 disabled:opacity-50",
+                  shop
+                    ? "bg-[#FFD54F] text-[#153E73] hover:brightness-95"
+                    : "bg-[#FFD54F] text-[#153E73] hover:brightness-95"
+                )}
+              >
+                <Plus className="h-5 w-5" aria-hidden />
+              </button>
+            )
           )}
         </div>
       </div>

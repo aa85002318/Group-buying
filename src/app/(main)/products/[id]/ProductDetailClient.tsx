@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useCart } from "@/hooks/useCart";
+import { useInquiryCart } from "@/hooks/useInquiryCart";
 import { useDesktopV2Active } from "@/hooks/useDesktopV2Active";
 import { getMockProductById } from "@/lib/mock-data";
 import { FavoriteButton } from "@/components/member/FavoriteButton";
@@ -127,6 +128,7 @@ export default function ProductDetailClient({ id }: { id: string }) {
   );
   const { addItem, items } = useCart();
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
+  const inquiryCart = useInquiryCart();
 
   useEffect(() => {
     fetch("/api/site-pages/shipping")
@@ -239,9 +241,32 @@ export default function ProductDetailClient({ id }: { id: string }) {
       ? Number((product as { vip_price?: number }).vip_price)
       : null;
 
+  // 「僅供詢價」的商品不顯示價格、不能下單，只能加入詢價單。
+  const inquiryOnly =
+    (product as { sales_mode?: string } | null)?.sales_mode === "inquiry";
+
   const showToast = (msg: string) => {
     setToast(msg);
     window.setTimeout(() => setToast(null), 2200);
+  };
+
+  const handleAddInquiry = () => {
+    if (!product) return;
+    const res = inquiryCart.addItem({
+      productId: product.id,
+      name: stripDemoPrefix(product.name),
+      imageUrl: gallery[0]?.url || product.image_url,
+      spec:
+        (product as { package_spec?: string | null }).package_spec ??
+        selectedVariant?.name ??
+        null,
+      quantity,
+    });
+    if (!res.ok) {
+      showToast(res.reason);
+      return;
+    }
+    showToast(res.duplicated ? "已在詢價單中，已累加數量" : "已加入詢價單");
   };
 
   const handleAdd = async (buyNow = false) => {
@@ -438,33 +463,44 @@ export default function ProductDetailClient({ id }: { id: string }) {
               </p>
             )}
 
-            <div className="mt-4 flex flex-wrap items-end gap-2">
-              <span className="text-[32px] font-bold leading-none text-[#F16458]">
-                {formatCurrency(displayPrice)}
-              </span>
-              {displayOriginal != null ? (
-                <span className="pb-1 text-sm text-[#8A94A6] line-through">
-                  {formatCurrency(displayOriginal)}
-                </span>
-              ) : null}
-            </div>
+            {inquiryOnly ? (
+              <div className="mt-4 rounded-xl border border-[#FEE169] bg-[#FFFBEA] px-4 py-3">
+                <p className="text-lg font-bold text-[#153E73]">價格請詢問</p>
+                <p className="mt-1 text-xs leading-relaxed text-[#8A6A00]">
+                  此商品依數量與配送方式個案報價。加入詢價單後一次送出，我們會回覆正式報價單。
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="mt-4 flex flex-wrap items-end gap-2">
+                  <span className="text-[32px] font-bold leading-none text-[#F16458]">
+                    {formatCurrency(displayPrice)}
+                  </span>
+                  {displayOriginal != null ? (
+                    <span className="pb-1 text-sm text-[#8A94A6] line-through">
+                      {formatCurrency(displayOriginal)}
+                    </span>
+                  ) : null}
+                </div>
 
-            {memberPrice != null && memberPrice < displayPrice ? (
-              <p className="mt-2 text-sm text-[#153E73]">
-                會員優惠價{" "}
-                <span className="font-bold text-[#F16458]">{formatCurrency(memberPrice)}</span>
-              </p>
-            ) : null}
+                {memberPrice != null && memberPrice < displayPrice ? (
+                  <p className="mt-2 text-sm text-[#153E73]">
+                    會員優惠價{" "}
+                    <span className="font-bold text-[#F16458]">{formatCurrency(memberPrice)}</span>
+                  </p>
+                ) : null}
 
-            <p className="mt-3 text-sm font-medium">
-              {outOfStock ? (
-                <span className="text-[#F16458]">目前缺貨</span>
-              ) : lowStock ? (
-                <span className="text-[#F16458]">即將售完｜剩餘 {stock}</span>
-              ) : (
-                <span className="text-[#153E73]">現貨｜庫存 {stock}</span>
-              )}
-            </p>
+                <p className="mt-3 text-sm font-medium">
+                  {outOfStock ? (
+                    <span className="text-[#F16458]">目前缺貨</span>
+                  ) : lowStock ? (
+                    <span className="text-[#F16458]">即將售完｜剩餘 {stock}</span>
+                  ) : (
+                    <span className="text-[#153E73]">現貨｜庫存 {stock}</span>
+                  )}
+                </p>
+              </>
+            )}
 
             {variants.length > 0 ? (
               <div className="mt-4 space-y-2">
@@ -502,7 +538,7 @@ export default function ProductDetailClient({ id }: { id: string }) {
                 <button
                   type="button"
                   className="flex h-11 w-11 items-center justify-center text-lg disabled:opacity-40"
-                  disabled={quantity <= 1 || outOfStock}
+                  disabled={quantity <= 1 || (!inquiryOnly && outOfStock)}
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 >
                   −
@@ -511,8 +547,11 @@ export default function ProductDetailClient({ id }: { id: string }) {
                 <button
                   type="button"
                   className="flex h-11 w-11 items-center justify-center text-lg disabled:opacity-40"
-                  disabled={quantity >= maxQty || outOfStock}
-                  onClick={() => setQuantity(Math.min(maxQty, quantity + 1))}
+                  // 詢價商品不受庫存上限限制——客戶就是在問「我要這麼多，能不能供」。
+                  disabled={inquiryOnly ? quantity >= 9999 : quantity >= maxQty || outOfStock}
+                  onClick={() =>
+                    setQuantity(inquiryOnly ? quantity + 1 : Math.min(maxQty, quantity + 1))
+                  }
                 >
                   +
                 </button>
@@ -521,22 +560,43 @@ export default function ProductDetailClient({ id }: { id: string }) {
 
             {/* Desktop CTA */}
             <div className="mt-6 hidden gap-3 md:flex">
-              <button
-                type="button"
-                disabled={outOfStock}
-                onClick={() => void handleAdd(false)}
-                className="flex h-12 flex-1 items-center justify-center rounded-full border-2 border-[#FEE169] bg-white text-sm font-bold text-[#153E73] disabled:opacity-40"
-              >
-                {outOfStock ? "補貨通知" : "加入購物車"}
-              </button>
-              <button
-                type="button"
-                disabled={outOfStock}
-                onClick={() => void handleAdd(true)}
-                className="flex h-12 flex-1 items-center justify-center rounded-full bg-[#153E73] text-sm font-bold text-white disabled:opacity-40"
-              >
-                {outOfStock ? "補貨通知" : "立即購買"}
-              </button>
+              {inquiryOnly ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleAddInquiry}
+                    className="flex h-12 flex-1 items-center justify-center rounded-full border-2 border-[#FEE169] bg-white text-sm font-bold text-[#153E73]"
+                  >
+                    {inquiryCart.has(product.id) ? "再加一次（累加數量）" : "加入詢價單"}
+                  </button>
+                  <Link
+                    href="/inquiry"
+                    className="flex h-12 flex-1 items-center justify-center rounded-full bg-[#153E73] text-sm font-bold text-white"
+                  >
+                    前往詢價單
+                    {inquiryCart.count > 0 ? `（${inquiryCart.count}）` : ""}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    disabled={outOfStock}
+                    onClick={() => void handleAdd(false)}
+                    className="flex h-12 flex-1 items-center justify-center rounded-full border-2 border-[#FEE169] bg-white text-sm font-bold text-[#153E73] disabled:opacity-40"
+                  >
+                    {outOfStock ? "補貨通知" : "加入購物車"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={outOfStock}
+                    onClick={() => void handleAdd(true)}
+                    className="flex h-12 flex-1 items-center justify-center rounded-full bg-[#153E73] text-sm font-bold text-white disabled:opacity-40"
+                  >
+                    {outOfStock ? "補貨通知" : "立即購買"}
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -885,25 +945,48 @@ export default function ProductDetailClient({ id }: { id: string }) {
       >
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs text-[#667085]">售價</p>
-            <p className="text-lg font-bold text-[#F16458]">{formatCurrency(displayPrice)}</p>
+            <p className="truncate text-xs text-[#667085]">{inquiryOnly ? "報價" : "售價"}</p>
+            <p className="text-lg font-bold text-[#F16458]">
+              {inquiryOnly ? "請詢問" : formatCurrency(displayPrice)}
+            </p>
           </div>
-          <button
-            type="button"
-            disabled={outOfStock}
-            onClick={() => void handleAdd(false)}
-            className="flex h-12 min-w-[7.5rem] items-center justify-center rounded-full border-2 border-[#FEE169] bg-white px-3 text-sm font-bold text-[#153E73] disabled:opacity-40"
-          >
-            {outOfStock ? "補貨通知" : "加入購物車"}
-          </button>
-          <button
-            type="button"
-            disabled={outOfStock}
-            onClick={() => void handleAdd(true)}
-            className="flex h-12 min-w-[7.5rem] items-center justify-center rounded-full bg-[#153E73] px-3 text-sm font-bold text-white disabled:opacity-40"
-          >
-            {outOfStock ? "補貨通知" : "立即購買"}
-          </button>
+          {inquiryOnly ? (
+            <>
+              <button
+                type="button"
+                onClick={handleAddInquiry}
+                className="flex h-12 min-w-[6.5rem] items-center justify-center rounded-full border-2 border-[#FEE169] bg-white px-3 text-sm font-bold text-[#153E73]"
+              >
+                加入詢價
+              </button>
+              <Link
+                href="/inquiry"
+                className="flex h-12 min-w-[6.5rem] items-center justify-center rounded-full bg-[#153E73] px-3 text-sm font-bold text-white"
+              >
+                詢價單
+                {inquiryCart.count > 0 ? `（${inquiryCart.count}）` : ""}
+              </Link>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled={outOfStock}
+                onClick={() => void handleAdd(false)}
+                className="flex h-12 min-w-[7.5rem] items-center justify-center rounded-full border-2 border-[#FEE169] bg-white px-3 text-sm font-bold text-[#153E73] disabled:opacity-40"
+              >
+                {outOfStock ? "補貨通知" : "加入購物車"}
+              </button>
+              <button
+                type="button"
+                disabled={outOfStock}
+                onClick={() => void handleAdd(true)}
+                className="flex h-12 min-w-[7.5rem] items-center justify-center rounded-full bg-[#153E73] px-3 text-sm font-bold text-white disabled:opacity-40"
+              >
+                {outOfStock ? "補貨通知" : "立即購買"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 

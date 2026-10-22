@@ -72,6 +72,8 @@ export type AdminProductFormV2 = {
   brand_id: string;
   supplier_id: string;
   status: ProductStatus;
+  /** sell = 直接販售；inquiry = 僅供詢價（前台隱藏價格，改為加入詢價單） */
+  sales_mode: "sell" | "inquiry";
   sort_order: string;
   is_featured: boolean;
   is_hot: boolean;
@@ -185,6 +187,7 @@ export const emptyProductFormV2 = (): AdminProductFormV2 => ({
   brand_id: "",
   supplier_id: "",
   status: "draft",
+  sales_mode: "sell",
   sort_order: "0",
   is_featured: false,
   is_hot: false,
@@ -336,6 +339,7 @@ export function productToFormV2(p: ExtendedProduct): AdminProductFormV2 {
     brand_id: p.brand_id ?? "",
     supplier_id: p.supplier_id ?? "",
     status: p.status ?? (p.is_active ? "active" : "inactive"),
+    sales_mode: p.sales_mode === "inquiry" ? "inquiry" : "sell",
     sort_order: String(p.sort_order ?? 0),
     is_featured: p.is_featured ?? false,
     is_hot: p.is_hot ?? false,
@@ -442,6 +446,7 @@ export function formV2ToPayload(form: AdminProductFormV2) {
     brand_id: form.brand_id || null,
     supplier_id: form.supplier_id || null,
     status: form.status,
+    sales_mode: form.sales_mode,
     sort_order: Number(form.sort_order) || 0,
     is_featured: form.is_featured,
     is_hot: form.is_hot,

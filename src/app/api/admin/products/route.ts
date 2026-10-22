@@ -174,6 +174,8 @@ function mapProductRow(body: Record<string, unknown>) {
     publish_store: body.publish_store !== false,
     product_scope:
       body.product_scope === "chime_select" ? "chime_select" : "baking",
+    // 僅供詢價的商品前台不顯示價格、不能下單。只認這兩個值，其他一律當作直接販售。
+    sales_mode: body.sales_mode === "inquiry" ? "inquiry" : "sell",
   };
 }
 

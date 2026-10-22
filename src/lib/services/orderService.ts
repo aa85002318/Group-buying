@@ -74,6 +74,7 @@ export class OrderError extends Error {
       | "TEMPERATURE_SPLIT"
       | "STORE_PICKUP_UNAVAILABLE"
       | "STORE_PICKUP_CLOSED"
+      | "INQUIRY_ONLY"
   ) {
     super(message);
     this.name = "OrderError";
@@ -109,6 +110,20 @@ async function resolveUnitPrice(
 
   if (!product || !product.is_active) {
     throw new OrderError("商品不存在或已下架", "INVALID_ITEM");
+  }
+
+  // 僅供詢價的商品沒有公開價格，不能直接成立訂單——必須走詢價→報價單→轉單。
+  // 這是伺服器端的最後一道，前台怎麼改都繞不過去。
+  //
+  // 刻意另外查一次而不是加進上面的 select：sales_mode 是後加的欄位，
+  // 還沒跑 migration 的環境加進去會讓整個 select 失敗，變成所有訂單都下不了。
+  const salesModeCheck = await admin
+    .from("products")
+    .select("sales_mode")
+    .eq("id", productId)
+    .maybeSingle();
+  if (!salesModeCheck.error && salesModeCheck.data?.sales_mode === "inquiry") {
+    throw new OrderError(`${product.name} 僅供詢價，請改送詢價單`, "INQUIRY_ONLY");
   }
 
   let unitPrice = Number(product.price);

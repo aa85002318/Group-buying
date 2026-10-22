@@ -33,6 +33,23 @@ export function ProductQuickSettings({
         />
       </section>
       <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <h2 className="text-sm font-semibold text-[#153E73]">銷售方式</h2>
+        <AdminRadioGroup<"sell" | "inquiry">
+          value={form.sales_mode}
+          onChange={(sales_mode) => patch({ sales_mode })}
+          options={[
+            { value: "sell", label: "直接販售（可加入購物車）" },
+            { value: "inquiry", label: "僅供詢價（隱藏價格）" },
+          ]}
+        />
+        {form.sales_mode === "inquiry" ? (
+          <p className="mt-2 rounded-lg bg-[#FFF7E0] px-3 py-2 text-xs leading-relaxed text-[#8A6A00]">
+            前台不顯示價格、不能下單，客戶只能「加入詢價單」。送出後會進到後台的
+            「企業詢價」，可以直接轉成報價單回覆。
+          </p>
+        ) : null}
+      </section>
+      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-[#153E73]">商品分類</h2>
         <CategoryGroupedPicker
           categories={categories}

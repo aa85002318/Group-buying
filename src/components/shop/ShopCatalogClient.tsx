@@ -483,6 +483,8 @@ export function ShopCatalogClient({
                       image_url={product.cover_image || null}
                       badge={productBadge(product)}
                       href={`/shop/products/${product.id}`}
+                      salesMode={product.sales_mode}
+                      spec={product.primary_variant_name ?? null}
                     />
                   );
                 })}
