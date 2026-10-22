@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { SideMenuCategoryChips } from "@/components/navigation/side-menu/SideMenuCategoryChips";
 import { SideMenuCategoryRow } from "@/components/navigation/side-menu/SideMenuCategoryRow";
 import {
   SideMenuEmptyState,
@@ -16,11 +15,7 @@ import {
   RECIPE_QUICK_LINKS,
 } from "@/lib/navigation/side-menu-registry";
 import { sideMenuAuthHref } from "@/lib/navigation/side-menu-routes";
-import {
-  getLastMaterialsCategoryId,
-  pickDefaultCategoryId,
-  setLastMaterialsCategoryId,
-} from "@/lib/navigation/side-menu-category-cache";
+import { setLastMaterialsCategoryId } from "@/lib/navigation/side-menu-category-cache";
 import { GROUP_BUY_CONSUMER_VISIBLE } from "@/lib/features/group-buy-visibility";
 import { APP_ROUTES } from "@/lib/site-links";
 import type {
@@ -58,12 +53,9 @@ export function SideMenuCategoryPanel({
   const source = sourceOf(section);
   const isMaterialsRoot = section === "materials" && !categoryId;
 
-  const [selectedMainId, setSelectedMainId] = useState<string | null>(() =>
-    isMaterialsRoot ? getLastMaterialsCategoryId() : null
-  );
-  const [contentVisible, setContentVisible] = useState(true);
+  // 大分類手風琴：預設全部收合，點擊才展開小分類，避免一次攤開太長
+  const [expandedMainId, setExpandedMainId] = useState<string | null>(null);
   const [slowLoad, setSlowLoad] = useState(false);
-  const defaultLocked = useRef(false);
 
   const roots = useCategoryNavigation(
     source,
@@ -75,10 +67,10 @@ export function SideMenuCategoryPanel({
 
   const children = useCategoryNavigation(
     source,
-    isMaterialsRoot ? selectedMainId : categoryId ?? null,
+    isMaterialsRoot ? expandedMainId : categoryId ?? null,
     Boolean(source) &&
       (isMaterialsRoot
-        ? Boolean(selectedMainId)
+        ? Boolean(expandedMainId)
         : Boolean(categoryId && section === "materials"))
   );
 
@@ -87,24 +79,6 @@ export function SideMenuCategoryPanel({
     categoryId ?? null,
     Boolean(source && categoryId && section === "materials" && !isMaterialsRoot)
   );
-
-  // Pick default once when roots arrive — avoid flash to empty first item
-  useEffect(() => {
-    if (!isMaterialsRoot) return;
-    if (!roots.categories.length) return;
-    if (
-      defaultLocked.current &&
-      selectedMainId &&
-      roots.categories.some((c) => c.id === selectedMainId)
-    ) {
-      return;
-    }
-    const preferred = getLastMaterialsCategoryId();
-    const next = pickDefaultCategoryId(roots.categories, preferred);
-    defaultLocked.current = true;
-    setSelectedMainId(next);
-    if (next) setLastMaterialsCategoryId(next);
-  }, [isMaterialsRoot, roots.categories, selectedMainId]);
 
   useEffect(() => {
     if (!children.loading) {
@@ -115,18 +89,24 @@ export function SideMenuCategoryPanel({
     return () => window.clearTimeout(t);
   }, [children.loading]);
 
-  const selectedMain = useMemo(
-    () => roots.categories.find((c) => c.id === selectedMainId) ?? null,
-    [roots.categories, selectedMainId]
+  const expandedMain = useMemo(
+    () => roots.categories.find((c) => c.id === expandedMainId) ?? null,
+    [roots.categories, expandedMainId]
   );
 
-  const selectMain = (cat: SideMenuCategory) => {
-    setSelectedMainId(cat.id);
+  const toggleMain = (cat: SideMenuCategory) => {
+    // 沒有小分類：直接進該大分類商品頁
+    if (cat.childCount <= 0) {
+      onPushBrowse({ id: cat.id, label: cat.name, href: cat.route });
+      onOpenCategory(cat, false);
+      return;
+    }
+    if (expandedMainId === cat.id) {
+      setExpandedMainId(null);
+      return;
+    }
+    setExpandedMainId(cat.id);
     setLastMaterialsCategoryId(cat.id);
-    setContentVisible(false);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setContentVisible(true));
-    });
   };
 
   if (section === "group_buy" && !GROUP_BUY_CONSUMER_VISIBLE) {
@@ -219,117 +199,129 @@ export function SideMenuCategoryPanel({
     );
   }
 
-  // Materials L2 — chips fixed, list scrolls, view-all footer stays inside the drawer
+  // Materials root — 大分類常駐，小分類手風琴展開
   if (isMaterialsRoot) {
     const list = children;
     const showRootSkeleton = roots.loading && roots.categories.length === 0;
-    const showChildSkeleton = Boolean(selectedMainId) && list.loading && list.categories.length === 0;
+    const showChildSkeleton =
+      Boolean(expandedMainId) && list.loading && list.categories.length === 0;
     const emptyChildren =
-      Boolean(selectedMainId) &&
+      Boolean(expandedMainId) &&
       !list.loading &&
       !list.error &&
       list.categories.length === 0;
 
     return (
-      <div className="grid min-h-0 min-w-0 w-full flex-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
-        <div className="min-w-0 shrink-0 space-y-2 border-b border-[#F0ECE5] py-3">
-          {showRootSkeleton ? (
-            <SideMenuCategorySkeleton chips={5} rows={0} showLabel={slowLoad} />
-          ) : roots.error ? (
-            <div className="px-4">
+      <div className="grid min-h-0 min-w-0 w-full flex-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
+        <div className="min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+          <div className="px-4 pt-2">
+            {showRootSkeleton ? (
+              <SideMenuCategorySkeleton chips={0} rows={8} showLabel={slowLoad} />
+            ) : null}
+
+            {roots.error ? (
               <SideMenuEmptyState
                 message="分類載入失敗，請稍後再試。"
                 actionLabel="重新載入"
                 onAction={roots.reload}
               />
-            </div>
-          ) : roots.categories.length === 0 ? (
-            <div className="px-4">
+            ) : null}
+
+            {!roots.loading && !roots.error && roots.categories.length === 0 ? (
               <SideMenuEmptyState message="目前尚未建立分類" />
-            </div>
-          ) : (
-            <SideMenuCategoryChips
-              categories={roots.categories}
-              selectedId={selectedMainId}
-              onSelect={selectMain}
-            />
-          )}
-        </div>
-
-        <div className="min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-          <div
-            className={cn(
-              "px-4 pt-2 transition duration-150 ease-out",
-              contentVisible
-                ? "translate-y-0 opacity-100"
-                : "translate-y-1 opacity-0"
-            )}
-          >
-            {showChildSkeleton ? (
-              <SideMenuCategorySkeleton chips={0} rows={6} showLabel={slowLoad} />
             ) : null}
 
-            {list.error ? (
-              <SideMenuEmptyState
-                message="分類載入失敗，請稍後再試。"
-                actionLabel="重新載入"
-                onAction={list.reload}
-              />
-            ) : null}
+            {roots.categories.map((main) => {
+              const isOpen = expandedMainId === main.id;
+              return (
+                <div key={main.id} className="border-b border-[#F0ECE5] last:border-b-0">
+                  <SideMenuCategoryRow
+                    category={main}
+                    compact
+                    borderless
+                    expanded={isOpen}
+                    onClick={() => toggleMain(main)}
+                  />
 
-            {emptyChildren && selectedMain ? (
-              <div className="flex min-h-[160px] flex-col items-center justify-center px-2 py-8 text-center">
-                {(selectedMain.productCount ?? 0) > 0 ? (
-                  <>
-                    <p className="text-sm text-[#687386]">
-                      {selectedMain.name}目前共有 {selectedMain.productCount} 項商品
-                    </p>
-                    <Link
-                      href={selectedMain.route}
-                      onClick={() => {
-                        onPushBrowse({
-                          id: selectedMain.id,
-                          label: selectedMain.name,
-                          href: selectedMain.route,
-                        });
-                        onNavigate();
-                      }}
-                      className="mt-4 inline-flex h-12 items-center justify-center rounded-2xl bg-[#FFD454] px-5 text-sm font-bold text-[#153E73] active:scale-[0.985]"
-                    >
-                      查看全部{selectedMain.name}商品
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm text-[#687386]">此分類目前尚未上架商品</p>
-                    <button
-                      type="button"
-                      className="mt-4 inline-flex h-12 items-center justify-center rounded-2xl border border-[#E8E1D7] px-5 text-sm font-bold text-[#153E73]"
-                      onClick={() => {
-                        const next = roots.categories.find(
-                          (c) => c.id !== selectedMain.id && (c.childCount > 0 || (c.productCount ?? 0) > 0)
-                        );
-                        if (next) selectMain(next);
-                      }}
-                    >
-                      返回其他分類
-                    </button>
-                  </>
-                )}
-              </div>
-            ) : null}
+                  {isOpen ? (
+                    <div className="mb-2 ml-2 space-y-0.5 rounded-2xl border border-[#F0ECE5] bg-[#FFFEFA] py-1 pl-2 pr-1">
+                      {showChildSkeleton ? (
+                        <SideMenuCategorySkeleton
+                          chips={0}
+                          rows={4}
+                          showLabel={slowLoad}
+                        />
+                      ) : null}
 
-            {list.categories.map((cat) => (
-              <SideMenuCategoryRow
-                key={cat.id}
-                category={cat}
-                compact
-                onClick={() => {
-                  onPushBrowse({ id: cat.id, label: cat.name, href: cat.route });
-                  onOpenCategory(cat, cat.childCount > 0);
-                }}
-              />
-            ))}
+                      {list.error ? (
+                        <SideMenuEmptyState
+                          message="分類載入失敗，請稍後再試。"
+                          actionLabel="重新載入"
+                          onAction={list.reload}
+                        />
+                      ) : null}
+
+                      {emptyChildren && expandedMain ? (
+                        <div className="px-2 py-3 text-center">
+                          {(expandedMain.productCount ?? 0) > 0 ? (
+                            <>
+                              <p className="text-sm text-[#687386]">
+                                {expandedMain.name}目前共有{" "}
+                                {expandedMain.productCount} 項商品
+                              </p>
+                              <Link
+                                href={expandedMain.route}
+                                onClick={() => {
+                                  onPushBrowse({
+                                    id: expandedMain.id,
+                                    label: expandedMain.name,
+                                    href: expandedMain.route,
+                                  });
+                                  onNavigate();
+                                }}
+                                className="mt-3 inline-flex h-11 items-center justify-center rounded-2xl bg-[#FFD454] px-4 text-sm font-bold text-[#153E73] active:scale-[0.985]"
+                              >
+                                查看全部{expandedMain.name}商品
+                              </Link>
+                            </>
+                          ) : (
+                            <p className="text-sm text-[#687386]">
+                              此分類目前尚未上架商品
+                            </p>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {list.categories.map((cat) => (
+                        <SideMenuCategoryRow
+                          key={cat.id}
+                          category={cat}
+                          compact
+                          onClick={() => {
+                            onPushBrowse({
+                              id: cat.id,
+                              label: cat.name,
+                              href: cat.route,
+                            });
+                            onOpenCategory(cat, cat.childCount > 0);
+                          }}
+                        />
+                      ))}
+
+                      {expandedMain && list.categories.length > 0 ? (
+                        <Link
+                          href={expandedMain.route}
+                          onClick={onNavigate}
+                          className="mx-1 mb-1 flex min-h-10 items-center justify-center rounded-xl px-2 text-sm font-semibold text-[#153E73] underline-offset-2 hover:underline active:bg-[#FFF5CC]"
+                        >
+                          查看「{expandedMain.name}」全部商品
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
 
             <SideMenuRecentItems items={recentBrowse} onNavigate={onNavigate} />
           </div>
@@ -337,15 +329,11 @@ export function SideMenuCategoryPanel({
 
         <div className="min-w-0 w-full shrink-0 space-y-2 border-t border-[#F0ECE5] px-4 pb-7 pr-6 pt-3">
           <Link
-            href={selectedMain?.route || APP_ROUTES.shop}
+            href={APP_ROUTES.shop}
             onClick={onNavigate}
             className="box-border flex min-h-12 w-full min-w-0 max-w-full items-center justify-center rounded-2xl border border-[#E8E1D7] px-3 py-2 text-center text-sm font-bold leading-snug text-[#153E73] active:scale-[0.985] active:bg-[#FFF5CC]"
           >
-            <span className="min-w-0 max-w-full break-words">
-              {selectedMain
-                ? `查看「${selectedMain.name}」全部商品`
-                : "查看全部烘焙材料"}
-            </span>
+            查看全部烘焙材料
           </Link>
           <FavoritesPreview loggedIn={loggedIn} onNavigate={onNavigate} />
         </div>
