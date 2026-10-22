@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SideMenuCategory } from "@/types/navigation";
 
@@ -11,27 +11,38 @@ import type { SideMenuCategory } from "@/types/navigation";
  * 分類數量多的時候（實際資料有 26 個大分類、147 個小分類），
  * 72px 一列會讓清單高到要捲很久——同一個螢幕高度下 compact 可以多看一倍以上。
  * 名稱一律單行、超出以 … 截斷，這樣每列高度固定，清單不會因為某個長名稱而跳動。
+ *
+ * expanded：大分類手風琴展開時改顯示向下箭頭。
  */
 export function SideMenuCategoryRow({
   category,
   onClick,
   hideDescription,
   compact = false,
+  expanded = false,
+  borderless = false,
 }: {
   category: SideMenuCategory;
   onClick: () => void;
   hideDescription?: boolean;
   compact?: boolean;
+  expanded?: boolean;
+  /** 外層已有分隔線時關掉自身 border */
+  borderless?: boolean;
 }) {
   const showDescription = !compact && !hideDescription && Boolean(category.description);
+  const Chevron = expanded ? ChevronDown : ChevronRight;
 
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-expanded={expanded || undefined}
       className={cn(
-        "flex w-full items-center gap-3 border-b border-[#F0ECE5] px-1 text-left transition duration-100 last:border-b-0 active:scale-[0.985] active:bg-[#FFF5CC]",
-        compact ? "min-h-12 py-2" : "min-h-[72px] py-3"
+        "flex w-full items-center gap-3 px-1 text-left transition duration-100 active:scale-[0.985] active:bg-[#FFF5CC]",
+        !borderless && "border-b border-[#F0ECE5] last:border-b-0",
+        compact ? "min-h-12 py-2" : "min-h-[72px] py-3",
+        expanded && "bg-[#FFF9EA]"
       )}
     >
       <span
@@ -71,7 +82,7 @@ export function SideMenuCategoryRow({
           </span>
         ) : null}
       </span>
-      <ChevronRight
+      <Chevron
         className={cn("shrink-0 text-[#153E73]", compact ? "h-4 w-4" : "h-5 w-5")}
       />
     </button>
