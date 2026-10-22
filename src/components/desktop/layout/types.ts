@@ -10,6 +10,8 @@ export type DesktopNavItem = {
   key: string;
   label: string;
   href?: string;
+  /** 小分類；有值時側欄以手風琴展開，預設收合 */
+  children?: DesktopNavItem[];
 };
 
 export type DesktopFilterOption = {
