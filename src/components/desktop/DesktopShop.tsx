@@ -105,7 +105,7 @@ export function DesktopShop() {
       list.push(cat);
       map.set(pid, list);
     }
-    for (const list of map.values()) list.sort(sortCats);
+    Array.from(map.values()).forEach((list) => list.sort(sortCats));
     return map;
   }, [categories]);
 
