@@ -143,7 +143,19 @@ export async function POST(request: Request) {
   if (itemsError) {
     // 明細寫不進去的話，整張詢價單就沒有意義，刪掉避免留下空單。
     await admin.from("corporate_inquiries").delete().eq("id", inquiry.id);
-    return NextResponse.json({ error: itemsError.message }, { status: 500 });
+    // 還沒跑 migration 的環境是「表不存在」，給一句看得懂的，
+    // 不要把 Postgres 的原始訊息丟給客戶。
+    const missingTable = /corporate_inquiry_items|does not exist|schema cache/i.test(
+      itemsError.message
+    );
+    return NextResponse.json(
+      {
+        error: missingTable
+          ? "商品詢價功能尚未開通，請改用客服表單與我們聯絡。"
+          : itemsError.message,
+      },
+      { status: missingTable ? 503 : 500 }
+    );
   }
 
   const skipped = ids.length - usable.length;

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { salesModeColumnExists } from "@/lib/products/sales-mode";
 import type {
   BakingBrand,
   BakingCatalogRoot,
@@ -22,18 +23,14 @@ const PRODUCT_LIST_FIELDS =
  * sales_mode（直接販售／僅供詢價）是後加的欄位。
  *
  * 直接寫進 select 的話，還沒跑 migration 的環境整個查詢會失敗，等於商品列表全空。
- * 所以第一次查詢前探一次有沒有這個欄位，之後就沿用結果（程序活著期間只探一次）。
+ * 所以查詢前先問過共用的偵測（它只在錯誤碼確定是「欄位／表不存在」時才記住
+ * 「沒有」，連線類錯誤不記住——否則一次網路抽風就會讓整個程序之後都不帶這個
+ * 欄位，商品列表的價格隱藏就悄悄失效了）。
  */
-let salesModeColumnExists: boolean | null = null;
-
-async function productListFields(
-  supabase: Awaited<ReturnType<typeof createClient>>
-): Promise<string> {
-  if (salesModeColumnExists === null) {
-    const probe = await supabase.from("products").select("sales_mode").limit(1);
-    salesModeColumnExists = !probe.error;
-  }
-  return salesModeColumnExists ? `${PRODUCT_LIST_FIELDS}, sales_mode` : PRODUCT_LIST_FIELDS;
+async function productListFields(): Promise<string> {
+  return (await salesModeColumnExists())
+    ? `${PRODUCT_LIST_FIELDS}, sales_mode`
+    : PRODUCT_LIST_FIELDS;
 }
 
 type DbCategoryRow = {
@@ -411,7 +408,7 @@ export async function searchBakingProducts(
 
     let query = supabase
       .from("products")
-      .select(await productListFields(supabase), { count: "exact" })
+      .select(await productListFields(), { count: "exact" })
       .eq("is_active", true)
       .or("status.is.null,status.eq.active");
 

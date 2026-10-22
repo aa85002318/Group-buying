@@ -1,24 +1,28 @@
 import { NextResponse } from "next/server";
 import { requireStoreOps } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/config";
-import { salesModeColumnExists } from "@/lib/products/sales-mode";
+import { quoteFileColumnsExist, salesModeColumnExists } from "@/lib/products/sales-mode";
 
 export const dynamic = "force-dynamic";
 
 /**
- * 這個環境的商品功能支援度。
+ * 這個環境支援哪些詢價相關功能（＝哪些 migration 跑過了）。
  *
- * 目前只回報一件事：資料庫有沒有 sales_mode 欄位（也就是詢價 migration 跑了沒）。
- * 後台用它決定要不要顯示「銷售方式」切換——沒跑 migration 的環境顯示出來
- * 也存不進去，不如直接說明白。
+ * 後台用它決定要不要顯示對應的控制項。沒跑 migration 的環境顯示出來也存不進去，
+ * 讓人按了以為有用、結果看到資料庫錯誤，比直接說明白糟得多。
  */
 export async function GET() {
   const { error } = await requireStoreOps();
   if (error) return error;
 
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ sales_mode: true });
+    return NextResponse.json({ sales_mode: true, quote_file: true });
   }
 
-  return NextResponse.json({ sales_mode: await salesModeColumnExists() });
+  const [salesMode, quoteFile] = await Promise.all([
+    salesModeColumnExists(),
+    quoteFileColumnsExist(),
+  ]);
+
+  return NextResponse.json({ sales_mode: salesMode, quote_file: quoteFile });
 }

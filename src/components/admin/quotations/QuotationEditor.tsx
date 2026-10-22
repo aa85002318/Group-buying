@@ -113,6 +113,9 @@ export function QuotationEditor({ mode, quotationId }: Props) {
   const [inquiryNote, setInquiryNote] = useState<string | null>(null);
   const [quoteFile, setQuoteFile] = useState<QuoteFile | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  // 這個環境的資料庫有沒有報價單檔案欄位。沒有的話上傳一定失敗，
+  // 不如不要顯示那一區，而不是讓人按了看到資料庫錯誤。
+  const [quoteFileSupported, setQuoteFileSupported] = useState(true);
 
   const [companyName, setCompanyName] = useState("");
   const [contactName, setContactName] = useState("");
@@ -205,6 +208,20 @@ export function QuotationEditor({ mode, quotationId }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/products/capabilities")
+      .then((r) => r.json())
+      .then((d) => {
+        // 問不到就當作支援，不要因為一次網路抽風就把功能藏起來。
+        if (!cancelled) setQuoteFileSupported(d?.quote_file !== false);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 從「詢價管理」按「轉成報價單」進來時（/admin/quotations/new?inquiry=<id>），
   // 把客戶資料與勾選的商品直接帶進表單，單價用商品現價當起點，後台再調整。
@@ -880,6 +897,7 @@ export function QuotationEditor({ mode, quotationId }: Props) {
             </div>
           </section>
 
+          {!quoteFileSupported ? null : (
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <h2 className="mb-2 text-sm font-semibold text-[#153E73]">自製報價單檔案</h2>
             <p className="mb-2 text-[11px] leading-relaxed text-[#8A94A6]">
@@ -931,6 +949,7 @@ export function QuotationEditor({ mode, quotationId }: Props) {
               <p className="mt-2 text-xs text-[#8A94A6]">上傳中…</p>
             ) : null}
           </section>
+          )}
 
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <h2 className="mb-2 text-sm font-semibold text-[#153E73]">綁定會員（轉單必填）</h2>
