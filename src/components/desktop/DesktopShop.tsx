@@ -32,11 +32,39 @@ type Product = {
 
 const PAGE_SIZE = 20;
 
-type ShopCategory = { id: string; name: string; slug?: string | null; sort_order?: number | null };
+type ShopCategory = {
+  id: string;
+  name: string;
+  slug?: string | null;
+  sort_order?: number | null;
+  parent_id?: string | null;
+};
+
+function sortCats(a: ShopCategory, b: ShopCategory) {
+  const byOrder = Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0);
+  if (byOrder !== 0) return byOrder;
+  return a.name.localeCompare(b.name, "zh-Hant");
+}
+
+/** 選中大分類時一併納入其下所有小分類 id，篩選才不會漏商品。 */
+function collectDescendantIds(
+  rootId: string,
+  byParent: Map<string, ShopCategory[]>
+): Set<string> {
+  const ids = new Set<string>([rootId]);
+  const walk = (pid: string) => {
+    for (const child of byParent.get(pid) ?? []) {
+      ids.add(child.id);
+      walk(child.id);
+    }
+  };
+  walk(rootId);
+  return ids;
+}
 
 export function DesktopShop() {
   const [products, setProducts] = useState<Product[]>([]);
-  // 側邊分類沿用後台「商品分類」的設定與排序。
+  // 側邊分類沿用後台「商品分類」的設定與排序；大分類常駐、小分類手風琴展開。
   const [categories, setCategories] = useState<ShopCategory[]>([]);
   const [category, setCategory] = useState("all");
   const [filters, setFilters] = useState<Record<string, string[]>>({ tag: ["all"] });
@@ -68,15 +96,31 @@ export function DesktopShop() {
     };
   }, []);
 
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, ShopCategory[]>();
+    for (const cat of categories) {
+      const pid = cat.parent_id;
+      if (!pid) continue;
+      const list = map.get(pid) ?? [];
+      list.push(cat);
+      map.set(pid, list);
+    }
+    for (const list of map.values()) list.sort(sortCats);
+    return map;
+  }, [categories]);
+
   const filtered = useMemo(() => {
     let list = [...products];
     if (category !== "all") {
       const picked = categories.find((c) => c.id === category);
       const name = picked?.name ?? category;
       const slug = picked?.slug ?? null;
+      const matchIds = picked
+        ? collectDescendantIds(picked.id, childrenByParent)
+        : new Set<string>([category]);
       list = list.filter(
         (p) =>
-          p.category_id === category ||
+          (p.category_id && matchIds.has(p.category_id)) ||
           (slug && p.product_categories?.slug === slug) ||
           p.product_categories?.name === name ||
           p.category === name ||
@@ -99,7 +143,7 @@ export function DesktopShop() {
       );
     }
     return list;
-  }, [products, categories, category, filters, sort]);
+  }, [products, categories, childrenByParent, category, filters, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -108,12 +152,21 @@ export function DesktopShop() {
 
   const dynamicNav = useMemo(() => {
     if (categories.length) {
-      const sorted = [...categories].sort(
-        (a, b) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)
-      );
+      const roots = categories.filter((c) => !c.parent_id).sort(sortCats);
       return [
         { key: "all", label: "全部商品" },
-        ...sorted.map((c) => ({ key: c.id, label: c.name })),
+        ...roots.map((c) => {
+          // 側欄只展一層：大分類下的直接小分類；更深層併入該小分類篩選範圍即可
+          const directKids = childrenByParent.get(c.id) ?? [];
+          return {
+            key: c.id,
+            label: c.name,
+            children: directKids.map((child) => ({
+              key: child.id,
+              label: child.name,
+            })),
+          };
+        }),
       ];
     }
     const cats = Array.from(
@@ -124,7 +177,7 @@ export function DesktopShop() {
       { key: "all", label: "全部商品" },
       ...cats.map((c) => ({ key: c, label: c })),
     ];
-  }, [categories, products]);
+  }, [categories, childrenByParent, products]);
 
   return (
     <DesktopInnerPageLayout
