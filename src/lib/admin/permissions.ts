@@ -199,6 +199,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/store/pos", label: "客戶服務", roles: ["admin", "store_staff", "store_manager"] },
       { href: "/admin/store/demand", label: "分店貨品需求", roles: ["admin", "store_staff", "store_manager"] },
       { href: "/admin/store/inventory", label: "分店庫存查詢", roles: ["admin", "store_staff", "store_manager"] },
+      { href: "/admin/store/stocktake/scan", label: "掃碼盤點", roles: ["admin", "store_staff", "store_manager"] },
+      { href: "/admin/store/shortages", label: "缺貨清單", roles: ["admin", "store_staff", "store_manager"] },
       { href: "/admin/store/entry", label: "商品處理", roles: ["admin", "store_staff", "store_manager"] },
       { href: "/admin/store/expiry", label: "效期管理", roles: ["admin", "store_staff", "store_manager"] },
       { href: "/admin/member-gifts/redeem", label: "會員禮核銷", roles: ["admin", "store_staff", "store_manager"] },
