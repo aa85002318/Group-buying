@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLatestRequest } from "@/hooks/useLatestRequest";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminTable } from "@/components/admin/AdminTable";
@@ -35,16 +36,25 @@ export default function AdminInventoryPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
 
+  const latest = useLatestRequest();
+
   useEffect(() => {
+    const isLatest = latest();
     setLoading(true);
     const params = new URLSearchParams({ filter });
     if (search) params.set("search", search);
     fetch(`/api/admin/inventory?${params}`)
       .then((r) => r.json())
-      .then((d) => setItems(d.items ?? []))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, [search, filter]);
+      .then((d) => {
+        if (isLatest()) setItems(d.items ?? []);
+      })
+      .catch(() => {
+        if (isLatest()) setItems([]);
+      })
+      .finally(() => {
+        if (isLatest()) setLoading(false);
+      });
+  }, [search, filter, latest]);
 
   return (
     <div className="space-y-6">

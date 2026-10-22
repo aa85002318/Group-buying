@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useLatestRequest } from "@/hooks/useLatestRequest";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -62,7 +63,10 @@ function BatchesPageInner() {
   });
   const [saving, setSaving] = useState(false);
 
+  const latest = useLatestRequest();
+
   const load = useCallback(async () => {
+    const isLatest = latest();
     setLoading(true);
     setError(null);
     try {
@@ -71,14 +75,15 @@ function BatchesPageInner() {
       if (range) params.set("range", range);
       const res = await fetch(`/api/admin/store/batches?${params}`);
       const data = await res.json();
+      if (!isLatest()) return;
       if (!res.ok) throw new Error(data.error ?? "載入失敗");
       setBatches(data.batches ?? []);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "載入失敗");
+      if (isLatest()) setError(e instanceof Error ? e.message : "載入失敗");
     } finally {
-      setLoading(false);
+      if (isLatest()) setLoading(false);
     }
-  }, [q, range]);
+  }, [q, range, latest]);
 
   useEffect(() => {
     void load();

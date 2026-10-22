@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLatestRequest } from "@/hooks/useLatestRequest";
 import Link from "next/link";
 import { Copy, FolderOpen, Loader2, Search, Trash2, Upload } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -23,7 +24,10 @@ export default function AdminMediaLibraryPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const latest = useLatestRequest();
+
   const load = useCallback(async () => {
+    const isLatest = latest();
     setLoading(true);
     setError(null);
     try {
@@ -33,15 +37,16 @@ export default function AdminMediaLibraryPage() {
       params.set("limit", "120");
       const res = await fetch(`/api/admin/media?${params}`);
       const data = await res.json();
+      if (!isLatest()) return;
       if (!res.ok) throw new Error(data.error ?? "載入失敗");
       setItems(data.items ?? []);
       if (data.warning) setError(data.warning);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "載入失敗");
+      if (isLatest()) setError(e instanceof Error ? e.message : "載入失敗");
     } finally {
-      setLoading(false);
+      if (isLatest()) setLoading(false);
     }
-  }, [folder, q]);
+  }, [folder, q, latest]);
 
   useEffect(() => {
     void load();
