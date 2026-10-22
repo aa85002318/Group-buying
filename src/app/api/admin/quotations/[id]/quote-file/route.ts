@@ -16,7 +16,11 @@ export const runtime = "nodejs";
  */
 
 const BUCKET = "cms-assets";
-const MAX_SIZE = 10 * 1024 * 1024;
+/**
+ * 5MB 不是隨便定的：cms-assets 這個 bucket 本身的 file_size_limit 就是 5MB。
+ * 這裡放寬的話，超過的檔案會過了這一關才在儲存體被拒，錯誤訊息還看不懂。
+ */
+const MAX_SIZE = 5 * 1024 * 1024;
 const ALLOWED = new Map<string, string>([
   ["application/pdf", "pdf"],
   ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"],
@@ -42,7 +46,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "請選擇要上傳的檔案" }, { status: 400 });
   }
   if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "檔案不能超過 10MB" }, { status: 400 });
+    return NextResponse.json({ error: "檔案不能超過 5MB" }, { status: 400 });
   }
   const ext = ALLOWED.get(file.type);
   if (!ext) {

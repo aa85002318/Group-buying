@@ -838,7 +838,7 @@ export function QuotationEditor({ mode, quotationId }: Props) {
           <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <h2 className="mb-2 text-sm font-semibold text-[#153E73]">自製報價單檔案</h2>
             <p className="mb-2 text-[11px] leading-relaxed text-[#8A94A6]">
-              需要蓋章或客戶指定格式時，可以上傳自己做好的報價單（PDF／Excel／Word／圖片，10MB
+              需要蓋章或客戶指定格式時，可以上傳自己做好的報價單（PDF／Excel／Word／圖片，5MB
               內）。沒有上傳就用系統內建的那份。
             </p>
             {!quotationId ? (
