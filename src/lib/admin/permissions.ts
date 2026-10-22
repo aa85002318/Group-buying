@@ -183,7 +183,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: "/admin/pos/pickup", label: "POS 取貨核銷", roles: ["admin", "store_staff", "store_manager"] },
       { href: "/admin/payments", label: "付款", roles: ["admin", "store_staff", "store_manager"] },
       { href: "/admin/payment-records", label: "金流紀錄", roles: ["admin"] },
-      { href: "/admin/corporate", label: "企業詢價", roles: ["admin"] },
+      // 現在同一頁也收前台客戶送出的商品詢價，不只企業／福委了。
+      { href: "/admin/corporate", label: "詢價管理", roles: ["admin"] },
       { href: "/admin/quotations", label: "報價單", roles: ["admin", "customer_service", "store_manager"] },
       { href: "/admin/pickup", label: "取貨核銷（舊）", roles: ["admin", "store_staff", "store_manager"], hiddenFromSidebar: true },
     ],
