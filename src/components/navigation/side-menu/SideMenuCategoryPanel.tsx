@@ -24,7 +24,6 @@ import type {
   SideMenuCategorySource,
   SideMenuSectionKey,
 } from "@/types/navigation";
-import { cn } from "@/lib/utils";
 
 function sourceOf(section: SideMenuSectionKey): SideMenuCategorySource | null {
   if (section === "materials") return "materials";
