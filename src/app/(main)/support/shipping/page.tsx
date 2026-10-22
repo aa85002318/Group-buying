@@ -11,24 +11,24 @@ export default function SupportShippingPage() {
   const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/site-pages/shipping").then((r) => r.json()),
-      fetch("/api/support-settings").then((r) => r.json()),
-    ]).then(([pageRes, supportRes]) => {
-      const doc = pageRes.document;
-      if (doc?.content?.trim()) {
-        if (doc.content_format === "html") {
-          setHtml(doc.content);
-          setInfo("");
-        } else {
-          setHtml(null);
-          setInfo(doc.content);
+    fetch("/api/site-pages/shipping", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((pageRes) => {
+        const doc = pageRes.document;
+        if (doc?.content?.trim()) {
+          if (doc.content_format === "html") {
+            setHtml(doc.content);
+            setInfo("");
+          } else {
+            setHtml(null);
+            setInfo(doc.content);
+          }
+          return;
         }
-        return;
-      }
-      setHtml(null);
-      setInfo(supportRes.settings?.shipping_info ?? "");
-    });
+        setHtml(null);
+        setInfo("");
+      })
+      .catch(() => {});
   }, []);
 
   return (

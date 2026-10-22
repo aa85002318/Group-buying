@@ -131,7 +131,7 @@ export default function ProductDetailClient({ id }: { id: string }) {
   const inquiryCart = useInquiryCart();
 
   useEffect(() => {
-    fetch("/api/site-pages/shipping")
+    fetch("/api/site-pages/shipping", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         const content = String(d.document?.content ?? "").trim();

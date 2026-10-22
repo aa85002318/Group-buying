@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SupportSettings } from "@/lib/types/database";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const FALLBACK: Partial<SupportSettings> = {
   phone: "02-2737-5508",
   line_url: "https://line.me/R/ti/p/@diy_chimei",
