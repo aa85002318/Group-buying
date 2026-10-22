@@ -12,6 +12,8 @@ type SearchHit = {
   snippet?: string | null;
   imageUrl?: string | null;
   price?: number | null;
+  /** "inquiry" 的商品不公開價格，搜尋結果也不能顯示。 */
+  salesMode?: "sell" | "inquiry";
 };
 
 function productImageUrl(row: {
@@ -78,9 +80,26 @@ export async function GET(request: Request) {
       .limit(5),
   ]);
 
+  // 哪幾筆是「僅供詢價」。刻意不併進上面的 select：sales_mode 是後加的欄位，
+  // 還沒跑 migration 的環境併進去會讓商品結果整組消失。
+  const inquiryIds = new Set<string>();
+  const productIds = (products.data ?? []).map((p) => String(p.id));
+  if (productIds.length > 0) {
+    const modes = await supabase
+      .from("products")
+      .select("id, sales_mode")
+      .in("id", productIds);
+    if (!modes.error) {
+      for (const row of modes.data ?? []) {
+        if (row.sales_mode === "inquiry") inquiryIds.add(String(row.id));
+      }
+    }
+  }
+
   for (const p of products.data ?? []) {
     const sale = Number(p.sale_price);
     const price = Number(p.price);
+    const inquiryOnly = inquiryIds.has(String(p.id));
     results.push({
       type: "product",
       id: p.id,
@@ -88,7 +107,15 @@ export async function GET(request: Request) {
       href: `/shop/products/${p.id}`,
       snippet: plainTextSnippet(p.short_description) ?? plainTextSnippet(p.description),
       imageUrl: productImageUrl(p),
-      price: Number.isFinite(sale) && sale > 0 ? sale : Number.isFinite(price) ? price : null,
+      // 詢價商品完全不回價格——前端拿不到就不可能不小心顯示出來。
+      price: inquiryOnly
+        ? null
+        : Number.isFinite(sale) && sale > 0
+          ? sale
+          : Number.isFinite(price)
+            ? price
+            : null,
+      salesMode: inquiryOnly ? "inquiry" : "sell",
     });
   }
   for (const a of articles.data ?? []) {

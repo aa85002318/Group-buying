@@ -64,6 +64,7 @@ export function ShopNewArrivalsPageClient() {
                 image_url={p.image_url}
                 badge={badge}
                 variant="shop"
+                salesMode={p.sales_mode}
               />
             );
           })}

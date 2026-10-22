@@ -50,6 +50,7 @@ function ProductGridSection({
             original_price={p.original_price}
             image_url={p.image_url}
             badge={badge}
+            salesMode={p.sales_mode}
           />
         ))}
         {tabletExtra.map((p) => (
@@ -61,6 +62,7 @@ function ProductGridSection({
               original_price={p.original_price}
               image_url={p.image_url}
               badge={badge}
+              salesMode={p.sales_mode}
             />
           </div>
         ))}

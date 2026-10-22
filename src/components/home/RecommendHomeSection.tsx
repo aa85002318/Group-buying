@@ -11,6 +11,8 @@ type Product = {
   price: number;
   original_price?: number | null;
   image_url?: string | null;
+  /** "inquiry" 的商品不顯示價格，只能加入詢價單。 */
+  sales_mode?: "sell" | "inquiry";
 };
 
 export function RecommendHomeSection() {
@@ -63,6 +65,7 @@ export function RecommendHomeSection() {
                   price={Number(p.price)}
                   original_price={p.original_price}
                   image_url={p.image_url}
+                  salesMode={p.sales_mode}
                 />
               </div>
             ))}
@@ -91,6 +94,7 @@ export function RecommendHomeSection() {
                   original_price={p.original_price}
                   image_url={p.image_url}
                   sticker="hot"
+                  salesMode={p.sales_mode}
                 />
               </div>
             ))}

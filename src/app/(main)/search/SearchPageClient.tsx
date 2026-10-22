@@ -19,6 +19,7 @@ type Hit = {
   snippet?: string | null;
   imageUrl?: string | null;
   price?: number | null;
+  salesMode?: "sell" | "inquiry";
 };
 
 export function SearchPageClient() {
@@ -154,7 +155,9 @@ function SearchHitCard({ hit }: { hit: Hit }) {
         {snippet ? (
           <p className="mt-1 line-clamp-2 text-sm text-foreground-secondary">{snippet}</p>
         ) : null}
-        {price != null ? (
+        {hit.salesMode === "inquiry" ? (
+          <p className="mt-1 text-sm font-semibold text-[#153E73]">價格請詢問</p>
+        ) : price != null ? (
           <p className="mt-1 text-sm font-semibold text-[#F0645A]">{formatCurrency(price)}</p>
         ) : null}
       </div>

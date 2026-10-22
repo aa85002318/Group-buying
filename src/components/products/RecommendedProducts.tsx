@@ -107,6 +107,7 @@ export function RecommendedProducts({ productId }: RecommendedProductsProps) {
               groupBuyLabel={
                 p.original_price != null && p.original_price > p.price ? "限時優惠" : undefined
               }
+              salesMode={p.sales_mode}
             />
           </div>
         ))}
