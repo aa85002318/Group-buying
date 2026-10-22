@@ -80,7 +80,9 @@ export async function POST(request: Request) {
 
   const { data: products, error: productError } = await admin
     .from("products")
-    .select("id, name, package_spec, specifications, sales_mode, is_active")
+    // 刻意不查 sales_mode：這裡用不到它（直接販售的商品客戶一樣可以問大量採購價），
+    // 而還沒跑 migration 的環境查了會讓整支 API 掛掉。
+    .select("id, name, package_spec, specifications, is_active")
     .in("id", ids);
 
   if (productError) {

@@ -16,6 +16,7 @@ import {
   type ProductChannel,
 } from "@/lib/services/productChannelService";
 import { resolveProductDisclaimer } from "@/lib/products/disclaimer";
+import { omitSalesModeIfUnsupported } from "@/lib/products/sales-mode";
 import { cleanRichTextHtml } from "@/lib/cms/safeHtml";
 import { syncProductImagesTable } from "@/lib/products/sync-product-images";
 import type { ProductImageItem } from "@/lib/products/product-images";
@@ -332,7 +333,8 @@ export async function POST(request: Request) {
   const pickup_store_ids = Array.isArray(body.pickup_store_ids)
     ? (body.pickup_store_ids as string[])
     : [];
-  const row = mapProductRow(body);
+  // 還沒跑詢價 migration 的環境不能寫 sales_mode，否則整筆新增會失敗。
+  const row = await omitSalesModeIfUnsupported(mapProductRow(body));
 
   if (!isSupabaseConfigured()) {
     const product = {
@@ -378,7 +380,9 @@ export async function PUT(request: Request) {
   const pickup_store_ids = Array.isArray(body.pickup_store_ids)
     ? (body.pickup_store_ids as string[])
     : undefined;
-  const row = mapProductRow(body);
+  // 還沒跑詢價 migration 的環境不能寫 sales_mode，否則整筆編輯會失敗
+  // ——後台連改個商品名稱都會中。
+  const row = await omitSalesModeIfUnsupported(mapProductRow(body));
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json({

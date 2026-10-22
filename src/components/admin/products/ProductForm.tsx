@@ -73,6 +73,9 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
   const [autoSaveLabel, setAutoSaveLabel] = useState<string | undefined>();
   const [meta, setMeta] = useState<{ created_at?: string; updated_at?: string }>({});
   const [notFound, setNotFound] = useState(false);
+  // 這個環境的資料庫有沒有 sales_mode 欄位。沒有的話「銷售方式」存不進去，
+  // 所以要讓那一段自己說明白，而不是看起來能按、按了沒反應。
+  const [salesModeSupported, setSalesModeSupported] = useState(true);
 
   const dirty = snapshot(form) !== baseline.current;
   const patch = useCallback((partial: Partial<AdminProductFormV2>) => {
@@ -92,8 +95,13 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
       mode === "edit" && productId
         ? fetch(`/api/admin/products/${productId}`).then((r) => r.json())
         : Promise.resolve(null),
+      fetch("/api/admin/products/capabilities")
+        .then((r) => r.json())
+        .catch(() => null),
     ])
-      .then(([bakingRes, allCatRes, storeRes, brandRes, supplierRes, gbCatRes, productRes]) => {
+      .then(([bakingRes, allCatRes, storeRes, brandRes, supplierRes, gbCatRes, productRes, capsRes]) => {
+        // 問不到就當作支援，不要因為一次網路抽風就把功能藏起來。
+        setSalesModeSupported(capsRes?.sales_mode !== false);
         const merged = new Map<string, ProductCategory>();
         for (const c of [
           ...((bakingRes.categories ?? []) as ProductCategory[]),
@@ -404,7 +412,13 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
               {WIZARD_STEPS[wizardStep]?.id === "basic" ? (
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
                   <ProductBasicInfo form={form} patch={patch} errors={errors} />
-                  <ProductQuickSettings form={form} patch={patch} categories={categories} errors={errors} />
+                  <ProductQuickSettings
+                    form={form}
+                    patch={patch}
+                    categories={categories}
+                    errors={errors}
+                    salesModeSupported={salesModeSupported}
+                  />
                 </div>
               ) : null}
               {WIZARD_STEPS[wizardStep]?.id === "specs" ? (
@@ -565,7 +579,13 @@ export function ProductForm({ mode, productId, groupBuy = false }: Props) {
                 />
               ) : null}
             </div>
-            <ProductQuickSettings form={form} patch={patch} categories={categories} errors={errors} />
+            <ProductQuickSettings
+              form={form}
+              patch={patch}
+              categories={categories}
+              errors={errors}
+              salesModeSupported={salesModeSupported}
+            />
           </div>
         )}
       </div>

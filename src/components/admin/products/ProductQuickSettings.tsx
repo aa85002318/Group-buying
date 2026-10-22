@@ -11,11 +11,14 @@ export function ProductQuickSettings({
   patch,
   categories,
   errors,
+  salesModeSupported = true,
 }: {
   form: AdminProductFormV2;
   patch: (partial: Partial<AdminProductFormV2>) => void;
   categories: ProductCategory[];
   errors: ProductFormFieldErrors;
+  /** false = 這個環境的資料庫還沒有 sales_mode 欄位，這個設定存不進去。 */
+  salesModeSupported?: boolean;
 }) {
   return (
     <aside className="space-y-4 lg:sticky lg:top-20">
@@ -32,23 +35,35 @@ export function ProductQuickSettings({
           ]}
         />
       </section>
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <h2 className="text-sm font-semibold text-[#153E73]">銷售方式</h2>
-        <AdminRadioGroup<"sell" | "inquiry">
-          value={form.sales_mode}
-          onChange={(sales_mode) => patch({ sales_mode })}
-          options={[
-            { value: "sell", label: "直接販售（可加入購物車）" },
-            { value: "inquiry", label: "僅供詢價（隱藏價格）" },
-          ]}
-        />
-        {form.sales_mode === "inquiry" ? (
-          <p className="mt-2 rounded-lg bg-[#FFF7E0] px-3 py-2 text-xs leading-relaxed text-[#8A6A00]">
-            前台不顯示價格、不能下單，客戶只能「加入詢價單」。送出後會進到後台的
-            「企業詢價」，可以直接轉成報價單回覆。
+      {salesModeSupported ? (
+        <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-[#153E73]">銷售方式</h2>
+          <AdminRadioGroup<"sell" | "inquiry">
+            value={form.sales_mode}
+            onChange={(sales_mode) => patch({ sales_mode })}
+            options={[
+              { value: "sell", label: "直接販售（可加入購物車）" },
+              { value: "inquiry", label: "僅供詢價（隱藏價格）" },
+            ]}
+          />
+          {form.sales_mode === "inquiry" ? (
+            <p className="mt-2 rounded-lg bg-[#FFF7E0] px-3 py-2 text-xs leading-relaxed text-[#8A6A00]">
+              前台不顯示價格、不能下單，客戶只能「加入詢價單」。送出後會進到後台的
+              「詢價管理」，可以直接轉成報價單回覆。
+            </p>
+          ) : null}
+        </section>
+      ) : (
+        // 資料庫還沒有 sales_mode 欄位。顯示切換鈕只會讓人按了以為有存到，
+        // 所以改成說清楚現在的狀態。
+        <section className="rounded-xl border border-dashed border-gray-300 bg-[#FAFAFA] p-4">
+          <h2 className="text-sm font-semibold text-[#8A94A6]">銷售方式</h2>
+          <p className="mt-1 text-xs leading-relaxed text-[#8A94A6]">
+            這個環境尚未啟用「商品詢價」，目前所有商品都是直接販售。需要開通請先執行
+            詢價功能的資料庫 migration。
           </p>
-        ) : null}
-      </section>
+        </section>
+      )}
       <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-semibold text-[#153E73]">商品分類</h2>
         <CategoryGroupedPicker
