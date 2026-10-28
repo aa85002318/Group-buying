@@ -337,6 +337,7 @@ export function StocktakeScanClient({ stores, defaultStoreId }: Props) {
                     type="number"
                     inputMode="numeric"
                     min={0}
+                    data-stocktake-qty="true"
                     value={l.counted_qty ?? ""}
                     placeholder="實際數量"
                     onChange={(e) => {

@@ -1,24 +1,26 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, CameraOff, Keyboard } from "lucide-react";
+import { Camera, CameraOff, ScanBarcode } from "lucide-react";
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser";
-import { BarcodeFormat, DecodeHintType, NotFoundException } from "@zxing/library";
+import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 
 /**
  * 一維條碼掃描。
  *
  * 輸入方式：
- * 1. 相機自動辨識
- *    - 優先：瀏覽器原生 BarcodeDetector（Android Chrome 等）
- *    - Fallback：ZXing WASM/JS（iPhone Safari / 不支援 BarcodeDetector 時）
- * 2. 手持掃描槍（鍵盤楔入）
- * 3. 手動輸入
+ * 1. 相機自動辨識（原生 BarcodeDetector → ZXing fallback，含 iPhone）
+ * 2. 外接手持條碼槍（藍牙／USB 鍵盤楔入）→ 專用輸入欄自動接收數字並送出
+ * 3. 同一欄位也可手動輸入後按 Enter／查詢
  *
- * 重複掃同一個條碼會被忽略（1.5 秒內）。
+ * 手機重點：iOS／Android 外接掃描槍必須有「聚焦中的 input」才收得到字元，
+ * 因此提供常駐掃描槍欄位，掃完自動清空並重新聚焦，方便連續掃。
  */
 
 const DUPLICATE_WINDOW_MS = 1500;
+/** 掃描槍打字極快；停頓超過此時間且長度足夠 → 自動送出（無 Enter 後綴的槍也適用） */
+const SCANNER_IDLE_SUBMIT_MS = 120;
+const MIN_BARCODE_LEN = 6;
 
 const NATIVE_FORMATS = [
   "ean_13",
@@ -59,36 +61,59 @@ function getNativeDetector(): (new (o: { formats: string[] }) => DetectorLike) |
   return Detector ?? null;
 }
 
+function normalizeBarcode(raw: string) {
+  // 掃描槍偶發前後空白／換行；只保留條碼常見字元
+  return raw.replace(/[\r\n\t]/g, "").trim();
+}
+
+function isQtyEditing() {
+  const ae = document.activeElement as HTMLElement | null;
+  return Boolean(ae?.closest("[data-stocktake-qty]"));
+}
+
 export function BarcodeScanner({ onScan, paused = false }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const scannerInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
   const zxingControlsRef = useRef<IScannerControls | null>(null);
   const lastScanRef = useRef<{ code: string; at: number }>({ code: "", at: 0 });
-  const wedgeRef = useRef<string>("");
-  const wedgeTimerRef = useRef<number | null>(null);
+  const idleSubmitRef = useRef<number | null>(null);
   const pausedRef = useRef(paused);
   const startingRef = useRef(false);
 
   const [active, setActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [engine, setEngine] = useState<"native" | "zxing" | null>(null);
-  const [manual, setManual] = useState("");
+  const [buffer, setBuffer] = useState("");
+  const [lastAccepted, setLastAccepted] = useState<string | null>(null);
 
   useEffect(() => {
     pausedRef.current = paused;
   }, [paused]);
 
+  const focusScannerField = useCallback(() => {
+    if (isQtyEditing()) return;
+    const el = scannerInputRef.current;
+    if (!el) return;
+    // preventScroll 避免手機盤點列表被捲動跳動
+    try {
+      el.focus({ preventScroll: true });
+    } catch {
+      el.focus();
+    }
+  }, []);
+
   const emit = useCallback(
     (raw: string) => {
-      const code = raw.trim();
-      if (!code) return;
+      const code = normalizeBarcode(raw);
+      if (!code || code.length < MIN_BARCODE_LEN) return false;
       const now = Date.now();
       if (
         lastScanRef.current.code === code &&
         now - lastScanRef.current.at < DUPLICATE_WINDOW_MS
       ) {
-        return;
+        return false;
       }
       lastScanRef.current = { code, at: now };
       try {
@@ -97,8 +122,13 @@ export function BarcodeScanner({ onScan, paused = false }: Props) {
         /* ignore */
       }
       onScan(code);
+      setLastAccepted(code);
+      setBuffer("");
+      // 下一輪掃碼：清完再聚焦
+      window.setTimeout(() => focusScannerField(), 0);
+      return true;
     },
-    [onScan]
+    [focusScannerField, onScan]
   );
 
   const stopCamera = useCallback(() => {
@@ -131,7 +161,7 @@ export function BarcodeScanner({ onScan, paused = false }: Props) {
           const raw = codes[0]?.rawValue;
           if (raw) emit(raw);
         } catch {
-          /* 單張影格失敗很正常 */
+          /* ignore */
         }
       }, 300);
       setEngine("native");
@@ -157,16 +187,9 @@ export function BarcodeScanner({ onScan, paused = false }: Props) {
       const controls = await reader.decodeFromStream(
         stream,
         videoRef.current,
-        (result, err) => {
+        (result) => {
           if (pausedRef.current) return;
-          if (result) {
-            emit(result.getText());
-            return;
-          }
-          // 每幀找不到條碼是正常的，不要當成錯誤顯示。
-          if (err && !(err instanceof NotFoundException)) {
-            /* ignore transient decode errors */
-          }
+          if (result) emit(result.getText());
         }
       );
 
@@ -201,7 +224,6 @@ export function BarcodeScanner({ onScan, paused = false }: Props) {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        // iOS 必須 playsInline + 明確 play()
         videoRef.current.setAttribute("playsinline", "true");
         videoRef.current.setAttribute("webkit-playsinline", "true");
         await videoRef.current.play();
@@ -219,55 +241,130 @@ export function BarcodeScanner({ onScan, paused = false }: Props) {
       stopCamera();
       const name = err instanceof DOMException ? err.name : "";
       if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-        setError("無法開啟相機：請到 iPhone「設定 → Safari／瀏覽器」允許相機權限後重試。");
+        setError("無法開啟相機：請到手機設定允許相機權限後重試。");
       } else if (name === "NotFoundError" || name === "DevicesNotFoundError") {
-        setError("找不到可用相機，請改用掃描槍或手動輸入。");
+        setError("找不到可用相機，請改用外接掃描槍或手動輸入。");
       } else {
         setError("無法開啟相機，請確認使用 HTTPS 並允許相機權限，或改用掃描槍／手動輸入。");
       }
     } finally {
       startingRef.current = false;
+      focusScannerField();
     }
-  }, [startNativeLoop, startZxingLoop, stopCamera]);
+  }, [focusScannerField, startNativeLoop, startZxingLoop, stopCamera]);
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
-  /**
-   * 掃描槍支援：它會很快地「打字」出條碼再按 Enter。
-   */
+  // 進入頁面先聚焦掃描槍欄，外接槍才能立刻輸入
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+    const t = window.setTimeout(() => focusScannerField(), 200);
+    return () => window.clearTimeout(t);
+  }, [focusScannerField]);
 
-      if (e.key === "Enter") {
-        if (wedgeRef.current.length >= 6) emit(wedgeRef.current);
-        wedgeRef.current = "";
-        return;
-      }
-      if (e.key.length === 1) {
-        wedgeRef.current += e.key;
-        if (wedgeTimerRef.current) window.clearTimeout(wedgeTimerRef.current);
-        wedgeTimerRef.current = window.setTimeout(() => {
-          wedgeRef.current = "";
-        }, 200);
-      }
+  // 編輯數量結束後，自動回到掃描槍欄，方便繼續掃
+  useEffect(() => {
+    const onFocusOut = () => {
+      window.setTimeout(() => {
+        if (!isQtyEditing()) focusScannerField();
+      }, 50);
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [emit]);
+    document.addEventListener("focusout", onFocusOut);
+    return () => document.removeEventListener("focusout", onFocusOut);
+  }, [focusScannerField]);
+
+  useEffect(() => {
+    return () => {
+      if (idleSubmitRef.current) window.clearTimeout(idleSubmitRef.current);
+    };
+  }, []);
+
+  const scheduleIdleSubmit = useCallback(
+    (value: string) => {
+      if (idleSubmitRef.current) window.clearTimeout(idleSubmitRef.current);
+      idleSubmitRef.current = window.setTimeout(() => {
+        const code = normalizeBarcode(value);
+        if (code.length >= MIN_BARCODE_LEN && !pausedRef.current) {
+          emit(code);
+        }
+      }, SCANNER_IDLE_SUBMIT_MS);
+    },
+    [emit]
+  );
+
+  const onScannerChange = (value: string) => {
+    // 多數掃描槍是數字；也允許 Code128 英數
+    const cleaned = value.replace(/[^\w\-./]/g, "");
+    setBuffer(cleaned);
+    if (!paused) scheduleIdleSubmit(cleaned);
+  };
+
+  const onScannerKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (idleSubmitRef.current) window.clearTimeout(idleSubmitRef.current);
+    if (paused) return;
+    emit(buffer);
+  };
 
   const submitManual = (e: React.FormEvent) => {
     e.preventDefault();
-    const code = manual.trim();
-    if (!code) return;
+    if (idleSubmitRef.current) window.clearTimeout(idleSubmitRef.current);
+    if (paused) return;
+    // 手動按查詢：略過短時間重複過濾
     lastScanRef.current = { code: "", at: 0 };
-    emit(code);
-    setManual("");
+    emit(buffer);
   };
 
   return (
     <div className="space-y-3">
+      {/* 外接掃描槍主輸入：必須可聚焦，手機才收得到 HID 鍵盤字元 */}
+      <form
+        onSubmit={submitManual}
+        className="rounded-2xl border border-[#153E73]/20 bg-[#F5F8FC] p-3 space-y-2"
+      >
+        <div className="flex items-center gap-2 text-[#153E73]">
+          <ScanBarcode className="h-4 w-4 shrink-0" aria-hidden />
+          <p className="text-sm font-bold">外接掃描槍／條碼輸入</p>
+        </div>
+        <p className="text-[12px] leading-relaxed text-[#8A94A6]">
+          藍牙或 USB 手持條碼槍連上手機後，直接掃商品即可自動帶入數字，無需再按鍵。
+          請保持此欄位為選取狀態（編輯數量時除外）。
+        </p>
+        <div className="flex gap-2">
+          <label className="sr-only" htmlFor="stocktake-scanner-input">
+            條碼掃描槍輸入
+          </label>
+          <input
+            id="stocktake-scanner-input"
+            ref={scannerInputRef}
+            data-scanner-input="true"
+            value={buffer}
+            onChange={(e) => onScannerChange(e.target.value)}
+            onKeyDown={onScannerKeyDown}
+            onFocus={() => setError(null)}
+            inputMode="numeric"
+            enterKeyHint="done"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            placeholder="掃描槍掃入，或手動輸入條碼數字"
+            className="input-field h-12 min-h-touch flex-1 font-mono text-base tracking-wide"
+            disabled={paused}
+          />
+          <button
+            type="submit"
+            disabled={paused || normalizeBarcode(buffer).length < MIN_BARCODE_LEN}
+            className="min-h-12 rounded-xl bg-[#153E73] px-4 font-bold text-white disabled:opacity-50"
+          >
+            查詢
+          </button>
+        </div>
+        {lastAccepted ? (
+          <p className="text-[12px] text-[#1B6B3A]">已帶入：{lastAccepted}</p>
+        ) : null}
+      </form>
+
       <div className="relative overflow-hidden rounded-2xl bg-black">
         <video
           ref={videoRef}
@@ -279,9 +376,9 @@ export function BarcodeScanner({ onScan, paused = false }: Props) {
         {!active ? (
           <div className="flex h-56 flex-col items-center justify-center gap-3 text-white/70">
             <CameraOff className="h-8 w-8" />
-            <p className="text-sm">相機尚未開啟</p>
+            <p className="text-sm">相機尚未開啟（可選）</p>
             <p className="px-6 text-center text-[11px] text-white/50">
-              iPhone／Android 都可使用相機掃碼；也支援掃描槍與手動輸入
+              已接掃描槍時可不開相機；也可用手機鏡頭掃碼
             </p>
           </div>
         ) : (
@@ -308,37 +405,13 @@ export function BarcodeScanner({ onScan, paused = false }: Props) {
         <p className="text-[12px] text-[#8A94A6]">
           {engine === "native"
             ? "使用系統條碼辨識中，請將條碼對準紅線。"
-            : "使用相容模式掃碼中（適合 iPhone），請將條碼對準紅線、保持 Steady。"}
+            : "使用相容模式掃碼中（適合 iPhone），請將條碼對準紅線。"}
         </p>
       ) : null}
 
       {error ? (
         <p className="rounded-xl bg-error-soft px-3 py-2 text-[13px] text-error">{error}</p>
       ) : null}
-
-      <form onSubmit={submitManual} className="flex gap-2">
-        <div className="relative flex-1">
-          <Keyboard className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A94A6]" />
-          <input
-            value={manual}
-            onChange={(e) => setManual(e.target.value)}
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="條碼掃不到？直接輸入數字"
-            className="input-field h-11 w-full pl-9"
-          />
-        </div>
-        <button
-          type="submit"
-          className="min-h-11 rounded-xl bg-white px-4 font-bold text-[#153E73] ring-1 ring-[#153E73]/30"
-        >
-          查詢
-        </button>
-      </form>
-
-      <p className="text-[12px] text-[#8A94A6]">
-        提示：藍牙或 USB 掃描槍可以直接用，不用點任何欄位，掃了就會自動帶入。
-      </p>
     </div>
   );
 }
