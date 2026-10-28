@@ -47,6 +47,11 @@ export function StocktakeScanClient({ stores, defaultStoreId }: Props) {
   const [applied, setApplied] = useState<null | { applied: number; skipped: number }>(null);
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
   const activeRef = useRef<string | null>(null);
+  /** 同一商品短時間重複掃：只提示一次，避免一直跳通知 */
+  const lastDupNoticeRef = useRef<{ productId: string; at: number }>({
+    productId: "",
+    at: 0,
+  });
 
   const storeName = useMemo(
     () => stores.find((s) => s.id === storeId)?.name ?? "",
@@ -115,10 +120,17 @@ export function StocktakeScanClient({ stores, defaultStoreId }: Props) {
       const existing = lines.find((l) => l.barcode === barcode);
       if (existing) {
         activeRef.current = existing.product_id;
-        setNotice(`${existing.name}　已在清單中，請直接修改數量`);
-        document
-          .getElementById(`line-${existing.product_id}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        const now = Date.now();
+        const recentlyNotified =
+          lastDupNoticeRef.current.productId === existing.product_id &&
+          now - lastDupNoticeRef.current.at < 5000;
+        if (!recentlyNotified) {
+          lastDupNoticeRef.current = { productId: existing.product_id, at: now };
+          setNotice(`${existing.name}　已在清單中，請直接修改數量`);
+          document
+            .getElementById(`line-${existing.product_id}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
         return;
       }
 
