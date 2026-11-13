@@ -25,8 +25,20 @@ const nextConfig = {
     return [
       {
         source: "/baking-materials",
-        destination: "/shop/categories",
+        destination: "/shop",
         permanent: true,
+      },
+      {
+        // Legacy catalog index — merged into /shop hub.
+        source: "/shop/categories",
+        destination: "/shop",
+        permanent: true,
+      },
+      {
+        // Design link target — reuse support hub for order guide content.
+        source: "/help/order-guide",
+        destination: "/support",
+        permanent: false,
       },
       {
         source: "/baking-materials/:slug",
