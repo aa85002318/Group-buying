@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "@/lib/config";
 import {
   ADMIN_ROLES,
@@ -8,6 +9,9 @@ import {
   isStoreStaffAllowedPath,
 } from "@/lib/admin/permissions";
 
+/** Vercel kills middleware after 25s; fail fast instead of hanging on a slow Supabase. */
+const SUPABASE_TIMEOUT_MS = 5000;
+
 export async function middleware(request: NextRequest) {
   if (!isSupabaseConfigured()) {
     return NextResponse.next();
@@ -15,10 +19,25 @@ export async function middleware(request: NextRequest) {
 
   let response = NextResponse.next({ request: { headers: request.headers } });
 
+  let supabaseUnavailable = false;
+  const fetchWithTimeout: typeof fetch = async (input, init) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SUPABASE_TIMEOUT_MS);
+    try {
+      return await fetch(input, { ...init, signal: init?.signal ?? controller.signal });
+    } catch (err) {
+      supabaseUnavailable = true;
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: { fetch: fetchWithTimeout },
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value;
@@ -37,13 +56,36 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  let user: User | null = null;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    user = data.user;
+    if (error && (error.status ?? 0) >= 500) supabaseUnavailable = true;
+  } catch {
+    supabaseUnavailable = true;
+  }
 
   const protectedPaths = ["/cart", "/checkout", "/orders", "/profile", "/commissions", "/share-rewards", "/notifications", "/payment-report"];
   const adminPaths = ["/admin"];
   const staffPaths = ["/staff"];
 
   const path = request.nextUrl.pathname;
+
+  // Supabase 無回應時：受保護頁面導回登入頁並提示，一般頁面照常顯示
+  const authUnavailableRedirect = () => {
+    const loginUrl = new URL(path.startsWith("/staff") ? "/staff/login" : "/auth/login", request.url);
+    loginUrl.searchParams.set("error", "auth_unavailable");
+    return NextResponse.redirect(loginUrl);
+  };
+
+  const isGuardedPath =
+    protectedPaths.some((p) => path.startsWith(p)) ||
+    adminPaths.some((p) => path.startsWith(p)) ||
+    (staffPaths.some((p) => path.startsWith(p)) && path !== "/staff/login");
+
+  if (supabaseUnavailable && isGuardedPath) {
+    return authUnavailableRedirect();
+  }
 
   if (protectedPaths.some((p) => path.startsWith(p)) && !user) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
@@ -70,6 +112,9 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
+    if (supabaseUnavailable) {
+      return authUnavailableRedirect();
+    }
     if (profileError || !profile?.role || !["admin", "store_staff"].includes(profile.role)) {
       const loginUrl = new URL("/staff/login", request.url);
       loginUrl.searchParams.set("error", "staff_required");
@@ -89,6 +134,9 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
+    if (supabaseUnavailable) {
+      return authUnavailableRedirect();
+    }
     const role = profile?.role;
     if (profileError || !role || !(ADMIN_ROLES as readonly string[]).includes(role)) {
       const loginUrl = new URL("/auth/login", request.url);

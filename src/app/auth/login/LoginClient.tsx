@@ -192,7 +192,9 @@ export default function LoginClient() {
       ? "此頁面需要管理員或門市人員權限。請使用具權限的帳號登入，或請管理員執行 npm run set-admin。"
       : errorCode === "staff_required"
         ? "門市掃碼需要門市人員或管理員權限。"
-        : null;
+        : errorCode === "auth_unavailable"
+          ? "登入服務暫時無回應，請稍後再試一次。"
+          : null;
 
   return (
     <div className="flex min-h-[calc(100vh-var(--header-height))] flex-col items-center justify-center gap-6 p-4">
